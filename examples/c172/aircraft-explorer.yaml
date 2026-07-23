@@ -1,0 +1,8 @@
+schema_version: 1
+project:
+  id: c172-demo
+  name: C172-Class Aircraft Concept Explorer Demo
+  default_unit_system: aviation_us
+  artifact_directory: artifacts/runs
+  profile_directories: [profiles]
+

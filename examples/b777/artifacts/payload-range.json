@@ -1,0 +1,66 @@
+{
+  "artifact_path": "examples/b777/artifacts/payload-range.svg",
+  "chart": {
+    "annotations": [
+      {
+        "label": "maximum_payload",
+        "x": 7904.236648531703,
+        "y": 68600.0
+      },
+      {
+        "label": "maximum_fuel_payload",
+        "x": 10314.264517769874,
+        "y": 38167.0
+      },
+      {
+        "label": "maximum_range",
+        "x": 10757.444695801107,
+        "y": 19083.5
+      },
+      {
+        "label": "zero_payload_ferry",
+        "x": 11205.513481371234,
+        "y": 0.0
+      }
+    ],
+    "chart_type": "line",
+    "series": [
+      {
+        "id": "payload",
+        "label": "Payload",
+        "unit": "kg",
+        "values": [
+          68600.0,
+          38167.0,
+          19083.5,
+          0.0
+        ]
+      }
+    ],
+    "title": "B777-Class Long-Range Mission: payload-range",
+    "warnings": [
+      {
+        "code": "SIMPLIFIED_PAYLOAD_RANGE",
+        "context": {},
+        "message": "Payload-range values use a representative cruise condition, not a full mission.",
+        "path": "analysis.payload_range",
+        "severity": "warning"
+      }
+    ],
+    "x": {
+      "label": "Range",
+      "unit": "nmi",
+      "values": [
+        7904.236648531703,
+        10314.264517769874,
+        10757.444695801107,
+        11205.513481371234
+      ]
+    },
+    "y": {
+      "label": "Payload",
+      "unit": "kg",
+      "values": []
+    }
+  }
+}

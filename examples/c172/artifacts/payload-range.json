@@ -1,0 +1,66 @@
+{
+  "artifact_path": "examples/c172/artifacts/payload-range.svg",
+  "chart": {
+    "annotations": [
+      {
+        "label": "maximum_payload",
+        "x": 0.0,
+        "y": 376.0
+      },
+      {
+        "label": "maximum_fuel_payload",
+        "x": 761.7524070704324,
+        "y": 200.0
+      },
+      {
+        "label": "maximum_range",
+        "x": 788.3919442035464,
+        "y": 100.0
+      },
+      {
+        "label": "zero_payload_ferry",
+        "x": 813.9968882570014,
+        "y": 0.0
+      }
+    ],
+    "chart_type": "line",
+    "series": [
+      {
+        "id": "payload",
+        "label": "Payload",
+        "unit": "kg",
+        "values": [
+          376.0,
+          200.0,
+          100.0,
+          0.0
+        ]
+      }
+    ],
+    "title": "C172-Class Normal Mission: payload-range",
+    "warnings": [
+      {
+        "code": "SIMPLIFIED_PAYLOAD_RANGE",
+        "context": {},
+        "message": "Payload-range values use a representative cruise condition, not a full mission.",
+        "path": "analysis.payload_range",
+        "severity": "warning"
+      }
+    ],
+    "x": {
+      "label": "Range",
+      "unit": "nmi",
+      "values": [
+        0.0,
+        761.7524070704324,
+        788.3919442035464,
+        813.9968882570014
+      ]
+    },
+    "y": {
+      "label": "Payload",
+      "unit": "kg",
+      "values": []
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "completion_status": "completed",
+  "result": {
+    "aerodynamics": {
+      "drag_coefficient": 0.041492286341409355,
+      "drag_n": {
+        "display_unit": "N",
+        "display_value": 1130.6519798600823,
+        "unit": "N",
+        "value": 1130.6519798600823
+      },
+      "dynamic_pressure_pa": {
+        "display_unit": "Pa",
+        "display_value": 1685.2004301775817,
+        "unit": "Pa",
+        "value": 1685.2004301775817
+      },
+      "induced_drag_coefficient": 0.008492286341409352,
+      "lift_coefficient": 0.39982795282353206,
+      "lift_to_drag_ratio": 9.63619959463413,
+      "model": {
+        "fidelity_level": 1,
+        "model_id": "aero.parabolic_polar",
+        "model_version": "1.0.0",
+        "validity_status": "valid"
+      },
+      "power_required_w": {
+        "display_unit": "W",
+        "display_value": 66890.6274085001,
+        "unit": "W",
+        "value": 66890.6274085001
+      },
+      "warnings": [],
+      "wave_drag_coefficient": 0.0
+    },
+    "altitude_m": {
+      "display_unit": "m",
+      "display_value": 2438.4,
+      "unit": "m",
+      "value": 2438.4
+    },
+    "best_glide_speed_m_s": {
+      "display_unit": "m/s",
+      "display_value": 42.13703706970911,
+      "unit": "m/s",
+      "value": 42.13703706970911
+    },
+    "climb_gradient": -0.022718777633372374,
+    "configuration": "clean",
+    "excess_power_w": {
+      "display_unit": "W",
+      "display_value": -14643.875139633485,
+      "unit": "W",
+      "value": -14643.875139633485
+    },
+    "excess_thrust_n": {
+      "display_unit": "N",
+      "display_value": -247.52535685360374,
+      "unit": "N",
+      "value": -247.52535685360374
+    },
+    "mach": 0.1788390570482834,
+    "mass_kg": {
+      "display_unit": "kg",
+      "display_value": 1111.0,
+      "unit": "kg",
+      "value": 1111.0
+    },
+    "maximum_lift_to_drag_ratio": 11.941912180111707,
+    "power_required_w": {
+      "display_unit": "W",
+      "display_value": 66890.6274085001,
+      "unit": "W",
+      "value": 66890.6274085001
+    },
+    "propulsion": {
+      "fuel_flow_kg_s": {
+        "display_unit": "kg/s",
+        "display_value": 0.008485415635064584,
+        "unit": "kg/s",
+        "value": 0.008485415635064584
+      },
+      "model": {
+        "fidelity_level": 1,
+        "model_id": "propulsion.piston_prop_simple",
+        "model_version": "1",
+        "validity_status": "valid"
+      },
+      "propulsive_power_available_w": {
+        "display_unit": "W",
+        "display_value": 52246.75226886662,
+        "unit": "W",
+        "value": 52246.75226886662
+      },
+      "shaft_power_available_w": {
+        "display_unit": "W",
+        "display_value": 105336.1940904569,
+        "unit": "W",
+        "value": 105336.1940904569
+      },
+      "thrust_available_n": {
+        "display_unit": "N",
+        "display_value": 883.1266230064786,
+        "unit": "N",
+        "value": 883.1266230064786
+      },
+      "warnings": []
+    },
+    "rate_of_climb_m_s": {
+      "display_unit": "m/s",
+      "display_value": -1.3440681278765696,
+      "unit": "m/s",
+      "value": -1.3440681278765696
+    },
+    "scenario_id": "c172-normal-mission",
+    "stall_speed_m_s": {
+      "display_unit": "m/s",
+      "display_value": 31.06625462332055,
+      "unit": "m/s",
+      "value": 31.06625462332055
+    },
+    "thrust_required_n": {
+      "display_unit": "N",
+      "display_value": 1130.6519798600823,
+      "unit": "N",
+      "value": 1130.6519798600823
+    },
+    "true_airspeed_m_s": {
+      "display_unit": "m/s",
+      "display_value": 59.16111111111112,
+      "unit": "m/s",
+      "value": 59.16111111111112
+    },
+    "warnings": []
+  },
+  "run_id": "2026-07-23T233303Z-49214541",
+  "scenario_name": "C172-Class Normal Mission",
+  "warning_count": 0
+}

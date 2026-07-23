@@ -1,0 +1,31 @@
+schema_version: 1
+requirements:
+  id: c172_reference_requirements
+  items:
+    - id: payload
+      metric: mission.payload_mass
+      operator: ge
+      value: 200 kg
+      severity: hard
+    - id: cruise_speed
+      metric: performance.cruise_true_airspeed
+      operator: ge
+      value: 110 kt
+      severity: hard
+    - id: range
+      metric: mission.completed_distance
+      operator: ge
+      value: 350 nmi
+      severity: hard
+    - id: service_ceiling
+      metric: performance.service_ceiling
+      operator: ge
+      value: 13000 ft
+      severity: soft
+      weight: 0.4
+    - id: stall_speed_landing
+      metric: performance.stall_speed_landing
+      operator: le
+      value: 50 kt
+      severity: hard
+

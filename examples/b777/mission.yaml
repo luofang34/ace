@@ -1,0 +1,55 @@
+schema_version: 1
+mission:
+  id: b777_long_range
+  name: B777-Class Long-Range Mission
+  payload:
+    mass: 52000 kg
+  segments:
+    - id: start_and_taxi
+      type: fixed_time
+      duration: 20 min
+      thrust_fraction: 0.06
+    - id: takeoff
+      type: takeoff
+      duration: 2 min
+      thrust_fraction: 1.0
+    - id: initial_climb
+      type: climb
+      target_altitude: 10000 ft
+      indicated_airspeed: 250 kt
+      thrust_fraction: 0.90
+    - id: climb_to_cruise
+      type: climb
+      target_altitude: 33000 ft
+      mach: 0.78
+      thrust_fraction: 0.86
+    - id: cruise_1
+      type: cruise
+      distance: 3000 nmi
+      altitude: 33000 ft
+      mach: 0.84
+    - id: cruise_2
+      type: cruise
+      distance: 3000 nmi
+      altitude: 35000 ft
+      mach: 0.84
+    - id: cruise_3
+      type: cruise
+      distance: 1100 nmi
+      altitude: 37000 ft
+      mach: 0.84
+    - id: descent
+      type: descent
+      target_altitude: 3000 ft
+      mach: 0.76
+    - id: alternate
+      type: cruise
+      distance: 200 nmi
+      altitude: 15000 ft
+      mach: 0.60
+    - id: reserve
+      type: loiter
+      duration: 30 min
+      altitude: 1500 ft
+      true_airspeed: 220 kt
+

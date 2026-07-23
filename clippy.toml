@@ -1,0 +1,4 @@
+disallowed-types = [
+  { path = "anyhow::Error", reason = "library errors must remain typed" },
+]
+

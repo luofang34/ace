@@ -1,0 +1,109 @@
+use std::collections::BTreeMap;
+
+use rmcp::schemars;
+use serde::Deserialize;
+use serde_json::Value;
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ValidateDocumentRequest {
+    pub(super) document: Value,
+    pub(super) document_type: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ListProfilesRequest {
+    pub(super) profile_type: Option<String>,
+    pub(super) query: Option<String>,
+    pub(super) directory: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct GetProfileRequest {
+    pub(super) profile_id: String,
+    pub(super) version: Option<u32>,
+    pub(super) directory: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ScenarioRequest {
+    pub(super) scenario_path: String,
+    #[serde(default)]
+    pub(super) overrides: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct PointRequest {
+    pub(super) scenario_path: String,
+    pub(super) condition: PointRequestCondition,
+    #[serde(default)]
+    pub(super) overrides: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct PointRequestCondition {
+    pub(super) altitude: String,
+    pub(super) true_airspeed: Option<String>,
+    pub(super) mach: Option<f64>,
+    pub(super) mass: Option<String>,
+    pub(super) configuration: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ConstraintRequest {
+    pub(super) scenario_path: String,
+    pub(super) wing_loading: WingLoadingRequest,
+    #[serde(default)]
+    pub(super) overrides: BTreeMap<String, String>,
+    pub(super) artifact_path: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct WingLoadingRequest {
+    pub(super) start: String,
+    pub(super) stop: String,
+    pub(super) count: u32,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct SweepRequest {
+    pub(super) scenario_path: String,
+    pub(super) variables: Vec<SweepVariableRequest>,
+    pub(super) metrics: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct SweepVariableRequest {
+    pub(super) path: String,
+    pub(super) start: Option<String>,
+    pub(super) stop: Option<String>,
+    pub(super) count: Option<u32>,
+    pub(super) values: Option<Vec<String>>,
+    pub(super) logarithmic: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct CompareRequest {
+    pub(super) scenario_paths: Vec<String>,
+    pub(super) metrics: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ExplainRequest {
+    pub(super) run_id: String,
+    pub(super) result_path: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ReportRequest {
+    pub(super) run_id: String,
+    pub(super) format: String,
+    pub(super) sections: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct PayloadRangeRequest {
+    pub(super) scenario_path: String,
+    #[serde(default)]
+    pub(super) overrides: BTreeMap<String, String>,
+    pub(super) artifact_path: Option<String>,
+}

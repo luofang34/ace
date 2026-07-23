@@ -1,0 +1,106 @@
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+
+use serde::Serialize;
+
+use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
+use crate::domain::quantity::{GRAVITY_M_S2, QuantityOutput};
+use crate::domain::schema::EngineProfile;
+use crate::services::analysis::ApplicationService;
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct ScenarioComparison {
+    pub(crate) scenarios: Vec<ComparisonRow>,
+    pub(crate) warnings: Vec<Diagnostic>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct ComparisonRow {
+    pub(crate) scenario_id: String,
+    pub(crate) metrics: BTreeMap<String, QuantityOutput>,
+}
+
+impl ApplicationService {
+    pub(crate) fn compare_blocking(
+        &self,
+        paths: &[PathBuf],
+        metrics: &[String],
+    ) -> AexResult<ScenarioComparison> {
+        let mut rows = Vec::new();
+        let mut propulsion_kinds = Vec::new();
+        for path in paths {
+            let (scenario, performance) = self.performance_blocking(path, &BTreeMap::new())?;
+            let (_, mission) = self.mission_blocking(path, &BTreeMap::new())?;
+            propulsion_kinds.push(match scenario.engine {
+                EngineProfile::Piston(_) => "power",
+                EngineProfile::Turbofan(_) => "thrust",
+            });
+            let values = metrics
+                .iter()
+                .map(|metric| {
+                    comparison_metric(metric, &scenario, &performance, &mission)
+                        .map(|value| (metric.clone(), value))
+                })
+                .collect::<AexResult<BTreeMap<_, _>>>()?;
+            rows.push(ComparisonRow {
+                scenario_id: scenario.id,
+                metrics: values,
+            });
+        }
+        let mut warnings = Vec::new();
+        if propulsion_kinds.windows(2).any(|pair| pair[0] != pair[1]) {
+            warnings.push(Diagnostic::warning(
+                "CROSS_CLASS_COMPARISON",
+                "Power-loading and thrust-loading metrics are not directly comparable.",
+                "scenario_paths",
+            ));
+        }
+        Ok(ScenarioComparison {
+            scenarios: rows,
+            warnings,
+        })
+    }
+}
+
+fn comparison_metric(
+    metric: &str,
+    scenario: &crate::domain::schema::ResolvedScenario,
+    performance: &crate::domain::result::PerformanceSummary,
+    mission: &crate::domain::result::MissionResult,
+) -> AexResult<QuantityOutput> {
+    match metric {
+        "performance.wing_loading" => Ok(QuantityOutput::si(
+            scenario.aircraft.mass.maximum_takeoff_mass_kg * GRAVITY_M_S2
+                / scenario.aircraft.wing.area_m2,
+            "N/m^2",
+        )),
+        "performance.thrust_or_power_loading" => Ok(QuantityOutput::si(
+            installed_loading(scenario),
+            match scenario.engine {
+                EngineProfile::Piston(_) => "W/kg",
+                EngineProfile::Turbofan(_) => "N/N",
+            },
+        )),
+        "performance.service_ceiling" => Ok(QuantityOutput::si(performance.service_ceiling_m, "m")),
+        "mission.total_fuel" => Ok(QuantityOutput::si(mission.total_fuel_burn_kg, "kg")),
+        "mission.completed_distance" => Ok(QuantityOutput::range(mission.total_distance.value)),
+        _ => Err(AexError::validation(
+            "UNSUPPORTED_COMPARISON_METRIC",
+            metric,
+            "metric is not implemented",
+        )),
+    }
+}
+
+fn installed_loading(scenario: &crate::domain::schema::ResolvedScenario) -> f64 {
+    let mass = scenario.aircraft.mass.maximum_takeoff_mass_kg;
+    match &scenario.engine {
+        EngineProfile::Piston(profile) => {
+            profile.rated_power_w * f64::from(scenario.aircraft.propulsion.engine_count) / mass
+        }
+        EngineProfile::Turbofan(profile) => {
+            profile.sea_level_static_thrust_n * f64::from(scenario.aircraft.propulsion.engine_count)
+                / (mass * GRAVITY_M_S2)
+        }
+    }
+}

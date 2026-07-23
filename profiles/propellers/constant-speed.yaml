@@ -1,0 +1,18 @@
+schema_version: 1
+profile:
+  id: propeller.constant_speed_light_aircraft
+  version: 1
+  type: propeller
+  model: propulsion.propeller_efficiency_simple
+  metadata:
+    display_name: Constant-Speed Light-Aircraft Propeller
+    source: representative conceptual profile
+    confidence: medium
+  parameters:
+    diameter: 1.93 m
+    blade_count: 2
+    static_efficiency: 0.45
+    cruise_efficiency: 0.80
+    maximum_efficiency: 0.83
+    climb_installation_factor: 0.62
+    tip_mach_limit: 0.88

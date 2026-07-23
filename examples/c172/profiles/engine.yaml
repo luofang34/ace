@@ -1,0 +1,28 @@
+schema_version: 1
+profile:
+  id: engine.lycoming_io360_class
+  version: 1
+  type: piston_engine
+  model: propulsion.piston_prop_simple
+  metadata:
+    display_name: IO-360-Class Naturally Aspirated Engine
+    source: representative conceptual profile
+    confidence: medium
+  parameters:
+    rated_power: 134 kW
+    rated_altitude: 0 ft
+    rated_speed: 2700 rpm
+    dry_mass: 135 kg
+    power_lapse:
+      model: density_power
+      exponent: 1.0
+      minimum_power_fraction: 0.35
+    bsfc:
+      takeoff: 0.290 kg/kWh
+      cruise: 0.245 kg/kWh
+      economy: 0.225 kg/kWh
+    limits:
+      maximum_continuous_power_fraction: 0.85
+      takeoff_power_time_limit: 5 min
+      maximum_altitude: 18000 ft
+

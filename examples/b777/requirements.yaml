@@ -1,0 +1,32 @@
+schema_version: 1
+requirements:
+  id: b777_reference_requirements
+  items:
+    - id: payload
+      metric: mission.payload_mass
+      operator: ge
+      value: 50000 kg
+      severity: hard
+    - id: design_range
+      metric: mission.completed_distance
+      operator: ge
+      value: 7000 nmi
+      severity: hard
+    - id: cruise_mach
+      metric: performance.cruise_mach
+      operator: ge
+      value: 0.83
+      severity: hard
+    - id: service_ceiling
+      metric: performance.service_ceiling
+      operator: ge
+      value: 41000 ft
+      severity: soft
+      weight: 0.3
+    - id: takeoff_field_length
+      metric: performance.takeoff_field_length
+      operator: le
+      value: 11000 ft
+      severity: soft
+      weight: 0.5
+

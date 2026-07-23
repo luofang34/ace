@@ -1,0 +1,44 @@
+schema_version: 1
+aircraft:
+  id: c172_class_reference
+  name: C172-Class Reference Aircraft
+  category: normal_category_light_aircraft
+  configuration: conventional_tail
+  propulsion_architecture: single_piston_propeller
+  metadata:
+    purpose: software demonstration and model calibration
+    certification_use: prohibited
+  mass:
+    maximum_takeoff_mass: 1111 kg
+    operating_empty_mass: 767 kg
+    maximum_payload_mass: 376 kg
+    maximum_fuel_mass: 144 kg
+  geometry:
+    wing:
+      area: 16.17 m^2
+      span: 11.0 m
+      aspect_ratio: 7.49
+      sweep_quarter_chord: 0 deg
+  aerodynamics:
+    model: aero.parabolic_polar
+    clean:
+      cd0: 0.031
+      additional_cd: 0.002
+      oswald_efficiency: 0.80
+      cl_max: 1.45
+    takeoff:
+      cd0: 0.041
+      oswald_efficiency: 0.76
+      cl_max: 1.75
+    landing:
+      cd0: 0.062
+      oswald_efficiency: 0.72
+      cl_max: 2.05
+  propulsion:
+    profile: engine.lycoming_io360_class
+    engine_count: 1
+    propeller_profile: propeller.constant_speed_light_aircraft
+  limits:
+    maximum_operating_speed: 163 kt
+    maximum_load_factor: 3.8
+    minimum_load_factor: -1.52

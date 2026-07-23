@@ -1,0 +1,48 @@
+schema_version: 1
+aircraft:
+  id: b777_300er_class_reference
+  name: B777-300ER-Class Reference Aircraft
+  category: widebody_transport
+  configuration: conventional_swept_wing
+  propulsion_architecture: twin_high_bypass_turbofan
+  metadata:
+    purpose: software demonstration and model calibration
+    certification_use: prohibited
+  mass:
+    maximum_takeoff_mass: 351534 kg
+    operating_empty_mass: 167829 kg
+    maximum_payload_mass: 68600 kg
+    maximum_fuel_mass: 145538 kg
+  geometry:
+    wing:
+      area: 436.8 m^2
+      span: 64.8 m
+      aspect_ratio: 9.61
+      sweep_quarter_chord: 31.6 deg
+  aerodynamics:
+    model: aero.parabolic_polar
+    clean:
+      cd0: 0.0205
+      oswald_efficiency: 0.84
+      cl_max: 1.45
+      mach_critical: 0.82
+      wave_drag:
+        coefficient: 0.35
+        exponent: 2.4
+    takeoff:
+      cd0: 0.038
+      oswald_efficiency: 0.78
+      cl_max: 2.15
+    landing:
+      cd0: 0.085
+      oswald_efficiency: 0.72
+      cl_max: 2.65
+  propulsion:
+    profile: engine.ge90_115b_class
+    engine_count: 2
+  limits:
+    maximum_operating_mach: 0.89
+    maximum_operating_altitude: 43100 ft
+    maximum_load_factor: 2.5
+    minimum_load_factor: -1.0
+

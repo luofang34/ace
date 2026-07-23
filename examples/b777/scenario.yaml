@@ -1,0 +1,8 @@
+schema_version: 1
+scenario:
+  id: b777-long-range
+  name: B777-Class Long-Range Mission
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml
+

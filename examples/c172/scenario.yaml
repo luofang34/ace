@@ -1,0 +1,8 @@
+schema_version: 1
+scenario:
+  id: c172-normal-mission
+  name: C172-Class Normal Mission
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml
+

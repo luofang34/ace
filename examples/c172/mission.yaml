@@ -1,0 +1,42 @@
+schema_version: 1
+mission:
+  id: c172_normal_cruise
+  name: C172-Class Normal Cruise Mission
+  payload:
+    mass: 230 kg
+  segments:
+    - id: taxi_out
+      type: fixed_time
+      duration: 10 min
+      power_fraction: 0.12
+    - id: takeoff
+      type: takeoff
+      duration: 2 min
+      power_fraction: 1.0
+    - id: climb
+      type: climb
+      target_altitude: 8000 ft
+      indicated_airspeed: 85 kt
+      power_fraction: 0.95
+    - id: cruise
+      type: cruise
+      distance: 350 nmi
+      altitude: 8000 ft
+      true_airspeed: 115 kt
+      power_fraction: 0.65
+    - id: descent
+      type: descent
+      target_altitude: 1500 ft
+      indicated_airspeed: 110 kt
+      power_fraction: 0.25
+    - id: reserve
+      type: loiter
+      duration: 45 min
+      altitude: 3000 ft
+      true_airspeed: 95 kt
+      power_fraction: 0.50
+    - id: taxi_in
+      type: fixed_time
+      duration: 5 min
+      power_fraction: 0.10
+

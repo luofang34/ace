@@ -1,0 +1,150 @@
+{
+  "completion_status": "completed",
+  "result": {
+    "aerodynamics": {
+      "drag_coefficient": 0.03814199844584213,
+      "drag_n": {
+        "display_unit": "N",
+        "display_value": 196744.209977107,
+        "unit": "N",
+        "value": 196744.209977107
+      },
+      "dynamic_pressure_pa": {
+        "display_unit": "Pa",
+        "display_value": 11809.075153144371,
+        "unit": "Pa",
+        "value": 11809.075153144371
+      },
+      "induced_drag_coefficient": 0.017612720538369573,
+      "lift_coefficient": 0.6683277518931693,
+      "lift_to_drag_ratio": 17.522095829407803,
+      "model": {
+        "fidelity_level": 1,
+        "model_id": "aero.parabolic_polar",
+        "model_version": "1.0.0",
+        "validity_status": "valid"
+      },
+      "power_required_w": {
+        "display_unit": "W",
+        "display_value": 49019973.5240607,
+        "unit": "W",
+        "value": 49019973.5240607
+      },
+      "warnings": [
+        {
+          "code": "TRANSONIC_DRAG_APPROXIMATION",
+          "context": {},
+          "message": "Wave drag uses a simple power-law correction.",
+          "path": "aircraft.aerodynamics.clean.wave_drag",
+          "severity": "warning"
+        }
+      ],
+      "wave_drag_coefficient": 0.000029277907472555723
+    },
+    "altitude_m": {
+      "display_unit": "m",
+      "display_value": 10668.0,
+      "unit": "m",
+      "value": 10668.0
+    },
+    "best_glide_speed_m_s": {
+      "display_unit": "m/s",
+      "display_value": 239.8773585307185,
+      "unit": "m/s",
+      "value": 239.8773585307185
+    },
+    "climb_gradient": 0.03597426388987249,
+    "configuration": "clean",
+    "excess_power_w": {
+      "display_unit": "W",
+      "display_value": 30899470.66528949,
+      "unit": "W",
+      "value": 30899470.66528949
+    },
+    "excess_thrust_n": {
+      "display_unit": "N",
+      "display_value": 124016.6305224389,
+      "unit": "N",
+      "value": 124016.6305224389
+    },
+    "mach": 0.84,
+    "mass_kg": {
+      "display_unit": "kg",
+      "display_value": 351534.0,
+      "unit": "kg",
+      "value": 351534.0
+    },
+    "maximum_lift_to_drag_ratio": 17.586092251923088,
+    "power_required_w": {
+      "display_unit": "W",
+      "display_value": 49019973.5240607,
+      "unit": "W",
+      "value": 49019973.5240607
+    },
+    "propulsion": {
+      "fuel_flow_kg_s": {
+        "display_unit": "kg/s",
+        "display_value": 3.314528685161974,
+        "unit": "kg/s",
+        "value": 3.314528685161974
+      },
+      "model": {
+        "fidelity_level": 1,
+        "model_id": "propulsion.turbofan_simple_deck",
+        "model_version": "1",
+        "validity_status": "valid"
+      },
+      "propulsive_power_available_w": {
+        "display_unit": "W",
+        "display_value": 79919444.18935019,
+        "unit": "W",
+        "value": 79919444.18935019
+      },
+      "shaft_power_available_w": null,
+      "thrust_available_n": {
+        "display_unit": "N",
+        "display_value": 320760.8404995459,
+        "unit": "N",
+        "value": 320760.8404995459
+      },
+      "warnings": []
+    },
+    "rate_of_climb_m_s": {
+      "display_unit": "m/s",
+      "display_value": 8.963198783000104,
+      "unit": "m/s",
+      "value": 8.963198783000104
+    },
+    "scenario_id": "b777-long-range",
+    "stall_speed_m_s": {
+      "display_unit": "m/s",
+      "display_value": 169.1538389672871,
+      "unit": "m/s",
+      "value": 169.1538389672871
+    },
+    "thrust_required_n": {
+      "display_unit": "N",
+      "display_value": 196744.209977107,
+      "unit": "N",
+      "value": 196744.209977107
+    },
+    "true_airspeed_m_s": {
+      "display_unit": "m/s",
+      "display_value": 249.1558634928297,
+      "unit": "m/s",
+      "value": 249.1558634928297
+    },
+    "warnings": [
+      {
+        "code": "TRANSONIC_DRAG_APPROXIMATION",
+        "context": {},
+        "message": "Wave drag uses a simple power-law correction.",
+        "path": "aircraft.aerodynamics.clean.wave_drag",
+        "severity": "warning"
+      }
+    ]
+  },
+  "run_id": "2026-07-23T233308Z-975f7553",
+  "scenario_name": "B777-Class Long-Range Mission",
+  "warning_count": 1
+}

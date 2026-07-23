@@ -1,0 +1,29 @@
+schema_version: 1
+profile:
+  id: engine.ge90_115b_class
+  version: 1
+  type: turbofan_engine
+  model: propulsion.turbofan_simple_deck
+  metadata:
+    display_name: GE90-115B-Class Turbofan
+    source: representative conceptual profile
+    confidence: medium
+  parameters:
+    sea_level_static_thrust: 513 kN
+    dry_mass: 8760 kg
+    bypass_ratio: 9.0
+    thrust_lapse:
+      altitude_exponent: 0.72
+      mach_linear_coefficient: 0.30
+      minimum_fraction: 0.12
+    tsfc:
+      sea_level_takeoff: 0.0108 kg/N/hr
+      cruise_reference: 0.0372 kg/N/hr
+      cruise_reference_altitude: 35000 ft
+      cruise_reference_mach: 0.84
+    installation:
+      thrust_loss_fraction: 0.03
+      nacelle_drag_area: 2.4 m^2
+    limits:
+      maximum_mach: 0.90
+      maximum_altitude: 45000 ft
