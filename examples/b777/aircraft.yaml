@@ -40,9 +40,9 @@ aircraft:
   propulsion:
     profile: engine.ge90_115b_class
     engine_count: 2
+    sizing_factor: 1.0
   limits:
     maximum_operating_mach: 0.89
     maximum_operating_altitude: 43100 ft
     maximum_load_factor: 2.5
     minimum_load_factor: -1.0
-

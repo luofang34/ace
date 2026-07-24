@@ -144,6 +144,43 @@ pub(crate) struct RequirementEvaluation {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct StructuralScreen {
+    pub(crate) passed: bool,
+    pub(crate) ultimate_load_factor: f64,
+    pub(crate) wing_root_bending_moment: QuantityOutput,
+    pub(crate) required_total_spar_cap_area: QuantityOutput,
+    pub(crate) spar_cap_packaging_ratio: f64,
+    pub(crate) horizontal_tail_volume: f64,
+    pub(crate) vertical_tail_volume: f64,
+    pub(crate) aspect_ratio: f64,
+    pub(crate) failed_constraints: Vec<String>,
+    pub(crate) provenance: ResultProvenance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct MissionPowerPoint {
+    pub(crate) segment_id: String,
+    pub(crate) altitude: QuantityOutput,
+    pub(crate) true_airspeed: QuantityOutput,
+    pub(crate) mass: QuantityOutput,
+    pub(crate) throttle: f64,
+    pub(crate) excess_power: QuantityOutput,
+    pub(crate) required_reserve: QuantityOutput,
+    pub(crate) passed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct MissionPowerScreen {
+    pub(crate) passed: bool,
+    pub(crate) minimum_excess_power: QuantityOutput,
+    pub(crate) minimum_reserve_margin: QuantityOutput,
+    pub(crate) required_reserve_fraction: f64,
+    pub(crate) points: Vec<MissionPowerPoint>,
+    pub(crate) failed_constraints: Vec<String>,
+    pub(crate) provenance: ResultProvenance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct PayloadRangePoint {
     pub(crate) id: String,
     pub(crate) range: QuantityOutput,
@@ -188,4 +225,5 @@ pub(crate) struct SweepResult {
     pub(crate) rows: Vec<SweepRow>,
     pub(crate) deterministic_ordering: bool,
     pub(crate) warnings: Vec<Diagnostic>,
+    pub(crate) provenance: ResultProvenance,
 }

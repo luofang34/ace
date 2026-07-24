@@ -27,6 +27,25 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     strict mode recognizes `AGENT_ASSUMPTION`.
 12. **The suite runs offline after dependencies are fetched.** `cargo test
     --all-targets` performs no network calls or external service calls.
+13. **Native design exploration works without OpenVSP.** The MCP integration
+    forces OpenVSP discovery to an absent executable, then creates, updates,
+    and evaluates a C172-class design successfully.
+14. **Backend-specific identifiers stay private.** MCP requests use canonical
+    dotted scenario paths; OpenVSP component parameter names exist only in the
+    subprocess adapter.
+15. **OpenVSP adds refinement without replacing native feasibility.** The
+    conditional installed-backend test asserts that native results remain the
+    baseline while `.vsp3`, wetted-area, polar, and static pitching-moment data
+    appear in a separate refinement.
+16. **OpenVSP failure is explicit.** The adapter requires completion markers
+    and usable structured outputs; process, API, and parse failures are typed
+    backend errors with no fallback path.
+17. **Automatic refinement has convergence guardrails.** The C172 refinement
+    test requires all implemented requirements, structural screens, and
+    mission operating-point power reserve to pass.
+18. **Generated OpenVSP geometry has bounded proportions.** Script regression
+    checks pin wing placement, fuselage sizing, and single vertical-tail
+    symmetry; the installed-backend test bounds C172-class wetted area.
 
 ## Calibration bands
 
@@ -39,4 +58,3 @@ Current deterministic reference behavior is checked against:
   0.25–0.35, cruise L/D 16–22.
 
 These are software-validation bands, not claims about certified aircraft.
-

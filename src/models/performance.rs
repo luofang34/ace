@@ -62,7 +62,7 @@ impl PointAnalyzer {
                 true_airspeed_m_s: speed_m_s,
                 mach,
                 throttle: 1.0,
-                mode: OperatingMode::Climb,
+                mode: OperatingMode::Cruise,
             },
         )?;
         let available_power = propulsion
@@ -174,12 +174,12 @@ impl PointAnalyzer {
         )?;
         let upper = speed_upper_bound(&self.scenario, &atmosphere);
         let roots = bracket_roots(stall * 1.05, upper, 180, |speed| {
-            self.excess_power(altitude_m, speed, mass_kg, OperatingMode::Cruise)
+            self.excess_power_at(altitude_m, speed, mass_kg, OperatingMode::Cruise, 1.0)
         })?;
         if let Some(root) = roots.last().copied() {
             return Ok(root);
         }
-        if self.excess_power(altitude_m, upper, mass_kg, OperatingMode::Cruise)? > 0.0 {
+        if self.excess_power_at(altitude_m, upper, mass_kg, OperatingMode::Cruise, 1.0)? > 0.0 {
             return Ok(upper);
         }
         Err(AexError::analysis(
@@ -206,8 +206,9 @@ impl PointAnalyzer {
         for index in 0..100 {
             let fraction = f64::from(index) / 99.0;
             let speed = stall * 1.05 + fraction * (upper - stall * 1.05);
-            let rate = self.excess_power(altitude_m, speed, mass_kg, OperatingMode::Climb)?
-                / (mass_kg * GRAVITY_M_S2);
+            let rate =
+                self.excess_power_at(altitude_m, speed, mass_kg, OperatingMode::Climb, 1.0)?
+                    / (mass_kg * GRAVITY_M_S2);
             if rate > best_rate {
                 best_rate = rate;
                 best_speed = speed;
@@ -239,12 +240,13 @@ impl PointAnalyzer {
         bounded_root(0.0, maximum_altitude, 1.0, 80, function)
     }
 
-    fn excess_power(
+    pub(crate) fn excess_power_at(
         &self,
         altitude_m: f64,
         speed_m_s: f64,
         mass_kg: f64,
         mode: OperatingMode,
+        throttle: f64,
     ) -> AexResult<f64> {
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let mach = speed_m_s / atmosphere.speed_of_sound_m_s;
@@ -265,7 +267,7 @@ impl PointAnalyzer {
                 altitude_m,
                 true_airspeed_m_s: speed_m_s,
                 mach,
-                throttle: 1.0,
+                throttle,
                 mode,
             },
         )?;

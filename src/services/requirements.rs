@@ -36,7 +36,7 @@ fn metric_value(
         "performance.service_ceiling" => Some(performance.service_ceiling_m),
         "performance.stall_speed_landing" => Some(performance.stall_speed_landing_m_s),
         "performance.cruise_mach" => performance.cruise_mach,
-        "performance.takeoff_field_length" => Some(approximate_takeoff_distance(scenario)),
+        "performance.takeoff_field_length" => Some(estimate_takeoff_distance_m(scenario)),
         _ => None,
     }
 }
@@ -73,23 +73,4 @@ fn quantity(value: f64, unit: &str, metric: &str) -> QuantityOutput {
     } else {
         QuantityOutput::si(value, unit)
     }
-}
-
-fn approximate_takeoff_distance(scenario: &ResolvedScenario) -> f64 {
-    let mass = scenario.aircraft.mass.maximum_takeoff_mass_kg;
-    let wing_loading =
-        mass * crate::domain::quantity::GRAVITY_M_S2 / scenario.aircraft.wing.area_m2;
-    let lift_off =
-        (2.0 * wing_loading / (1.225 * scenario.aircraft.aerodynamics.takeoff.cl_max)).sqrt() * 1.2;
-    let thrust_to_weight = match &scenario.engine {
-        crate::domain::schema::EngineProfile::Piston(profile) => {
-            profile.rated_power_w / (mass * crate::domain::quantity::GRAVITY_M_S2 * lift_off)
-        }
-        crate::domain::schema::EngineProfile::Turbofan(profile) => {
-            profile.sea_level_static_thrust_n * f64::from(scenario.aircraft.propulsion.engine_count)
-                / (mass * crate::domain::quantity::GRAVITY_M_S2)
-        }
-    };
-    lift_off.powi(2)
-        / (2.0 * crate::domain::quantity::GRAVITY_M_S2 * (thrust_to_weight - 0.04).max(0.03))
 }

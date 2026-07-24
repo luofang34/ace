@@ -5,6 +5,7 @@ use serde::Serialize;
 
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{GRAVITY_M_S2, QuantityOutput};
+use crate::domain::result::ResultProvenance;
 use crate::domain::schema::EngineProfile;
 use crate::services::analysis::ApplicationService;
 
@@ -12,6 +13,7 @@ use crate::services::analysis::ApplicationService;
 pub(crate) struct ScenarioComparison {
     pub(crate) scenarios: Vec<ComparisonRow>,
     pub(crate) warnings: Vec<Diagnostic>,
+    pub(crate) provenance: ResultProvenance,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -58,6 +60,7 @@ impl ApplicationService {
         Ok(ScenarioComparison {
             scenarios: rows,
             warnings,
+            provenance: comparison_provenance(),
         })
     }
 }
@@ -102,5 +105,18 @@ fn installed_loading(scenario: &crate::domain::schema::ResolvedScenario) -> f64 
             profile.sea_level_static_thrust_n * f64::from(scenario.aircraft.propulsion.engine_count)
                 / (mass * GRAVITY_M_S2)
         }
+    }
+}
+
+fn comparison_provenance() -> ResultProvenance {
+    ResultProvenance {
+        method: "native conceptual metric comparison".to_owned(),
+        backend: "native".to_owned(),
+        assumptions: vec!["each design is evaluated independently".to_owned()],
+        validity_range: vec!["designs using registered native models".to_owned()],
+        units: BTreeMap::from([("metrics".to_owned(), "result-specific SI".to_owned())]),
+        warnings: vec![Diagnostic::limitation(
+            "Comparison ranks conceptual estimates rather than certified performance.",
+        )],
     }
 }

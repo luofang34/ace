@@ -5,6 +5,7 @@ use std::sync::Arc;
 use serde::Serialize;
 use serde_json::Value;
 
+use crate::backends::registry::BackendRegistry;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::result::{
     ConstraintResult, MissionResult, PayloadRangeResult, PerformanceSummary, PointPerformanceResult,
@@ -34,6 +35,7 @@ pub(crate) struct ApplicationService {
     resolver: ScenarioResolver,
     profiles: Arc<dyn ProfileRepository>,
     runs: Arc<dyn RunRepository>,
+    pub(super) backends: BackendRegistry,
 }
 
 impl ApplicationService {
@@ -48,6 +50,7 @@ impl ApplicationService {
             resolver: ScenarioResolver::new(Arc::clone(&profiles)),
             profiles,
             runs,
+            backends: BackendRegistry::detect_blocking(),
         }
     }
 

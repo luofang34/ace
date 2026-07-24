@@ -37,6 +37,7 @@ aircraft:
   propulsion:
     profile: engine.lycoming_io360_class
     engine_count: 1
+    sizing_factor: 1.0
     propeller_profile: propeller.constant_speed_light_aircraft
   limits:
     maximum_operating_speed: 163 kt

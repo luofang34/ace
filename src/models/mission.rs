@@ -370,7 +370,7 @@ impl MissionSimulator {
     }
 }
 
-fn representative_speed(
+pub(crate) fn representative_speed(
     segment: &MissionSegment,
     scenario: &ResolvedScenario,
     altitude_m: f64,

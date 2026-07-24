@@ -21,3 +21,22 @@ ledger. Interface quantity objects contain `value`, `unit`, `display_value`,
 and `display_unit`. Range fields use metres for `value` and nautical miles for
 display by default.
 
+Scenario documents may contain an `overrides` map. The design MCP tools use
+this map as an editable overlay instead of rewriting aircraft, mission, or
+requirements documents:
+
+```yaml
+scenario:
+  id: c172_experiment
+  name: C172 Experiment
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml
+  overrides:
+    aircraft.geometry.wing.area: 18.0 m^2
+    aircraft.geometry.wing.aspect_ratio: "8.4"
+    aircraft.propulsion.sizing_factor: "1.10"
+```
+
+Call-specific overrides take precedence over persisted scenario overrides.
+Both are validated against the same typed canonical models.

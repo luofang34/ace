@@ -100,3 +100,35 @@ The C172-class and B777-300ER-class examples demonstrate different scale and
 propulsion modes. Broad acceptance bands test software behavior; no result
 claims handbook, manufacturer, operational, or certification authority.
 
+## ADR-017 — Backend-neutral geometry and analysis
+
+Geometry generation and low-order analysis implement separate backend traits.
+The native backend is always registered. Optional adapters consume resolved
+canonical scenarios and return backend-neutral geometry, scalar, polar,
+stability, provenance, unit, and warning structures. Adapter-specific
+parameter identifiers remain private implementation details.
+
+## ADR-018 — OpenVSP is an explicit subprocess refinement
+
+OpenVSP runs through its headless script executable and produces `.vsp3`,
+CompGeom wetted-area, and VSPAERO polar data. Native feasibility remains a
+separate baseline in the response. Requesting OpenVSP is explicit, and any
+launch, analysis, protocol, or parsing failure fails the request rather than
+silently returning a native substitute.
+
+## ADR-019 — Editable designs use validated scenario overlays
+
+An editable design is a normal scenario directory plus a persisted
+backend-neutral `overrides` map. Creating a design copies its canonical
+aircraft, mission, requirements, and profiles. Updating parameters validates
+the prospective resolved scenario before atomically replacing the overlay.
+
+## ADR-020 — Automatic refinement is bounded and independently verified
+
+Automatic refinement uses deterministic coordinate search over canonical wing
+area, aspect ratio, propulsion sizing, and fuel capacity. Wing span preserves
+the planform identity, and propulsion growth carries an empty-mass penalty.
+Convergence requires all requirements, mission power reserve, tail-volume,
+aspect-ratio, and wing-spar packaging screens to pass. Optional OpenVSP runs
+only on the selected candidate; its static-pitch result is an independent
+verification gate and is not substituted into native feasibility.

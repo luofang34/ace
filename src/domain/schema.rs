@@ -84,6 +84,12 @@ pub(crate) struct RawPropulsion {
     pub(crate) profile: String,
     pub(crate) engine_count: u32,
     pub(crate) propeller_profile: Option<String>,
+    #[serde(default = "default_propulsion_sizing_factor")]
+    pub(crate) sizing_factor: f64,
+}
+
+fn default_propulsion_sizing_factor() -> f64 {
+    1.0
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -167,6 +173,8 @@ pub(crate) struct RawScenario {
     pub(crate) aircraft: PathBuf,
     pub(crate) mission: PathBuf,
     pub(crate) requirements: PathBuf,
+    #[serde(default)]
+    pub(crate) overrides: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -285,6 +293,7 @@ pub(crate) struct Propulsion {
     pub(crate) profile: String,
     pub(crate) engine_count: u32,
     pub(crate) propeller_profile: Option<String>,
+    pub(crate) sizing_factor: f64,
 }
 
 #[derive(Debug, Clone, Serialize)]

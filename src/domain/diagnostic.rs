@@ -117,6 +117,33 @@ pub enum AexError {
         /// Profile search root.
         directory: PathBuf,
     },
+    /// A requested optional analysis backend is not installed or configured.
+    #[error("analysis backend {backend} is unavailable: {reason}")]
+    BackendUnavailable {
+        /// Stable backend identifier.
+        backend: String,
+        /// Discovery or configuration detail.
+        reason: String,
+    },
+    /// A backend subprocess could not be launched.
+    #[error("failed to launch backend executable {executable}: {source}")]
+    BackendLaunch {
+        /// Executable selected by backend discovery.
+        executable: PathBuf,
+        /// Operating-system launch failure.
+        #[source]
+        source: std::io::Error,
+    },
+    /// A backend subprocess completed without a usable result.
+    #[error("backend {backend} failed during {operation}: {message}")]
+    BackendExecution {
+        /// Stable backend identifier.
+        backend: String,
+        /// Backend operation that failed.
+        operation: String,
+        /// Exit status, reported backend error, or parsing detail.
+        message: String,
+    },
 }
 
 impl AexError {

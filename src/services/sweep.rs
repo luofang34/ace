@@ -6,9 +6,12 @@ use rayon::prelude::*;
 
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{GRAVITY_M_S2, parse_quantity};
-use crate::domain::result::{SweepResult, SweepRow};
+use crate::domain::result::{ResultProvenance, SweepResult, SweepRow};
 use crate::domain::schema::EngineProfile;
+use crate::models::breguet;
+use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
 use crate::services::analysis::ApplicationService;
+use crate::services::requirements::evaluate_requirements;
 
 #[derive(Debug, Clone)]
 pub(crate) struct SweepVariable {
@@ -84,6 +87,7 @@ impl ApplicationService {
             rows,
             deterministic_ordering: true,
             warnings: Vec::new(),
+            provenance: sweep_provenance(),
         })
     }
 
@@ -120,6 +124,12 @@ fn metric_values(
     mission: &crate::domain::result::MissionResult,
     metrics: &[String],
 ) -> AexResult<BTreeMap<String, f64>> {
+    let breguet = breguet::estimate(
+        scenario,
+        performance.maximum_lift_to_drag_ratio,
+        mission.total_fuel_burn_kg,
+    )?;
+    let requirements = evaluate_requirements(scenario, mission, performance);
     metrics
         .iter()
         .map(|metric| {
@@ -128,6 +138,11 @@ fn metric_values(
                 "performance.stall_speed_landing" => performance.stall_speed_landing_m_s,
                 "performance.service_ceiling" => performance.service_ceiling_m,
                 "performance.maximum_level_speed" => performance.maximum_level_speed_m_s,
+                "performance.takeoff_field_length" => estimate_takeoff_distance_m(scenario),
+                "performance.landing_field_length" => estimate_landing_distance_m(scenario)?,
+                "aerodynamics.maximum_lift_to_drag_ratio" => performance.maximum_lift_to_drag_ratio,
+                "geometry.aspect_ratio" => scenario.aircraft.wing.aspect_ratio,
+                "geometry.wing_area" => scenario.aircraft.wing.area_m2,
                 "performance.wing_loading" => {
                     scenario.aircraft.mass.maximum_takeoff_mass_kg * GRAVITY_M_S2
                         / scenario.aircraft.wing.area_m2
@@ -135,6 +150,17 @@ fn metric_values(
                 "performance.thrust_or_power_loading" => installed_loading(scenario),
                 "mission.total_fuel" => mission.total_fuel_burn_kg,
                 "mission.completed_distance" | "mission.range" => mission.total_distance.value,
+                "mission.breguet_range" => breguet.range_m,
+                "mission.breguet_endurance" => breguet.endurance_s,
+                "mission.payload_mass" => scenario.mission.payload_mass_kg,
+                "feasibility.hard_constraints_passed" => {
+                    let passed = mission.completed
+                        && requirements
+                            .iter()
+                            .filter(|item| item.severity == "hard")
+                            .all(|item| item.passed);
+                    f64::from(u8::from(passed))
+                }
                 _ => {
                     return Err(AexError::validation(
                         "UNSUPPORTED_SWEEP_METRIC",
@@ -152,10 +178,15 @@ fn installed_loading(scenario: &crate::domain::schema::ResolvedScenario) -> f64 
     let mass = scenario.aircraft.mass.maximum_takeoff_mass_kg;
     match &scenario.engine {
         EngineProfile::Piston(profile) => {
-            profile.rated_power_w * f64::from(scenario.aircraft.propulsion.engine_count) / mass
+            profile.rated_power_w
+                * f64::from(scenario.aircraft.propulsion.engine_count)
+                * scenario.aircraft.propulsion.sizing_factor
+                / mass
         }
         EngineProfile::Turbofan(profile) => {
-            profile.sea_level_static_thrust_n * f64::from(scenario.aircraft.propulsion.engine_count)
+            profile.sea_level_static_thrust_n
+                * f64::from(scenario.aircraft.propulsion.engine_count)
+                * scenario.aircraft.propulsion.sizing_factor
                 / (mass * GRAVITY_M_S2)
         }
     }
@@ -211,4 +242,23 @@ fn split_value_unit(raw: &str) -> AexResult<(f64, String)> {
         _ => value,
     };
     Ok((value, unit.to_owned()))
+}
+
+fn sweep_provenance() -> ResultProvenance {
+    ResultProvenance {
+        method: "deterministic Cartesian parameter sweep".to_owned(),
+        backend: "native".to_owned(),
+        assumptions: vec![
+            "each row uses the resolved native conceptual models".to_owned(),
+            "rows are independent and retain stable input ordering".to_owned(),
+        ],
+        validity_range: vec!["one or two canonical design parameters".to_owned()],
+        units: BTreeMap::from([
+            ("physical_metrics".to_owned(), "SI".to_owned()),
+            ("feasibility_flags".to_owned(), "1".to_owned()),
+        ]),
+        warnings: vec![crate::domain::diagnostic::Diagnostic::limitation(
+            "Sweep precision does not increase the fidelity of the underlying models.",
+        )],
+    }
 }

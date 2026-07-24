@@ -2,6 +2,7 @@
 
 #![forbid(unsafe_code)]
 
+mod backends;
 mod charts;
 mod cli;
 mod domain;

@@ -38,12 +38,14 @@ pub(crate) fn evaluate(
             profile,
             scenario.propeller.as_ref(),
             scenario.aircraft.propulsion.engine_count,
+            scenario.aircraft.propulsion.sizing_factor,
             atmosphere,
             query,
         ),
         EngineProfile::Turbofan(profile) => evaluate_turbofan(
             profile,
             scenario.aircraft.propulsion.engine_count,
+            scenario.aircraft.propulsion.sizing_factor,
             atmosphere,
             query,
         ),
@@ -54,6 +56,7 @@ fn evaluate_piston(
     profile: &PistonProfile,
     propeller: Option<&PropellerProfile>,
     engine_count: u32,
+    sizing_factor: f64,
     atmosphere: &AtmosphereState,
     query: PropulsionQuery,
 ) -> AexResult<PropulsionState> {
@@ -69,7 +72,8 @@ fn evaluate_piston(
     let lapse = density_ratio
         .powf(profile.lapse_exponent)
         .max(profile.minimum_power_fraction);
-    let shaft_power = profile.rated_power_w * f64::from(engine_count) * lapse * query.throttle;
+    let shaft_power =
+        profile.rated_power_w * f64::from(engine_count) * sizing_factor * lapse * query.throttle;
     let efficiency = propeller_efficiency(propeller, query.true_airspeed_m_s, query.mode);
     let propulsive_power = shaft_power * efficiency;
     let static_reference_speed = 15.0;
@@ -118,6 +122,7 @@ fn propeller_efficiency(profile: &PropellerProfile, speed_m_s: f64, mode: Operat
 fn evaluate_turbofan(
     profile: &TurbofanProfile,
     engine_count: u32,
+    sizing_factor: f64,
     atmosphere: &AtmosphereState,
     query: PropulsionQuery,
 ) -> AexResult<PropulsionState> {
@@ -128,6 +133,7 @@ fn evaluate_turbofan(
     let installation_factor = 1.0 - profile.thrust_loss_fraction;
     let thrust = profile.sea_level_static_thrust_n
         * f64::from(engine_count)
+        * sizing_factor
         * lapse
         * query.throttle
         * installation_factor;

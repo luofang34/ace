@@ -18,13 +18,18 @@ use crate::charts::renderer::render_svg_blocking;
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::services::analysis::{ApplicationService, PointCondition};
+use crate::services::refinement::RefinementSpec;
 use crate::services::report::LIMITATION;
-use crate::services::sweep::SweepVariable;
 use crate::services::validator::{error_validation, validate_document_value};
+use parameters::{
+    dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
+    sweep_variable,
+};
 use schema::{
-    CompareRequest, ConstraintRequest, ExplainRequest, GetProfileRequest, ListProfilesRequest,
-    PayloadRangeRequest, PointRequest, ReportRequest, ScenarioRequest, SweepRequest,
-    SweepVariableRequest, ValidateDocumentRequest,
+    AutoRefineDesignRequest, CompareDesignsRequest, CompareRequest, ConstraintRequest,
+    CreateDesignRequest, EvaluateFeasibilityRequest, ExplainRequest, GetProfileRequest,
+    ListProfilesRequest, PayloadRangeRequest, PointRequest, ReportRequest, ScenarioRequest,
+    SweepRequest, UpdateDesignRequest, ValidateDocumentRequest,
 };
 
 #[derive(Clone)]
@@ -115,6 +120,107 @@ impl AexMcpServer {
             ));
         }
         json_output(profile)
+    }
+
+    #[tool(description = "Create an editable design from a C172, transport, or scenario baseline")]
+    fn create_design(
+        &self,
+        Parameters(request): Parameters<CreateDesignRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        let display_name = request
+            .display_name
+            .unwrap_or_else(|| request.design_id.clone());
+        let design_root = request
+            .design_root
+            .map_or_else(|| PathBuf::from(".ace/designs"), PathBuf::from);
+        let source = request.source_scenario_path.as_deref().map(Path::new);
+        let design = self
+            .service
+            .create_design_blocking(
+                &request.design_id,
+                &display_name,
+                &design_root,
+                request.baseline.as_deref(),
+                source,
+                &request.parameters,
+            )
+            .map_err(mcp_error)?;
+        json_output(json!({
+            "design": design,
+            "next_actions": ["update_design_parameters", "evaluate_feasibility"],
+        }))
+    }
+
+    #[tool(description = "Update canonical design parameters using backend-neutral dotted paths")]
+    fn update_design_parameters(
+        &self,
+        Parameters(request): Parameters<UpdateDesignRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        let scenario_path = Path::new(&request.scenario_path);
+        let design = self
+            .service
+            .update_design_parameters_blocking(scenario_path, &request.updates)
+            .map_err(mcp_error)?;
+        let resolved = self
+            .service
+            .resolve_blocking(scenario_path, &BTreeMap::new())
+            .map_err(mcp_error)?;
+        json_output(json!({ "design": design, "resolved_design": resolved }))
+    }
+
+    #[tool(
+        description = "Evaluate conceptual feasibility with native analysis and optional explicit OpenVSP refinement"
+    )]
+    fn evaluate_feasibility(
+        &self,
+        Parameters(request): Parameters<EvaluateFeasibilityRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        let artifact = request.artifact_path.as_deref().map(Path::new);
+        let result = self
+            .service
+            .evaluate_feasibility_blocking(
+                Path::new(&request.scenario_path),
+                request.backend.as_deref().unwrap_or("native"),
+                artifact,
+            )
+            .map_err(mcp_error)?;
+        json_output(result)
+    }
+
+    #[tool(
+        description = "Auto-refine a fixed-wing concept until requirements and conceptual aero-structural screens converge"
+    )]
+    fn auto_refine_design(
+        &self,
+        Parameters(request): Parameters<AutoRefineDesignRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        let display_name = request
+            .display_name
+            .unwrap_or_else(|| request.output_design_id.clone());
+        let design_root = request
+            .design_root
+            .map_or_else(|| PathBuf::from(".ace/designs"), PathBuf::from);
+        let artifact_path = request.artifact_path.as_deref().map(Path::new);
+        let result = self
+            .service
+            .auto_refine_design_blocking(RefinementSpec {
+                scenario_path: Path::new(&request.scenario_path),
+                output_design_id: &request.output_design_id,
+                display_name: &display_name,
+                design_root: &design_root,
+                backend: request.backend.as_deref().unwrap_or("native"),
+                artifact_path,
+                max_iterations: request.max_iterations.unwrap_or(12),
+            })
+            .map_err(mcp_error)?;
+        json_output(result)
+    }
+
+    #[tool(
+        description = "List native and optional analysis backends with availability and capabilities"
+    )]
+    fn list_analysis_backends(&self) -> Result<Json<ObjectOutput>, ErrorData> {
+        json_output(json!({ "backends": self.service.list_analysis_backends() }))
     }
 
     #[tool(description = "Resolve a scenario, profiles, units, assumptions, and overrides")]
@@ -259,6 +365,22 @@ impl AexMcpServer {
         json_output(result)
     }
 
+    #[tool(description = "Compare selected conceptual metrics across editable designs")]
+    fn compare_designs(
+        &self,
+        Parameters(request): Parameters<CompareDesignsRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        let paths = request
+            .design_paths
+            .into_iter()
+            .map(PathBuf::from)
+            .collect::<Vec<_>>();
+        self.service
+            .compare_blocking(&paths, &request.metrics)
+            .map_err(mcp_error)
+            .and_then(json_output)
+    }
+
     #[tool(description = "Explain a persisted result value and its governing low-fidelity model")]
     fn explain_result(
         &self,
@@ -366,86 +488,4 @@ fn json_output<T: serde::Serialize>(value: T) -> Result<Json<ObjectOutput>, Erro
 
 fn mcp_error<E: std::fmt::Display>(source: E) -> ErrorData {
     ErrorData::internal_error(source.to_string(), None)
-}
-
-fn sweep_variable(request: SweepVariableRequest) -> AexResult<SweepVariable> {
-    if let Some(values) = request.values {
-        if values.is_empty() {
-            return Err(AexError::validation(
-                "EMPTY_SWEEP_VALUES",
-                request.path,
-                "explicit value list cannot be empty",
-            ));
-        }
-        return Ok(SweepVariable {
-            path: request.path,
-            values,
-        });
-    }
-    let start = request.start.ok_or_else(|| {
-        AexError::validation("MISSING_SWEEP_START", &request.path, "start is required")
-    })?;
-    let stop = request.stop.ok_or_else(|| {
-        AexError::validation("MISSING_SWEEP_STOP", &request.path, "stop is required")
-    })?;
-    SweepVariable::linear(
-        request.path,
-        &start,
-        &stop,
-        request.count.unwrap_or(25),
-        request.logarithmic.unwrap_or(false),
-    )
-}
-
-fn parse_wing_loading(raw: &str) -> AexResult<f64> {
-    crate::cli::commands::parse_wing_loading(raw)
-}
-
-fn dotted_value<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
-    path.split('.')
-        .try_fold(value, |current, part| current.get(part))
-}
-
-fn infer_result_unit(path: &str) -> &'static str {
-    if path.contains("distance") || path.contains("range") {
-        "nmi display, m internal"
-    } else if path.contains("ceiling") || path.ends_with("_m") {
-        "m"
-    } else if path.contains("speed") {
-        "m/s"
-    } else if path.contains("fuel") || path.contains("mass") {
-        "kg"
-    } else {
-        "dimensionless or result-specific"
-    }
-}
-
-fn governing_equations(path: &str) -> Vec<&'static str> {
-    if path.contains("ceiling") {
-        vec![
-            "ROC = excess power / weight",
-            "bounded root: ROC - threshold = 0",
-        ]
-    } else if path.contains("range") || path.contains("distance") {
-        vec![
-            "distance = true airspeed × segment duration",
-            "fuel flow from BSFC or TSFC",
-        ]
-    } else {
-        vec!["CD = CD0 + k CL² + CDadditional + CDwave", "drag = q S CD"]
-    }
-}
-
-fn input_dependencies(path: &str) -> Vec<&'static str> {
-    if path.contains("ceiling") {
-        vec![
-            "aircraft mass",
-            "wing geometry",
-            "drag polar",
-            "propulsion lapse",
-            "ISA atmosphere",
-        ]
-    } else {
-        vec!["resolved aircraft", "mission", "selected profiles"]
-    }
 }

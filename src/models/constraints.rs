@@ -194,10 +194,15 @@ fn installed_loading(scenario: &ResolvedScenario) -> f64 {
     let mass = scenario.aircraft.mass.maximum_takeoff_mass_kg;
     match &scenario.engine {
         EngineProfile::Piston(profile) => {
-            profile.rated_power_w * f64::from(scenario.aircraft.propulsion.engine_count) / mass
+            profile.rated_power_w
+                * f64::from(scenario.aircraft.propulsion.engine_count)
+                * scenario.aircraft.propulsion.sizing_factor
+                / mass
         }
         EngineProfile::Turbofan(profile) => {
-            profile.sea_level_static_thrust_n * f64::from(scenario.aircraft.propulsion.engine_count)
+            profile.sea_level_static_thrust_n
+                * f64::from(scenario.aircraft.propulsion.engine_count)
+                * scenario.aircraft.propulsion.sizing_factor
                 / (mass * GRAVITY_M_S2)
         }
     }

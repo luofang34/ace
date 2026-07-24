@@ -14,6 +14,7 @@ use crate::domain::schema::{
     ScenarioDocument, SegmentKind, Wing,
 };
 use crate::services::assumptions::collect_all_assumptions;
+use crate::services::overrides::apply_overrides;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
 use crate::services::requirement_resolution::resolve_requirements;
 use crate::storage::profile_store::ProfileRepository;
@@ -38,6 +39,8 @@ impl ScenarioResolver {
         require_schema_version(scenario_document.schema_version, "scenario")?;
         let directory = scenario_path.parent().unwrap_or_else(|| Path::new("."));
         let raw = &scenario_document.scenario;
+        let mut effective_overrides = raw.overrides.clone();
+        effective_overrides.extend(overrides.clone());
         let mut aircraft_value = read_yaml_value_blocking(&directory.join(&raw.aircraft))?;
         let mut mission_value = read_yaml_value_blocking(&directory.join(&raw.mission))?;
         let mut requirements_value = read_yaml_value_blocking(&directory.join(&raw.requirements))?;
@@ -45,7 +48,7 @@ impl ScenarioResolver {
             &mut aircraft_value,
             &mut mission_value,
             &mut requirements_value,
-            overrides,
+            &effective_overrides,
         )?;
         let aircraft_document: AircraftDocument =
             deserialize_value(aircraft_value.clone(), "aircraft")?;
@@ -131,63 +134,6 @@ fn require_schema_version(version: u32, path: &str) -> AexResult<()> {
     }
 }
 
-fn apply_overrides(
-    aircraft: &mut Value,
-    mission: &mut Value,
-    requirements: &mut Value,
-    overrides: &BTreeMap<String, String>,
-) -> AexResult<()> {
-    for (path, raw_value) in overrides {
-        let parts: Vec<&str> = path.split('.').collect();
-        let root = parts.first().copied().ok_or_else(|| {
-            AexError::validation("INVALID_OVERRIDE", path, "override path is empty")
-        })?;
-        let document = match root {
-            "aircraft" => &mut *aircraft,
-            "mission" => &mut *mission,
-            "requirements" => &mut *requirements,
-            _ => {
-                return Err(AexError::validation(
-                    "INVALID_OVERRIDE",
-                    path,
-                    "path must begin with aircraft, mission, or requirements",
-                ));
-            }
-        };
-        set_path(document, &parts, Value::String(raw_value.clone()), path)?;
-    }
-    Ok(())
-}
-
-fn set_path(target: &mut Value, parts: &[&str], value: Value, full_path: &str) -> AexResult<()> {
-    if parts.is_empty() {
-        return Err(AexError::validation(
-            "INVALID_OVERRIDE",
-            full_path,
-            "override must address a field",
-        ));
-    }
-    let mapping = target.as_mapping_mut().ok_or_else(|| {
-        AexError::validation("INVALID_OVERRIDE", full_path, "path is not a mapping")
-    })?;
-    let key = Value::String(parts[0].to_owned());
-    if parts.len() == 1 {
-        if !mapping.contains_key(&key) {
-            return Err(AexError::validation(
-                "INVALID_OVERRIDE",
-                full_path,
-                "field does not exist",
-            ));
-        }
-        mapping.insert(key, value);
-        return Ok(());
-    }
-    let nested = mapping.get_mut(&key).ok_or_else(|| {
-        AexError::validation("INVALID_OVERRIDE", full_path, "field does not exist")
-    })?;
-    set_path(nested, &parts[1..], value, full_path)
-}
-
 pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft> {
     let raw = document.aircraft;
     let mass = resolve_mass(&raw.mass)?;
@@ -247,6 +193,12 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
             profile: raw.propulsion.profile,
             engine_count: raw.propulsion.engine_count,
             propeller_profile: raw.propulsion.propeller_profile,
+            sizing_factor: bounded(
+                raw.propulsion.sizing_factor,
+                0.5,
+                2.0,
+                "aircraft.propulsion.sizing_factor",
+            )?,
         },
         limits,
     })
@@ -467,4 +419,16 @@ fn fraction(value: f64, path: &str) -> AexResult<f64> {
 
 fn optional_fraction(value: Option<f64>, path: &str) -> AexResult<Option<f64>> {
     value.map(|item| fraction(item, path)).transpose()
+}
+
+fn bounded(value: f64, lower: f64, upper: f64, path: &str) -> AexResult<f64> {
+    if value >= lower && value <= upper && value.is_finite() {
+        Ok(value)
+    } else {
+        Err(AexError::validation(
+            "VALUE_OUT_OF_RANGE",
+            path,
+            format!("value must be between {lower} and {upper}"),
+        ))
+    }
 }

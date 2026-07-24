@@ -69,8 +69,19 @@ cargo run --bin aex -- mcp serve
 
 The server exposes validation, profile lookup, scenario resolution, point
 performance, mission simulation, constraints, payload-range, one- and
-two-dimensional sweeps, comparison, explanation, and report tools. It writes
-protocol messages only to stdout; diagnostics use `tracing` on stderr.
+two-dimensional sweeps, comparison, explanation, report, and editable
+aircraft-design experiment tools. `auto_refine_design` performs a bounded
+native search, requires conceptual aerodynamic, structural, mission-power, and
+requirement gates to pass, writes a new design, and can run an explicit final
+OpenVSP verification. It writes protocol messages only to stdout; diagnostics
+use `tracing` on stderr.
+
+Native conceptual geometry and performance analysis are always available.
+OpenVSP is discovered automatically when its headless `vspscript` executable
+is installed, or it can be configured with `ACE_OPENVSP_EXECUTABLE`. Selecting
+the `openvsp` backend generates a `.vsp3` artifact, computes wetted area, and
+runs a VSPAERO polar refinement. An OpenVSP failure is returned as a backend
+error; it never causes an implicit substitution with native estimates.
 
 ## Model scope
 
@@ -78,7 +89,11 @@ The MVP implements ISA through 20 km, a parabolic drag polar with optional
 transonic drag rise, density-lapsed piston power, a simple turbofan thrust/TSFC
 deck, bounded speed and ceiling solves, segment mission integration,
 constraint diagrams, payload-range, requirement margins, SVG charts, and
-content-addressed run manifests.
+content-addressed run manifests. Concept-design feasibility also includes a
+bounded weight iteration, empirical tail sizing, Breguet range/endurance, and
+takeoff/landing estimates, mission operating-point power reserve, and a
+conceptual wing-spar/tail-volume structural screen with explicit provenance
+and validity limits.
 
 The C172-class and B777-300ER-class files are calibration examples rather than
 digital twins. Their metadata explicitly prohibits certification use.
@@ -95,4 +110,3 @@ See [architecture decisions](docs/architecture-decisions.md),
 
 The offline gate runs formatting, Clippy with warnings denied, all unit and
 integration tests, missing-doc and intra-doc-link checks, and a release build.
-
