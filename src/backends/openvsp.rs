@@ -271,8 +271,7 @@ void main()
     PrintErrors();
     Print( "ACE_COMPLETE=1" );
 }}
-"#,
-        center_of_gravity_x = center_of_gravity_x,
+"#
     ))
 }
 

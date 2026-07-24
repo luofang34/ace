@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - rust-mvp
+  push:
+    branches:
+      - rust-mvp
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install --yes libfontconfig1-dev
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c
+        with:
+          toolchain: 1.88.0
+          components: rustfmt, clippy
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
+      - name: Run repository CI
+        run: ./ci.sh
