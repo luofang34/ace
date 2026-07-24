@@ -10,8 +10,7 @@ fi
 
 status=0
 while IFS= read -r source_file; do
-    line_count="$(wc -l < "${source_file}")"
-    line_count="${line_count//[[:space:]]/}"
+    line_count="$(awk 'END { print NR }' "${source_file}")"
 
     limit=500
     if [[ "$(basename "${source_file}")" == "lib.rs" ]]; then
