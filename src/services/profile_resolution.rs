@@ -118,6 +118,16 @@ fn parse_turbofan_profile(raw: RawProfile) -> AexResult<TurbofanProfile> {
             "installation.nacelle_drag_area",
             Dimension::Area,
         )?,
+        overall_length_m: profile_optional_quantity(
+            &raw.parameters,
+            "dimensions.overall_length",
+            Dimension::Length,
+        )?,
+        maximum_diameter_m: profile_optional_quantity(
+            &raw.parameters,
+            "dimensions.maximum_diameter",
+            Dimension::Length,
+        )?,
         maximum_mach: profile_number(&raw.parameters, "limits.maximum_mach")?,
         maximum_altitude_m: profile_quantity(
             &raw.parameters,

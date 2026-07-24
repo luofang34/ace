@@ -439,6 +439,8 @@ pub(crate) struct TurbofanProfile {
     pub(crate) cruise_reference_mach: f64,
     pub(crate) thrust_loss_fraction: f64,
     pub(crate) nacelle_drag_area_m2: f64,
+    pub(crate) overall_length_m: Option<f64>,
+    pub(crate) maximum_diameter_m: Option<f64>,
     pub(crate) maximum_mach: f64,
     pub(crate) maximum_altitude_m: f64,
 }

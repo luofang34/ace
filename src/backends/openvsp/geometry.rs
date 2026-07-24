@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::backends::contracts::GeometryOutput;
 use crate::domain::diagnostic::AexResult;
-use crate::domain::schema::ResolvedScenario;
+use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::models::concept_geometry::ConceptGeometry;
 
 use super::script_string;
@@ -39,20 +39,40 @@ fn blended_wing_body_script(scenario: &ResolvedScenario, artifact: &Path) -> Aex
         inner_span * (1.0 + middle_ratio) + outer_span * middle_ratio * (1.0 + tip_ratio);
     let root_chord = wing.area_m2 / area_denominator;
     let middle_chord = root_chord * middle_ratio;
+    let center_sweep_deg = (0.25 * (root_chord - middle_chord) / inner_span)
+        .atan()
+        .to_degrees();
+    let (engine_length, engine_diameter) = turbofan_envelope(scenario);
     let values = [
         ("__INNER_SPAN__", decimal(inner_span)),
         ("__OUTER_SPAN__", decimal(outer_span)),
         ("__ROOT_CHORD__", decimal(root_chord)),
         ("__MIDDLE_CHORD__", decimal(middle_chord)),
         ("__TIP_CHORD__", decimal(middle_chord * tip_ratio)),
+        ("__CENTER_SWEEP_DEG__", decimal(center_sweep_deg)),
         (
             "__SWEEP_DEG__",
             decimal(wing.sweep_quarter_chord_rad.to_degrees()),
+        ),
+        ("__ENGINE_LENGTH__", decimal(engine_length)),
+        (
+            "__ENGINE_FINE_RATIO__",
+            decimal(engine_length / engine_diameter),
         ),
         ("__ENGINE_X__", decimal(root_chord * 0.58)),
         ("__ARTIFACT__", script_string(artifact)?),
     ];
     Ok(render_template(BLENDED_WING_BODY_TEMPLATE, &values))
+}
+
+fn turbofan_envelope(scenario: &ResolvedScenario) -> (f64, f64) {
+    match &scenario.engine {
+        EngineProfile::Turbofan(profile) => (
+            profile.overall_length_m.unwrap_or(1.888),
+            profile.maximum_diameter_m.unwrap_or(1.888 / 3.0),
+        ),
+        EngineProfile::Piston(_) => (1.888, 1.888 / 3.0),
+    }
 }
 
 fn conventional_geometry_script(

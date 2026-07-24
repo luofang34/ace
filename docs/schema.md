@@ -40,3 +40,7 @@ scenario:
 
 Call-specific overrides take precedence over persisted scenario overrides.
 Both are validated against the same typed canonical models.
+
+Turbofan profiles may provide `dimensions.overall_length` and
+`dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
+retains conservative defaults when they are absent.

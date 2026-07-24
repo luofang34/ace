@@ -217,6 +217,8 @@ void main()
     ReadVSPFile( "{artifact}" );
     array<string> fuselages = FindGeomsWithName( "ACE_Fuselage" );
     DeleteGeomVec( fuselages );
+    array<string> engine_envelopes = FindGeomsWithName( "ACE_Engine_Envelope" );
+    DeleteGeomVec( engine_envelopes );
     Update();
 
     SetAnalysisInputDefaults( "VSPAEROComputeGeometry" );
@@ -326,7 +328,7 @@ fn backend_failure(operation: &str, output: &str, code: Option<i32>) -> AexError
 
 fn openvsp_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance {
     if is_blended_wing_body(scenario) {
-        return blended_wing_body_geometry_provenance();
+        return blended_wing_body_geometry_provenance(scenario);
     }
     ResultProvenance {
         method: "OpenVSP parametric geometry and CompGeom".to_owned(),
@@ -346,7 +348,7 @@ fn openvsp_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance 
     }
 }
 
-fn blended_wing_body_geometry_provenance() -> ResultProvenance {
+fn blended_wing_body_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance {
     ResultProvenance {
         method: "OpenVSP two-panel flying-wing geometry and CompGeom".to_owned(),
         backend: "openvsp".to_owned(),
@@ -354,7 +356,10 @@ fn blended_wing_body_geometry_provenance() -> ResultProvenance {
             "two spanwise panels approximate the blended centerbody and outer wing".to_owned(),
             "modified five-digit sections with a three-degree upward trailing edge approximate reflex"
                 .to_owned(),
-            "one aft pod represents the PW306 installation envelope".to_owned(),
+            format!(
+                "one aft pod represents the {} installation envelope",
+                scenario.engine.profile_id()
+            ),
             "OpenVSP component parameters remain adapter-internal".to_owned(),
         ],
         validity_range: vec!["visual and low-order tailless BWB concepts".to_owned()],

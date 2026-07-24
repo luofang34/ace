@@ -50,3 +50,38 @@ fn blended_wing_script_is_tailless_and_reflexed() -> Result<(), Box<dyn std::err
     assert!(script.contains("ACE_Engine_Envelope"));
     Ok(())
 }
+
+#[test]
+fn blended_wing_center_has_parallel_opposite_edges() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("bwb.vsp3"))?;
+    let semispan = scenario.aircraft.wing.span_m * 0.5;
+    let inner_span = semispan * 0.23;
+    let outer_span = semispan - inner_span;
+    let area_denominator = inner_span * 1.55 + outer_span * 0.55 * 1.16;
+    let root_chord = scenario.aircraft.wing.area_m2 / area_denominator;
+    let middle_chord = root_chord * 0.55;
+    let sweep = (0.25 * (root_chord - middle_chord) / inner_span)
+        .atan()
+        .to_degrees();
+    assert!(script.contains(&format!(
+        "SetParmVal( wing, \"Sweep\", \"XSec_1\", {sweep:.12} )"
+    )));
+    Ok(())
+}
+
+#[test]
+fn vspaero_excludes_the_non_lifting_engine_envelope() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    let script = super::analysis_script(&scenario, std::path::Path::new("bwb.vsp3"))?;
+    assert!(script.contains("FindGeomsWithName( \"ACE_Engine_Envelope\" )"));
+    assert!(script.contains("DeleteGeomVec( engine_envelopes )"));
+    Ok(())
+}

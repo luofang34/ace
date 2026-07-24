@@ -1,0 +1,32 @@
+schema_version: 1
+profile:
+  id: engine.honeywell_htf7700l
+  version: 1
+  type: turbofan_engine
+  model: propulsion.turbofan_simple_deck
+  metadata:
+    display_name: Honeywell HTF7700L / AS907-2-1S
+    source: EASA TCDS IM.E.058 and Honeywell HTF7000 family data; TSFC and installation losses are conceptual assumptions
+    confidence: low
+  parameters:
+    sea_level_static_thrust: 34.10 kN
+    dry_mass: 696 kg
+    bypass_ratio: 4.2
+    dimensions:
+      overall_length: 2.282 m
+      maximum_diameter: 1.340 m
+    thrust_lapse:
+      altitude_exponent: 0.72
+      mach_linear_coefficient: 0.30
+      minimum_fraction: 0.12
+    tsfc:
+      sea_level_takeoff: 0.054 kg/N/hr
+      cruise_reference: 0.065 kg/N/hr
+      cruise_reference_altitude: 35000 ft
+      cruise_reference_mach: 0.80
+    installation:
+      thrust_loss_fraction: 0.05
+      nacelle_drag_area: 0.48 m^2
+    limits:
+      maximum_mach: 0.84
+      maximum_altitude: 45000 ft
