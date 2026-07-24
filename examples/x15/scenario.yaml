@@ -1,0 +1,7 @@
+schema_version: 1
+scenario:
+  id: x15-speed-mission
+  name: X-15-Class Speed Mission
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml

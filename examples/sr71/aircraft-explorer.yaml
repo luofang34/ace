@@ -1,0 +1,7 @@
+schema_version: 1
+project:
+  id: sr71-envelope-probe
+  name: SR-71-Class Model-Envelope Evaluation
+  default_unit_system: aviation_us
+  artifact_directory: artifacts/runs
+  profile_directories: [profiles]
