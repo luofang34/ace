@@ -7,10 +7,11 @@ use crate::backends::contracts::{
     AnalysisBackend, AnalysisRequest, GeometryBackend, GeometryRequest, ResultProvenance,
 };
 use crate::domain::diagnostic::{AexResult, Diagnostic};
-use crate::domain::schema::{EngineProfile, ResolvedScenario};
+use crate::domain::schema::{EngineProfile, ResolvedScenario, ScenarioDocument};
 use crate::services::analysis::ApplicationService;
 use crate::services::design_experiments::FeasibilityResult;
 use crate::storage::design_store::DesignRecord;
+use crate::storage::project_store::read_yaml_blocking;
 
 #[derive(Debug, Clone)]
 pub(crate) struct RefinementSpec<'a> {
@@ -126,13 +127,14 @@ impl ApplicationService {
             history.push(step(iteration, &current, &baseline));
         }
         let selected_parameters = parameters(current.state, &baseline);
+        let output_parameters = output_parameters(spec.scenario_path, &selected_parameters)?;
         let design = self.create_design_blocking(
             spec.output_design_id,
             spec.display_name,
             spec.design_root,
             None,
             Some(spec.scenario_path),
-            &selected_parameters,
+            &output_parameters,
         )?;
         let evaluation = self.evaluate_feasibility_blocking(
             &design.scenario_path,
@@ -198,6 +200,16 @@ impl ApplicationService {
             conceptually_feasible: analysis.feasible.unwrap_or(false),
         })
     }
+}
+
+fn output_parameters(
+    scenario_path: &Path,
+    selected: &BTreeMap<String, String>,
+) -> AexResult<BTreeMap<String, String>> {
+    let source: ScenarioDocument = read_yaml_blocking(scenario_path)?;
+    let mut output = source.scenario.overrides;
+    output.extend(selected.clone());
+    Ok(output)
 }
 
 impl DesignState {

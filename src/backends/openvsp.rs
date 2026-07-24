@@ -19,7 +19,7 @@ use crate::domain::schema::{ResolvedScenario, SegmentKind};
 mod geometry;
 mod parsing;
 
-use geometry::geometry_script;
+use geometry::{geometry_script, is_blended_wing_body};
 use parsing::{marker_number, maximum_lift_to_drag_ratio, polar_points, stability_summary};
 
 #[derive(Debug, Clone)]
@@ -75,10 +75,14 @@ impl GeometryBackend for OpenVspBackend {
         let wetted_area = marker_number(&output, "ACE_WETTED_AREA_M2=")?;
         let mut metrics = native.metrics;
         metrics.wetted_area = QuantityOutput::si(wetted_area, "m^2");
+        if is_blended_wing_body(request.scenario) {
+            metrics.horizontal_tail_area = QuantityOutput::si(0.0, "m^2");
+            metrics.vertical_tail_area = QuantityOutput::si(0.0, "m^2");
+        }
         Ok(GeometryOutput {
             metrics,
             artifact_path: Some(artifact),
-            provenance: openvsp_geometry_provenance(),
+            provenance: openvsp_geometry_provenance(request.scenario),
         })
     }
 }
@@ -117,7 +121,7 @@ impl AnalysisBackend for OpenVspBackend {
             requirements: Vec::new(),
             feasible: None,
             failed_constraints: Vec::new(),
-            provenance: openvsp_analysis_provenance(),
+            provenance: openvsp_analysis_provenance(request.scenario),
         })
     }
 }
@@ -131,6 +135,7 @@ impl OpenVspBackend {
             version: self.version.clone(),
             capabilities: vec![
                 "vsp3_geometry".to_owned(),
+                "tailless_bwb_geometry".to_owned(),
                 "wetted_area".to_owned(),
                 "vspaero_polar".to_owned(),
                 "static_pitching_moment".to_owned(),
@@ -191,8 +196,12 @@ fn analysis_script(scenario: &ResolvedScenario, artifact: &Path) -> AexResult<St
     let artifact = script_string(artifact)?;
     let mach = cruise_mach(scenario).clamp(0.05, 0.90);
     let concept = crate::models::concept_geometry::ConceptGeometry::from_scenario(scenario);
-    let center_of_gravity_x =
-        concept.wing_x_m + 0.30 * scenario.aircraft.wing.area_m2 / scenario.aircraft.wing.span_m;
+    let mean_chord = scenario.aircraft.wing.area_m2 / scenario.aircraft.wing.span_m;
+    let center_of_gravity_x = if is_blended_wing_body(scenario) {
+        0.30 * mean_chord
+    } else {
+        concept.wing_x_m + 0.30 * mean_chord
+    };
     Ok(format!(
         r#"void PrintErrors()
 {{
@@ -315,7 +324,10 @@ fn backend_failure(operation: &str, output: &str, code: Option<i32>) -> AexError
     }
 }
 
-fn openvsp_geometry_provenance() -> ResultProvenance {
+fn openvsp_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance {
+    if is_blended_wing_body(scenario) {
+        return blended_wing_body_geometry_provenance();
+    }
     ResultProvenance {
         method: "OpenVSP parametric geometry and CompGeom".to_owned(),
         backend: "openvsp".to_owned(),
@@ -334,14 +346,41 @@ fn openvsp_geometry_provenance() -> ResultProvenance {
     }
 }
 
-fn openvsp_analysis_provenance() -> ResultProvenance {
+fn blended_wing_body_geometry_provenance() -> ResultProvenance {
+    ResultProvenance {
+        method: "OpenVSP two-panel flying-wing geometry and CompGeom".to_owned(),
+        backend: "openvsp".to_owned(),
+        assumptions: vec![
+            "two spanwise panels approximate the blended centerbody and outer wing".to_owned(),
+            "modified five-digit sections with a three-degree upward trailing edge approximate reflex"
+                .to_owned(),
+            "one aft pod represents the PW306 installation envelope".to_owned(),
+            "OpenVSP component parameters remain adapter-internal".to_owned(),
+        ],
+        validity_range: vec!["visual and low-order tailless BWB concepts".to_owned()],
+        units: BTreeMap::from([
+            ("area".to_owned(), "m^2".to_owned()),
+            ("length".to_owned(), "m".to_owned()),
+        ]),
+        warnings: vec![Diagnostic::limitation(
+            "The BWB geometry does not resolve inlet flow, internal volume, control-system sizing, or structural load paths.",
+        )],
+    }
+}
+
+fn openvsp_analysis_provenance(scenario: &ResolvedScenario) -> ResultProvenance {
+    let excluded_geometry = if is_blended_wing_body(scenario) {
+        "the engine envelope is non-lifting in the vortex-lattice interpretation"
+    } else {
+        "fuselage excluded from the lifting-surface solve"
+    };
     ResultProvenance {
         method: "VSPAERO vortex-lattice alpha sweep".to_owned(),
         backend: "openvsp".to_owned(),
         assumptions: vec![
             "six alpha points from -2 to 8 degrees".to_owned(),
             "single mission cruise Mach".to_owned(),
-            "fuselage excluded from the lifting-surface solve".to_owned(),
+            excluded_geometry.to_owned(),
             "pitching moments referenced to an assumed CG at 30% mean aerodynamic chord".to_owned(),
         ],
         validity_range: vec![

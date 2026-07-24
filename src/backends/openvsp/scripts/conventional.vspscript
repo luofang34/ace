@@ -1,0 +1,82 @@
+void PrintErrors()
+{
+    while ( GetNumTotalErrors() > 0 )
+    {
+        ErrorObj err = PopLastError();
+        Print( "ACE_ERROR=" + err.GetErrorString() );
+    }
+}
+
+void SetEllipse( string surface, int index, double width, double height )
+{
+    ChangeXSecShape( surface, index, XS_ELLIPSE );
+    string section = GetXSec( surface, index );
+    SetParmVal( GetXSecParm( section, "Ellipse_Width" ), width );
+    SetParmVal( GetXSecParm( section, "Ellipse_Height" ), height );
+}
+
+void main()
+{
+    ClearVSPModel();
+
+    string fuselage = AddGeom( "FUSELAGE", "" );
+    SetGeomName( fuselage, "ACE_Fuselage" );
+    SetParmVal( fuselage, "Length", "Design", __FUSELAGE_LENGTH__ );
+    string fuselage_surface = GetXSecSurf( fuselage, 0 );
+    SetEllipse( fuselage_surface, 1, __NOSE_WIDTH__, __NOSE_HEIGHT__ );
+    SetEllipse( fuselage_surface, 2, __FUSELAGE_WIDTH__, __FUSELAGE_HEIGHT__ );
+    SetEllipse( fuselage_surface, 3, __TAIL_WIDTH__, __TAIL_HEIGHT__ );
+
+    string wing = AddGeom( "WING", "" );
+    SetGeomName( wing, "ACE_Main_Wing" );
+    SetParmVal( wing, "TotalArea", "WingGeom", __WING_AREA__ );
+    SetParmVal( wing, "TotalAR", "WingGeom", __ASPECT_RATIO__ );
+    SetParmVal( wing, "Taper", "XSec_1", __TAPER_RATIO__ );
+    SetParmVal( wing, "Sweep", "XSec_1", __SWEEP_DEG__ );
+    SetParmVal( wing, "Dihedral", "XSec_1", __DIHEDRAL_DEG__ );
+    SetParmVal( wing, "Twist", "XSec_1", __TWIST_DEG__ );
+    SetParmVal( wing, "X_Rel_Location", "XForm", __WING_X__ );
+    SetParmVal( wing, "Z_Rel_Location", "XForm", __WING_Z__ );
+    SetParmVal( wing, "Sym_Planar_Flag", "Sym", SYM_XZ );
+    SetParmVal( wing, "Camber", "XSecCurve_0", __WING_CAMBER__ );
+    SetParmVal( wing, "CamberLoc", "XSecCurve_0", 0.4 );
+    SetParmVal( wing, "ThickChord", "XSecCurve_0", 0.12 );
+    SetParmVal( wing, "Camber", "XSecCurve_1", __WING_CAMBER__ );
+    SetParmVal( wing, "CamberLoc", "XSecCurve_1", 0.4 );
+    SetParmVal( wing, "ThickChord", "XSecCurve_1", 0.12 );
+
+    string horizontal_tail = AddGeom( "WING", "" );
+    SetGeomName( horizontal_tail, "ACE_Horizontal_Tail" );
+    SetParmVal( horizontal_tail, "TotalArea", "WingGeom", __HORIZONTAL_TAIL_AREA__ );
+    SetParmVal( horizontal_tail, "TotalAR", "WingGeom", 4.0 );
+    SetParmVal( horizontal_tail, "Taper", "XSec_1", 0.55 );
+    SetParmVal( horizontal_tail, "X_Rel_Location", "XForm", __TAIL_X__ );
+    SetParmVal( horizontal_tail, "Z_Rel_Location", "XForm", __TAIL_Z__ );
+    SetParmVal( horizontal_tail, "Sym_Planar_Flag", "Sym", SYM_XZ );
+
+    string vertical_tail = AddGeom( "WING", "" );
+    SetGeomName( vertical_tail, "ACE_Vertical_Tail" );
+    SetParmVal( vertical_tail, "TotalArea", "WingGeom", __VERTICAL_TAIL_AREA__ );
+    SetParmVal( vertical_tail, "TotalAR", "WingGeom", 1.8 );
+    SetParmVal( vertical_tail, "Taper", "XSec_1", 0.45 );
+    SetParmVal( vertical_tail, "X_Rel_Location", "XForm", __TAIL_X__ );
+    SetParmVal( vertical_tail, "Z_Rel_Location", "XForm", __TAIL_Z__ );
+    SetParmVal( vertical_tail, "X_Rel_Rotation", "XForm", 90.0 );
+    SetParmVal( vertical_tail, "Sym_Planar_Flag", "Sym", 0 );
+
+    Update();
+    WriteVSPFile( "__ARTIFACT__", SET_ALL );
+
+    SetAnalysisInputDefaults( "CompGeom" );
+    string result_id = ExecAnalysis( "CompGeom" );
+    array<double> wet_areas = GetDoubleResults( result_id, "Wet_Area" );
+    double wetted_area = 0.0;
+    for ( uint i = 0; i < wet_areas.size(); i++ )
+    {
+        wetted_area += wet_areas[i];
+    }
+    Print( "ACE_WETTED_AREA_M2=", false );
+    Print( wetted_area );
+    PrintErrors();
+    Print( "ACE_COMPLETE=1" );
+}

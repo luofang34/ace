@@ -31,3 +31,22 @@ fn c172_script_places_and_sizes_the_concept() -> Result<(), Box<dyn std::error::
     assert!(script.contains("SetEllipse"));
     Ok(())
 }
+
+#[test]
+fn blended_wing_script_is_tailless_and_reflexed() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("bwb.vsp3"))?;
+    assert!(!script.contains("ACE_Fuselage"));
+    assert!(!script.contains("ACE_Horizontal_Tail"));
+    assert!(script.contains("InsertXSec"));
+    assert!(script.contains("XS_FIVE_DIGIT_MOD"));
+    assert!(script.contains("TE_Flap_Deflection"));
+    assert!(script.contains("ACE_Engine_Envelope"));
+    Ok(())
+}

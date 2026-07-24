@@ -81,6 +81,13 @@ When `backend: "openvsp"` is selected, OpenVSP runs once on the chosen design;
 static pitch stability becomes a final verification gate, and any adapter
 failure is returned without fallback.
 
+OpenVSP geometry dispatches from the canonical `aircraft.configuration`.
+Configuration names containing `tailless`, `flying_wing`, or `blended_wing`
+produce a two-panel flying-wing `.vsp3` with a reflexed trailing-edge surrogate
+and a single aft engine envelope. CompGeom wetted area and VSPAERO results retain
+explicit BWB-specific validity warnings. The adapter does not claim inlet-flow,
+internal-volume, control-system, or structural-load-path fidelity.
+
 The structural screen is a sizing guardrail rather than substantiation. It does
 not cover detailed loads, joints, buckling, fatigue, flutter, or aeroelasticity.
 

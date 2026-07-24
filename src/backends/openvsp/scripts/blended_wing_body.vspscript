@@ -1,0 +1,71 @@
+void PrintErrors()
+{
+    while ( GetNumTotalErrors() > 0 )
+    {
+        ErrorObj err = PopLastError();
+        Print( "ACE_ERROR=" + err.GetErrorString() );
+    }
+}
+
+void SetReflexSection( string surface, int index, double ideal_cl, double thickness )
+{
+    ChangeXSecShape( surface, index, XS_FIVE_DIGIT_MOD );
+    string section = GetXSec( surface, index );
+    SetParmVal( GetXSecParm( section, "IdealCl" ), ideal_cl );
+    SetParmVal( GetXSecParm( section, "CamberLoc" ), 0.15 );
+    SetParmVal( GetXSecParm( section, "ThickChord" ), thickness );
+    SetParmVal( GetXSecParm( section, "TE_Flap_Flag" ), 1.0 );
+    SetParmVal( GetXSecParm( section, "TE_Flap_T" ), 0.18 );
+    SetParmVal( GetXSecParm( section, "TE_Flap_Deflection" ), -3.0 );
+}
+
+void main()
+{
+    ClearVSPModel();
+
+    string wing = AddGeom( "WING", "" );
+    SetGeomName( wing, "ACE_Main_Wing" );
+    InsertXSec( wing, 1, XS_FIVE_DIGIT_MOD );
+    SetDriverGroup( wing, 1, SPAN_WSECT_DRIVER, ROOTC_WSECT_DRIVER, TIPC_WSECT_DRIVER );
+    SetParmVal( wing, "Span", "XSec_1", __INNER_SPAN__ );
+    SetParmVal( wing, "Root_Chord", "XSec_1", __ROOT_CHORD__ );
+    SetParmVal( wing, "Tip_Chord", "XSec_1", __MIDDLE_CHORD__ );
+    SetParmVal( wing, "Sweep", "XSec_1", 55.0 );
+    SetParmVal( wing, "Sweep_Location", "XSec_1", 0.25 );
+    Update();
+    SetDriverGroup( wing, 2, SPAN_WSECT_DRIVER, ROOTC_WSECT_DRIVER, TIPC_WSECT_DRIVER );
+    SetParmVal( wing, "Span", "XSec_2", __OUTER_SPAN__ );
+    SetParmVal( wing, "Root_Chord", "XSec_2", __MIDDLE_CHORD__ );
+    SetParmVal( wing, "Tip_Chord", "XSec_2", __TIP_CHORD__ );
+    SetParmVal( wing, "Sweep", "XSec_2", __SWEEP_DEG__ );
+    SetParmVal( wing, "Sweep_Location", "XSec_2", 0.25 );
+    SetParmVal( wing, "Dihedral", "XSec_2", 2.5 );
+    SetParmVal( wing, "Twist", "XSec_2", -3.0 );
+    SetParmVal( wing, "Sym_Planar_Flag", "Sym", SYM_XZ );
+    string surface = GetXSecSurf( wing, 0 );
+    SetReflexSection( surface, 0, 0.35, 0.16 );
+    SetReflexSection( surface, 1, 0.30, 0.13 );
+    SetReflexSection( surface, 2, 0.20, 0.10 );
+
+    string engine = AddGeom( "POD", "" );
+    SetGeomName( engine, "ACE_Engine_Envelope" );
+    SetParmVal( engine, "Length", "Design", 1.888 );
+    SetParmVal( engine, "FineRatio", "Design", 3.0 );
+    SetParmVal( engine, "X_Rel_Location", "XForm", __ENGINE_X__ );
+    SetParmVal( engine, "Z_Rel_Location", "XForm", 0.25 );
+
+    Update();
+    WriteVSPFile( "__ARTIFACT__", SET_ALL );
+    SetAnalysisInputDefaults( "CompGeom" );
+    string result_id = ExecAnalysis( "CompGeom" );
+    array<double> wet_areas = GetDoubleResults( result_id, "Wet_Area" );
+    double wetted_area = 0.0;
+    for ( uint i = 0; i < wet_areas.size(); i++ )
+    {
+        wetted_area += wet_areas[i];
+    }
+    Print( "ACE_WETTED_AREA_M2=", false );
+    Print( wetted_area );
+    PrintErrors();
+    Print( "ACE_COMPLETE=1" );
+}
