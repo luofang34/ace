@@ -156,6 +156,10 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
             &raw.geometry.wing.sweep_quarter_chord,
             Dimension::Angle,
         )?,
+        center_body_edge_sweep_rad: optional_quantity(
+            raw.geometry.wing.center_body_edge_sweep.as_deref(),
+            Dimension::Angle,
+        )?,
     };
     let aerodynamics = Aerodynamics {
         model: raw.aerodynamics.model,

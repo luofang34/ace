@@ -41,6 +41,12 @@ scenario:
 Call-specific overrides take precedence over persisted scenario overrides.
 Both are validated against the same typed canonical models.
 
+`aircraft.geometry.wing.center_body_edge_sweep` is an optional angle for
+tailless blended-wing-body geometry. It denotes the positive magnitude of
+opposed center-body leading- and trailing-edge sweeps. OpenVSP translates it
+to the backend's quarter-chord representation without exposing backend
+parameter identifiers.
+
 Turbofan profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
 retains conservative defaults when they are absent.

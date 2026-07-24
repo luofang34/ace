@@ -29,3 +29,21 @@ fn override_preserves_numeric_and_quantity_types() -> Result<(), Box<dyn std::er
     );
     Ok(())
 }
+
+#[test]
+fn override_can_set_an_optional_scalar() -> Result<(), Box<dyn std::error::Error>> {
+    let mut document: Value = serde_yaml::from_str(
+        "aircraft:\n  geometry:\n    wing:\n      center_body_edge_sweep: null\n",
+    )?;
+    set_path(
+        &mut document,
+        &["aircraft", "geometry", "wing", "center_body_edge_sweep"],
+        "65 deg",
+        "aircraft.geometry.wing.center_body_edge_sweep",
+    )?;
+    assert_eq!(
+        document["aircraft"]["geometry"]["wing"]["center_body_edge_sweep"].as_str(),
+        Some("65 deg")
+    );
+    Ok(())
+}

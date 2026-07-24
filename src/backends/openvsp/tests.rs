@@ -77,6 +77,30 @@ fn blended_wing_center_has_parallel_opposite_edges() -> Result<(), Box<dyn std::
 }
 
 #[test]
+fn blended_wing_center_accepts_explicit_opposite_edge_sweeps()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    scenario.aircraft.wing.center_body_edge_sweep_rad = Some(65_f64.to_radians());
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("bwb.vsp3"))?;
+    let quarter_sweep = (0.5 * 65_f64.to_radians().tan()).atan().to_degrees();
+    assert!(script.contains(&format!(
+        "SetParmVal( wing, \"Sweep\", \"XSec_1\", {quarter_sweep:.12} )"
+    )));
+    let center_of_gravity_x = super::geometry::blended_wing_center_of_gravity_x(&scenario)?;
+    let analysis = super::analysis_script(&scenario, std::path::Path::new("bwb.vsp3"))?;
+    assert!(analysis.contains(&format!(
+        "center_of_gravity_x.push_back( {center_of_gravity_x:.12} )"
+    )));
+    Ok(())
+}
+
+#[test]
 fn vspaero_excludes_the_non_lifting_engine_envelope() -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
     scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();

@@ -19,6 +19,7 @@ aircraft:
       span: 64.8 m
       aspect_ratio: 9.61
       sweep_quarter_chord: 31.6 deg
+      center_body_edge_sweep: null
   aerodynamics:
     model: aero.parabolic_polar
     clean:

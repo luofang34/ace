@@ -19,7 +19,7 @@ use crate::domain::schema::{ResolvedScenario, SegmentKind};
 mod geometry;
 mod parsing;
 
-use geometry::{geometry_script, is_blended_wing_body};
+use geometry::{blended_wing_center_of_gravity_x, geometry_script, is_blended_wing_body};
 use parsing::{marker_number, maximum_lift_to_drag_ratio, polar_points, stability_summary};
 
 #[derive(Debug, Clone)]
@@ -198,7 +198,7 @@ fn analysis_script(scenario: &ResolvedScenario, artifact: &Path) -> AexResult<St
     let concept = crate::models::concept_geometry::ConceptGeometry::from_scenario(scenario);
     let mean_chord = scenario.aircraft.wing.area_m2 / scenario.aircraft.wing.span_m;
     let center_of_gravity_x = if is_blended_wing_body(scenario) {
-        0.30 * mean_chord
+        blended_wing_center_of_gravity_x(scenario)?
     } else {
         concept.wing_x_m + 0.30 * mean_chord
     };
@@ -386,7 +386,8 @@ fn openvsp_analysis_provenance(scenario: &ResolvedScenario) -> ResultProvenance 
             "six alpha points from -2 to 8 degrees".to_owned(),
             "single mission cruise Mach".to_owned(),
             excluded_geometry.to_owned(),
-            "pitching moments referenced to an assumed CG at 30% mean aerodynamic chord".to_owned(),
+            "pitching moments referenced to an area-weighted CG at 30% mean aerodynamic chord"
+                .to_owned(),
         ],
         validity_range: vec![
             "attached subsonic flow".to_owned(),
