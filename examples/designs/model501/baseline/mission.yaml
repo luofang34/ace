@@ -1,0 +1,78 @@
+schema_version: 1
+mission:
+  id: model_501_10_payload_radius
+  name: 3,500 nmi Payload Delivery and Empty Return
+  payload:
+    mass: 4200 lb
+  segments:
+    - id: outbound_taxi
+      type: fixed_time
+      duration: 15 min
+      thrust_fraction: 0.06
+    - id: outbound_takeoff
+      type: takeoff
+      duration: 2 min
+      thrust_fraction: 1.0
+    - id: outbound_initial_climb
+      type: climb
+      target_altitude: 10000 ft
+      indicated_airspeed: 210 kt
+      thrust_fraction: 0.92
+    - id: outbound_climb
+      type: climb
+      target_altitude: 35000 ft
+      mach: 0.62
+      thrust_fraction: 0.88
+    - id: outbound_cruise
+      type: cruise
+      distance: 3500 nmi
+      altitude: 35000 ft
+      mach: 0.62
+    - id: destination_descent
+      type: descent
+      target_altitude: 0 ft
+      mach: 0.55
+    - id: destination_landing
+      type: landing
+      duration: 3 min
+      thrust_fraction: 0.12
+    - id: deliver_payload
+      type: payload_drop
+      payload_mass: 4200 lb
+    - id: return_taxi
+      type: fixed_time
+      duration: 10 min
+      thrust_fraction: 0.06
+    - id: return_takeoff
+      type: takeoff
+      duration: 2 min
+      thrust_fraction: 1.0
+    - id: return_initial_climb
+      type: climb
+      target_altitude: 10000 ft
+      indicated_airspeed: 210 kt
+      thrust_fraction: 0.92
+    - id: return_climb
+      type: climb
+      target_altitude: 39000 ft
+      mach: 0.62
+      thrust_fraction: 0.88
+    - id: return_cruise
+      type: cruise
+      distance: 3500 nmi
+      altitude: 39000 ft
+      mach: 0.62
+    - id: final_descent
+      type: descent
+      target_altitude: 3000 ft
+      mach: 0.55
+    - id: alternate
+      type: cruise
+      distance: 200 nmi
+      altitude: 15000 ft
+      mach: 0.48
+    - id: reserve
+      type: loiter
+      duration: 45 min
+      altitude: 1500 ft
+      true_airspeed: 170 kt

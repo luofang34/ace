@@ -15,11 +15,12 @@ use crate::backends::native::NativeBackend;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::{ResolvedScenario, SegmentKind};
+use crate::models::blended_wing::is_blended_wing_body;
 
 mod geometry;
 mod parsing;
 
-use geometry::{blended_wing_center_of_gravity_x, geometry_script, is_blended_wing_body};
+use geometry::{blended_wing_center_of_gravity_x, geometry_script};
 use parsing::{marker_number, maximum_lift_to_drag_ratio, polar_points, stability_summary};
 
 #[derive(Debug, Clone)]
@@ -356,8 +357,11 @@ fn blended_wing_body_geometry_provenance(scenario: &ResolvedScenario) -> ResultP
             "two spanwise panels approximate the blended centerbody and outer wing".to_owned(),
             "modified five-digit sections with a three-degree upward trailing edge approximate reflex"
                 .to_owned(),
+            "canonical planform and internal-volume fields retain native estimates; CompGeom refines wetted area"
+                .to_owned(),
             format!(
-                "one aft pod represents the {} installation envelope",
+                "{} aft pod envelope(s) represent the {} installation",
+                scenario.aircraft.propulsion.engine_count,
                 scenario.engine.profile_id()
             ),
             "OpenVSP component parameters remain adapter-internal".to_owned(),

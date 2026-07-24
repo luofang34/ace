@@ -95,8 +95,11 @@ pub(super) struct ExplainRequest {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ReportRequest {
-    pub(super) run_id: String,
+    pub(super) run_id: Option<String>,
+    pub(super) scenario_path: Option<String>,
+    pub(super) backend: Option<String>,
     pub(super) format: String,
+    #[serde(default)]
     pub(super) sections: Vec<String>,
 }
 

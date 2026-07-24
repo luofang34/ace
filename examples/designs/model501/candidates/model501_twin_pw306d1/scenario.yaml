@@ -1,0 +1,18 @@
+schema_version: 1
+scenario:
+  id: model501_twin_pw306d1
+  name: Model 501-10 / Twin PW306D1
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml
+  overrides:
+    aircraft.geometry.wing.area: 88 m^2
+    aircraft.geometry.wing.aspect_ratio: '10.2'
+    aircraft.geometry.wing.center_body_edge_sweep: 35 deg
+    aircraft.geometry.wing.span: 29.959973 m
+    aircraft.geometry.wing.sweep_quarter_chord: 28 deg
+    aircraft.mass.maximum_fuel_mass: 5890.926 kg
+    aircraft.mass.operating_empty_mass: 8079.720 kg
+    aircraft.propulsion.engine_count: '2'
+    aircraft.propulsion.profile: engine.pratt_whitney_pw306d1_concept
+    aircraft.propulsion_architecture: twin_buried_pw306d1

@@ -1,0 +1,32 @@
+schema_version: 1
+profile:
+  id: engine.pratt_whitney_pw812d_concept
+  version: 1
+  type: turbofan_engine
+  model: propulsion.turbofan_simple_deck
+  metadata:
+    display_name: Pratt & Whitney Canada PW812D conceptual deck
+    source: Pratt & Whitney PW800 product data and EASA TCDS E.081; thrust, dimensions, and dry mass are source data; TSFC, lapse, bypass ratio, and installation losses are conceptual assumptions
+    confidence: low
+  parameters:
+    sea_level_static_thrust: 60.62 kN
+    dry_mass: 1233 kg
+    bypass_ratio: 5.0
+    dimensions:
+      overall_length: 2.874 m
+      maximum_diameter: 1.109 m
+    thrust_lapse:
+      altitude_exponent: 0.70
+      mach_linear_coefficient: 0.28
+      minimum_fraction: 0.12
+    tsfc:
+      sea_level_takeoff: 0.050 kg/N/hr
+      cruise_reference: 0.058 kg/N/hr
+      cruise_reference_altitude: 35000 ft
+      cruise_reference_mach: 0.75
+    installation:
+      thrust_loss_fraction: 0.06
+      nacelle_drag_area: 0.42 m^2
+    limits:
+      maximum_mach: 0.85
+      maximum_altitude: 51000 ft

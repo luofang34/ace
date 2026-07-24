@@ -8,11 +8,13 @@ use crate::backends::contracts::{
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::ResolvedScenario;
+use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::breguet;
 use crate::models::concept_geometry::ConceptGeometry;
 use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
 use crate::models::mission::MissionSimulator;
 use crate::models::mission_power;
+use crate::models::payload_range::PayloadRangeAnalyzer;
 use crate::models::performance::PointAnalyzer;
 use crate::models::structural_screen;
 use crate::models::weight::{WeightClosureInput, solve_weight_closure};
@@ -20,6 +22,31 @@ use crate::services::requirements::evaluate_requirements;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub(crate) struct NativeBackend;
+
+fn geometry_dimensions(
+    wing_area: f64,
+    wing_span: f64,
+    concept: ConceptGeometry,
+    planform: Option<BlendedWingPlanform>,
+) -> (f64, f64, f64, f64) {
+    if let Some(planform) = planform {
+        return (
+            planform.mean_aerodynamic_chord_m(),
+            0.0,
+            0.0,
+            2.2 * wing_area,
+        );
+    }
+    let wetted_area = 2.05
+        * (wing_area + concept.horizontal_tail_area_m2 + concept.vertical_tail_area_m2)
+        + 0.85 * std::f64::consts::PI * concept.fuselage_width_m * concept.fuselage_length_m;
+    (
+        wing_area / wing_span,
+        concept.horizontal_tail_area_m2,
+        concept.vertical_tail_area_m2,
+        wetted_area,
+    )
+}
 
 impl GeometryBackend for NativeBackend {
     fn descriptor(&self) -> BackendDescriptor {
@@ -34,21 +61,36 @@ impl GeometryBackend for NativeBackend {
         let wing_area = aircraft.wing.area_m2;
         let wing_span = aircraft.wing.span_m;
         let concept = ConceptGeometry::from_scenario(request.scenario);
-        let wetted_area = 2.05
-            * (wing_area + concept.horizontal_tail_area_m2 + concept.vertical_tail_area_m2)
-            + 0.85 * std::f64::consts::PI * concept.fuselage_width_m * concept.fuselage_length_m;
+        let blended = is_blended_wing_body(request.scenario);
+        let planform = blended
+            .then(|| BlendedWingPlanform::from_wing(&aircraft.wing))
+            .transpose()?;
+        let (mean_chord, horizontal_tail, vertical_tail, wetted_area) =
+            geometry_dimensions(wing_area, wing_span, concept, planform);
         Ok(GeometryOutput {
             metrics: GeometryMetrics {
                 wing_area: QuantityOutput::si(wing_area, "m^2"),
                 wing_span: QuantityOutput::si(wing_span, "m"),
-                mean_aerodynamic_chord: QuantityOutput::si(wing_area / wing_span, "m"),
-                horizontal_tail_area: QuantityOutput::si(concept.horizontal_tail_area_m2, "m^2"),
-                vertical_tail_area: QuantityOutput::si(concept.vertical_tail_area_m2, "m^2"),
+                mean_aerodynamic_chord: QuantityOutput::si(mean_chord, "m"),
+                horizontal_tail_area: QuantityOutput::si(horizontal_tail, "m^2"),
+                vertical_tail_area: QuantityOutput::si(vertical_tail, "m^2"),
                 wetted_area: QuantityOutput::si(wetted_area, "m^2"),
                 aspect_ratio: aircraft.wing.aspect_ratio,
+                center_body_leading_edge_sweep: planform
+                    .map(|item| QuantityOutput::si(item.center_edge_sweep_rad.to_degrees(), "deg")),
+                center_body_trailing_edge_sweep: planform.map(|item| {
+                    QuantityOutput::si(-item.center_edge_sweep_rad.to_degrees(), "deg")
+                }),
+                edge_alignment_error: planform.map(|item| {
+                    QuantityOutput::si(item.edge_alignment_error_rad().to_degrees(), "deg")
+                }),
+                independent_planform_angle_count: planform
+                    .map(BlendedWingPlanform::independent_planform_angle_count),
+                estimated_usable_internal_volume: planform
+                    .map(|item| QuantityOutput::si(item.estimated_usable_volume_m3(), "m^3")),
             },
             artifact_path: None,
-            provenance: native_geometry_provenance(),
+            provenance: native_geometry_provenance(blended),
         })
     }
 }
@@ -58,9 +100,11 @@ impl AnalysisBackend for NativeBackend {
         let scenario = request.scenario;
         let performance = PointAnalyzer::new(scenario.clone()).summary()?;
         let mission = MissionSimulator::new(scenario.clone()).simulate()?;
-        let structural_screen = structural_screen::evaluate(scenario);
+        let payload_range = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
+        let structural_screen = structural_screen::evaluate(scenario)?;
         let mission_power_screen = mission_power::evaluate(scenario, &mission)?;
-        let requirements = evaluate_requirements(scenario, &mission, &performance);
+        let requirements =
+            evaluate_requirements(scenario, &mission, &performance, Some(&payload_range));
         let breguet = breguet::estimate(
             scenario,
             performance.maximum_lift_to_drag_ratio,
@@ -72,6 +116,7 @@ impl AnalysisBackend for NativeBackend {
             geometry: request.geometry,
             performance: &performance,
             mission: &mission,
+            payload_range: &payload_range,
             breguet: &breguet,
             structural: &structural_screen,
             mission_power: &mission_power_screen,
@@ -91,6 +136,7 @@ impl AnalysisBackend for NativeBackend {
         failed_constraints.extend(mission_power_screen.failed_constraints.clone());
         let mut warnings = performance.warnings.clone();
         warnings.extend(mission.warnings.clone());
+        warnings.extend(payload_range.warnings.clone());
         warnings.extend(breguet.warnings);
         warnings.extend(structural_screen.provenance.warnings.clone());
         warnings.extend(mission_power_screen.provenance.warnings.clone());
@@ -112,7 +158,7 @@ impl AnalysisBackend for NativeBackend {
             requirements,
             feasible: Some(feasible),
             failed_constraints,
-            provenance: native_analysis_provenance(warnings, breguet.assumptions),
+            provenance: native_analysis_provenance(scenario, warnings, breguet.assumptions),
         })
     }
 }
@@ -155,6 +201,7 @@ struct NativeMetricInputs<'a> {
     geometry: &'a GeometryOutput,
     performance: &'a crate::domain::result::PerformanceSummary,
     mission: &'a crate::domain::result::MissionResult,
+    payload_range: &'a crate::domain::result::PayloadRangeResult,
     breguet: &'a breguet::BreguetEstimate,
     structural: &'a crate::domain::result::StructuralScreen,
     mission_power: &'a crate::domain::result::MissionPowerScreen,
@@ -196,6 +243,7 @@ fn native_metrics(input: NativeMetricInputs<'_>) -> AexResult<BTreeMap<String, Q
         "mission.simulated_range".to_owned(),
         input.mission.total_distance.clone(),
     );
+    insert_payload_range(&mut metrics, input.payload_range);
     insert(
         &mut metrics,
         "mission.fuel_burn",
@@ -214,6 +262,22 @@ fn native_metrics(input: NativeMetricInputs<'_>) -> AexResult<BTreeMap<String, Q
         input.structural.spar_cap_packaging_ratio,
         "1",
     );
+    if let Some(volume) = &input.structural.estimated_usable_internal_volume {
+        insert(
+            &mut metrics,
+            "structures.estimated_usable_internal_volume",
+            volume.value,
+            "m^3",
+        );
+    }
+    if let Some(ratio) = input.structural.fuel_volume_utilization_ratio {
+        insert(
+            &mut metrics,
+            "structures.fuel_volume_utilization_ratio",
+            ratio,
+            "1",
+        );
+    }
     insert(
         &mut metrics,
         "mission.minimum_excess_power",
@@ -227,6 +291,24 @@ fn native_metrics(input: NativeMetricInputs<'_>) -> AexResult<BTreeMap<String, Q
         "W",
     );
     Ok(metrics)
+}
+
+fn insert_payload_range(
+    metrics: &mut BTreeMap<String, QuantityOutput>,
+    payload_range: &crate::domain::result::PayloadRangeResult,
+) {
+    for (point_id, metric_id) in [
+        ("full_payload_mission", "performance.full_payload_range"),
+        ("zero_payload_ferry", "performance.zero_payload_ferry_range"),
+    ] {
+        if let Some(point) = payload_range
+            .points
+            .iter()
+            .find(|point| point.id == point_id)
+        {
+            metrics.insert(metric_id.to_owned(), point.range.clone());
+        }
+    }
 }
 
 fn insert_performance(
@@ -311,24 +393,43 @@ fn native_polar(scenario: &ResolvedScenario) -> Vec<PolarPoint> {
         .collect()
 }
 
-fn native_geometry_provenance() -> ResultProvenance {
+fn native_geometry_provenance(blended: bool) -> ResultProvenance {
+    let (method, assumptions, validity_range) = if blended {
+        (
+            "area-closed two-panel BWB planform identities",
+            vec![
+                "one center-body edge angle enforces equal-and-opposite leading and trailing edges"
+                    .to_owned(),
+                "one outer quarter-chord sweep is independent".to_owned(),
+                "wetted area is 2.2 times reference planform area".to_owned(),
+            ],
+            vec!["tailless blended-wing conceptual geometry".to_owned()],
+        )
+    } else {
+        (
+            "planform identities and empirical tail-volume ratios",
+            vec![
+                "horizontal tail area is 20-24% of wing area".to_owned(),
+                "vertical tail area is 10-12% of wing area".to_owned(),
+                "fuselage dimensions scale from wing span and area".to_owned(),
+            ],
+            vec!["conventional fixed-wing configurations".to_owned()],
+        )
+    };
     ResultProvenance {
-        method: "planform identities and empirical tail-volume ratios".to_owned(),
+        method: method.to_owned(),
         backend: "native".to_owned(),
-        assumptions: vec![
-            "horizontal tail area is 20-24% of wing area".to_owned(),
-            "vertical tail area is 10-12% of wing area".to_owned(),
-            "fuselage dimensions scale from wing span and area".to_owned(),
-        ],
-        validity_range: vec!["conventional fixed-wing configurations".to_owned()],
+        assumptions,
+        validity_range,
         units: geometry_units(),
         warnings: vec![Diagnostic::limitation(
-            "Wetted area and tail sizes are empirical conceptual estimates.",
+            "Native geometry dimensions and wetted area are conceptual estimates.",
         )],
     }
 }
 
 fn native_analysis_provenance(
+    scenario: &ResolvedScenario,
     warnings: Vec<Diagnostic>,
     mut assumptions: Vec<String>,
 ) -> ResultProvenance {
@@ -338,12 +439,17 @@ fn native_analysis_provenance(
         "quasi-steady mission segments".to_owned(),
         "sea-level dry paved runway for field-length estimates".to_owned(),
     ]);
+    let configuration_range = if is_blended_wing_body(scenario) {
+        "subsonic BWB represented by an equivalent parabolic polar"
+    } else {
+        "subsonic conventional fixed-wing aircraft"
+    };
     ResultProvenance {
         method: "deterministic conceptual performance synthesis".to_owned(),
         backend: "native".to_owned(),
         assumptions,
         validity_range: vec![
-            "subsonic conventional fixed-wing aircraft".to_owned(),
+            configuration_range.to_owned(),
             "fidelity level 0-1; not for certification".to_owned(),
         ],
         units: analysis_units(),

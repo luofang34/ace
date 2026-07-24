@@ -47,6 +47,11 @@ Physical values retain explicit units. Dimensionless values are strings in the
 MCP request and are restored to numeric YAML scalars by the scenario resolver.
 The canonical aircraft, mission, requirements, profiles, and design overrides
 remain YAML data; OpenVSP parameter identifiers never enter the interface.
+Sequence entries use stable IDs rather than array positions, for example
+`mission.segments.outbound_cruise.mach`.
+
+`payload_drop` mission segments remove declared payload mass without treating
+it as fuel burn. This supports payload-out/empty-return radius studies.
 
 `evaluate_feasibility` defaults to `backend: "native"`. Its baseline contains
 native geometry, weight closure, drag polar, Breguet estimates, mission
@@ -69,6 +74,8 @@ including:
 - `performance.landing_field_length`
 - `mission.breguet_range`
 - `mission.breguet_endurance`
+- `performance.full_payload_range`
+- `performance.zero_payload_ferry_range`
 - `feasibility.hard_constraints_passed`
 
 `auto_refine_design` runs a deterministic bounded native search over wing area,
@@ -84,12 +91,17 @@ failure is returned without fallback.
 OpenVSP geometry dispatches from the canonical `aircraft.configuration`.
 Configuration names containing `tailless`, `flying_wing`, or `blended_wing`
 produce a two-panel flying-wing `.vsp3` with a reflexed trailing-edge surrogate
-and a single aft engine envelope. CompGeom wetted area and VSPAERO results retain
-explicit BWB-specific validity warnings. The adapter does not claim inlet-flow,
-internal-volume, control-system, or structural-load-path fidelity.
+and one or two aft engine envelopes. CompGeom wetted area and VSPAERO results
+retain explicit BWB-specific validity warnings. The adapter does not claim
+inlet-flow, internal-volume, control-system, or structural-load-path fidelity.
 
 The structural screen is a sizing guardrail rather than substantiation. It does
 not cover detailed loads, joints, buckling, fatigue, flutter, or aeroelasticity.
+
+`generate_report` accepts either a `scenario_path` for an organized concept
+report or a `run_id` for an immutable run report. Concept reports include
+decision-first sections and ordered chart specifications. See
+[concept-design reports](concept-reports.md).
 
 `list_analysis_backends` reports availability rather than requiring callers to
 infer it from platform paths.

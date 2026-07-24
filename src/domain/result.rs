@@ -104,6 +104,7 @@ pub(crate) struct MissionSegmentResult {
     pub(crate) start_mass_kg: f64,
     pub(crate) end_mass_kg: f64,
     pub(crate) fuel_burn_kg: f64,
+    pub(crate) payload_removed_kg: f64,
     pub(crate) distance_m: f64,
     pub(crate) duration_s: f64,
     pub(crate) start_altitude_m: f64,
@@ -119,7 +120,9 @@ pub(crate) struct MissionResult {
     pub(crate) total_duration_s: f64,
     pub(crate) total_fuel_burn_kg: f64,
     pub(crate) reserve_fuel_remaining_kg: f64,
+    pub(crate) initial_takeoff_mass_kg: f64,
     pub(crate) final_mass_kg: f64,
+    pub(crate) final_payload_mass_kg: f64,
     pub(crate) failed_segment: Option<String>,
     pub(crate) fuel_capacity_violation: bool,
     pub(crate) takeoff_mass_violation: bool,
@@ -146,6 +149,7 @@ pub(crate) struct RequirementEvaluation {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct StructuralScreen {
     pub(crate) passed: bool,
+    pub(crate) structural_configuration: String,
     pub(crate) ultimate_load_factor: f64,
     pub(crate) wing_root_bending_moment: QuantityOutput,
     pub(crate) required_total_spar_cap_area: QuantityOutput,
@@ -153,6 +157,9 @@ pub(crate) struct StructuralScreen {
     pub(crate) horizontal_tail_volume: f64,
     pub(crate) vertical_tail_volume: f64,
     pub(crate) aspect_ratio: f64,
+    pub(crate) estimated_usable_internal_volume: Option<QuantityOutput>,
+    pub(crate) required_fuel_volume: Option<QuantityOutput>,
+    pub(crate) fuel_volume_utilization_ratio: Option<f64>,
     pub(crate) failed_constraints: Vec<String>,
     pub(crate) provenance: ResultProvenance,
 }

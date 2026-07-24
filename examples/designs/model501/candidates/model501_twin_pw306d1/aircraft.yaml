@@ -1,0 +1,49 @@
+schema_version: 1
+aircraft:
+  id: model_501_10_bwb
+  name: Model 501-10 Blended-Wing Concept
+  category: experimental_blended_wing_body
+  configuration: tailless_blended_wing_body
+  propulsion_architecture: single_buried_turbofan
+  metadata:
+    purpose: experimental 35,000 lb blended-wing concept trade study
+    certification_use: prohibited; propulsion integration and aircraft-level approval are not established
+  mass:
+    maximum_takeoff_mass: 35000 lb
+    operating_empty_mass: 8291.550 kg
+    maximum_payload_mass: 4200 lb
+    maximum_fuel_mass: 5679.096 kg
+  geometry:
+    wing:
+      area: 84 m^2
+      span: 30.119761 m
+      aspect_ratio: 10.8
+      sweep_quarter_chord: 30 deg
+      center_body_edge_sweep: 38 deg
+  aerodynamics:
+    model: aero.parabolic_polar
+    clean:
+      cd0: 0.013
+      oswald_efficiency: 0.90
+      cl_max: 1.35
+      mach_critical: 0.75
+      wave_drag:
+        coefficient: 0.30
+        exponent: 2.4
+    takeoff:
+      cd0: 0.030
+      oswald_efficiency: 0.82
+      cl_max: 1.85
+    landing:
+      cd0: 0.060
+      oswald_efficiency: 0.78
+      cl_max: 2.05
+  propulsion:
+    profile: engine.pratt_whitney_pw812d_concept
+    engine_count: 1
+    sizing_factor: 1.0
+  limits:
+    maximum_operating_mach: 0.78
+    maximum_operating_altitude: 45000 ft
+    maximum_load_factor: 2.5
+    minimum_load_factor: -1.0

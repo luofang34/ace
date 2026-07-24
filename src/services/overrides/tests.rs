@@ -47,3 +47,21 @@ fn override_can_set_an_optional_scalar() -> Result<(), Box<dyn std::error::Error
     );
     Ok(())
 }
+
+#[test]
+fn override_addresses_sequence_items_by_stable_id() -> Result<(), Box<dyn std::error::Error>> {
+    let mut document: Value = serde_yaml::from_str(
+        "mission:\n  segments:\n    - id: outbound_cruise\n      mach: 0.62\n",
+    )?;
+    set_path(
+        &mut document,
+        &["mission", "segments", "outbound_cruise", "mach"],
+        "0.56",
+        "mission.segments.outbound_cruise.mach",
+    )?;
+    assert_eq!(
+        document["mission"]["segments"][0]["mach"].as_f64(),
+        Some(0.56)
+    );
+    Ok(())
+}

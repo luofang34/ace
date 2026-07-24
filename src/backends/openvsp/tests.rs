@@ -52,6 +52,25 @@ fn blended_wing_script_is_tailless_and_reflexed() -> Result<(), Box<dyn std::err
 }
 
 #[test]
+fn twin_engine_blended_wing_uses_two_symmetric_envelopes() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    scenario.aircraft.propulsion.engine_count = 2;
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("bwb.vsp3"))?;
+    let y_location = scenario.aircraft.wing.span_m * 0.12;
+    assert!(script.contains("if ( 2 == 1 )"));
+    assert!(script.contains("AddEngineEnvelope( -"));
+    assert!(script.contains(&format!("AddEngineEnvelope( {y_location:.12} )")));
+    Ok(())
+}
+
+#[test]
 fn blended_wing_center_has_parallel_opposite_edges() -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
     scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();

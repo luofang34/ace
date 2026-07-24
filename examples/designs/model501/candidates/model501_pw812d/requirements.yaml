@@ -1,0 +1,48 @@
+schema_version: 1
+requirements:
+  id: model_501_10_concept_requirements
+  items:
+    - id: useful_payload
+      metric: mission.payload_mass
+      operator: ge
+      value: 4200 lb
+      severity: hard
+    - id: full_payload_outbound_range
+      metric: performance.full_payload_range
+      operator: ge
+      value: 3500 nmi
+      severity: hard
+    - id: zero_payload_ferry_range
+      metric: performance.zero_payload_ferry_range
+      operator: ge
+      value: 8000 nmi
+      severity: hard
+    - id: payload_delivery_empty_return
+      metric: mission.completed_distance
+      operator: ge
+      value: 7000 nmi
+      severity: hard
+    - id: cruise_mach
+      metric: performance.cruise_mach
+      operator: ge
+      value: 0.60
+      severity: soft
+      weight: 0.2
+    - id: service_ceiling
+      metric: performance.service_ceiling
+      operator: ge
+      value: 41000 ft
+      severity: soft
+      weight: 0.3
+    - id: takeoff_field_length
+      metric: performance.takeoff_field_length
+      operator: le
+      value: 6000 ft
+      severity: soft
+      weight: 0.3
+    - id: landing_stall_speed
+      metric: performance.stall_speed_landing
+      operator: le
+      value: 105 kt
+      severity: soft
+      weight: 0.2

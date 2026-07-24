@@ -29,6 +29,11 @@ pub(crate) struct GeometryMetrics {
     pub(crate) vertical_tail_area: QuantityOutput,
     pub(crate) wetted_area: QuantityOutput,
     pub(crate) aspect_ratio: f64,
+    pub(crate) center_body_leading_edge_sweep: Option<QuantityOutput>,
+    pub(crate) center_body_trailing_edge_sweep: Option<QuantityOutput>,
+    pub(crate) edge_alignment_error: Option<QuantityOutput>,
+    pub(crate) independent_planform_angle_count: Option<u32>,
+    pub(crate) estimated_usable_internal_volume: Option<QuantityOutput>,
 }
 
 #[derive(Debug, Clone, Serialize)]

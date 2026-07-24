@@ -33,6 +33,7 @@ impl ApplicationService {
         for path in paths {
             let (scenario, performance) = self.performance_blocking(path, &BTreeMap::new())?;
             let (_, mission) = self.mission_blocking(path, &BTreeMap::new())?;
+            let (_, payload_range) = self.payload_range_blocking(path, &BTreeMap::new())?;
             propulsion_kinds.push(match scenario.engine {
                 EngineProfile::Piston(_) => "power",
                 EngineProfile::Turbofan(_) => "thrust",
@@ -40,7 +41,7 @@ impl ApplicationService {
             let values = metrics
                 .iter()
                 .map(|metric| {
-                    comparison_metric(metric, &scenario, &performance, &mission)
+                    comparison_metric(metric, &scenario, &performance, &mission, &payload_range)
                         .map(|value| (metric.clone(), value))
                 })
                 .collect::<AexResult<BTreeMap<_, _>>>()?;
@@ -70,6 +71,7 @@ fn comparison_metric(
     scenario: &crate::domain::schema::ResolvedScenario,
     performance: &crate::domain::result::PerformanceSummary,
     mission: &crate::domain::result::MissionResult,
+    payload_range: &crate::domain::result::PayloadRangeResult,
 ) -> AexResult<QuantityOutput> {
     match metric {
         "performance.wing_loading" => Ok(QuantityOutput::si(
@@ -85,14 +87,41 @@ fn comparison_metric(
             },
         )),
         "performance.service_ceiling" => Ok(QuantityOutput::si(performance.service_ceiling_m, "m")),
+        "aerodynamics.maximum_lift_to_drag_ratio" => Ok(QuantityOutput::si(
+            performance.maximum_lift_to_drag_ratio,
+            "1",
+        )),
         "mission.total_fuel" => Ok(QuantityOutput::si(mission.total_fuel_burn_kg, "kg")),
         "mission.completed_distance" => Ok(QuantityOutput::range(mission.total_distance.value)),
+        "performance.full_payload_range" => {
+            payload_range_value(payload_range, "full_payload_mission")
+        }
+        "performance.zero_payload_ferry_range" => {
+            payload_range_value(payload_range, "zero_payload_ferry")
+        }
         _ => Err(AexError::validation(
             "UNSUPPORTED_COMPARISON_METRIC",
             metric,
             "metric is not implemented",
         )),
     }
+}
+
+fn payload_range_value(
+    result: &crate::domain::result::PayloadRangeResult,
+    point_id: &str,
+) -> AexResult<QuantityOutput> {
+    result
+        .points
+        .iter()
+        .find(|point| point.id == point_id)
+        .map(|point| point.range.clone())
+        .ok_or_else(|| {
+            AexError::analysis(
+                "PAYLOAD_RANGE_POINT_MISSING",
+                format!("payload-range result does not contain {point_id}"),
+            )
+        })
 }
 
 fn installed_loading(scenario: &crate::domain::schema::ResolvedScenario) -> f64 {

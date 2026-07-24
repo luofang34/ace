@@ -309,6 +309,11 @@ fn resolve_segment(raw: RawMissionSegment, index: usize) -> AexResult<MissionSeg
         )?,
         fuel_fraction: optional_fraction(raw.fuel_fraction, &format!("{path}.fuel_fraction"))?,
         fuel_mass_kg: optional_quantity(raw.fuel_mass.as_deref(), Dimension::Mass)?,
+        payload_mass_kg: optional_positive_quantity(
+            raw.payload_mass.as_deref(),
+            Dimension::Mass,
+            &format!("{path}.payload_mass"),
+        )?,
     })
 }
 
@@ -317,6 +322,7 @@ fn segment_kind(value: &str, path: &str) -> AexResult<SegmentKind> {
         "start_and_taxi" => Ok(SegmentKind::StartAndTaxi),
         "fixed_time" => Ok(SegmentKind::FixedTime),
         "fixed_fuel" => Ok(SegmentKind::FixedFuel),
+        "payload_drop" => Ok(SegmentKind::PayloadDrop),
         "takeoff" => Ok(SegmentKind::Takeoff),
         "climb" => Ok(SegmentKind::Climb),
         "cruise" => Ok(SegmentKind::Cruise),
@@ -359,6 +365,13 @@ fn validate_segment_requirements(
             "cruise segment requires distance",
         ));
     }
+    if kind == SegmentKind::PayloadDrop && raw.payload_mass.is_none() {
+        return Err(AexError::validation(
+            "MISSING_PAYLOAD_MASS",
+            path,
+            "payload-drop segment requires payload_mass",
+        ));
+    }
     Ok(())
 }
 
@@ -382,6 +395,16 @@ fn positive_quantity(raw: &str, dimension: Dimension, path: &str) -> AexResult<f
 
 fn optional_quantity(raw: Option<&str>, dimension: Dimension) -> AexResult<Option<f64>> {
     raw.map(|value| parse_quantity(value, dimension))
+        .transpose()
+}
+
+fn optional_positive_quantity(
+    raw: Option<&str>,
+    dimension: Dimension,
+    path: &str,
+) -> AexResult<Option<f64>> {
+    optional_quantity(raw, dimension)?
+        .map(|value| positive(value, path))
         .transpose()
 }
 

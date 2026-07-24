@@ -91,7 +91,14 @@ fn generate_chart(
         PlotKind::RequirementMargins => {
             let (_, mission) = service.mission_blocking(&arguments.scenario, overrides)?;
             let (_, performance) = service.performance_blocking(&arguments.scenario, overrides)?;
-            let evaluations = evaluate_requirements(scenario, &mission, &performance);
+            let (_, payload_range_result) =
+                service.payload_range_blocking(&arguments.scenario, overrides)?;
+            let evaluations = evaluate_requirements(
+                scenario,
+                &mission,
+                &performance,
+                Some(&payload_range_result),
+            );
             Ok(requirement_margins(scenario, &evaluations))
         }
     }

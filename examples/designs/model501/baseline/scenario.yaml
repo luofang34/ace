@@ -1,0 +1,8 @@
+schema_version: 1
+scenario:
+  id: model_501_10_baseline
+  name: Model 501-10 Engine Trade Baseline
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml
+  overrides: {}

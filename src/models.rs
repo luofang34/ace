@@ -1,5 +1,6 @@
 pub(crate) mod aerodynamics;
 pub(crate) mod atmosphere;
+pub(crate) mod blended_wing;
 pub(crate) mod breguet;
 pub(crate) mod concept_geometry;
 pub(crate) mod constraints;

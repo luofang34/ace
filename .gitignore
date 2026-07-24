@@ -1,5 +1,8 @@
 /target/
 /runs/
+**/designs/**
+!examples/designs/
+!examples/designs/**
 /*.svg
 /*.png
 .DS_Store

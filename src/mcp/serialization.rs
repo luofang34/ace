@@ -46,7 +46,10 @@ fn unit_for_key(key: &str) -> Option<&'static str> {
         "performance.wing_loading" => Some("N/m^2"),
         "performance.thrust_or_power_loading" => Some("W/kg or N/N"),
         "mission.total_fuel" => Some("kg"),
-        "mission.completed_distance" | "mission.range" => Some("m"),
+        "mission.completed_distance"
+        | "mission.range"
+        | "performance.full_payload_range"
+        | "performance.zero_payload_ferry_range" => Some("m"),
         _ => SUFFIX_UNITS
             .iter()
             .find_map(|(suffix, unit)| key.ends_with(suffix).then_some(*unit)),
@@ -68,6 +71,8 @@ fn quantity(key: &str, value: Value, unit: &str) -> Value {
             | "total_distance_m"
             | "mission.completed_distance"
             | "mission.range"
+            | "performance.full_payload_range"
+            | "performance.zero_payload_ferry_range"
     );
     let display_value = if range {
         convert_value(&value, 1852.0)

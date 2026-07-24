@@ -138,6 +138,7 @@ pub(crate) struct RawMissionSegment {
     pub(crate) thrust_fraction: Option<f64>,
     pub(crate) fuel_fraction: Option<f64>,
     pub(crate) fuel_mass: Option<String>,
+    pub(crate) payload_mass: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -331,6 +332,7 @@ pub(crate) struct MissionSegment {
     pub(crate) thrust_fraction: Option<f64>,
     pub(crate) fuel_fraction: Option<f64>,
     pub(crate) fuel_mass_kg: Option<f64>,
+    pub(crate) payload_mass_kg: Option<f64>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -339,6 +341,7 @@ pub(crate) enum SegmentKind {
     StartAndTaxi,
     FixedTime,
     FixedFuel,
+    PayloadDrop,
     Takeoff,
     Climb,
     Cruise,

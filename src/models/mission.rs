@@ -18,11 +18,13 @@ struct MissionState {
     mass_kg: f64,
     altitude_m: f64,
     fuel_remaining_kg: f64,
+    payload_remaining_kg: f64,
 }
 
 #[derive(Debug, Clone, Copy)]
 struct SegmentComputation {
     fuel_burn_kg: f64,
+    payload_removed_kg: f64,
     distance_m: f64,
     duration_s: f64,
     end_altitude_m: f64,
@@ -50,7 +52,9 @@ impl MissionSimulator {
                 + initial_fuel,
             altitude_m: 0.0,
             fuel_remaining_kg: initial_fuel,
+            payload_remaining_kg: self.scenario.mission.payload_mass_kg,
         };
+        let initial_takeoff_mass = state.mass_kg;
         let mut segment_results = Vec::new();
         let mut total_distance = 0.0;
         let mut total_duration = 0.0;
@@ -69,8 +73,9 @@ impl MissionSimulator {
                 break;
             }
             segment_results.push(segment_result(segment, state, computation));
-            state.mass_kg -= computation.fuel_burn_kg;
+            state.mass_kg -= computation.fuel_burn_kg + computation.payload_removed_kg;
             state.fuel_remaining_kg -= computation.fuel_burn_kg;
+            state.payload_remaining_kg -= computation.payload_removed_kg;
             state.altitude_m = computation.end_altitude_m;
             total_distance += computation.distance_m;
             total_duration += computation.duration_s;
@@ -84,10 +89,12 @@ impl MissionSimulator {
             total_duration_s: total_duration,
             total_fuel_burn_kg: total_fuel,
             reserve_fuel_remaining_kg: state.fuel_remaining_kg,
+            initial_takeoff_mass_kg: initial_takeoff_mass,
             final_mass_kg: state.mass_kg,
+            final_payload_mass_kg: state.payload_remaining_kg,
             failed_segment,
             fuel_capacity_violation: !completed,
-            takeoff_mass_violation: state.mass_kg > aircraft.mass.maximum_takeoff_mass_kg,
+            takeoff_mass_violation: initial_takeoff_mass > aircraft.mass.maximum_takeoff_mass_kg,
             segments: segment_results,
             assumptions: self.scenario.assumptions.clone(),
             warnings,
@@ -107,6 +114,7 @@ impl MissionSimulator {
     ) -> AexResult<SegmentComputation> {
         match segment.kind {
             SegmentKind::FixedFuel => self.fixed_fuel_segment(segment, state),
+            SegmentKind::PayloadDrop => self.payload_drop_segment(segment, state),
             SegmentKind::Climb => self.climb_segment(segment, state),
             SegmentKind::Cruise => self.cruise_segment(segment, state),
             SegmentKind::Descent => self.descent_segment(segment, state),
@@ -137,6 +145,7 @@ impl MissionSimulator {
         let fuel_flow = self.available_fuel_flow(state.altitude_m, speed, throttle, mode)?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel_flow * duration,
+            payload_removed_kg: 0.0,
             distance_m: if segment.kind == SegmentKind::Takeoff {
                 speed * duration * 0.5
             } else {
@@ -168,6 +177,38 @@ impl MissionSimulator {
             })?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel,
+            payload_removed_kg: 0.0,
+            distance_m: 0.0,
+            duration_s: 0.0,
+            end_altitude_m: state.altitude_m,
+        })
+    }
+
+    fn payload_drop_segment(
+        &self,
+        segment: &MissionSegment,
+        state: MissionState,
+    ) -> AexResult<SegmentComputation> {
+        let payload = segment.payload_mass_kg.ok_or_else(|| {
+            AexError::validation(
+                "MISSING_PAYLOAD_MASS",
+                format!("mission.segments.{}.payload_mass", segment.id),
+                "payload-drop segment requires payload mass",
+            )
+        })?;
+        if payload > state.payload_remaining_kg + 1.0e-8 {
+            return Err(AexError::validation(
+                "PAYLOAD_DROP_EXCEEDS_REMAINING",
+                format!("mission.segments.{}.payload_mass", segment.id),
+                format!(
+                    "{payload} kg exceeds remaining payload {} kg",
+                    state.payload_remaining_kg
+                ),
+            ));
+        }
+        Ok(SegmentComputation {
+            fuel_burn_kg: 0.0,
+            payload_removed_kg: payload,
             distance_m: 0.0,
             duration_s: 0.0,
             end_altitude_m: state.altitude_m,
@@ -200,6 +241,7 @@ impl MissionSimulator {
             self.available_fuel_flow(midpoint, speed, throttle, OperatingMode::Climb)?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel_flow * duration,
+            payload_removed_kg: 0.0,
             distance_m: speed * duration * 0.75,
             duration_s: duration,
             end_altitude_m: target,
@@ -223,6 +265,7 @@ impl MissionSimulator {
             self.available_fuel_flow(midpoint, speed, throttle, OperatingMode::Economy)?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel_flow * duration,
+            payload_removed_kg: 0.0,
             distance_m: speed * duration * 0.75,
             duration_s: duration,
             end_altitude_m: target,
@@ -253,6 +296,7 @@ impl MissionSimulator {
         )?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel,
+            payload_removed_kg: 0.0,
             distance_m: distance,
             duration_s: duration,
             end_altitude_m: altitude,
@@ -282,6 +326,7 @@ impl MissionSimulator {
         )?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel,
+            payload_removed_kg: 0.0,
             distance_m: 0.0,
             duration_s: duration,
             end_altitude_m: altitude,
@@ -399,8 +444,9 @@ fn segment_result(
     MissionSegmentResult {
         segment_id: segment.id.clone(),
         start_mass_kg: state.mass_kg,
-        end_mass_kg: state.mass_kg - computation.fuel_burn_kg,
+        end_mass_kg: state.mass_kg - computation.fuel_burn_kg - computation.payload_removed_kg,
         fuel_burn_kg: computation.fuel_burn_kg,
+        payload_removed_kg: computation.payload_removed_kg,
         distance_m: computation.distance_m,
         duration_s: computation.duration_s,
         start_altitude_m: state.altitude_m,

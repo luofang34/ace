@@ -1,4 +1,5 @@
 mod parameters;
+mod report;
 mod schema;
 pub(crate) mod serialization;
 
@@ -19,7 +20,6 @@ use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::refinement::RefinementSpec;
-use crate::services::report::LIMITATION;
 use crate::services::validator::{error_validation, validate_document_value};
 use parameters::{
     dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
@@ -403,41 +403,13 @@ impl AexMcpServer {
         }))
     }
 
-    #[tool(description = "Generate a JSON or Markdown report for an immutable analysis run")]
+    #[tool(description = "Generate an organized concept-design report or immutable-run report")]
     fn generate_report(
         &self,
         Parameters(request): Parameters<ReportRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let (manifest, result) = self
-            .service
-            .load_run_blocking(&request.run_id)
-            .map_err(mcp_error)?;
-        if request.format == "json" {
-            return json_output(json!({
-                "format": "json",
-                "sections": request.sections,
-                "manifest": manifest,
-                "result": result,
-                "limitation": LIMITATION,
-            }));
-        }
-        if request.format != "markdown" {
-            return Err(ErrorData::invalid_params(
-                "format must be markdown or json",
-                None,
-            ));
-        }
-        let markdown = format!(
-            "# Analysis run {}\n\n{}\n\n## Summary\n\n```json\n{}\n```\n",
-            request.run_id,
-            LIMITATION,
-            serde_json::to_string_pretty(&result).map_err(mcp_error)?
-        );
-        json_output(json!({
-            "format": "markdown",
-            "sections": request.sections,
-            "content": markdown,
-        }))
+        let value = report::generate_report_blocking(&self.service, request).map_err(mcp_error)?;
+        json_output(value)
     }
 
     #[tool(description = "Generate payload-range data, chart specification, and optional SVG")]

@@ -90,6 +90,24 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
     assert_eq!(backends["backends"][0]["available"], true);
     assert_eq!(backends["backends"][1]["available"], false);
 
+    let report = client
+        .call_tool(CallToolRequestParams {
+            meta: None,
+            name: "generate_report".into(),
+            arguments: Some(arguments(json!({
+                "scenario_path": scenario("c172"),
+                "backend": "native",
+                "format": "json",
+                "sections": []
+            }))?),
+            task: None,
+        })
+        .await?
+        .structured_content
+        .ok_or_else(|| io::Error::other("missing concept report"))?;
+    assert_eq!(report["report"]["charts"].as_array().map(Vec::len), Some(7));
+    assert_eq!(report["report"]["charts"][0]["order"], 1);
+
     let design_root = tempfile::tempdir()?;
     let created = client
         .call_tool(CallToolRequestParams {

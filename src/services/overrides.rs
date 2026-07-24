@@ -40,8 +40,15 @@ fn set_path(target: &mut Value, parts: &[&str], raw_value: &str, full_path: &str
             "override must address a field",
         ));
     }
+    if target.is_sequence() {
+        return set_sequence_path(target, parts, raw_value, full_path);
+    }
     let mapping = target.as_mapping_mut().ok_or_else(|| {
-        AexError::validation("INVALID_OVERRIDE", full_path, "path is not a mapping")
+        AexError::validation(
+            "INVALID_OVERRIDE",
+            full_path,
+            "path is neither a mapping nor an ID-addressable sequence",
+        )
     })?;
     let key = Value::String(parts[0].to_owned());
     if parts.len() == 1 {
@@ -55,6 +62,36 @@ fn set_path(target: &mut Value, parts: &[&str], raw_value: &str, full_path: &str
         AexError::validation("INVALID_OVERRIDE", full_path, "field does not exist")
     })?;
     set_path(nested, &parts[1..], raw_value, full_path)
+}
+
+fn set_sequence_path(
+    target: &mut Value,
+    parts: &[&str],
+    raw_value: &str,
+    full_path: &str,
+) -> AexResult<()> {
+    let selector = parts[0];
+    let sequence = target.as_sequence_mut().ok_or_else(|| {
+        AexError::validation("INVALID_OVERRIDE", full_path, "path is not a sequence")
+    })?;
+    let item = sequence
+        .iter_mut()
+        .find(|item| item.get("id").and_then(Value::as_str) == Some(selector))
+        .ok_or_else(|| {
+            AexError::validation(
+                "INVALID_OVERRIDE",
+                full_path,
+                format!("sequence has no item with id {selector}"),
+            )
+        })?;
+    if parts.len() == 1 {
+        return Err(AexError::validation(
+            "INVALID_OVERRIDE",
+            full_path,
+            "override must address a field within the selected item",
+        ));
+    }
+    set_path(item, &parts[1..], raw_value, full_path)
 }
 
 fn override_value(current: &Value, raw: &str, path: &str) -> AexResult<Value> {

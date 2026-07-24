@@ -109,7 +109,8 @@ impl ApplicationService {
         }
         let (_, performance) = self.performance_blocking(scenario_path, overrides)?;
         let (scenario, mission) = self.mission_blocking(scenario_path, overrides)?;
-        let resolved = metric_values(&scenario, &performance, &mission, metrics)?;
+        let (_, payload_range) = self.payload_range_blocking(scenario_path, overrides)?;
+        let resolved = metric_values(&scenario, &performance, &mission, &payload_range, metrics)?;
         cache
             .lock()
             .map_err(|source| AexError::analysis("SWEEP_CACHE_POISONED", source.to_string()))?
@@ -122,6 +123,7 @@ fn metric_values(
     scenario: &crate::domain::schema::ResolvedScenario,
     performance: &crate::domain::result::PerformanceSummary,
     mission: &crate::domain::result::MissionResult,
+    payload_range: &crate::domain::result::PayloadRangeResult,
     metrics: &[String],
 ) -> AexResult<BTreeMap<String, f64>> {
     let breguet = breguet::estimate(
@@ -129,7 +131,7 @@ fn metric_values(
         performance.maximum_lift_to_drag_ratio,
         mission.total_fuel_burn_kg,
     )?;
-    let requirements = evaluate_requirements(scenario, mission, performance);
+    let requirements = evaluate_requirements(scenario, mission, performance, Some(payload_range));
     metrics
         .iter()
         .map(|metric| {
@@ -153,6 +155,12 @@ fn metric_values(
                 "mission.breguet_range" => breguet.range_m,
                 "mission.breguet_endurance" => breguet.endurance_s,
                 "mission.payload_mass" => scenario.mission.payload_mass_kg,
+                "performance.full_payload_range" => {
+                    payload_range_metric(payload_range, "full_payload_mission")?
+                }
+                "performance.zero_payload_ferry_range" => {
+                    payload_range_metric(payload_range, "zero_payload_ferry")?
+                }
                 "feasibility.hard_constraints_passed" => {
                     let passed = mission.completed
                         && requirements
@@ -172,6 +180,23 @@ fn metric_values(
             Ok((metric.clone(), value))
         })
         .collect()
+}
+
+fn payload_range_metric(
+    payload_range: &crate::domain::result::PayloadRangeResult,
+    point_id: &str,
+) -> AexResult<f64> {
+    payload_range
+        .points
+        .iter()
+        .find(|point| point.id == point_id)
+        .map(|point| point.range.value)
+        .ok_or_else(|| {
+            AexError::analysis(
+                "PAYLOAD_RANGE_POINT_MISSING",
+                format!("payload-range result does not contain {point_id}"),
+            )
+        })
 }
 
 fn installed_loading(scenario: &crate::domain::schema::ResolvedScenario) -> f64 {

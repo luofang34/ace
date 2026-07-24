@@ -1,5 +1,7 @@
 use crate::domain::quantity::QuantityOutput;
-use crate::domain::result::{MissionResult, PerformanceSummary, RequirementEvaluation};
+use crate::domain::result::{
+    MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation,
+};
 use crate::domain::schema::{Requirement, ResolvedScenario};
 use crate::models::field_performance::estimate_takeoff_distance_m;
 
@@ -7,13 +9,14 @@ pub(crate) fn evaluate_requirements(
     scenario: &ResolvedScenario,
     mission: &MissionResult,
     performance: &PerformanceSummary,
+    payload_range: Option<&PayloadRangeResult>,
 ) -> Vec<RequirementEvaluation> {
     scenario
         .requirements
         .items
         .iter()
         .filter_map(|requirement| {
-            metric_value(requirement, scenario, mission, performance)
+            metric_value(requirement, scenario, mission, performance, payload_range)
                 .map(|actual| evaluate_one(requirement, actual))
         })
         .collect()
@@ -24,6 +27,7 @@ fn metric_value(
     scenario: &ResolvedScenario,
     mission: &MissionResult,
     performance: &PerformanceSummary,
+    payload_range: Option<&PayloadRangeResult>,
 ) -> Option<f64> {
     match requirement.metric.as_str() {
         "mission.payload_mass" => Some(scenario.mission.payload_mass_kg),
@@ -37,8 +41,22 @@ fn metric_value(
         "performance.stall_speed_landing" => Some(performance.stall_speed_landing_m_s),
         "performance.cruise_mach" => performance.cruise_mach,
         "performance.takeoff_field_length" => Some(estimate_takeoff_distance_m(scenario)),
+        "performance.full_payload_range" => {
+            payload_range.and_then(|result| point_range(result, "full_payload_mission"))
+        }
+        "performance.zero_payload_ferry_range" => {
+            payload_range.and_then(|result| point_range(result, "zero_payload_ferry"))
+        }
         _ => None,
     }
+}
+
+fn point_range(result: &PayloadRangeResult, id: &str) -> Option<f64> {
+    result
+        .points
+        .iter()
+        .find(|point| point.id == id)
+        .map(|point| point.range.value)
 }
 
 fn evaluate_one(requirement: &Requirement, actual: f64) -> RequirementEvaluation {
@@ -68,7 +86,12 @@ fn evaluate_one(requirement: &Requirement, actual: f64) -> RequirementEvaluation
 }
 
 fn quantity(value: f64, unit: &str, metric: &str) -> QuantityOutput {
-    if metric == "mission.completed_distance" {
+    if matches!(
+        metric,
+        "mission.completed_distance"
+            | "performance.full_payload_range"
+            | "performance.zero_payload_ferry_range"
+    ) {
         QuantityOutput::range(value)
     } else {
         QuantityOutput::si(value, unit)

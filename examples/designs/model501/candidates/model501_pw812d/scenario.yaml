@@ -1,0 +1,18 @@
+schema_version: 1
+scenario:
+  id: model501_pw812d
+  name: Model 501-10 / Single PW812D
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml
+  overrides:
+    aircraft.geometry.wing.area: 84 m^2
+    aircraft.geometry.wing.aspect_ratio: '10.8'
+    aircraft.geometry.wing.center_body_edge_sweep: 38 deg
+    aircraft.geometry.wing.span: 30.119761 m
+    aircraft.geometry.wing.sweep_quarter_chord: 30 deg
+    aircraft.mass.maximum_fuel_mass: 5679.096 kg
+    aircraft.mass.operating_empty_mass: 8291.550 kg
+    aircraft.propulsion.engine_count: '1'
+    aircraft.propulsion.profile: engine.pratt_whitney_pw812d_concept
+    aircraft.propulsion_architecture: single_buried_pw812d

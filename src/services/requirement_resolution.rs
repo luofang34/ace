@@ -47,7 +47,9 @@ fn requirement_value(metric: &str, value: &Value) -> AexResult<(f64, String)> {
         "performance.cruise_true_airspeed" | "performance.stall_speed_landing" => {
             Some((Dimension::Speed, "m/s"))
         }
-        "mission.completed_distance" => Some((Dimension::Length, "m")),
+        "mission.completed_distance"
+        | "performance.full_payload_range"
+        | "performance.zero_payload_ferry_range" => Some((Dimension::Length, "m")),
         "performance.service_ceiling" | "performance.takeoff_field_length" => {
             Some((Dimension::Length, "m"))
         }

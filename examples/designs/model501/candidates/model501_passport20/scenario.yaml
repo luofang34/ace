@@ -1,0 +1,18 @@
+schema_version: 1
+scenario:
+  id: model501_passport20
+  name: Model 501-10 / Single Passport 20-17
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml
+  overrides:
+    aircraft.geometry.wing.area: 90 m^2
+    aircraft.geometry.wing.aspect_ratio: '9.8'
+    aircraft.geometry.wing.center_body_edge_sweep: 34 deg
+    aircraft.geometry.wing.span: 29.698485 m
+    aircraft.geometry.wing.sweep_quarter_chord: 28 deg
+    aircraft.mass.maximum_fuel_mass: 4721.491 kg
+    aircraft.mass.operating_empty_mass: 9249.155 kg
+    aircraft.propulsion.engine_count: '1'
+    aircraft.propulsion.profile: engine.ge_passport_20_17_concept
+    aircraft.propulsion_architecture: single_buried_passport20

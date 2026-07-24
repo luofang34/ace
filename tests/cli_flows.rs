@@ -17,6 +17,16 @@ fn scenario(name: &str) -> PathBuf {
         .join("scenario.yaml")
 }
 
+fn model501_scenario(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join("designs")
+        .join("model501")
+        .join("candidates")
+        .join(name)
+        .join("scenario.yaml")
+}
+
 fn command(directory: &Path) -> assert_cmd::Command {
     let mut command = cargo_bin_cmd!("aex");
     command.current_dir(directory);
@@ -38,6 +48,29 @@ fn validates_both_reference_projects() -> Result<(), Box<dyn Error>> {
         assert_eq!(result["valid"], true);
     }
     Ok(())
+}
+
+#[test]
+fn model501_engine_trade_examples_resolve() {
+    let temporary = TempDir::new();
+    assert!(temporary.is_ok());
+    if let Ok(directory) = temporary {
+        for name in [
+            "model501_pw812d",
+            "model501_twin_pw306d1",
+            "model501_passport20",
+        ] {
+            command(directory.path())
+                .args([
+                    "resolve",
+                    &model501_scenario(name).to_string_lossy(),
+                    "--format",
+                    "json",
+                ])
+                .assert()
+                .success();
+        }
+    }
 }
 
 #[test]

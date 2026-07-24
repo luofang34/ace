@@ -25,8 +25,17 @@ impl PayloadRangeAnalyzer {
         let payload_at_maximum_fuel =
             (mass.maximum_takeoff_mass_kg - mass.operating_empty_mass_kg - maximum_fuel)
                 .clamp(0.0, maximum_payload);
+        let mission_payload = self.scenario.mission.payload_mass_kg;
+        let fuel_at_mission_payload =
+            (mass.maximum_takeoff_mass_kg - mass.operating_empty_mass_kg - mission_payload)
+                .clamp(0.0, maximum_fuel);
         let reduced_payload = payload_at_maximum_fuel * 0.5;
         let definitions = [
+            (
+                "full_payload_mission",
+                mission_payload,
+                fuel_at_mission_payload,
+            ),
             ("maximum_payload", maximum_payload, fuel_at_maximum_payload),
             (
                 "maximum_fuel_payload",

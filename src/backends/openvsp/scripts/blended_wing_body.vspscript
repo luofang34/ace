@@ -19,6 +19,17 @@ void SetReflexSection( string surface, int index, double ideal_cl, double thickn
     SetParmVal( GetXSecParm( section, "TE_Flap_Deflection" ), -3.0 );
 }
 
+void AddEngineEnvelope( double y_location )
+{
+    string engine = AddGeom( "POD", "" );
+    SetGeomName( engine, "ACE_Engine_Envelope" );
+    SetParmVal( engine, "Length", "Design", __ENGINE_LENGTH__ );
+    SetParmVal( engine, "FineRatio", "Design", __ENGINE_FINE_RATIO__ );
+    SetParmVal( engine, "X_Rel_Location", "XForm", __ENGINE_X__ );
+    SetParmVal( engine, "Y_Rel_Location", "XForm", y_location );
+    SetParmVal( engine, "Z_Rel_Location", "XForm", 0.25 );
+}
+
 void main()
 {
     ClearVSPModel();
@@ -47,12 +58,15 @@ void main()
     SetReflexSection( surface, 1, 0.30, 0.13 );
     SetReflexSection( surface, 2, 0.20, 0.10 );
 
-    string engine = AddGeom( "POD", "" );
-    SetGeomName( engine, "ACE_Engine_Envelope" );
-    SetParmVal( engine, "Length", "Design", __ENGINE_LENGTH__ );
-    SetParmVal( engine, "FineRatio", "Design", __ENGINE_FINE_RATIO__ );
-    SetParmVal( engine, "X_Rel_Location", "XForm", __ENGINE_X__ );
-    SetParmVal( engine, "Z_Rel_Location", "XForm", 0.25 );
+    if ( __ENGINE_COUNT__ == 1 )
+    {
+        AddEngineEnvelope( 0.0 );
+    }
+    else
+    {
+        AddEngineEnvelope( -__ENGINE_Y__ );
+        AddEngineEnvelope( __ENGINE_Y__ );
+    }
 
     Update();
     WriteVSPFile( "__ARTIFACT__", SET_ALL );

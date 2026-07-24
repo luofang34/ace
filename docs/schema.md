@@ -40,6 +40,17 @@ scenario:
 
 Call-specific overrides take precedence over persisted scenario overrides.
 Both are validated against the same typed canonical models.
+Sequence entries are addressed by their stable `id`, not by array position:
+
+```yaml
+scenario:
+  overrides:
+    mission.segments.outbound_cruise.mach: "0.58"
+```
+
+Mission segments with `type: payload_drop` require `payload_mass`. The
+simulator removes that mass without recording fuel burn, enabling an explicit
+payload-delivery and empty-return mission.
 
 `aircraft.geometry.wing.center_body_edge_sweep` is an optional angle for
 tailless blended-wing-body geometry. It denotes the positive magnitude of
