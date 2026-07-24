@@ -1,6 +1,7 @@
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{MissionResult, PerformanceSummary, RequirementEvaluation};
 use crate::domain::schema::{Requirement, ResolvedScenario};
+use crate::models::field_performance::estimate_takeoff_distance_m;
 
 pub(crate) fn evaluate_requirements(
     scenario: &ResolvedScenario,

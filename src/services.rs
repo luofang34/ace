@@ -1,7 +1,10 @@
 pub(crate) mod analysis;
 pub(crate) mod assumptions;
 pub(crate) mod comparison;
+pub(crate) mod design_experiments;
+pub(crate) mod overrides;
 pub(crate) mod profile_resolution;
+pub(crate) mod refinement;
 pub(crate) mod report;
 pub(crate) mod requirement_resolution;
 pub(crate) mod requirements;

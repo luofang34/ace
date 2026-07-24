@@ -1,8 +1,20 @@
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::AssumptionEntry;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct ResultProvenance {
+    pub(crate) method: String,
+    pub(crate) backend: String,
+    pub(crate) assumptions: Vec<String>,
+    pub(crate) validity_range: Vec<String>,
+    pub(crate) units: BTreeMap<String, String>,
+    pub(crate) warnings: Vec<Diagnostic>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct ModelMetadata {

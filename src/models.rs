@@ -1,8 +1,13 @@
 pub(crate) mod aerodynamics;
 pub(crate) mod atmosphere;
+pub(crate) mod breguet;
+pub(crate) mod concept_geometry;
 pub(crate) mod constraints;
+pub(crate) mod field_performance;
 pub(crate) mod mission;
+pub(crate) mod mission_power;
 pub(crate) mod payload_range;
 pub(crate) mod performance;
 pub(crate) mod propulsion;
+pub(crate) mod structural_screen;
 pub(crate) mod weight;

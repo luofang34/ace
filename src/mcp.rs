@@ -1,3 +1,4 @@
+mod parameters;
 mod schema;
 pub(crate) mod serialization;
 
