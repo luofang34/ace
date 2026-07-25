@@ -19,7 +19,9 @@ typed `Quantity`/validation error rather than guessing.
 The resolver normalizes SI values and records scalar sources in an assumptions
 ledger. Interface quantity objects contain `value`, `unit`, `display_value`,
 and `display_unit`. Range fields use metres for `value` and nautical miles for
-display by default.
+display by default. Ledger units are assigned only to registered physical
+quantity paths; names, identifiers, topology vocabulary, requirement metadata,
+and unknown string fields remain verbatim text with `unit: null`.
 
 Scenario documents may contain an `overrides` map. The design MCP tools use
 this map as an editable overlay instead of rewriting aircraft, mission, or
