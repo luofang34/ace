@@ -1,7 +1,7 @@
 use super::parsing::{polar_points, stability_summary};
 use crate::backends::contracts::{GeometryBackend, GeometryRequest};
 use crate::backends::native::NativeBackend;
-use crate::test_support::example_scenario;
+use crate::test_support::{example_scenario, set_inferred_configuration};
 
 #[test]
 fn parses_structured_polar_markers() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,13 +29,35 @@ fn c172_script_places_and_sizes_the_concept() -> Result<(), Box<dyn std::error::
     assert!(script.contains("X_Rel_Location\", \"XForm\", 2.805000000000"));
     assert!(script.contains("Sym_Planar_Flag\", \"Sym\", 0"));
     assert!(script.contains("SetEllipse"));
+    assert!(script.contains("SetGeomName( propeller, \"ACE_Propeller\" )"));
+    assert!(script.contains("Diameter\", \"Design\", 1.930000000000"));
+    assert!(script.contains("AddEngineEnvelope( 0.0 )"));
+    assert!(script.contains("engine, \"X_Rel_Location\", \"XForm\", 0.000000000000"));
+    assert!(script.contains("propeller, \"X_Rel_Location\", \"XForm\", -0.030000000000"));
+    Ok(())
+}
+
+#[test]
+fn transport_script_places_two_engine_envelopes() -> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("b777")?;
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("b777.vsp3"))?;
+    let engine_y = scenario.aircraft.wing.span_m * 0.22;
+    assert!(script.contains("if ( 0 == 1 )"));
+    assert!(script.contains("if ( 2 == 1 )"));
+    assert!(script.contains(&format!("AddEngineEnvelope( -{engine_y:.12} )")));
+    assert!(script.contains(&format!("AddEngineEnvelope( {engine_y:.12} )")));
     Ok(())
 }
 
 #[test]
 fn blended_wing_script_is_tailless_and_reflexed() -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
-    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    set_inferred_configuration(&mut scenario, "tailless_blended_wing_body")?;
     let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
         scenario: &scenario,
         artifact_path: None,
@@ -55,8 +77,8 @@ fn blended_wing_script_is_tailless_and_reflexed() -> Result<(), Box<dyn std::err
 fn twin_engine_blended_wing_uses_two_symmetric_envelopes() -> Result<(), Box<dyn std::error::Error>>
 {
     let mut scenario = example_scenario("c172")?;
-    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
     scenario.aircraft.propulsion.engine_count = 2;
+    set_inferred_configuration(&mut scenario, "tailless_blended_wing_body")?;
     let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
         scenario: &scenario,
         artifact_path: None,
@@ -73,7 +95,7 @@ fn twin_engine_blended_wing_uses_two_symmetric_envelopes() -> Result<(), Box<dyn
 #[test]
 fn blended_wing_center_has_parallel_opposite_edges() -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
-    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    set_inferred_configuration(&mut scenario, "tailless_blended_wing_body")?;
     let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
         scenario: &scenario,
         artifact_path: None,
@@ -99,7 +121,7 @@ fn blended_wing_center_has_parallel_opposite_edges() -> Result<(), Box<dyn std::
 fn blended_wing_center_accepts_explicit_opposite_edge_sweeps()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
-    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    set_inferred_configuration(&mut scenario, "tailless_blended_wing_body")?;
     scenario.aircraft.wing.center_body_edge_sweep_rad = Some(65_f64.to_radians());
     let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
         scenario: &scenario,
@@ -122,9 +144,11 @@ fn blended_wing_center_accepts_explicit_opposite_edge_sweeps()
 #[test]
 fn vspaero_excludes_the_non_lifting_engine_envelope() -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
-    scenario.aircraft.configuration = "tailless_blended_wing_body".to_owned();
+    set_inferred_configuration(&mut scenario, "tailless_blended_wing_body")?;
     let script = super::analysis_script(&scenario, std::path::Path::new("bwb.vsp3"))?;
     assert!(script.contains("FindGeomsWithName( \"ACE_Engine_Envelope\" )"));
     assert!(script.contains("DeleteGeomVec( engine_envelopes )"));
+    assert!(script.contains("FindGeomsWithName( \"ACE_Propeller\" )"));
+    assert!(script.contains("DeleteGeomVec( propellers )"));
     Ok(())
 }

@@ -13,6 +13,7 @@ use crate::domain::schema::{
     Propulsion, RawAeroConfiguration, RawMissionSegment, RequirementsDocument, ResolvedScenario,
     ScenarioDocument, SegmentKind, Wing,
 };
+use crate::domain::topology::AircraftTopology;
 use crate::services::assumptions::collect_all_assumptions;
 use crate::services::overrides::apply_overrides;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
@@ -137,6 +138,12 @@ fn require_schema_version(version: u32, path: &str) -> AexResult<()> {
 pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft> {
     let raw = document.aircraft;
     let mass = resolve_mass(&raw.mass)?;
+    let topology = AircraftTopology::resolve(
+        raw.topology,
+        &raw.configuration,
+        raw.propulsion.engine_count,
+        raw.propulsion.propeller_profile.is_some(),
+    )?;
     let wing = Wing {
         area_m2: positive_quantity(
             &raw.geometry.wing.area,
@@ -186,6 +193,7 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
         category: raw.category,
         configuration: raw.configuration,
         propulsion_architecture: raw.propulsion_architecture,
+        topology,
         metadata: ConceptMetadata {
             purpose: raw.metadata.purpose,
             certification_use: raw.metadata.certification_use,
@@ -459,3 +467,6 @@ fn bounded(value: f64, lower: f64, upper: f64, path: &str) -> AexResult<f64> {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests;

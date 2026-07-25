@@ -192,3 +192,45 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
     client.cancel().await?;
     Ok(())
 }
+
+#[tokio::test]
+async fn unavailable_openvsp_preflights_before_mutation() -> Result<(), Box<dyn Error>> {
+    let temporary = tempfile::tempdir()?;
+    let design_root = temporary.path().join("designs");
+    let artifact = temporary.path().join("rejected.vsp3");
+    let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
+    command.args(["mcp", "serve"]);
+    command.env(
+        "ACE_OPENVSP_EXECUTABLE",
+        "/path/that/does/not/contain/vspscript",
+    );
+    let client = ().serve(TokioChildProcess::new(command)?).await?;
+
+    let response = client
+        .call_tool(CallToolRequestParams {
+            meta: None,
+            name: "auto_refine_design".into(),
+            arguments: Some(arguments(json!({
+                "scenario_path": scenario("c172"),
+                "output_design_id": "must_not_exist",
+                "display_name": "Rejected Design",
+                "design_root": design_root,
+                "backend": "openvsp",
+                "artifact_path": artifact,
+                "max_iterations": 12
+            }))?),
+            task: None,
+        })
+        .await;
+
+    assert!(
+        response.is_err()
+            || response
+                .as_ref()
+                .is_ok_and(|result| result.is_error == Some(true))
+    );
+    assert!(!design_root.exists());
+    assert!(!artifact.exists());
+    client.cancel().await?;
+    Ok(())
+}

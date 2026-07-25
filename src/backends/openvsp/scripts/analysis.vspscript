@@ -1,0 +1,69 @@
+void PrintErrors()
+{
+    while ( GetNumTotalErrors() > 0 )
+    {
+        ErrorObj err = PopLastError();
+        Print( "ACE_ERROR=" + err.GetErrorString() );
+    }
+}
+
+void main()
+{
+    ReadVSPFile( "__ARTIFACT__" );
+    array<string> fuselages = FindGeomsWithName( "ACE_Fuselage" );
+    DeleteGeomVec( fuselages );
+    array<string> engine_envelopes = FindGeomsWithName( "ACE_Engine_Envelope" );
+    DeleteGeomVec( engine_envelopes );
+    array<string> propellers = FindGeomsWithName( "ACE_Propeller" );
+    DeleteGeomVec( propellers );
+    Update();
+
+    SetAnalysisInputDefaults( "VSPAEROComputeGeometry" );
+    string geometry_id = ExecAnalysis( "VSPAEROComputeGeometry" );
+    Print( "ACE_VSPAERO_GEOMETRY_ID=" + geometry_id );
+
+    SetAnalysisInputDefaults( "VSPAEROSweep" );
+    array<int> reference_flag;
+    reference_flag.push_back( 1 );
+    SetIntAnalysisInput( "VSPAEROSweep", "RefFlag", reference_flag );
+    array<string> wings = FindGeomsWithName( "ACE_Main_Wing" );
+    SetStringAnalysisInput( "VSPAEROSweep", "WingID", wings );
+    array<double> center_of_gravity_x;
+    center_of_gravity_x.push_back( __CENTER_OF_GRAVITY_X__ );
+    SetDoubleAnalysisInput( "VSPAEROSweep", "Xcg", center_of_gravity_x );
+    array<double> alpha_start;
+    alpha_start.push_back( -2.0 );
+    SetDoubleAnalysisInput( "VSPAEROSweep", "AlphaStart", alpha_start );
+    array<double> alpha_end;
+    alpha_end.push_back( 8.0 );
+    SetDoubleAnalysisInput( "VSPAEROSweep", "AlphaEnd", alpha_end );
+    array<int> alpha_count;
+    alpha_count.push_back( 6 );
+    SetIntAnalysisInput( "VSPAEROSweep", "AlphaNpts", alpha_count );
+    array<double> mach_start;
+    mach_start.push_back( __MACH__ );
+    SetDoubleAnalysisInput( "VSPAEROSweep", "MachStart", mach_start );
+    array<int> mach_count;
+    mach_count.push_back( 1 );
+    SetIntAnalysisInput( "VSPAEROSweep", "MachNpts", mach_count );
+    ExecAnalysis( "VSPAEROSweep" );
+
+    string polar_id = FindLatestResultsID( "VSPAERO_Polar" );
+    array<double> alpha = GetDoubleResults( polar_id, "Alpha" );
+    array<double> cl = GetDoubleResults( polar_id, "CLtot" );
+    array<double> cd = GetDoubleResults( polar_id, "CDtot" );
+    array<double> cm = GetDoubleResults( polar_id, "CMytot" );
+    for ( uint i = 0; i < alpha.size(); i++ )
+    {
+        Print( "ACE_POLAR=", false );
+        Print( alpha[i], false );
+        Print( ",", false );
+        Print( cl[i], false );
+        Print( ",", false );
+        Print( cd[i], false );
+        Print( ",", false );
+        Print( cm[i] );
+    }
+    PrintErrors();
+    Print( "ACE_COMPLETE=1" );
+}

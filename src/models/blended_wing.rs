@@ -162,10 +162,10 @@ impl PlanformPanel {
 }
 
 pub(crate) fn is_blended_wing_body(scenario: &ResolvedScenario) -> bool {
-    let configuration = scenario.aircraft.configuration.to_ascii_lowercase();
-    configuration.contains("blended_wing")
-        || configuration.contains("flying_wing")
-        || configuration.contains("tailless")
+    let topology = &scenario.aircraft.topology;
+    topology.has_component_kind("lifting_body")
+        || topology.inferred
+            && crate::domain::topology::legacy_lifting_body(&scenario.aircraft.configuration)
 }
 
 fn edge_swept_center(

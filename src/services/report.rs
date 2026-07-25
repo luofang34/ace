@@ -14,7 +14,9 @@ use crate::domain::result::{
 };
 use crate::domain::schema::{ResolvedScenario, SegmentKind};
 use crate::services::analysis::ApplicationService;
-use crate::services::design_experiments::{BackendEvaluation, FeasibilityResult};
+use crate::services::design_experiments::{
+    BackendEvaluation, CompletedFeasibility, FeasibilityResult,
+};
 
 pub(crate) const LIMITATION: &str = "Results are conceptual estimates based on the selected \
 low-fidelity models and are not suitable for certification, operational flight planning, or \
@@ -59,16 +61,17 @@ impl ApplicationService {
     ) -> AexResult<ConceptDesignReport> {
         let scenario = self.resolve_blocking(scenario_path, &Default::default())?;
         let feasibility = self.evaluate_feasibility_blocking(scenario_path, backend, None)?;
+        let completed = feasibility.completed()?;
         let (_, mission) = self.mission_blocking(scenario_path, &Default::default())?;
         let (_, performance) = self.performance_blocking(scenario_path, &Default::default())?;
         let (_, payload_range_result) =
             self.payload_range_blocking(scenario_path, &Default::default())?;
         let (_, constraint_result) =
             self.constraints_blocking(scenario_path, &Default::default(), 300.0, 9_000.0, 80)?;
-        let decision = concept_decision(&feasibility);
+        let decision = concept_decision(completed);
         let charts = concept_charts(
             &scenario,
-            &feasibility,
+            completed,
             &mission,
             &payload_range_result,
             &constraint_result,
@@ -88,7 +91,7 @@ impl ApplicationService {
     }
 }
 
-fn concept_decision(feasibility: &FeasibilityResult) -> ConceptReportDecision {
+fn concept_decision(feasibility: &CompletedFeasibility) -> ConceptReportDecision {
     let requirements = &feasibility.baseline.analysis.requirements;
     let native_feasible = feasibility.baseline.analysis.feasible.unwrap_or(false);
     let hard = requirements
@@ -110,7 +113,7 @@ fn concept_decision(feasibility: &FeasibilityResult) -> ConceptReportDecision {
 
 fn concept_charts(
     scenario: &ResolvedScenario,
-    feasibility: &FeasibilityResult,
+    feasibility: &CompletedFeasibility,
     mission: &MissionResult,
     payload_range_result: &PayloadRangeResult,
     constraint_result: &ConstraintResult,
@@ -248,11 +251,11 @@ pub(crate) fn concept_report_markdown(report: &ConceptDesignReport) -> AexResult
 }
 
 fn write_geometry_summary(output: &mut String, report: &ConceptDesignReport) -> AexResult<()> {
-    let evaluation = report
-        .feasibility
+    let feasibility = report.feasibility.completed()?;
+    let evaluation = feasibility
         .refinement
         .as_ref()
-        .unwrap_or(&report.feasibility.baseline);
+        .unwrap_or(&feasibility.baseline);
     let geometry = &evaluation.geometry.metrics;
     writeln!(output, "\n## Geometry and packaging").map_err(format_error)?;
     writeln!(
@@ -363,3 +366,6 @@ pub(crate) fn markdown_report(
 fn format_error(source: std::fmt::Error) -> AexError {
     AexError::analysis("REPORT_FORMAT_ERROR", source.to_string())
 }
+
+#[cfg(test)]
+mod tests;

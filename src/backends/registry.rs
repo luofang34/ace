@@ -5,7 +5,7 @@ use std::process::Command;
 
 use crate::backends::contracts::{BackendDescriptor, GeometryBackend};
 use crate::backends::native::NativeBackend;
-use crate::backends::openvsp::OpenVspBackend;
+use crate::backends::openvsp::{OpenVspBackend, openvsp_topology_capabilities};
 use crate::domain::diagnostic::{AexError, AexResult};
 
 const OPENVSP_ENV: &str = "ACE_OPENVSP_EXECUTABLE";
@@ -69,6 +69,9 @@ impl BackendRegistry {
                     "vspaero_polar".to_owned(),
                     "static_pitching_moment".to_owned(),
                 ],
+                disciplines: vec!["geometry".to_owned(), "aerodynamics".to_owned()],
+                fidelity_levels: vec![1, 2],
+                topology: openvsp_topology_capabilities(),
                 unavailable_reason: self.openvsp_unavailable_reason.clone(),
             },
             GeometryBackend::descriptor,

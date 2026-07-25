@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 
 use crate::domain::diagnostic::Diagnostic;
+use crate::domain::topology::{AircraftTopology, RawAircraftTopology};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct AircraftDocument {
@@ -19,6 +20,8 @@ pub(crate) struct RawAircraft {
     pub(crate) category: String,
     pub(crate) configuration: String,
     pub(crate) propulsion_architecture: String,
+    #[serde(default)]
+    pub(crate) topology: Option<RawAircraftTopology>,
     pub(crate) metadata: ConceptMetadata,
     pub(crate) mass: RawMass,
     pub(crate) geometry: RawGeometry,
@@ -238,6 +241,7 @@ pub(crate) struct Aircraft {
     pub(crate) category: String,
     pub(crate) configuration: String,
     pub(crate) propulsion_architecture: String,
+    pub(crate) topology: AircraftTopology,
     pub(crate) metadata: ConceptMetadata,
     pub(crate) mass: MassProperties,
     pub(crate) wing: Wing,

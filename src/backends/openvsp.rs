@@ -8,8 +8,9 @@ use std::process::Command;
 use tempfile::NamedTempFile;
 
 use crate::backends::contracts::{
-    AnalysisBackend, AnalysisOutput, AnalysisRequest, BackendDescriptor, GeometryBackend,
-    GeometryOutput, GeometryRequest, ResultProvenance,
+    AnalysisBackend, AnalysisOutput, AnalysisRequest, BackendDescriptor,
+    BackendTopologyCapabilities, GeometryBackend, GeometryOutput, GeometryRequest,
+    ResultProvenance,
 };
 use crate::backends::native::NativeBackend;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
@@ -22,6 +23,8 @@ mod parsing;
 
 use geometry::{blended_wing_center_of_gravity_x, geometry_script};
 use parsing::{marker_number, maximum_lift_to_drag_ratio, polar_points, stability_summary};
+
+const ANALYSIS_TEMPLATE: &str = include_str!("openvsp/scripts/analysis.vspscript");
 
 #[derive(Debug, Clone)]
 pub(crate) struct OpenVspBackend {
@@ -141,6 +144,9 @@ impl OpenVspBackend {
                 "vspaero_polar".to_owned(),
                 "static_pitching_moment".to_owned(),
             ],
+            disciplines: vec!["geometry".to_owned(), "aerodynamics".to_owned()],
+            fidelity_levels: vec![1, 2],
+            topology: openvsp_topology_capabilities(),
             unavailable_reason: None,
         }
     }
@@ -203,76 +209,19 @@ fn analysis_script(scenario: &ResolvedScenario, artifact: &Path) -> AexResult<St
     } else {
         concept.wing_x_m + 0.30 * mean_chord
     };
-    Ok(format!(
-        r#"void PrintErrors()
-{{
-    while ( GetNumTotalErrors() > 0 )
-    {{
-        ErrorObj err = PopLastError();
-        Print( "ACE_ERROR=" + err.GetErrorString() );
-    }}
-}}
-
-void main()
-{{
-    ReadVSPFile( "{artifact}" );
-    array<string> fuselages = FindGeomsWithName( "ACE_Fuselage" );
-    DeleteGeomVec( fuselages );
-    array<string> engine_envelopes = FindGeomsWithName( "ACE_Engine_Envelope" );
-    DeleteGeomVec( engine_envelopes );
-    Update();
-
-    SetAnalysisInputDefaults( "VSPAEROComputeGeometry" );
-    string geometry_id = ExecAnalysis( "VSPAEROComputeGeometry" );
-    Print( "ACE_VSPAERO_GEOMETRY_ID=" + geometry_id );
-
-    SetAnalysisInputDefaults( "VSPAEROSweep" );
-    array<int> reference_flag;
-    reference_flag.push_back( 1 );
-    SetIntAnalysisInput( "VSPAEROSweep", "RefFlag", reference_flag );
-    array<string> wings = FindGeomsWithName( "ACE_Main_Wing" );
-    SetStringAnalysisInput( "VSPAEROSweep", "WingID", wings );
-    array<double> center_of_gravity_x;
-    center_of_gravity_x.push_back( {center_of_gravity_x:.12} );
-    SetDoubleAnalysisInput( "VSPAEROSweep", "Xcg", center_of_gravity_x );
-    array<double> alpha_start;
-    alpha_start.push_back( -2.0 );
-    SetDoubleAnalysisInput( "VSPAEROSweep", "AlphaStart", alpha_start );
-    array<double> alpha_end;
-    alpha_end.push_back( 8.0 );
-    SetDoubleAnalysisInput( "VSPAEROSweep", "AlphaEnd", alpha_end );
-    array<int> alpha_count;
-    alpha_count.push_back( 6 );
-    SetIntAnalysisInput( "VSPAEROSweep", "AlphaNpts", alpha_count );
-    array<double> mach_start;
-    mach_start.push_back( {mach:.12} );
-    SetDoubleAnalysisInput( "VSPAEROSweep", "MachStart", mach_start );
-    array<int> mach_count;
-    mach_count.push_back( 1 );
-    SetIntAnalysisInput( "VSPAEROSweep", "MachNpts", mach_count );
-    ExecAnalysis( "VSPAEROSweep" );
-
-    string polar_id = FindLatestResultsID( "VSPAERO_Polar" );
-    array<double> alpha = GetDoubleResults( polar_id, "Alpha" );
-    array<double> cl = GetDoubleResults( polar_id, "CLtot" );
-    array<double> cd = GetDoubleResults( polar_id, "CDtot" );
-    array<double> cm = GetDoubleResults( polar_id, "CMytot" );
-    for ( uint i = 0; i < alpha.size(); i++ )
-    {{
-        Print( "ACE_POLAR=", false );
-        Print( alpha[i], false );
-        Print( ",", false );
-        Print( cl[i], false );
-        Print( ",", false );
-        Print( cd[i], false );
-        Print( ",", false );
-        Print( cm[i] );
-    }}
-    PrintErrors();
-    Print( "ACE_COMPLETE=1" );
-}}
-"#
-    ))
+    let values = [
+        ("__ARTIFACT__", artifact),
+        (
+            "__CENTER_OF_GRAVITY_X__",
+            format!("{center_of_gravity_x:.12}"),
+        ),
+        ("__MACH__", format!("{mach:.12}")),
+    ];
+    Ok(values
+        .iter()
+        .fold(ANALYSIS_TEMPLATE.to_owned(), |script, (key, value)| {
+            script.replace(key, value)
+        }))
 }
 
 pub(super) fn script_string(path: &Path) -> AexResult<String> {
@@ -324,6 +273,40 @@ fn backend_failure(operation: &str, output: &str, code: Option<i32>) -> AexError
         operation: operation.to_owned(),
         message: format!("exit code {code:?}: {tail}"),
     }
+}
+
+pub(super) fn openvsp_topology_capabilities() -> BackendTopologyCapabilities {
+    BackendTopologyCapabilities {
+        component_kinds: vec![
+            "fuselage".to_owned(),
+            "wing".to_owned(),
+            "horizontal_tail".to_owned(),
+            "vertical_tail".to_owned(),
+            "lifting_body".to_owned(),
+            "engine".to_owned(),
+            "propeller".to_owned(),
+        ],
+        relationship_kinds: vec!["attached_to".to_owned(), "symmetric_about".to_owned()],
+        delegated_relationship_kinds: vec!["carries_load_to".to_owned()],
+    }
+}
+
+pub(crate) fn openvsp_topology_violations(scenario: &ResolvedScenario) -> Vec<String> {
+    let mut violations = Vec::new();
+    let engine_count = scenario.aircraft.propulsion.engine_count;
+    if engine_count > 2 {
+        violations.push("OpenVSP topology supports at most two engine instances".to_owned());
+    }
+    if scenario.propeller.is_some() && engine_count != 1 {
+        violations.push(
+            "OpenVSP topology supports a propeller only for a single-engine configuration"
+                .to_owned(),
+        );
+    }
+    if is_blended_wing_body(scenario) && scenario.propeller.is_some() {
+        violations.push("OpenVSP lifting-body geometry does not represent propellers".to_owned());
+    }
+    violations
 }
 
 fn openvsp_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance {
