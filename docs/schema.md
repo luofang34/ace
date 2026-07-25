@@ -65,6 +65,14 @@ Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
 payload-delivery and empty-return mission.
 
+Aerodynamic and propulsion diagnostics produced while evaluating a mission
+segment appear both on that segment and in the mission warning channel.
+Diagnostic paths use the stable segment ID, for example
+`mission.segments.supersonic_cruise.condition.mach`. Repeated integration
+steps deduplicate the same model code and source path within one segment;
+matching warnings from different segment IDs remain distinct. Strict mission
+analysis therefore applies the same model-warning policy as point analysis.
+
 `aircraft.geometry.wing.center_body_edge_sweep` is an optional angle for
 tailless blended-wing-body geometry. It denotes the positive magnitude of
 opposed center-body leading- and trailing-edge sweeps. OpenVSP translates it

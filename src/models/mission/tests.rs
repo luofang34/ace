@@ -6,6 +6,28 @@ use crate::test_support::example_scenario;
 
 use super::{MissionSimulator, initial_fuel_load};
 
+fn cruise_probe(
+    scenario: &crate::domain::schema::ResolvedScenario,
+    id: &str,
+    altitude_m: f64,
+    mach: Option<f64>,
+) -> Result<MissionSegment, Box<dyn std::error::Error>> {
+    let mut segment = scenario
+        .mission
+        .segments
+        .iter()
+        .find(|segment| segment.kind == SegmentKind::Cruise)
+        .cloned()
+        .ok_or_else(|| io::Error::other("fixture has no cruise segment"))?;
+    segment.id = id.to_owned();
+    segment.distance_m = Some(1_000.0);
+    segment.altitude_m = Some(altitude_m);
+    segment.mach = mach;
+    segment.true_airspeed_m_s = mach.is_none().then_some(45.0);
+    segment.indicated_airspeed_m_s = None;
+    Ok(segment)
+}
+
 #[test]
 fn mission_mass_is_continuous_and_non_increasing() {
     let scenario = example_scenario("c172");
@@ -111,5 +133,82 @@ fn stored_mission_without_exhaustion_flag_defaults_to_false()
     let decoded: MissionResult = serde_json::from_value(stored)?;
 
     assert!(!decoded.fuel_exhausted);
+    Ok(())
+}
+
+#[test]
+fn cruise_model_diagnostics_are_scoped_and_deduplicated() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut scenario = example_scenario("sr71")?;
+    scenario.mission.segments = vec![cruise_probe(
+        &scenario,
+        "strict_probe",
+        19_507.2,
+        Some(3.2),
+    )?];
+
+    let mission = MissionSimulator::new(scenario).simulate()?;
+    let segment = mission
+        .segments
+        .first()
+        .ok_or_else(|| io::Error::other("probe segment did not complete"))?;
+    let extrapolations = segment
+        .warnings
+        .iter()
+        .filter(|warning| warning.code == "MODEL_EXTRAPOLATION")
+        .collect::<Vec<_>>();
+
+    assert_eq!(extrapolations.len(), 1);
+    assert_eq!(
+        extrapolations[0].path.as_deref(),
+        Some("mission.segments.strict_probe.condition.mach")
+    );
+    assert!(mission.warnings.contains(extrapolations[0]));
+    Ok(())
+}
+
+#[test]
+fn identical_diagnostics_remain_distinct_across_segments() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut scenario = example_scenario("sr71")?;
+    scenario.mission.segments = vec![
+        cruise_probe(&scenario, "high_speed_one", 19_507.2, Some(3.2))?,
+        cruise_probe(&scenario, "high_speed_two", 19_507.2, Some(3.2))?,
+    ];
+
+    let mission = MissionSimulator::new(scenario).simulate()?;
+    let paths = mission
+        .warnings
+        .iter()
+        .filter(|warning| warning.code == "MODEL_EXTRAPOLATION")
+        .filter_map(|warning| warning.path.as_deref())
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        paths,
+        [
+            "mission.segments.high_speed_one.condition.mach",
+            "mission.segments.high_speed_two.condition.mach",
+        ]
+    );
+    Ok(())
+}
+
+#[test]
+fn cruise_retains_propulsion_deck_diagnostics() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.mission.segments = vec![cruise_probe(&scenario, "high_cruise", 5_800.0, None)?];
+
+    let mission = MissionSimulator::new(scenario).simulate()?;
+    let segment = mission
+        .segments
+        .first()
+        .ok_or_else(|| io::Error::other("probe segment did not complete"))?;
+
+    assert!(segment.warnings.iter().any(|warning| {
+        warning.code == "MODEL_EXTRAPOLATION"
+            && warning.path.as_deref()
+                == Some("mission.segments.high_cruise.aircraft.propulsion.profile")
+    }));
     Ok(())
 }

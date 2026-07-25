@@ -15,6 +15,19 @@ pub(crate) struct PointAnalyzer {
     atmosphere: Isa1976,
 }
 
+#[derive(Debug)]
+pub(crate) struct ClimbRateEvaluation {
+    pub(crate) speed_m_s: f64,
+    pub(crate) maximum_rate_m_s: f64,
+    pub(crate) warnings: Vec<Diagnostic>,
+}
+
+#[derive(Debug)]
+struct ExcessPowerEvaluation {
+    value_w: f64,
+    warnings: Vec<Diagnostic>,
+}
+
 impl PointAnalyzer {
     pub(crate) fn new(scenario: ResolvedScenario) -> Self {
         Self {
@@ -193,6 +206,15 @@ impl PointAnalyzer {
         altitude_m: f64,
         mass_kg: f64,
     ) -> AexResult<(f64, f64)> {
+        let evaluation = self.maximum_rate_of_climb_with_diagnostics(altitude_m, mass_kg)?;
+        Ok((evaluation.speed_m_s, evaluation.maximum_rate_m_s))
+    }
+
+    pub(crate) fn maximum_rate_of_climb_with_diagnostics(
+        &self,
+        altitude_m: f64,
+        mass_kg: f64,
+    ) -> AexResult<ClimbRateEvaluation> {
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let stall = stall_speed_m_s(
             &self.scenario.aircraft,
@@ -203,18 +225,29 @@ impl PointAnalyzer {
         let upper = speed_upper_bound(&self.scenario, &atmosphere);
         let mut best_speed = stall * 1.2;
         let mut best_rate = f64::NEG_INFINITY;
+        let mut warnings = Vec::new();
         for index in 0..100 {
             let fraction = f64::from(index) / 99.0;
             let speed = stall * 1.05 + fraction * (upper - stall * 1.05);
-            let rate =
-                self.excess_power_at(altitude_m, speed, mass_kg, OperatingMode::Climb, 1.0)?
-                    / (mass_kg * GRAVITY_M_S2);
+            let evaluation = self.excess_power_evaluation(
+                altitude_m,
+                speed,
+                mass_kg,
+                OperatingMode::Climb,
+                1.0,
+            )?;
+            extend_unique_diagnostics(&mut warnings, evaluation.warnings);
+            let rate = evaluation.value_w / (mass_kg * GRAVITY_M_S2);
             if rate > best_rate {
                 best_rate = rate;
                 best_speed = speed;
             }
         }
-        Ok((best_speed, best_rate))
+        Ok(ClimbRateEvaluation {
+            speed_m_s: best_speed,
+            maximum_rate_m_s: best_rate,
+            warnings,
+        })
     }
 
     pub(crate) fn ceiling(&self, mass_kg: f64, threshold_m_s: f64) -> AexResult<f64> {
@@ -248,6 +281,19 @@ impl PointAnalyzer {
         mode: OperatingMode,
         throttle: f64,
     ) -> AexResult<f64> {
+        Ok(self
+            .excess_power_evaluation(altitude_m, speed_m_s, mass_kg, mode, throttle)?
+            .value_w)
+    }
+
+    fn excess_power_evaluation(
+        &self,
+        altitude_m: f64,
+        speed_m_s: f64,
+        mass_kg: f64,
+        mode: OperatingMode,
+        throttle: f64,
+    ) -> AexResult<ExcessPowerEvaluation> {
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let mach = speed_m_s / atmosphere.speed_of_sound_m_s;
         let aero = evaluate_aerodynamics(
@@ -281,7 +327,23 @@ impl PointAnalyzer {
             .ok_or_else(|| {
                 AexError::analysis("MISSING_PROPULSION_CAPABILITY", "no power or thrust")
             })?;
-        Ok(available - aero.power_required_w)
+        let mut warnings = aero.warnings;
+        extend_unique_diagnostics(&mut warnings, propulsion.warnings);
+        Ok(ExcessPowerEvaluation {
+            value_w: available - aero.power_required_w,
+            warnings,
+        })
+    }
+}
+
+fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diagnostic>) {
+    for diagnostic in diagnostics {
+        if !target
+            .iter()
+            .any(|existing| existing.code == diagnostic.code && existing.path == diagnostic.path)
+        {
+            target.push(diagnostic);
+        }
     }
 }
 
