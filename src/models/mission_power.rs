@@ -116,6 +116,7 @@ fn provenance() -> ResultProvenance {
             "quasi-steady unaccelerated flight".to_owned(),
         ],
         validity_range: vec!["climb, cruise, loiter, and reserve segments".to_owned()],
+        validity_domains: Vec::new(),
         units: BTreeMap::from([
             ("altitude".to_owned(), "m".to_owned()),
             ("speed".to_owned(), "m/s".to_owned()),

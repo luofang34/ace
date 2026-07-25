@@ -43,6 +43,7 @@ fn evidence(candidate_id: String) -> Result<EvidenceEnvelope, Box<dyn std::error
         provenance: EvidenceProvenance {
             assumptions: Vec::new(),
             validity_range: Vec::new(),
+            validity_domains: Vec::new(),
             confidence: None,
             dependencies: Vec::new(),
             artifacts: Vec::new(),

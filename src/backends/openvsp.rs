@@ -325,6 +325,7 @@ fn openvsp_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance 
             "OpenVSP component parameters remain adapter-internal".to_owned(),
         ],
         validity_range: vec!["conventional fixed-wing planforms".to_owned()],
+        validity_domains: Vec::new(),
         units: BTreeMap::from([
             ("area".to_owned(), "m^2".to_owned()),
             ("length".to_owned(), "m".to_owned()),
@@ -355,6 +356,7 @@ fn blended_wing_body_geometry_provenance(scenario: &ResolvedScenario) -> ResultP
             "OpenVSP component parameters remain adapter-internal".to_owned(),
         ],
         validity_range: vec!["visual and low-order tailless BWB concepts".to_owned()],
+        validity_domains: Vec::new(),
         units: BTreeMap::from([
             ("area".to_owned(), "m^2".to_owned()),
             ("length".to_owned(), "m".to_owned()),
@@ -385,6 +387,7 @@ fn openvsp_analysis_provenance(scenario: &ResolvedScenario) -> ResultProvenance 
             "attached subsonic flow".to_owned(),
             "low-order static aerodynamic trends".to_owned(),
         ],
+        validity_domains: Vec::new(),
         units: BTreeMap::from([
             ("angle_of_attack".to_owned(), "deg".to_owned()),
             ("aerodynamic_coefficients".to_owned(), "1".to_owned()),

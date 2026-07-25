@@ -159,6 +159,14 @@ digest prefix under `evaluations/` and `archives/`. An identical write is
 idempotent; changed content cannot replace an existing identity. Candidate
 directories are not part of the storage contract.
 
+Result and evidence provenance may include `validity_domains`, a
+machine-readable list keyed by `model_id`. Each bound names a typed variable,
+canonical SI unit, optional minimum and maximum with explicit inclusivity, and
+a basis such as `published_specification`, `model_form`, `resolved_profile`, or
+`screening_assumption`. The prose `validity_range` remains available for human
+readers. Omitted typed domains default to an empty list and empty lists are not
+serialized, preserving schema-version-1 stored-record identities.
+
 Archive workflow data is additive and defaults to empty, so schema-version-1
 archives without it remain valid. A checkpoint records the completed
 generation, deterministic random-number state after population construction,

@@ -447,6 +447,7 @@ fn refinement_provenance() -> ResultProvenance {
                 .to_owned(),
         ],
         validity_range: vec!["local refinement around an existing fixed-wing concept".to_owned()],
+        validity_domains: Vec::new(),
         units: BTreeMap::from([("score".to_owned(), "ranking-only".to_owned())]),
         warnings: vec![Diagnostic::limitation(
             "Convergence means all implemented conceptual screens pass; it is not structural substantiation or certification.",

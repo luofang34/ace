@@ -16,6 +16,7 @@ use crate::models::mission_power;
 use crate::models::payload_range::PayloadRangeAnalyzer;
 use crate::models::performance::PointAnalyzer;
 use crate::models::structural_screen;
+use crate::models::validity::scenario_domains;
 use crate::models::weight::{WeightClosureInput, solve_weight_closure};
 use crate::services::requirements::{
     evaluate_requirements, failed_hard_requirement_ids, hard_requirements_passed,
@@ -187,7 +188,7 @@ impl AnalysisBackend for NativeBackend {
             requirements,
             feasible: Some(feasible),
             failed_constraints,
-            provenance: native_analysis_provenance(scenario, warnings, breguet.assumptions),
+            provenance: native_analysis_provenance(scenario, warnings, breguet.assumptions)?,
         })
     }
 }
@@ -285,6 +286,7 @@ fn native_geometry_provenance(blended: bool) -> ResultProvenance {
         backend: "native".to_owned(),
         assumptions,
         validity_range,
+        validity_domains: Vec::new(),
         units: geometry_units(),
         warnings: vec![Diagnostic::limitation(
             "Native geometry dimensions and wetted area are conceptual estimates.",
@@ -296,7 +298,7 @@ fn native_analysis_provenance(
     scenario: &ResolvedScenario,
     warnings: Vec<Diagnostic>,
     mut assumptions: Vec<String>,
-) -> ResultProvenance {
+) -> AexResult<ResultProvenance> {
     assumptions.extend([
         "parabolic drag polar".to_owned(),
         "ISA 1976 atmosphere".to_owned(),
@@ -308,7 +310,7 @@ fn native_analysis_provenance(
     } else {
         "subsonic conventional fixed-wing aircraft"
     };
-    ResultProvenance {
+    Ok(ResultProvenance {
         method: "deterministic conceptual performance synthesis".to_owned(),
         backend: "native".to_owned(),
         assumptions,
@@ -316,9 +318,10 @@ fn native_analysis_provenance(
             configuration_range.to_owned(),
             "fidelity level 0-1; not for certification".to_owned(),
         ],
+        validity_domains: scenario_domains(scenario)?,
         units: analysis_units(),
         warnings,
-    }
+    })
 }
 
 fn geometry_units() -> BTreeMap<String, String> {

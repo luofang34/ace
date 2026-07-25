@@ -187,6 +187,7 @@ fn comparison_provenance() -> ResultProvenance {
         backend: "native".to_owned(),
         assumptions: vec!["each design is evaluated independently".to_owned()],
         validity_range: vec!["designs using registered native models".to_owned()],
+        validity_domains: Vec::new(),
         units: BTreeMap::from([("metrics".to_owned(), "result-specific SI".to_owned())]),
         warnings: vec![Diagnostic::limitation(
             "Comparison ranks conceptual estimates rather than certified performance.",

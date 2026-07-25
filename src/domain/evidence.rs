@@ -7,6 +7,7 @@ use crate::domain::content_identity::{
 };
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
+use crate::domain::validity::ModelValidityDomain;
 
 pub(crate) mod archive;
 mod workflow;
@@ -201,6 +202,8 @@ pub(crate) struct EvidenceResults {
 pub(crate) struct EvidenceProvenance {
     pub(crate) assumptions: Vec<String>,
     pub(crate) validity_range: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) validity_domains: Vec<ModelValidityDomain>,
     pub(crate) confidence: Option<f64>,
     pub(crate) dependencies: Vec<String>,
     pub(crate) artifacts: Vec<EvidenceArtifact>,
@@ -363,6 +366,17 @@ fn validate_provenance(provenance: &EvidenceProvenance) -> AexResult<()> {
             "evidence.provenance.confidence",
             "confidence must be finite and between zero and one",
         ));
+    }
+    let mut model_ids = BTreeSet::new();
+    for domain in &provenance.validity_domains {
+        domain.validate()?;
+        if !model_ids.insert(domain.model_id.as_str()) {
+            return Err(AexError::validation(
+                "DUPLICATE_MODEL_VALIDITY_DOMAIN",
+                "evidence.provenance.validity_domains",
+                "model validity domain identifiers must be unique",
+            ));
+        }
     }
     let mut dependencies = BTreeSet::new();
     for dependency in &provenance.dependencies {
