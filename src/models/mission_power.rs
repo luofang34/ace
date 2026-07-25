@@ -128,3 +128,6 @@ fn provenance() -> ResultProvenance {
         )],
     }
 }
+
+#[cfg(test)]
+mod tests;

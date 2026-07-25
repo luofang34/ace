@@ -9,9 +9,8 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{
     AeroConfiguration, Aerodynamics, Aircraft, AircraftDocument, AircraftLimits, ConceptMetadata,
-    EngineProfile, MassProperties, Mission, MissionDocument, MissionSegment, PropellerProfile,
-    Propulsion, RawAeroConfiguration, RawMissionSegment, RequirementsDocument, ResolvedScenario,
-    ScenarioDocument, SegmentKind,
+    EngineProfile, MassProperties, Mission, MissionDocument, PropellerProfile, Propulsion,
+    RawAeroConfiguration, RequirementsDocument, ResolvedScenario, ScenarioDocument,
 };
 use crate::domain::topology::AircraftTopology;
 use crate::services::assumptions::collect_all_assumptions;
@@ -24,9 +23,11 @@ use crate::storage::project_store::read_yaml_value_blocking;
 
 mod embedded;
 mod planform;
+mod segments;
 
 pub(crate) use embedded::resolve_embedded_study;
 pub(crate) use planform::complete_planform_overrides;
+use segments::resolve_segment;
 
 #[derive(Clone)]
 pub(crate) struct ScenarioResolver {
@@ -277,96 +278,6 @@ pub(crate) fn resolve_mission(document: MissionDocument) -> AexResult<Mission> {
         )?,
         segments,
     })
-}
-
-fn resolve_segment(raw: RawMissionSegment, index: usize) -> AexResult<MissionSegment> {
-    let path = format!("mission.segments.{index}");
-    let kind = segment_kind(&raw.kind, &path)?;
-    validate_segment_requirements(kind, &raw, &path)?;
-    Ok(MissionSegment {
-        id: raw.id,
-        kind,
-        duration_s: optional_quantity(raw.duration.as_deref(), Dimension::Time)?,
-        distance_m: optional_quantity(raw.distance.as_deref(), Dimension::Length)?,
-        target_altitude_m: optional_quantity(raw.target_altitude.as_deref(), Dimension::Length)?,
-        altitude_m: optional_quantity(raw.altitude.as_deref(), Dimension::Length)?,
-        indicated_airspeed_m_s: optional_quantity(
-            raw.indicated_airspeed.as_deref(),
-            Dimension::Speed,
-        )?,
-        true_airspeed_m_s: optional_quantity(raw.true_airspeed.as_deref(), Dimension::Speed)?,
-        mach: raw.mach,
-        power_fraction: optional_fraction(raw.power_fraction, &format!("{path}.power_fraction"))?,
-        thrust_fraction: optional_fraction(
-            raw.thrust_fraction,
-            &format!("{path}.thrust_fraction"),
-        )?,
-        fuel_fraction: optional_fraction(raw.fuel_fraction, &format!("{path}.fuel_fraction"))?,
-        fuel_mass_kg: optional_quantity(raw.fuel_mass.as_deref(), Dimension::Mass)?,
-        payload_mass_kg: optional_positive_quantity(
-            raw.payload_mass.as_deref(),
-            Dimension::Mass,
-            &format!("{path}.payload_mass"),
-        )?,
-    })
-}
-
-fn segment_kind(value: &str, path: &str) -> AexResult<SegmentKind> {
-    match value {
-        "start_and_taxi" => Ok(SegmentKind::StartAndTaxi),
-        "fixed_time" => Ok(SegmentKind::FixedTime),
-        "fixed_fuel" => Ok(SegmentKind::FixedFuel),
-        "payload_drop" => Ok(SegmentKind::PayloadDrop),
-        "takeoff" => Ok(SegmentKind::Takeoff),
-        "climb" => Ok(SegmentKind::Climb),
-        "cruise" => Ok(SegmentKind::Cruise),
-        "loiter" => Ok(SegmentKind::Loiter),
-        "descent" => Ok(SegmentKind::Descent),
-        "landing" => Ok(SegmentKind::Landing),
-        "reserve" => Ok(SegmentKind::Reserve),
-        _ => Err(AexError::validation(
-            "UNSUPPORTED_SEGMENT_TYPE",
-            path,
-            format!("unsupported segment type {value}"),
-        )),
-    }
-}
-
-fn validate_segment_requirements(
-    kind: SegmentKind,
-    raw: &RawMissionSegment,
-    path: &str,
-) -> AexResult<()> {
-    let timed = matches!(
-        kind,
-        SegmentKind::StartAndTaxi
-            | SegmentKind::FixedTime
-            | SegmentKind::Takeoff
-            | SegmentKind::Loiter
-            | SegmentKind::Reserve
-    );
-    if timed && raw.duration.is_none() {
-        return Err(AexError::validation(
-            "MISSING_SEGMENT_DURATION",
-            path,
-            "segment requires duration",
-        ));
-    }
-    if kind == SegmentKind::Cruise && raw.distance.is_none() {
-        return Err(AexError::validation(
-            "MISSING_SEGMENT_DISTANCE",
-            path,
-            "cruise segment requires distance",
-        ));
-    }
-    if kind == SegmentKind::PayloadDrop && raw.payload_mass.is_none() {
-        return Err(AexError::validation(
-            "MISSING_PAYLOAD_MASS",
-            path,
-            "payload-drop segment requires payload_mass",
-        ));
-    }
-    Ok(())
 }
 
 fn validate_payload(aircraft: &Aircraft, mission: &Mission) -> AexResult<()> {

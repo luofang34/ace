@@ -1,5 +1,6 @@
 use serde_json::json;
 
+use crate::domain::validity::ValidityBasis;
 use crate::models::atmosphere::Isa1976;
 use crate::test_support::example_scenario;
 
@@ -46,6 +47,29 @@ fn resolved_propulsion_domains_use_profile_limits() -> Result<(), Box<dyn std::e
     for domain in scenario_domains(&b777)? {
         domain.validate()?;
     }
+    Ok(())
+}
+
+#[test]
+fn generic_turbofan_domain_declares_profile_resolved_mach() -> Result<(), Box<dyn std::error::Error>>
+{
+    let generic = RegisteredModel::TurbofanPropulsion.validity_domain();
+    let mach = generic
+        .bounds
+        .iter()
+        .find(|bound| bound.variable == ValidityVariable::Mach)
+        .ok_or("generic turbofan Mach bound is missing")?;
+    assert_eq!(mach.maximum, None);
+    assert_eq!(mach.basis, ValidityBasis::ResolvedProfile);
+
+    let b777 = example_scenario("b777")?;
+    let resolved = b777.engine.validity_domain();
+    let resolved_mach = resolved
+        .bounds
+        .iter()
+        .find(|bound| bound.variable == ValidityVariable::Mach)
+        .ok_or("resolved turbofan Mach bound is missing")?;
+    assert_eq!(resolved_mach.maximum, Some(0.9));
     Ok(())
 }
 

@@ -23,7 +23,7 @@ object, and fix warning/metric plumbing so an eager LLM cannot be lied to.
 | C172 | All hard requirements pass; soft ceiling requirement honestly fails by 3.7% | 86 kg fuel / 383 nmi ≈ 9.4 gph at 65% — right. Stall 45 kt, L/D 11.9 — right. |
 | 777-300ER | All requirements pass, 7,490 nmi | Trip fuel 104.7 t is ~15–20% low; climb to FL350 takes 10 min / 2.8 t (real: ~22 min / ~8 t). The simplified climb model is the main error source. |
 | SR-71 | Authentic mission (78 kft): hard crash. Clamped to 64 kft: "completed", all hard requirements pass | Cruise point right by construction (24 t/hr at M3.2 — matches). Everything off-design is garbage: subsonic leg burns 11.6 t/hr (~3× real), landed with 7 kg of fuel, no warning about either. The fixture also raises fuel capacity from NASA's 80,280 lb (36,414 kg) figure to 46,180 kg because the model cannot represent operational post-takeoff refueling. |
-| X-15 | Not representable. Best attempt fails mid-"glide" | Rocket profile type rejected; air launch silently ignored (started at 0 m); forced idle burned 3.3 t of propellant during engine-off captive carry; boost climb did 0→65,000 ft in 17 s; the unpowered glider "ran out of fuel". |
+| X-15 | Not representable. Best attempt fails mid-"glide" | Rocket profile type rejected; air launch has no supported initial-state field (started at 0 m); forced idle burned 3.3 t of propellant during engine-off captive carry; boost climb did 0→65,000 ft in 17 s; the unpowered glider "ran out of fuel". |
 
 ## What works well for an LLM
 

@@ -4,9 +4,13 @@ use std::path::Path;
 use serde::Serialize;
 use serde_yaml::Value;
 
+use crate::domain::capabilities::{
+    DocumentKind, ProfileRole, document_type as capability_document_type, document_types,
+    profile_type,
+};
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic, Severity};
 use crate::domain::schema::{
-    AircraftDocument, MissionDocument, ProfileDocument, RequirementsDocument,
+    AircraftDocument, MissionDocument, ProfileDocument, RequirementsDocument, ScenarioDocument,
 };
 use crate::domain::study::{StudyDocument, validate_study_document};
 use crate::domain::warning::WarningCode;
@@ -65,8 +69,11 @@ pub(crate) fn validate_document_value(
                 "document has no supported envelope key",
             )
         })?;
-    match document_type.as_str() {
-        "aircraft" => {
+    let kind = capability_document_type(&document_type).ok_or_else(|| {
+        AexError::validation("UNSUPPORTED_DOCUMENT_TYPE", "document_type", &document_type)
+    })?;
+    match kind.kind {
+        DocumentKind::Aircraft => {
             let typed: AircraftDocument = from_value(document.clone(), "aircraft")?;
             let resolved = resolve_aircraft(typed)?;
             if resolved.metadata.certification_use != "prohibited" {
@@ -82,37 +89,34 @@ pub(crate) fn validate_document_value(
                 });
             }
         }
-        "mission" => {
+        DocumentKind::Mission => {
             let typed: MissionDocument = from_value(document.clone(), "mission")?;
             resolve_mission(typed)?;
         }
-        "requirements" => {
+        DocumentKind::Requirements => {
             let typed: RequirementsDocument = from_value(document.clone(), "requirements")?;
             resolve_requirements(typed)?;
         }
-        "profile" => {
+        DocumentKind::Profile => {
             let typed: ProfileDocument = from_value(document.clone(), "profile")?;
-            let warnings = if typed.profile.kind == "propeller" {
-                propeller_profile_warnings(&parse_propeller_profile(typed.profile)?)
-            } else {
-                engine_profile_warnings(&parse_engine_profile(typed.profile)?)
+            let warnings = match profile_type(&typed.profile.kind).map(|item| item.role) {
+                Some(ProfileRole::Propeller) => {
+                    propeller_profile_warnings(&parse_propeller_profile(typed.profile)?)
+                }
+                _ => engine_profile_warnings(&parse_engine_profile(typed.profile)?),
             };
             return Ok(result_with_warnings(&document_type, warnings));
         }
-        "study" => {
+        DocumentKind::Scenario => {
+            let _: ScenarioDocument = from_value(document.clone(), "scenario")?;
+        }
+        DocumentKind::Study => {
             let typed: StudyDocument = from_value(document.clone(), "study")?;
             validate_study_document(&typed)?;
             if let Some(embedded) = &typed.study.baseline.embedded {
                 let warnings = embedded_study_warnings(embedded)?;
                 return Ok(result_with_warnings(&document_type, warnings));
             }
-        }
-        _ => {
-            return Err(AexError::validation(
-                "UNSUPPORTED_DOCUMENT_TYPE",
-                "document_type",
-                document_type,
-            ));
         }
     }
     Ok(valid_result(&document_type))
@@ -149,10 +153,10 @@ fn from_value<T: serde::de::DeserializeOwned>(value: Value, path: &str) -> AexRe
 }
 
 fn detect_type(document: &Value) -> Option<String> {
-    ["aircraft", "mission", "requirements", "profile", "study"]
-        .into_iter()
-        .find(|key| document.get(*key).is_some())
-        .map(str::to_owned)
+    document_types()
+        .iter()
+        .find(|item| document.get(item.id).is_some())
+        .map(|item| item.id.to_owned())
 }
 
 fn valid_result(document_type: &str) -> ValidationResult {

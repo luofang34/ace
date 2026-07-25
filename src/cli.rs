@@ -20,6 +20,10 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    Capabilities {
+        #[command(flatten)]
+        output: OutputArgs,
+    },
     Validate {
         path: PathBuf,
         #[command(flatten)]

@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 
+use crate::domain::capabilities::{AeroConfigurationKind, aero_configuration};
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::topology::{AircraftTopology, RawAircraftTopology};
 
@@ -145,6 +146,8 @@ pub(crate) struct RawMissionSegment {
     pub(crate) fuel_fraction: Option<f64>,
     pub(crate) fuel_mass: Option<String>,
     pub(crate) payload_mass: Option<String>,
+    #[serde(flatten, default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) additional_fields: BTreeMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -280,11 +283,10 @@ pub(crate) struct Aerodynamics {
 
 impl Aerodynamics {
     pub(crate) fn configuration(&self, name: &str) -> Option<&AeroConfiguration> {
-        match name {
-            "clean" => Some(&self.clean),
-            "takeoff" => Some(&self.takeoff),
-            "landing" => Some(&self.landing),
-            _ => None,
+        match aero_configuration(name)?.kind {
+            AeroConfigurationKind::Clean => Some(&self.clean),
+            AeroConfigurationKind::Takeoff => Some(&self.takeoff),
+            AeroConfigurationKind::Landing => Some(&self.landing),
         }
     }
 }
