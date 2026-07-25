@@ -31,6 +31,12 @@ maps of dotted paths to explicit unit strings. Chart tools return a serializable
 chart specification and may write an SVG only when an artifact path is
 supplied. No MCP tool invokes a web service or language model.
 
+Scenario tools use `default_unit_system` from the `aircraft-explorer.yaml`
+adjacent to `scenario_path`. An optional `units: "si"|"aviation_us"` request
+field overrides the project. MCP and CLI responses share the same presentation
+serializer: canonical values remain SI, while Aviation-US display metadata uses
+kt, ft, lb, and nmi according to quantity semantics.
+
 `simulate_mission` preserves the mission result fields at the response root and
 adds `hard_requirements_passed`. That headline is true only when the mission
 completes and every hard requirement passes; incomplete missions report false

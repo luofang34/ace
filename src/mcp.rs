@@ -1,19 +1,19 @@
+mod design;
 mod mission;
+mod output;
 mod parameters;
 mod report;
 mod schema;
 pub(crate) mod serialization;
 mod study;
 
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use rmcp::handler::server::wrapper::{Json, Parameters};
 use rmcp::{
-    ErrorData, ServerHandler, ServiceExt, handler::server::router::tool::ToolRouter, schemars,
-    tool, tool_handler, tool_router, transport::stdio,
+    ErrorData, ServerHandler, ServiceExt, handler::server::router::tool::ToolRouter, tool,
+    tool_handler, tool_router, transport::stdio,
 };
-use serde::Serialize;
 use serde_json::{Value, json};
 
 use crate::charts::generators::{constraints, payload_range, sweep};
@@ -21,8 +21,8 @@ use crate::charts::renderer::render_svg_blocking;
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::services::analysis::{ApplicationService, PointCondition};
-use crate::services::refinement::RefinementSpec;
 use crate::services::validator::{error_validation, validate_document_value};
+use output::{ObjectOutput, json_output, json_output_for_scenario};
 use parameters::{
     dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
     sweep_variable,
@@ -39,12 +39,6 @@ use schema::{
 pub(crate) struct AexMcpServer {
     service: ApplicationService,
     tool_router: ToolRouter<Self>,
-}
-
-#[derive(Debug, Serialize, schemars::JsonSchema)]
-struct ObjectOutput {
-    #[serde(flatten)]
-    fields: BTreeMap<String, Value>,
 }
 
 impl AexMcpServer {
@@ -191,16 +185,7 @@ impl AexMcpServer {
         &self,
         Parameters(request): Parameters<UpdateDesignRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let scenario_path = Path::new(&request.scenario_path);
-        let design = self
-            .service
-            .update_design_parameters_blocking(scenario_path, &request.updates)
-            .map_err(mcp_error)?;
-        let resolved = self
-            .service
-            .resolve_blocking(scenario_path, &BTreeMap::new())
-            .map_err(mcp_error)?;
-        json_output(json!({ "design": design, "resolved_design": resolved }))
+        design::update(&self.service, request)
     }
 
     #[tool(
@@ -210,16 +195,7 @@ impl AexMcpServer {
         &self,
         Parameters(request): Parameters<EvaluateFeasibilityRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let artifact = request.artifact_path.as_deref().map(Path::new);
-        let result = self
-            .service
-            .evaluate_feasibility_blocking(
-                Path::new(&request.scenario_path),
-                request.backend.as_deref().unwrap_or("native"),
-                artifact,
-            )
-            .map_err(mcp_error)?;
-        json_output(result)
+        design::evaluate(&self.service, request)
     }
 
     #[tool(
@@ -229,26 +205,7 @@ impl AexMcpServer {
         &self,
         Parameters(request): Parameters<AutoRefineDesignRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let display_name = request
-            .display_name
-            .unwrap_or_else(|| request.output_design_id.clone());
-        let design_root = request
-            .design_root
-            .map_or_else(|| PathBuf::from(".ace/designs"), PathBuf::from);
-        let artifact_path = request.artifact_path.as_deref().map(Path::new);
-        let result = self
-            .service
-            .auto_refine_design_blocking(RefinementSpec {
-                scenario_path: Path::new(&request.scenario_path),
-                output_design_id: &request.output_design_id,
-                display_name: &display_name,
-                design_root: &design_root,
-                backend: request.backend.as_deref().unwrap_or("native"),
-                artifact_path,
-                max_iterations: request.max_iterations.unwrap_or(12),
-            })
-            .map_err(mcp_error)?;
-        json_output(result)
+        design::refine(&self.service, request)
     }
 
     #[tool(
@@ -267,11 +224,15 @@ impl AexMcpServer {
             .service
             .resolve_blocking(Path::new(&request.scenario_path), &request.overrides)
             .map_err(mcp_error)?;
-        json_output(json!({
-            "resolved_scenario": resolved,
-            "assumptions": resolved.assumptions,
-            "warnings": resolved.warnings,
-        }))
+        json_output_for_scenario(
+            json!({
+                "resolved_scenario": resolved,
+                "assumptions": resolved.assumptions,
+                "warnings": resolved.warnings,
+            }),
+            Path::new(&request.scenario_path),
+            request.units.as_deref(),
+        )
     }
 
     #[tool(description = "Calculate deterministic point performance for a resolved scenario")]
@@ -312,7 +273,11 @@ impl AexMcpServer {
                 },
             )
             .map_err(mcp_error)?;
-        json_output(result)
+        json_output_for_scenario(
+            result,
+            Path::new(&request.scenario_path),
+            request.units.as_deref(),
+        )
     }
 
     #[tool(description = "Simulate an ordered quasi-steady mission with mass continuity")]
@@ -344,11 +309,15 @@ impl AexMcpServer {
         if let Some(path) = &request.artifact_path {
             render_svg_blocking(&chart, Path::new(path)).map_err(mcp_error)?;
         }
-        json_output(json!({
-            "result": result,
-            "chart_spec": chart,
-            "artifact_path": request.artifact_path,
-        }))
+        json_output_for_scenario(
+            json!({
+                "result": result,
+                "chart_spec": chart,
+                "artifact_path": request.artifact_path,
+            }),
+            Path::new(&request.scenario_path),
+            request.units.as_deref(),
+        )
     }
 
     #[tool(description = "Run a deterministic one- or two-dimensional parameter sweep")]
@@ -376,7 +345,11 @@ impl AexMcpServer {
             .map(|metric| sweep(&result, metric))
             .transpose()
             .map_err(mcp_error)?;
-        json_output(json!({ "result": result, "chart_spec": chart }))
+        json_output_for_scenario(
+            json!({ "result": result, "chart_spec": chart }),
+            Path::new(&request.scenario_path),
+            request.units.as_deref(),
+        )
     }
 
     #[tool(description = "Compare selected metrics across aircraft scenarios")]
@@ -393,7 +366,10 @@ impl AexMcpServer {
             .service
             .compare_blocking(&paths, &request.metrics)
             .map_err(mcp_error)?;
-        json_output(result)
+        let path = paths
+            .first()
+            .ok_or_else(|| ErrorData::invalid_params("scenario_paths must not be empty", None))?;
+        json_output_for_scenario(result, path, request.units.as_deref())
     }
 
     #[tool(description = "Compare selected conceptual metrics across editable designs")]
@@ -406,10 +382,14 @@ impl AexMcpServer {
             .into_iter()
             .map(PathBuf::from)
             .collect::<Vec<_>>();
-        self.service
+        let result = self
+            .service
             .compare_blocking(&paths, &request.metrics)
-            .map_err(mcp_error)
-            .and_then(json_output)
+            .map_err(mcp_error)?;
+        let path = paths
+            .first()
+            .ok_or_else(|| ErrorData::invalid_params("design_paths must not be empty", None))?;
+        json_output_for_scenario(result, path, request.units.as_deref())
     }
 
     #[tool(description = "Explain a persisted result value and its governing low-fidelity model")]
@@ -439,8 +419,13 @@ impl AexMcpServer {
         &self,
         Parameters(request): Parameters<ReportRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
+        let scenario_path = request.scenario_path.clone();
+        let units = request.units.clone();
         let value = report::generate_report_blocking(&self.service, request).map_err(mcp_error)?;
-        json_output(value)
+        match scenario_path {
+            Some(path) => json_output_for_scenario(value, Path::new(&path), units.as_deref()),
+            None => json_output(value),
+        }
     }
 
     #[tool(description = "Generate payload-range data, chart specification, and optional SVG")]
@@ -456,11 +441,15 @@ impl AexMcpServer {
         if let Some(path) = &request.artifact_path {
             render_svg_blocking(&chart, Path::new(path)).map_err(mcp_error)?;
         }
-        json_output(json!({
-            "result": result,
-            "chart_spec": chart,
-            "artifact_path": request.artifact_path,
-        }))
+        json_output_for_scenario(
+            json!({
+                "result": result,
+                "chart_spec": chart,
+                "artifact_path": request.artifact_path,
+            }),
+            Path::new(&request.scenario_path),
+            request.units.as_deref(),
+        )
     }
 }
 
@@ -477,16 +466,6 @@ pub(crate) async fn serve_stdio(service: ApplicationService) -> AexResult<()> {
         .await
         .map_err(|source| AexError::analysis("MCP_TRANSPORT_ERROR", source.to_string()))?;
     Ok(())
-}
-
-fn json_output<T: serde::Serialize>(value: T) -> Result<Json<ObjectOutput>, ErrorData> {
-    let serialized = serde_json::to_value(value).map_err(mcp_error)?;
-    let interface_value = serialization::attach_units(serialized);
-    let fields = match interface_value {
-        Value::Object(mapping) => mapping.into_iter().collect(),
-        scalar => BTreeMap::from([("result".to_owned(), scalar)]),
-    };
-    Ok(Json(ObjectOutput { fields }))
 }
 
 fn mcp_error<E: std::fmt::Display>(source: E) -> ErrorData {

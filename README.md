@@ -23,9 +23,9 @@ cargo run --bin aex -- analyze point examples/b777/scenario.yaml \
 cargo run --bin aex -- analyze mission examples/b777/scenario.yaml --format json
 ```
 
-SI values remain authoritative inside the solver and persisted runs. Range and
-completed-distance fields display in nautical miles by default in every output
-format, including when other display fields remain SI:
+SI values remain authoritative inside the solver and persisted runs. The
+example projects select Aviation-US display metadata, so ranges use nautical
+miles, speeds use knots, altitudes use feet, and masses use pounds:
 
 ```json
 {

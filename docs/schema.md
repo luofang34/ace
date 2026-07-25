@@ -18,10 +18,15 @@ typed `Quantity`/validation error rather than guessing.
 
 The resolver normalizes SI values and records scalar sources in an assumptions
 ledger. Interface quantity objects contain `value`, `unit`, `display_value`,
-and `display_unit`. Range fields use metres for `value` and nautical miles for
-display by default. Ledger units are assigned only to registered physical
-quantity paths; names, identifiers, topology vocabulary, requirement metadata,
-and unknown string fields remain verbatim text with `unit: null`.
+and `display_unit`. The adjacent `aircraft-explorer.yaml` project selects
+`default_unit_system: si|aviation_us`; an explicit request override takes
+precedence, and scenarios without a project use SI. Aviation-US presentation
+uses kt, ft, lb, and nmi for speeds, lengths/altitudes, masses, and semantic
+distances. The canonical `value` and `unit` remain SI in every system and are
+the only quantity fields used by persisted identities. Ledger units are
+assigned only to registered physical quantity paths; names, identifiers,
+topology vocabulary, requirement metadata, and unknown string fields remain
+verbatim text with `unit: null`.
 
 Scenario documents may contain an `overrides` map. The design MCP tools use
 this map as an editable overlay instead of rewriting aircraft, mission, or

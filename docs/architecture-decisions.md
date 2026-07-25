@@ -20,7 +20,12 @@ MCP over stdio.
 
 Core values use kg, N, m, m², m/s, W, Pa, kg/s, and seconds. Dimensional
 inputs require a unit string. Outputs retain SI values with display metadata.
-Range and completed distance display in `nmi` by default.
+Scenario output uses the adjacent project's `default_unit_system`, with an
+explicit interface override taking precedence and SI as the fallback when no
+project exists. `aviation_us` displays speeds in kt, ordinary lengths and
+altitudes in ft, masses in lb, and semantic distances in nmi. Presentation
+conversion occurs after persistence, so content hashes and evidence identities
+cover canonical SI values only.
 
 ## ADR-004 — Provenance and diagnostics are data
 

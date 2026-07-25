@@ -114,6 +114,47 @@ fn mission_outputs_use_nautical_mile_display() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn project_display_units_and_si_override_preserve_canonical_values() -> Result<(), Box<dyn Error>> {
+    let scenario_path = scenario("c172");
+    let path = scenario_path.to_string_lossy();
+    let arguments = [
+        "analyze",
+        "point",
+        &path,
+        "--altitude",
+        "8000 ft",
+        "--speed",
+        "115 kt",
+        "--mass",
+        "2400 lb",
+        "--format",
+        "json",
+    ];
+    let aviation = json_output(&arguments)?;
+    let mut si_arguments = arguments.to_vec();
+    si_arguments.extend(["--units", "si"]);
+    let si = json_output(&si_arguments)?;
+
+    for (field, aviation_unit, si_unit) in [
+        ("altitude_m", "ft", "m"),
+        ("true_airspeed_m_s", "kt", "m/s"),
+        ("mass_kg", "lb", "kg"),
+    ] {
+        assert_eq!(aviation["result"][field]["display_unit"], aviation_unit);
+        assert_eq!(si["result"][field]["display_unit"], si_unit);
+        assert_eq!(
+            aviation["result"][field]["value"],
+            si["result"][field]["value"]
+        );
+        assert_eq!(
+            aviation["result"][field]["unit"],
+            si["result"][field]["unit"]
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn calibration_bands_cover_both_aircraft_classes() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     let c172_path = scenario("c172");

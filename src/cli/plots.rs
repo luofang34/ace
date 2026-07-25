@@ -15,7 +15,7 @@ use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::evaluate_requirements;
 
-use super::output::emit_blocking;
+use super::output::emit_scenario_blocking;
 use super::strict::enforce as enforce_strict;
 
 #[derive(Debug, Serialize)]
@@ -44,12 +44,13 @@ pub(super) fn execute_plot(service: &ApplicationService, arguments: PlotArgs) ->
         std::slice::from_ref(&artifact),
     )?;
     tracing::info!(run_id = %run.run_id, artifact = %artifact, "plot completed");
-    emit_blocking(
+    emit_scenario_blocking(
         &PlotOutput {
             artifact_path: output,
             chart,
         },
         &arguments.output_args(),
+        &arguments.scenario,
     )
 }
 

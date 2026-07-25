@@ -27,6 +27,7 @@ pub(super) struct GetProfileRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ScenarioRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
 }
@@ -34,6 +35,7 @@ pub(super) struct ScenarioRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct PointRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     pub(super) condition: PointRequestCondition,
     #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
@@ -51,6 +53,7 @@ pub(super) struct PointRequestCondition {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ConstraintRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     pub(super) wing_loading: WingLoadingRequest,
     #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
@@ -67,6 +70,7 @@ pub(super) struct WingLoadingRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct SweepRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     pub(super) variables: Vec<SweepVariableRequest>,
     pub(super) metrics: Vec<String>,
 }
@@ -84,6 +88,7 @@ pub(super) struct SweepVariableRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct CompareRequest {
     pub(super) scenario_paths: Vec<String>,
+    pub(super) units: Option<String>,
     pub(super) metrics: Vec<String>,
 }
 
@@ -97,6 +102,7 @@ pub(super) struct ExplainRequest {
 pub(super) struct ReportRequest {
     pub(super) run_id: Option<String>,
     pub(super) scenario_path: Option<String>,
+    pub(super) units: Option<String>,
     pub(super) backend: Option<String>,
     pub(super) format: String,
     #[serde(default)]
@@ -106,6 +112,7 @@ pub(super) struct ReportRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct PayloadRangeRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
     pub(super) artifact_path: Option<String>,
@@ -125,12 +132,14 @@ pub(super) struct CreateDesignRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct UpdateDesignRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     pub(super) updates: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct EvaluateFeasibilityRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     pub(super) backend: Option<String>,
     pub(super) artifact_path: Option<String>,
 }
@@ -138,6 +147,7 @@ pub(super) struct EvaluateFeasibilityRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct AutoRefineDesignRequest {
     pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
     pub(super) output_design_id: String,
     pub(super) display_name: Option<String>,
     pub(super) design_root: Option<String>,
@@ -149,6 +159,7 @@ pub(super) struct AutoRefineDesignRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct CompareDesignsRequest {
     pub(super) design_paths: Vec<String>,
+    pub(super) units: Option<String>,
     pub(super) metrics: Vec<String>,
 }
 

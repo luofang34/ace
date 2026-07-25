@@ -18,7 +18,7 @@ use crate::services::report::markdown_report;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::services::sweep::SweepVariable;
 
-use super::output::emit_blocking;
+use super::output::{emit_blocking, emit_scenario_blocking};
 use super::plots::execute_plot;
 use super::strict::enforce as enforce_strict;
 
@@ -55,7 +55,7 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
         Command::Resolve { scenario, common } => {
             let result = service.resolve_blocking(&scenario, &common.override_map())?;
             enforce_strict(common.strict, &result.warnings)?;
-            emit_blocking(&result, &common.output)
+            emit_scenario_blocking(&result, &common.output, &scenario)
         }
         Command::Analyze { analysis } => execute_analysis(&service, analysis),
         Command::Sweep(arguments) => execute_sweep(&service, arguments),
@@ -111,7 +111,7 @@ fn execute_point(service: &ApplicationService, arguments: PointArgs) -> AexResul
         arguments.common.seed,
         &[],
     )?;
-    emit_blocking(
+    emit_scenario_blocking(
         &AnalysisEnvelope {
             scenario_name: scenario.name,
             run_id: run.run_id,
@@ -120,6 +120,7 @@ fn execute_point(service: &ApplicationService, arguments: PointArgs) -> AexResul
             result,
         },
         &arguments.common.output,
+        &arguments.scenario,
     )
 }
 
@@ -151,7 +152,7 @@ fn execute_mission(service: &ApplicationService, arguments: ScenarioArgs) -> Aex
         &performance,
         &requirements,
     )?;
-    emit_blocking(
+    emit_scenario_blocking(
         &MissionEnvelope {
             scenario_name: scenario.name,
             run_id: run.run_id,
@@ -170,6 +171,7 @@ fn execute_mission(service: &ApplicationService, arguments: ScenarioArgs) -> Aex
             report_markdown,
         },
         &arguments.common.output,
+        &arguments.scenario,
     )
 }
 
@@ -192,7 +194,7 @@ fn execute_constraints(service: &ApplicationService, arguments: ConstraintArgs) 
         arguments.common.seed,
         &[],
     )?;
-    emit_blocking(
+    emit_scenario_blocking(
         &AnalysisEnvelope {
             scenario_name: scenario.name,
             run_id: run.run_id,
@@ -201,6 +203,7 @@ fn execute_constraints(service: &ApplicationService, arguments: ConstraintArgs) 
             result,
         },
         &arguments.common.output,
+        &arguments.scenario,
     )
 }
 
@@ -216,7 +219,7 @@ fn execute_payload_range(service: &ApplicationService, arguments: ScenarioArgs) 
         arguments.common.seed,
         &[],
     )?;
-    emit_blocking(
+    emit_scenario_blocking(
         &AnalysisEnvelope {
             scenario_name: scenario.name,
             run_id: run.run_id,
@@ -225,6 +228,7 @@ fn execute_payload_range(service: &ApplicationService, arguments: ScenarioArgs) 
             result,
         },
         &arguments.common.output,
+        &arguments.scenario,
     )
 }
 
@@ -240,7 +244,7 @@ fn execute_performance(service: &ApplicationService, arguments: ScenarioArgs) ->
         arguments.common.seed,
         &[],
     )?;
-    emit_blocking(
+    emit_scenario_blocking(
         &AnalysisEnvelope {
             scenario_name: scenario.name,
             run_id: run.run_id,
@@ -249,6 +253,7 @@ fn execute_performance(service: &ApplicationService, arguments: ScenarioArgs) ->
             result,
         },
         &arguments.common.output,
+        &arguments.scenario,
     )
 }
 
@@ -270,7 +275,7 @@ fn execute_sweep(service: &ApplicationService, arguments: SweepArgs) -> AexResul
         arguments.common.seed,
         &[],
     )?;
-    emit_blocking(
+    emit_scenario_blocking(
         &AnalysisEnvelope {
             scenario_name: scenario.name,
             run_id: run.run_id,
@@ -279,12 +284,20 @@ fn execute_sweep(service: &ApplicationService, arguments: SweepArgs) -> AexResul
             result,
         },
         &arguments.common.output,
+        &arguments.scenario,
     )
 }
 
 fn execute_compare(service: &ApplicationService, arguments: CompareArgs) -> AexResult<()> {
     let result = service.compare_blocking(&arguments.scenarios, &arguments.metrics)?;
-    emit_blocking(&result, &arguments.output)
+    let scenario = arguments.scenarios.first().ok_or_else(|| {
+        AexError::validation(
+            "MISSING_COMPARISON_SCENARIO",
+            "scenarios",
+            "at least one scenario is required",
+        )
+    })?;
+    emit_scenario_blocking(&result, &arguments.output, scenario)
 }
 
 fn execute_profile(service: &ApplicationService, command: ProfileCommand) -> AexResult<()> {
