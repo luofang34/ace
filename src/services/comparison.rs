@@ -152,6 +152,10 @@ fn comparison_metric(
             "1",
         )),
         "mission.total_fuel" => Ok(QuantityOutput::si(mission.total_fuel_burn_kg, "kg")),
+        "mission.landing_fuel" => mission
+            .landing_fuel
+            .clone()
+            .ok_or_else(|| landing_fuel_unavailable(metric)),
         "mission.completed_distance" => Ok(QuantityOutput::range(mission.total_distance.value)),
         "feasibility.hard_constraints_passed" => {
             let requirements =
@@ -175,6 +179,13 @@ fn comparison_metric(
             "metric is not implemented",
         )),
     }
+}
+
+fn landing_fuel_unavailable(metric: &str) -> AexError {
+    AexError::analysis(
+        "MISSION_LANDING_FUEL_UNAVAILABLE",
+        format!("{metric} is available only for a completed mission"),
+    )
 }
 
 fn optional_performance_metric(

@@ -84,6 +84,8 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
         .ok_or_else(|| io::Error::other("missing structured MCP result"))?;
     assert_eq!(structured["completed"], true);
     assert_eq!(structured["total_distance"]["display_unit"], "nmi");
+    assert_eq!(structured["landing_fuel"]["unit"], "kg");
+    assert_eq!(structured["landing_fuel"]["display_unit"], "lb");
 
     let backends = client
         .call_tool(CallToolRequestParams {
@@ -226,6 +228,14 @@ async fn mission_verdict_is_completion_gated_in_mcp() -> Result<(), Box<dyn Erro
         .await?;
         assert_eq!(result["completed"], completed);
         assert_eq!(result["hard_requirements_passed"], hard_passed);
+        assert_eq!(result.get("landing_fuel").is_some(), completed);
+        if !completed {
+            assert!(result["warnings"].as_array().is_some_and(|warnings| {
+                warnings
+                    .iter()
+                    .all(|warning| warning["code"] != "LOW_LANDING_FUEL")
+            }));
+        }
     }
 
     let no_cruise = no_cruise_scenario(&temporary.path().join("no-cruise"))?;

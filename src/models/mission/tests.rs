@@ -344,18 +344,19 @@ fn initial_load_capacity_has_an_independent_diagnostic() {
 }
 
 #[test]
-fn stored_mission_without_exhaustion_flag_defaults_to_false()
--> Result<(), Box<dyn std::error::Error>> {
+fn stored_mission_defaults_additive_fuel_fields() -> Result<(), Box<dyn std::error::Error>> {
     let mission = MissionSimulator::new(example_scenario("c172")?).simulate()?;
     let mut stored = serde_json::to_value(mission)?;
     let object = stored
         .as_object_mut()
         .ok_or_else(|| io::Error::other("mission did not serialize as an object"))?;
     assert!(object.remove("fuel_exhausted").is_some());
+    assert!(object.remove("landing_fuel").is_some());
 
     let decoded: MissionResult = serde_json::from_value(stored)?;
 
     assert!(!decoded.fuel_exhausted);
+    assert!(decoded.landing_fuel.is_none());
     Ok(())
 }
 

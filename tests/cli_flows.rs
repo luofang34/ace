@@ -204,6 +204,8 @@ fn mission_outputs_use_nautical_mile_display() -> Result<(), Box<dyn Error>> {
         assert_eq!(result["mission"]["completed"], true);
         assert_eq!(result["hard_requirements_passed"], true);
         assert_eq!(result["mission"]["total_distance"]["display_unit"], "nmi");
+        assert_eq!(result["mission"]["landing_fuel"]["unit"], "kg");
+        assert_eq!(result["mission"]["landing_fuel"]["display_unit"], "lb");
         assert!(
             result["mission"]["segments"]
                 .as_array()
@@ -218,11 +220,9 @@ fn mission_outputs_use_nautical_mile_display() -> Result<(), Box<dyn Error>> {
                         .is_some_and(|metric| metric.starts_with("performance.achieved_cruise_"))
                 }))
         );
-        assert!(
-            result["report_markdown"]
-                .as_str()
-                .is_some_and(|report| report.contains("Achieved cruise"))
-        );
+        assert!(result["report_markdown"].as_str().is_some_and(|report| {
+            report.contains("Achieved cruise") && report.contains("Landing fuel")
+        }));
     }
     Ok(())
 }

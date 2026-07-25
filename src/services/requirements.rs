@@ -99,6 +99,10 @@ fn metric_value(
         RequirementMetric::MissionCompletedDistance => {
             Some(MetricInput::valid(mission.total_distance.value))
         }
+        RequirementMetric::MissionLandingFuel => mission
+            .landing_fuel
+            .as_ref()
+            .map(|fuel| MetricInput::valid(fuel.value)),
         RequirementMetric::ServiceCeiling => Some(MetricInput {
             actual: performance.service_ceiling_m,
             validity: performance.validity_for("performance.service_ceiling"),

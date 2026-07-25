@@ -77,6 +77,11 @@ power and nonmonotonic schedules. Legacy `climb` uses an explicitly
 low-fidelity constant rate capped at 50 m/s; descent retains a simplified
 rate.
 
+Completed missions publish `mission.landing_fuel`. Landing fuel below 5% of
+the aircraft's maximum fuel capacity emits the advisory
+`LOW_LANDING_FUEL`; incomplete missions publish neither the achieved metric
+nor that advisory. Explicit landing-fuel floors remain ordinary requirements.
+
 Feasibility separately checks legacy climb, energy climb, cruise, loiter, and
 reserve operating points at their declared power or thrust fractions. Each
 point must retain a 3% installed-reference-power reserve.

@@ -56,6 +56,7 @@ Power/thrust fractions on climb, energy_climb, cruise, loiter, and reserve const
 | `mission.payload_mass` | `declared` | yes | `kg` | — |
 | `performance.achieved_cruise_true_airspeed` | `achieved` | yes | `m/s` | — |
 | `mission.completed_distance` | `achieved` | yes | `m` | — |
+| `mission.landing_fuel` | `achieved` | yes | `kg` | — |
 | `performance.service_ceiling` | `achieved` | yes | `m` | — |
 | `performance.stall_speed_landing` | `achieved` | yes | `m/s` | — |
 | `performance.achieved_cruise_mach` | `achieved` | yes | `1` | — |

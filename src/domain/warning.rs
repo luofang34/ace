@@ -93,6 +93,11 @@ warning_registry! {
         false,
         "A boundary-limited requirement margin cannot be plotted as pass or fail."
     ),
+    LowLandingFuel => (
+        "LOW_LANDING_FUEL",
+        false,
+        "A completed mission lands with less than 5% of maximum fuel capacity."
+    ),
     LowFidelityModel => (
         "LOW_FIDELITY_MODEL",
         false,

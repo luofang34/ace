@@ -259,6 +259,11 @@ must use
 `performance.achieved_cruise_true_airspeed`; the legacy declared names are
 reporting inputs and are not bindable.
 
+Completed mission results add `landing_fuel` as a canonical mass quantity.
+The bindable achieved metric `mission.landing_fuel` uses that value. Incomplete
+missions omit the metric; a hard landing-fuel floor is therefore unevaluable
+and cannot pass.
+
 Archive workflow data is additive and defaults to empty, so schema-version-1
 archives without it remain valid. A checkpoint records the completed
 generation, deterministic random-number state after population construction,

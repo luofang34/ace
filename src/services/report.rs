@@ -346,6 +346,9 @@ pub(crate) fn markdown_report(
         mission.total_fuel_burn_kg
     )
     .map_err(format_error)?;
+    if let Some(landing_fuel) = &mission.landing_fuel {
+        writeln!(output, "- Landing fuel: {:.1} kg", landing_fuel.value).map_err(format_error)?;
+    }
     writeln!(
         output,
         "- Service ceiling: {:.0} m",

@@ -42,6 +42,13 @@ fn strict_enforcement_promotes_registered_codes_only() -> Result<(), Box<dyn std
     );
     assert!(enforce_strict(true, &[promoted]).is_err());
 
+    let advisory = Diagnostic::warning(
+        WarningCode::LowLandingFuel,
+        "landing fuel is below the advisory threshold",
+        "mission.landing_fuel",
+    );
+    enforce_strict(true, &[advisory])?;
+
     let unknown = Diagnostic {
         code: "FUTURE_STORED_WARNING".to_owned(),
         severity: Severity::Warning,

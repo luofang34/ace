@@ -97,6 +97,7 @@ pub(crate) enum RequirementMetric {
     MissionPayloadMass,
     AchievedCruiseTrueAirspeed,
     MissionCompletedDistance,
+    MissionLandingFuel,
     ServiceCeiling,
     StallSpeedLanding,
     AchievedCruiseMach,
@@ -143,7 +144,7 @@ const AERO_CONFIGURATIONS: [AeroConfigurationCapability; 3] = [
     configuration("landing", AeroConfigurationKind::Landing),
 ];
 
-const REQUIREMENT_METRICS: [RequirementMetricCapability; 13] = [
+const REQUIREMENT_METRICS: [RequirementMetricCapability; 14] = [
     metric(
         "mission.payload_mass",
         RequirementMetric::MissionPayloadMass,
@@ -166,6 +167,14 @@ const REQUIREMENT_METRICS: [RequirementMetricCapability; 13] = [
         MetricSource::Achieved,
         true,
         RequirementValueKind::Length,
+        None,
+    ),
+    metric(
+        "mission.landing_fuel",
+        RequirementMetric::MissionLandingFuel,
+        MetricSource::Achieved,
+        true,
+        RequirementValueKind::Mass,
         None,
     ),
     metric(
