@@ -148,6 +148,7 @@ impl AnalysisBackend for NativeBackend {
             weight_kg: weight,
         })?;
         let feasible = mission.completed
+            && !mission.fuel_exhausted
             && !mission.fuel_capacity_violation
             && !mission.takeoff_mass_violation
             && structural_screen.passed
@@ -373,6 +374,9 @@ fn failed_constraints(
     if !mission.completed {
         failed.push("mission_completion".to_owned());
     }
+    if mission.fuel_exhausted {
+        failed.push("fuel_exhausted".to_owned());
+    }
     if mission.fuel_capacity_violation {
         failed.push("fuel_capacity".to_owned());
     }
@@ -482,3 +486,6 @@ fn analysis_units() -> BTreeMap<String, String> {
         ("coefficient".to_owned(), "1".to_owned()),
     ])
 }
+
+#[cfg(test)]
+mod tests;

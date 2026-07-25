@@ -124,6 +124,8 @@ pub(crate) struct MissionResult {
     pub(crate) final_mass_kg: f64,
     pub(crate) final_payload_mass_kg: f64,
     pub(crate) failed_segment: Option<String>,
+    #[serde(default)]
+    pub(crate) fuel_exhausted: bool,
     pub(crate) fuel_capacity_violation: bool,
     pub(crate) takeoff_mass_violation: bool,
     pub(crate) segments: Vec<MissionSegmentResult>,

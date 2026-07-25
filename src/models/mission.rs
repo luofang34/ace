@@ -30,6 +30,13 @@ struct SegmentComputation {
     end_altitude_m: f64,
 }
 
+#[derive(Debug)]
+struct InitialFuelLoad {
+    loaded_kg: f64,
+    capacity_exceeded: bool,
+    warning: Option<Diagnostic>,
+}
+
 impl MissionSimulator {
     pub(crate) fn new(scenario: ResolvedScenario) -> Self {
         Self {
@@ -45,7 +52,11 @@ impl MissionSimulator {
             - aircraft.mass.operating_empty_mass_kg
             - self.scenario.mission.payload_mass_kg)
             .max(0.0);
-        let initial_fuel = fuel_capacity.min(structural_fuel);
+        let InitialFuelLoad {
+            loaded_kg: initial_fuel,
+            capacity_exceeded,
+            warning: fuel_load_warning,
+        } = initial_fuel_load(fuel_capacity.min(structural_fuel), fuel_capacity);
         let mut state = MissionState {
             mass_kg: aircraft.mass.operating_empty_mass_kg
                 + self.scenario.mission.payload_mass_kg
@@ -60,13 +71,16 @@ impl MissionSimulator {
         let mut total_duration = 0.0;
         let mut total_fuel = 0.0;
         let mut failed_segment = None;
+        let mut fuel_exhausted = false;
         let mut warnings = self.scenario.warnings.clone();
+        warnings.extend(fuel_load_warning);
         for segment in &self.scenario.mission.segments {
             let computation = self.compute_segment(segment, state)?;
             if computation.fuel_burn_kg > state.fuel_remaining_kg + 1.0e-8 {
                 failed_segment = Some(segment.id.clone());
+                fuel_exhausted = true;
                 warnings.push(Diagnostic::warning(
-                    "FUEL_CAPACITY_EXCEEDED",
+                    "FUEL_EXHAUSTED",
                     format!("Fuel was exhausted during segment {}.", segment.id),
                     format!("mission.segments.{}", segment.id),
                 ));
@@ -93,7 +107,8 @@ impl MissionSimulator {
             final_mass_kg: state.mass_kg,
             final_payload_mass_kg: state.payload_remaining_kg,
             failed_segment,
-            fuel_capacity_violation: !completed,
+            fuel_exhausted,
+            fuel_capacity_violation: capacity_exceeded,
             takeoff_mass_violation: initial_takeoff_mass > aircraft.mass.maximum_takeoff_mass_kg,
             segments: segment_results,
             assumptions: self.scenario.assumptions.clone(),
@@ -433,6 +448,24 @@ pub(crate) fn representative_speed(
     match scenario.engine {
         EngineProfile::Piston(_) => Ok(45.0),
         EngineProfile::Turbofan(_) => Ok(120.0),
+    }
+}
+
+fn initial_fuel_load(requested_kg: f64, capacity_kg: f64) -> InitialFuelLoad {
+    let capacity_exceeded = requested_kg > capacity_kg + 1.0e-8;
+    InitialFuelLoad {
+        loaded_kg: requested_kg.min(capacity_kg),
+        capacity_exceeded,
+        warning: capacity_exceeded.then(|| {
+            Diagnostic::warning(
+                "FUEL_CAPACITY_EXCEEDED",
+                format!(
+                    "Requested initial fuel load {requested_kg} kg exceeds tank capacity \
+                     {capacity_kg} kg."
+                ),
+                "mission.initial_fuel_load",
+            )
+        }),
     }
 }
 

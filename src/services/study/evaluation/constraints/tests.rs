@@ -80,3 +80,28 @@ fn unitless_constraint_accepts_exactly_one() -> Result<(), Box<dyn std::error::E
     );
     Ok(())
 }
+
+#[test]
+fn fuel_failure_kinds_remain_distinct_in_study_evidence() -> Result<(), Box<dyn std::error::Error>>
+{
+    let constraints = collect(
+        &[],
+        &["fuel_exhausted".to_owned(), "fuel_capacity".to_owned()],
+        &[],
+        &BTreeMap::new(),
+    )?;
+
+    assert_eq!(constraints.len(), 2);
+    assert!(constraints.iter().any(|constraint| {
+        constraint.metric == "fuel_exhausted"
+            && constraint.status == crate::domain::evidence::ConstraintStatus::Fail
+            && constraint.severity == "hard"
+    }));
+    assert!(
+        constraints
+            .iter()
+            .any(|constraint| constraint.metric == "fuel_capacity")
+    );
+    assert_ne!(constraints[0].id, constraints[1].id);
+    Ok(())
+}

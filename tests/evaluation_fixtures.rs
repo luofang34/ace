@@ -150,13 +150,14 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
     )?;
     assert_eq!(result["completion_status"], "incomplete");
     assert_eq!(result["mission"]["completed"], false);
+    assert_eq!(result["mission"]["fuel_exhausted"], true);
+    assert_eq!(result["mission"]["fuel_capacity_violation"], false);
     assert_eq!(result["hard_requirements_passed"], true);
     let warnings = result["mission"]["warnings"]
         .as_array()
         .ok_or("missing mission warnings")?;
     assert!(warnings.iter().any(|warning| {
-        warning["code"] == "FUEL_CAPACITY_EXCEEDED"
-            && warning["path"] == "mission.segments.glide_descent"
+        warning["code"] == "FUEL_EXHAUSTED" && warning["path"] == "mission.segments.glide_descent"
     }));
     Ok(())
 }
