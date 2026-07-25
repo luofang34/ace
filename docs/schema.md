@@ -61,3 +61,27 @@ parameter identifiers.
 Turbofan profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
 retains conservative defaults when they are absent.
+
+## Aircraft topology
+
+`aircraft.topology` is an optional, backend-neutral component graph. Components
+have stable IDs, registered kinds, optional reusable definitions, counts,
+analysis roles, and data parameters. Relationships express attachment,
+symmetry, repetition, alignment, parallelism, continuity, and load paths.
+Backend geometry IDs, meshes, and solver entities are not schema data.
+
+When topology is absent, schema-version-1 aircraft retain their behavior
+through a resolved graph inferred from `aircraft.configuration`, engine count,
+and propeller presence. An explicit graph takes precedence over the legacy
+configuration label.
+
+Canonical component kinds include fuselage, wing, horizontal and vertical
+tails, canard, lifting body, boom, engine, propeller, fuel system, and payload.
+A backend advertises the subset it can analyze. A canonical graph outside that
+subset resolves normally, but feasibility returns `status: "unsupported"`
+with code `UNSUPPORTED_BACKEND_TOPOLOGY`, unsupported kinds, and any unsupported
+count, parameter, or relationship-endpoint features. Unknown vocabulary
+remains a validation error. Component definitions and roles are descriptive;
+backend-relevant counts, parameters, and relationships must be consumed or
+rejected before analysis. A refinement descriptor may delegate a relationship
+outside its disciplines only when the mandatory native baseline consumes it.

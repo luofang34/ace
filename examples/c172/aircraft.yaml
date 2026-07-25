@@ -5,6 +5,34 @@ aircraft:
   category: normal_category_light_aircraft
   configuration: conventional_tail
   propulsion_architecture: single_piston_propeller
+  topology:
+    version: 1
+    components:
+      - id: fuselage
+        kind: fuselage
+        roles: [payload_volume, primary_structure]
+      - id: wing
+        kind: wing
+        roles: [lift, fuel_storage]
+      - id: horizontal_tail
+        kind: horizontal_tail
+        roles: [pitch_control]
+      - id: vertical_tail
+        kind: vertical_tail
+        roles: [directional_control]
+      - id: powerplant
+        kind: engine
+        definition: engine.lycoming_io360_class
+      - id: propeller
+        kind: propeller
+        definition: propeller.constant_speed_light_aircraft
+    relationships:
+      - { kind: attached_to, source: wing, target: fuselage }
+      - { kind: attached_to, source: horizontal_tail, target: fuselage }
+      - { kind: attached_to, source: vertical_tail, target: fuselage }
+      - { kind: attached_to, source: powerplant, target: fuselage }
+      - { kind: attached_to, source: propeller, target: powerplant }
+      - { kind: carries_load_to, source: wing, target: fuselage }
   metadata:
     purpose: software demonstration and model calibration
     certification_use: prohibited

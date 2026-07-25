@@ -15,6 +15,28 @@ void SetEllipse( string surface, int index, double width, double height )
     SetParmVal( GetXSecParm( section, "Ellipse_Height" ), height );
 }
 
+void AddEngineEnvelope( double y_location )
+{
+    string engine = AddGeom( "POD", "" );
+    SetGeomName( engine, "ACE_Engine_Envelope" );
+    SetParmVal( engine, "Length", "Design", __ENGINE_LENGTH__ );
+    SetParmVal( engine, "FineRatio", "Design", __ENGINE_FINE_RATIO__ );
+    SetParmVal( engine, "X_Rel_Location", "XForm", __ENGINE_X__ );
+    SetParmVal( engine, "Y_Rel_Location", "XForm", y_location );
+    SetParmVal( engine, "Z_Rel_Location", "XForm", __ENGINE_Z__ );
+}
+
+void AddPropeller()
+{
+    string propeller = AddGeom( "PROP", "" );
+    SetGeomName( propeller, "ACE_Propeller" );
+    SetParmVal( propeller, "PropMode", "Design", PROP_BLADES );
+    SetParmVal( propeller, "Diameter", "Design", __PROPELLER_DIAMETER__ );
+    SetParmVal( propeller, "NumBlade", "Design", __PROPELLER_BLADE_COUNT__ );
+    SetParmVal( propeller, "X_Rel_Location", "XForm", __PROPELLER_X__ );
+    SetParmVal( propeller, "Z_Rel_Location", "XForm", __PROPELLER_Z__ );
+}
+
 void main()
 {
     ClearVSPModel();
@@ -63,6 +85,20 @@ void main()
     SetParmVal( vertical_tail, "Z_Rel_Location", "XForm", __TAIL_Z__ );
     SetParmVal( vertical_tail, "X_Rel_Rotation", "XForm", 90.0 );
     SetParmVal( vertical_tail, "Sym_Planar_Flag", "Sym", 0 );
+
+    if ( __HAS_PROPELLER__ == 1 )
+    {
+        AddPropeller();
+    }
+    if ( __ENGINE_COUNT__ == 1 )
+    {
+        AddEngineEnvelope( 0.0 );
+    }
+    else
+    {
+        AddEngineEnvelope( -__ENGINE_Y__ );
+        AddEngineEnvelope( __ENGINE_Y__ );
+    }
 
     Update();
     WriteVSPFile( "__ARTIFACT__", SET_ALL );

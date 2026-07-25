@@ -132,3 +132,45 @@ Convergence requires all requirements, mission power reserve, tail-volume,
 aspect-ratio, and wing-spar packaging screens to pass. Optional OpenVSP runs
 only on the selected candidate; its static-pitch result is an independent
 verification gate and is not substituted into native feasibility.
+
+## ADR-023 — Aircraft configurations use components and relationships
+
+The canonical aircraft model represents configurations as stable component
+instances and explicit relationships rather than deriving topology from one
+configuration label. Components have identifiers, registered kinds, optional
+reusable definitions, counts, data parameters, and analysis roles.
+Relationships describe attachment, symmetry, repetition, alignment,
+parallelism, continuity, and load-path intent. Backend-native geometry
+identifiers, meshes, and solver entities do not enter this graph.
+
+Missing topology in a schema-version-1 aircraft resolves to a versioned graph
+inferred from the legacy configuration, engine count, and propeller presence.
+Explicit topology takes precedence. Each backend advertises the component and
+relationship kinds it supports. A canonical but unsupported graph returns an
+explicit unsupported result; adapters do not flatten, drop, or reinterpret
+components silently.
+
+Backend support covers both vocabulary and graph shape. Component definitions
+and roles are descriptive metadata, while counts, parameters, and relationship
+endpoints must be consumed or rejected. Native conventional analysis requires
+one fuselage, wing, horizontal tail, and vertical tail, and propulsion counts
+must agree with the resolved propulsion model. OpenVSP advertises only the
+component and relationship mappings implemented by its geometry adapter,
+including conventional propellers and one- or two-engine envelopes. A
+relationship outside a refinement backend's disciplines may be declared as
+delegated only when the mandatory native baseline consumes it. OpenVSP
+delegates `carries_load_to` and does not claim structural-load-path fidelity.
+
+## ADR-024 — Refinement is a discipline-aware analysis graph
+
+Geometry, aerodynamics, propulsion, structures, mission, controls, signatures,
+and other disciplines are independent capabilities. Backend descriptors name
+their disciplines, fidelity levels, and topology support. A refinement result
+remains separate from native feasibility and never overwrites its provenance
+or verdict.
+
+Multi-fidelity policies decide which candidates advance to expensive analyses.
+A failed, unavailable, unsupported, or out-of-validity refinement remains a
+distinct state and does not cause silent substitution by a lower-fidelity
+value. Solver decks, meshes, and detailed model files are artifacts rather
+than canonical aircraft state.

@@ -59,10 +59,20 @@ performance, field lengths, ceiling, requirement margins, and failed
 constraints. Every geometry or analysis block contains its method, backend,
 assumptions, validity range, units, and warnings.
 
+Supported evaluations include `status: "completed"`. If the resolved
+component graph uses a canonical component or relationship the selected
+backend cannot represent, the tool returns `status: "unsupported"`,
+`feasible: null`, code `UNSUPPORTED_BACKEND_TOPOLOGY`, the backend and
+topology path, deterministic lists of unsupported kinds, and
+`unsupported_features` for count, parameter, or endpoint-shape conflicts. It
+does not run the backend or silently omit graph elements.
+
 Use `backend: "openvsp"` only when refinement is requested. The result retains
 the native feasibility baseline and adds an OpenVSP geometry/VSPAERO
 `refinement`. If OpenVSP cannot launch or produce the explicit completion
 protocol, the tool returns an error and does not return a native-only response.
+Known backend unavailability is rejected before native analysis, refinement
+search, design creation, or artifact creation.
 
 `run_parameter_sweep` accepts the design `scenario_path` and supports metrics
 including:
@@ -88,12 +98,19 @@ When `backend: "openvsp"` is selected, OpenVSP runs once on the chosen design;
 static pitch stability becomes a final verification gate, and any adapter
 failure is returned without fallback.
 
-OpenVSP geometry dispatches from the canonical `aircraft.configuration`.
-Configuration names containing `tailless`, `flying_wing`, or `blended_wing`
-produce a two-panel flying-wing `.vsp3` with a reflexed trailing-edge surrogate
-and one or two aft engine envelopes. CompGeom wetted area and VSPAERO results
-retain explicit BWB-specific validity warnings. The adapter does not claim
-inlet-flow, internal-volume, control-system, or structural-load-path fidelity.
+Geometry dispatch uses the resolved component graph. Legacy configuration
+names still infer the same conventional or lifting-body graph. A lifting-body
+component produces the existing two-panel flying-wing `.vsp3` with a reflexed
+trailing-edge surrogate and one or two aft engine envelopes. CompGeom wetted
+area and VSPAERO results retain explicit BWB-specific validity warnings. The
+adapter does not claim inlet-flow, internal-volume, control-system, or
+structural-load-path fidelity.
+
+The conventional OpenVSP adapter maps the validated fuselage, lifting surfaces,
+propeller, and one- or two-engine layout. Propellers and engine envelopes are
+excluded from the VSPAERO lifting set. A graph outside those mappings returns
+`UNSUPPORTED_BACKEND_TOPOLOGY`; native feasibility remains available without
+an OpenVSP installation.
 
 The structural screen is a sizing guardrail rather than substantiation. It does
 not cover detailed loads, joints, buckling, fatigue, flutter, or aeroelasticity.
@@ -103,8 +120,11 @@ report or a `run_id` for an immutable run report. Concept reports include
 decision-first sections and ordered chart specifications. See
 [concept-design reports](concept-reports.md).
 
-`list_analysis_backends` reports availability rather than requiring callers to
-infer it from platform paths.
+`list_analysis_backends` reports availability, disciplines, fidelity levels,
+and supported component and relationship kinds rather than requiring callers
+to infer capability from platform paths. `delegated_relationship_kinds` names
+relationships consumed by the mandatory native baseline because they are
+outside the refinement backend's declared disciplines.
 
 ## OpenVSP subprocess adapter
 

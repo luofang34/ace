@@ -75,10 +75,21 @@ fn conventional_geometry_script(
     native: &GeometryOutput,
     artifact: &Path,
 ) -> AexResult<String> {
-    let wing = &scenario.aircraft.wing;
     let concept = ConceptGeometry::from_scenario(scenario);
+    let mut values = conventional_airframe_values(scenario, native, concept);
+    values.extend(conventional_propulsion_values(scenario, concept));
+    values.push(("__ARTIFACT__", script_string(artifact)?));
+    Ok(render_template(CONVENTIONAL_TEMPLATE, &values))
+}
+
+fn conventional_airframe_values(
+    scenario: &ResolvedScenario,
+    native: &GeometryOutput,
+    concept: ConceptGeometry,
+) -> Vec<(&'static str, String)> {
+    let wing = &scenario.aircraft.wing;
     let transport = scenario.aircraft.category.contains("transport");
-    let values = [
+    vec![
         ("__FUSELAGE_LENGTH__", decimal(concept.fuselage_length_m)),
         ("__NOSE_WIDTH__", decimal(concept.fuselage_width_m * 0.72)),
         ("__NOSE_HEIGHT__", decimal(concept.fuselage_height_m * 0.78)),
@@ -117,9 +128,49 @@ fn conventional_geometry_script(
         ),
         ("__TAIL_X__", decimal(concept.tail_x_m)),
         ("__TAIL_Z__", decimal(concept.tail_z_m)),
-        ("__ARTIFACT__", script_string(artifact)?),
-    ];
-    Ok(render_template(CONVENTIONAL_TEMPLATE, &values))
+    ]
+}
+
+fn conventional_propulsion_values(
+    scenario: &ResolvedScenario,
+    concept: ConceptGeometry,
+) -> Vec<(&'static str, String)> {
+    let wing = &scenario.aircraft.wing;
+    let (engine_length, engine_diameter) = turbofan_envelope(scenario);
+    let propeller = scenario.propeller.as_ref();
+    let root_chord = 2.0 * wing.area_m2 / (wing.span_m * (1.0 + concept.taper_ratio));
+    let engine_x = propeller.map_or(concept.wing_x_m + 0.20 * root_chord, |_| 0.0);
+    let engine_z = propeller.map_or(concept.wing_z_m - 0.65 * engine_diameter, |_| 0.0);
+    vec![
+        ("__ENGINE_LENGTH__", decimal(engine_length)),
+        (
+            "__ENGINE_FINE_RATIO__",
+            decimal(engine_length / engine_diameter),
+        ),
+        (
+            "__ENGINE_COUNT__",
+            scenario.aircraft.propulsion.engine_count.to_string(),
+        ),
+        ("__ENGINE_Y__", decimal(wing.span_m * 0.22)),
+        ("__ENGINE_X__", decimal(engine_x)),
+        ("__ENGINE_Z__", decimal(engine_z)),
+        (
+            "__HAS_PROPELLER__",
+            u8::from(propeller.is_some()).to_string(),
+        ),
+        (
+            "__PROPELLER_DIAMETER__",
+            decimal(propeller.map_or(1.9, |profile| profile.diameter_m)),
+        ),
+        (
+            "__PROPELLER_BLADE_COUNT__",
+            propeller
+                .map_or(2, |profile| profile.blade_count)
+                .to_string(),
+        ),
+        ("__PROPELLER_X__", decimal(engine_x - 0.03)),
+        ("__PROPELLER_Z__", decimal(engine_z)),
+    ]
 }
 
 fn decimal(value: f64) -> String {

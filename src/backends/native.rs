@@ -20,6 +20,12 @@ use crate::models::structural_screen;
 use crate::models::weight::{WeightClosureInput, solve_weight_closure};
 use crate::services::requirements::evaluate_requirements;
 
+mod descriptor;
+mod topology;
+
+use descriptor::native_descriptor;
+pub(crate) use topology::native_topology_violations;
+
 #[derive(Debug, Clone, Copy, Default)]
 pub(crate) struct NativeBackend;
 
@@ -28,6 +34,8 @@ fn geometry_dimensions(
     wing_span: f64,
     concept: ConceptGeometry,
     planform: Option<BlendedWingPlanform>,
+    has_horizontal_tail: bool,
+    has_vertical_tail: bool,
 ) -> (f64, f64, f64, f64) {
     if let Some(planform) = planform {
         return (
@@ -37,13 +45,22 @@ fn geometry_dimensions(
             2.2 * wing_area,
         );
     }
-    let wetted_area = 2.05
-        * (wing_area + concept.horizontal_tail_area_m2 + concept.vertical_tail_area_m2)
+    let horizontal_tail = if has_horizontal_tail {
+        concept.horizontal_tail_area_m2
+    } else {
+        0.0
+    };
+    let vertical_tail = if has_vertical_tail {
+        concept.vertical_tail_area_m2
+    } else {
+        0.0
+    };
+    let wetted_area = 2.05 * (wing_area + horizontal_tail + vertical_tail)
         + 0.85 * std::f64::consts::PI * concept.fuselage_width_m * concept.fuselage_length_m;
     (
         wing_area / wing_span,
-        concept.horizontal_tail_area_m2,
-        concept.vertical_tail_area_m2,
+        horizontal_tail,
+        vertical_tail,
         wetted_area,
     )
 }
@@ -65,8 +82,16 @@ impl GeometryBackend for NativeBackend {
         let planform = blended
             .then(|| BlendedWingPlanform::from_wing(&aircraft.wing))
             .transpose()?;
-        let (mean_chord, horizontal_tail, vertical_tail, wetted_area) =
-            geometry_dimensions(wing_area, wing_span, concept, planform);
+        let topology = &aircraft.topology;
+        let dimensions = geometry_dimensions(
+            wing_area,
+            wing_span,
+            concept,
+            planform,
+            topology.has_component_kind("horizontal_tail"),
+            topology.has_component_kind("vertical_tail"),
+        );
+        let (mean_chord, horizontal_tail, vertical_tail, wetted_area) = dimensions;
         Ok(GeometryOutput {
             metrics: GeometryMetrics {
                 wing_area: QuantityOutput::si(wing_area, "m^2"),
@@ -160,23 +185,6 @@ impl AnalysisBackend for NativeBackend {
             failed_constraints,
             provenance: native_analysis_provenance(scenario, warnings, breguet.assumptions),
         })
-    }
-}
-
-fn native_descriptor() -> BackendDescriptor {
-    BackendDescriptor {
-        id: "native".to_owned(),
-        display_name: "Native conceptual approximation".to_owned(),
-        available: true,
-        version: Some(env!("CARGO_PKG_VERSION").to_owned()),
-        capabilities: vec![
-            "conceptual_geometry".to_owned(),
-            "weight_iteration".to_owned(),
-            "drag_polar".to_owned(),
-            "mission_performance".to_owned(),
-            "constraint_margins".to_owned(),
-        ],
-        unavailable_reason: None,
     }
 }
 

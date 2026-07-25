@@ -9,7 +9,7 @@ use crate::backends::contracts::{
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::schema::{EngineProfile, ResolvedScenario, ScenarioDocument};
 use crate::services::analysis::ApplicationService;
-use crate::services::design_experiments::FeasibilityResult;
+use crate::services::design_experiments::{CompletedFeasibility, FeasibilityResult};
 use crate::storage::design_store::DesignRecord;
 use crate::storage::project_store::read_yaml_blocking;
 
@@ -73,6 +73,13 @@ struct Candidate {
     conceptually_feasible: bool,
 }
 
+struct SearchOutcome {
+    selected: Candidate,
+    history: Vec<RefinementStep>,
+    iterations: u32,
+    evaluated_candidates: u32,
+}
+
 impl Candidate {
     fn converged(&self) -> bool {
         self.conceptually_feasible && self.unmet_requirements.is_empty()
@@ -85,48 +92,12 @@ impl ApplicationService {
         spec: RefinementSpec<'_>,
     ) -> AexResult<RefinementResult> {
         let baseline = self.resolve_blocking(spec.scenario_path, &BTreeMap::new())?;
-        let initial = DesignState::from_scenario(&baseline);
-        let mut steps = SearchSteps::from_state(initial);
-        let mut evaluated_candidates = 0_u32;
-        let mut current = self.evaluate_candidate(
-            spec.scenario_path,
-            &baseline,
-            initial,
-            initial,
-            &mut evaluated_candidates,
-        )?;
-        let mut history = vec![step(0, &current, &baseline)];
-        let mut iterations = 0_u32;
-        for iteration in 1..=spec.max_iterations.clamp(1, 40) {
-            if current.converged() {
-                break;
-            }
-            iterations = iterations.wrapping_add(1);
-            let mut best = current.clone();
-            for state in neighbors(current.state, initial, steps) {
-                let candidate = self.evaluate_candidate(
-                    spec.scenario_path,
-                    &baseline,
-                    state,
-                    initial,
-                    &mut evaluated_candidates,
-                )?;
-                if candidate.score < best.score {
-                    best = candidate;
-                }
-            }
-            if best.state == current.state {
-                steps = steps.halved();
-                if steps.converged() {
-                    history.push(step(iteration, &current, &baseline));
-                    break;
-                }
-            } else {
-                current = best;
-            }
-            history.push(step(iteration, &current, &baseline));
+        if let Some(unsupported) = self.feasibility_preflight(&baseline, spec.backend)? {
+            return Err(unsupported.as_error());
         }
-        let selected_parameters = parameters(current.state, &baseline);
+        let initial = DesignState::from_scenario(&baseline);
+        let search = self.search_refinement_candidates(&spec, &baseline, initial)?;
+        let selected_parameters = parameters(search.selected.state, &baseline);
         let output_parameters = output_parameters(spec.scenario_path, &selected_parameters)?;
         let design = self.create_design_blocking(
             spec.output_design_id,
@@ -141,10 +112,11 @@ impl ApplicationService {
             spec.backend,
             spec.artifact_path,
         )?;
-        let verification_failures = backend_verification_failures(&evaluation);
+        let completed = evaluation.completed()?;
+        let verification_failures = backend_verification_failures(completed);
         let backend_verification_passed = verification_failures.is_empty();
-        let converged = evaluation.baseline.analysis.feasible.unwrap_or(false)
-            && evaluation
+        let converged = completed.baseline.analysis.feasible.unwrap_or(false)
+            && completed
                 .baseline
                 .analysis
                 .requirements
@@ -154,15 +126,69 @@ impl ApplicationService {
         Ok(RefinementResult {
             source_scenario_id: baseline.id,
             converged,
-            iterations,
-            evaluated_candidates,
+            iterations: search.iterations,
+            evaluated_candidates: search.evaluated_candidates,
             selected_parameters,
-            history,
+            history: search.history,
             design,
             evaluation,
             backend_verification_passed,
             verification_failures,
             provenance: refinement_provenance(),
+        })
+    }
+
+    fn search_refinement_candidates(
+        &self,
+        spec: &RefinementSpec<'_>,
+        baseline: &ResolvedScenario,
+        initial: DesignState,
+    ) -> AexResult<SearchOutcome> {
+        let mut steps = SearchSteps::from_state(initial);
+        let mut evaluated_candidates = 0_u32;
+        let mut current = self.evaluate_candidate(
+            spec.scenario_path,
+            baseline,
+            initial,
+            initial,
+            &mut evaluated_candidates,
+        )?;
+        let mut history = vec![step(0, &current, baseline)];
+        let mut iterations = 0_u32;
+        for iteration in 1..=spec.max_iterations.clamp(1, 40) {
+            if current.converged() {
+                break;
+            }
+            iterations = iterations.wrapping_add(1);
+            let mut best = current.clone();
+            for state in neighbors(current.state, initial, steps) {
+                let candidate = self.evaluate_candidate(
+                    spec.scenario_path,
+                    baseline,
+                    state,
+                    initial,
+                    &mut evaluated_candidates,
+                )?;
+                if candidate.score < best.score {
+                    best = candidate;
+                }
+            }
+            if best.state == current.state {
+                steps = steps.halved();
+                if steps.converged() {
+                    history.push(step(iteration, &current, baseline));
+                    break;
+                }
+            } else {
+                current = best;
+            }
+            history.push(step(iteration, &current, baseline));
+        }
+        Ok(SearchOutcome {
+            selected: current,
+            history,
+            iterations,
+            evaluated_candidates,
         })
     }
 
@@ -397,7 +423,7 @@ fn step(iteration: u32, candidate: &Candidate, baseline: &ResolvedScenario) -> R
     }
 }
 
-fn backend_verification_failures(result: &FeasibilityResult) -> Vec<String> {
+fn backend_verification_failures(result: &CompletedFeasibility) -> Vec<String> {
     result
         .refinement
         .as_ref()
