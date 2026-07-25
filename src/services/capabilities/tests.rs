@@ -6,7 +6,7 @@ use crate::backends::contracts::{BackendDescriptor, BackendTopologyCapabilities}
 use crate::domain::capabilities::{
     SegmentFieldCapability, SegmentFieldRequirement, aero_configurations, document_types,
     energy_schedule_fields, mission_initial_state_fields, mission_segments, profile_types,
-    requirement_metrics,
+    requirement_metrics, requirement_templates,
 };
 
 use super::{manifest, reference_markdown};
@@ -56,6 +56,15 @@ fn registries_are_unique_and_lookup_complete() {
     assert_field_groups(energy_schedule_fields());
     assert_segment_field_groups();
     assert_unique(requirement_metrics().iter().map(|item| item.id));
+    assert_unique(requirement_templates().iter().map(|item| item.id));
+    for template in requirement_templates() {
+        assert_unique(template.items.iter().map(|item| item.id));
+        assert!(template.items.iter().all(|item| {
+            requirement_metrics()
+                .iter()
+                .any(|metric| metric.id == item.metric)
+        }));
+    }
     assert!(
         requirement_metrics()
             .iter()

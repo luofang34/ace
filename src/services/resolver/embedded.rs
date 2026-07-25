@@ -12,7 +12,7 @@ use crate::services::assumptions::collect_all_assumptions;
 use crate::services::overrides::apply_overrides;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
 use crate::services::profile_sanity::profile_warnings;
-use crate::services::requirement_resolution::resolve_requirements;
+use crate::services::requirement_resolution::{resolve_requirements, validate_template_context};
 
 use super::energy_climb::validate_energy_schedule_limits;
 use super::initial_state::validate_initial_state;
@@ -40,6 +40,7 @@ pub(crate) fn resolve_embedded_study(
         requirements_value.clone(),
         "requirements",
     )?)?;
+    validate_template_context(&requirements, aircraft.propulsion.engine_count)?;
     validate_payload(&aircraft, &mission)?;
     validate_initial_state(&aircraft, &mission)?;
     validate_energy_schedule_limits(&aircraft, &mission)?;

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
-use crate::domain::schema::AssumptionEntry;
+use crate::domain::schema::{AssumptionEntry, RequirementProvenance};
 use crate::domain::validity::{MetricValidity, ModelValidityDomain};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -208,6 +208,8 @@ pub(crate) struct RequirementEvaluation {
     pub(crate) percentage_margin: Option<f64>,
     pub(crate) severity: String,
     pub(crate) warning_state: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) provenance: Option<RequirementProvenance>,
 }
 
 impl RequirementEvaluation {

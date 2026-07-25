@@ -4,9 +4,9 @@ use crate::backends::contracts::BackendDescriptor;
 use crate::domain::capabilities::{
     AeroConfigurationCapability, DocumentTypeCapability, MissionSegmentCapability,
     ProfileTypeCapability, REQUIREMENT_OPERATORS, REQUIREMENT_SEVERITIES,
-    RequirementMetricCapability, SegmentFieldCapability, aero_configurations, document_types,
-    energy_schedule_fields, mission_initial_state_fields, mission_segments, profile_types,
-    requirement_metrics,
+    RequirementMetricCapability, RequirementTemplateCapability, SegmentFieldCapability,
+    aero_configurations, document_types, energy_schedule_fields, mission_initial_state_fields,
+    mission_segments, profile_types, requirement_metrics, requirement_templates,
 };
 #[cfg(test)]
 use crate::domain::capabilities::{MetricSource, ProfileRole, SegmentFieldRequirement};
@@ -32,6 +32,7 @@ pub(crate) struct CapabilitiesManifest {
     pub(crate) mission_initial_state_fields: &'static [SegmentFieldCapability],
     pub(crate) energy_schedule_fields: &'static [SegmentFieldCapability],
     pub(crate) mission_segments: &'static [MissionSegmentCapability],
+    pub(crate) requirement_templates: &'static [RequirementTemplateCapability],
     pub(crate) requirement_metrics: &'static [RequirementMetricCapability],
     pub(crate) requirement_operators: &'static [&'static str],
     pub(crate) requirement_severities: &'static [&'static str],
@@ -63,6 +64,7 @@ fn manifest(backends: Vec<BackendDescriptor>) -> AexResult<CapabilitiesManifest>
         mission_initial_state_fields: mission_initial_state_fields(),
         energy_schedule_fields: energy_schedule_fields(),
         mission_segments: mission_segments(),
+        requirement_templates: requirement_templates(),
         requirement_metrics: requirement_metrics(),
         requirement_operators: &REQUIREMENT_OPERATORS,
         requirement_severities: &REQUIREMENT_SEVERITIES,
@@ -98,22 +100,11 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
         .collect::<String>();
     let initial_state_fields = initial_state_markdown(manifest.mission_initial_state_fields);
     let energy_schedule_fields = initial_state_markdown(manifest.energy_schedule_fields);
-    let metrics = manifest
-        .requirement_metrics
+    let metrics = requirement_metrics_markdown(manifest);
+    let templates = manifest
+        .requirement_templates
         .iter()
-        .map(|item| {
-            let replacement = item
-                .replacement
-                .map_or_else(|| "—".to_owned(), |value| format!("`{value}`"));
-            format!(
-                "| `{}` | `{}` | {} | `{}` | {} |\n",
-                item.id,
-                metric_source(item.source),
-                if item.bindable { "yes" } else { "no" },
-                item.canonical_unit,
-                replacement
-            )
-        })
+        .map(template_markdown)
         .collect::<String>();
     let domains = manifest
         .model_domains
@@ -144,6 +135,13 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          A declared power or thrust fraction of zero means engine off and produces zero \
          modeled propulsion output and fuel flow.\n\n\
          {mission_notes}\n\n\
+         ## Requirement templates\n\n\
+         All shipped templates are conceptual screens, not certification findings.\n\n\
+         Transport OEI second-segment gradients are regulatory-derived from \
+         [14 CFR 25.121(b)](https://www.ecfr.gov/current/title-14/section-25.121); \
+         the implemented calculation remains a conceptual screen.\n\n\
+         | Template | Version | Category | Parameter | Items |\n\
+         | --- | --- | --- | --- | --- |\n{templates}\n\
          ## Requirement metrics\n\n\
          | Metric | Source | Bindable | Unit | Replacement |\n\
          | --- | --- | --- | --- | --- |\n{metrics}\n\
@@ -151,6 +149,75 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          ## Backends\n\n{backends}\n\
          ## Registered model domains\n\n{domains}\n\
          Strict-warning decisions are listed in [the generated warning policy](strict-warning-policy.md).\n"
+    )
+}
+
+#[cfg(test)]
+fn requirement_metrics_markdown(manifest: &CapabilitiesManifest) -> String {
+    manifest
+        .requirement_metrics
+        .iter()
+        .map(|item| {
+            let replacement = item
+                .replacement
+                .map_or_else(|| "—".to_owned(), |value| format!("`{value}`"));
+            format!(
+                "| `{}` | `{}` | {} | `{}` | {} |\n",
+                item.id,
+                metric_source(item.source),
+                if item.bindable { "yes" } else { "no" },
+                item.canonical_unit,
+                replacement
+            )
+        })
+        .collect()
+}
+
+#[cfg(test)]
+fn template_markdown(template: &RequirementTemplateCapability) -> String {
+    let parameter = template.parameter.map_or_else(
+        || "—".to_owned(),
+        |parameter| {
+            let allowed = parameter
+                .allowed_values
+                .iter()
+                .map(u32::to_string)
+                .collect::<Vec<_>>()
+                .join("/");
+            format!("`{}` ({allowed})", parameter.name)
+        },
+    );
+    let items = template
+        .items
+        .iter()
+        .map(|item| {
+            let value = item.value.map_or_else(
+                || {
+                    item.values_by_engine_count
+                        .iter()
+                        .map(|entry| format!("{}:{:.3}", entry.engine_count, entry.value))
+                        .collect::<Vec<_>>()
+                        .join("/")
+                },
+                |value| match value {
+                    crate::domain::capabilities::RequirementTemplateValue::Quantity(value) => {
+                        value.to_owned()
+                    }
+                    crate::domain::capabilities::RequirementTemplateValue::Scalar(value) => {
+                        value.to_string()
+                    }
+                },
+            );
+            format!(
+                "`{}` = {} [{}; {}]",
+                item.id, value, item.severity, item.provenance.kind
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("<br>");
+    format!(
+        "| `{}` | {} | {} | {} | {} |\n",
+        template.id, template.version, template.category, parameter, items
     )
 }
 

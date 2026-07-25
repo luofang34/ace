@@ -4,9 +4,12 @@ use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
     MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation, RequirementStatus,
 };
-use crate::domain::schema::{Requirement, ResolvedScenario};
+use crate::domain::schema::{Requirement, ResolvedScenario, SegmentKind};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
-use crate::models::field_performance::estimate_takeoff_distance;
+use crate::models::field_performance::{
+    FieldPerformanceEstimate, estimate_landing_distance, estimate_second_segment_climb_gradient,
+    estimate_takeoff_distance,
+};
 
 struct MetricInput {
     actual: f64,
@@ -106,6 +109,9 @@ fn metric_value(
             .landing_fuel
             .as_ref()
             .map(|fuel| MetricInput::valid(fuel.value)),
+        RequirementMetric::MissionReserveDuration => {
+            Some(MetricInput::valid(reserve_duration_s(scenario, mission)))
+        }
         RequirementMetric::ServiceCeiling => Some(MetricInput {
             actual: performance.service_ceiling_m,
             validity: performance.validity_for("performance.service_ceiling"),
@@ -129,11 +135,17 @@ fn metric_value(
             )
         }),
         RequirementMetric::TakeoffFieldLength => {
-            let estimate = estimate_takeoff_distance(scenario)?;
-            Some(MetricInput {
-                actual: estimate.distance_m,
-                validity: estimate.validity,
-            })
+            Some(field_distance_input(estimate_takeoff_distance(scenario)?))
+        }
+        RequirementMetric::LandingFieldLength => {
+            Some(field_distance_input(estimate_landing_distance(scenario)?))
+        }
+        RequirementMetric::AllEngineClimbGradient => Some(climb_gradient_input(
+            scenario,
+            scenario.aircraft.propulsion.engine_count,
+        )?),
+        RequirementMetric::OeiSecondSegmentClimbGradient => {
+            Some(oei_climb_gradient_input(scenario)?)
         }
         RequirementMetric::FullPayloadRange => payload_range
             .and_then(|result| point_range(result, "full_payload_mission"))
@@ -146,6 +158,57 @@ fn metric_value(
         }
     };
     Ok(input)
+}
+
+fn field_distance_input(estimate: FieldPerformanceEstimate) -> MetricInput {
+    MetricInput {
+        actual: estimate.distance_m,
+        validity: estimate.validity,
+    }
+}
+
+fn oei_climb_gradient_input(scenario: &ResolvedScenario) -> AexResult<MetricInput> {
+    let operating_engines = scenario
+        .aircraft
+        .propulsion
+        .engine_count
+        .checked_sub(1)
+        .filter(|count| *count > 0)
+        .ok_or_else(|| {
+            crate::domain::diagnostic::AexError::validation(
+                "OEI_REQUIRES_MULTIPLE_ENGINES",
+                "aircraft.propulsion.engine_count",
+                "OEI second-segment climb requires at least two installed engines",
+            )
+        })?;
+    climb_gradient_input(scenario, operating_engines)
+}
+
+fn climb_gradient_input(
+    scenario: &ResolvedScenario,
+    operating_engine_count: u32,
+) -> AexResult<MetricInput> {
+    let estimate = estimate_second_segment_climb_gradient(scenario, operating_engine_count)?;
+    Ok(MetricInput {
+        actual: estimate.gradient,
+        validity: estimate.validity,
+    })
+}
+
+fn reserve_duration_s(scenario: &ResolvedScenario, mission: &MissionResult) -> f64 {
+    scenario
+        .mission
+        .segments
+        .iter()
+        .filter(|segment| segment.kind == SegmentKind::Reserve)
+        .filter_map(|segment| {
+            mission
+                .segments
+                .iter()
+                .find(|result| result.segment_id == segment.id)
+        })
+        .map(|result| result.duration_s)
+        .sum()
 }
 
 fn performance_input(performance: &PerformanceSummary, metric: &str, actual: f64) -> MetricInput {
@@ -197,6 +260,7 @@ fn evaluate_one(requirement: &Requirement, input: MetricInput) -> RequirementEva
         severity: requirement.severity.clone(),
         warning_state: status != RequirementStatus::Indeterminate
             && margin.abs() <= requirement.required.abs() * 1.0e-6,
+        provenance: Some(requirement.provenance.clone()),
     }
 }
 

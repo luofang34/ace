@@ -285,6 +285,30 @@ fn inconsistent_override_is_rejected_and_paired_override_closes()
 }
 
 #[test]
+fn template_engine_count_must_match_resolved_aircraft() -> Result<(), Box<dyn std::error::Error>> {
+    let temporary = tempfile::tempdir()?;
+    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let scenario = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/b777/scenario.yaml");
+    let result = service.resolve_blocking(
+        &scenario,
+        &BTreeMap::from([(
+            "requirements.template.engine_count".to_owned(),
+            "3".to_owned(),
+        )]),
+    );
+
+    assert!(matches!(
+        result,
+        Err(AexError::Validation {
+            code: "TEMPLATE_ENGINE_COUNT_MISMATCH",
+            path,
+            ..
+        }) if path == "requirements.template.engine_count"
+    ));
+    Ok(())
+}
+
+#[test]
 fn every_shipped_example_resolves_a_closed_planform() -> Result<(), Box<dyn std::error::Error>> {
     let resolver = ScenarioResolver::new(Arc::new(FileProfileStore));
     let examples = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");

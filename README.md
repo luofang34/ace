@@ -82,6 +82,8 @@ OpenVSP verification. Portable studies can be loaded, run or resumed, queried
 by immutable evidence ID, and explicitly promoted into one editable design.
 Mission simulation is compact by default and returns an immutable run
 reference; `detail: true` or `generate_report` retrieves the full result.
+The shared capability manifest advertises versioned light-aircraft and
+transport requirement templates with achieved metrics and provenance.
 Study execution stores content-addressed evaluations and checkpoints under
 `.ace/studies/`; it does not generate candidate directories. The server writes
 protocol messages only to stdout; diagnostics use `tracing` on stderr.

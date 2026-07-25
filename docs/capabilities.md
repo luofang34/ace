@@ -51,6 +51,17 @@ Legacy `climb` remains a low-fidelity constant-rate model capped at 50 m/s.
 
 Power/thrust fractions on climb, energy_climb, cruise, loiter, and reserve constrain the mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows the aerodynamic power required and is not scaled directly by throttle.
 
+## Requirement templates
+
+All shipped templates are conceptual screens, not certification findings.
+
+Transport OEI second-segment gradients are regulatory-derived from [14 CFR 25.121(b)](https://www.ecfr.gov/current/title-14/section-25.121); the implemented calculation remains a conceptual screen.
+
+| Template | Version | Category | Parameter | Items |
+| --- | --- | --- | --- | --- |
+| `light_aircraft_conceptual` | 1 | normal-category light aircraft | — | `stall_speed_landing` = 61 kt [soft; designer_default]<br>`takeoff_field_length` = 2500 ft [soft; designer_default]<br>`landing_field_length` = 2500 ft [soft; designer_default]<br>`all_engine_climb_gradient` = 0.05 [soft; designer_default]<br>`reserve_duration` = 45 min [soft; designer_default] |
+| `transport_conceptual` | 1 | transport | `engine_count` (2/3/4) | `stall_speed_landing` = 150 kt [soft; designer_default]<br>`takeoff_field_length` = 11000 ft [soft; designer_default]<br>`landing_field_length` = 8000 ft [soft; designer_default]<br>`reserve_duration` = 30 min [soft; designer_default]<br>`oei_second_segment_climb_gradient` = 2:0.024/3:0.027/4:0.030 [hard; regulatory_derived] |
+
 ## Requirement metrics
 
 | Metric | Source | Bindable | Unit | Replacement |
@@ -59,12 +70,16 @@ Power/thrust fractions on climb, energy_climb, cruise, loiter, and reserve const
 | `performance.achieved_cruise_true_airspeed` | `achieved` | yes | `m/s` | — |
 | `mission.completed_distance` | `achieved` | yes | `m` | — |
 | `mission.landing_fuel` | `achieved` | yes | `kg` | — |
+| `mission.reserve_duration` | `achieved` | yes | `s` | — |
 | `performance.service_ceiling` | `achieved` | yes | `m` | — |
 | `performance.stall_speed_landing` | `achieved` | yes | `m/s` | — |
 | `performance.achieved_cruise_mach` | `achieved` | yes | `1` | — |
 | `performance.minimum_cruise_excess_power` | `achieved` | yes | `W` | — |
 | `performance.cruise_feasible` | `achieved` | yes | `1` | — |
 | `performance.takeoff_field_length` | `achieved` | yes | `m` | — |
+| `performance.landing_field_length` | `achieved` | yes | `m` | — |
+| `performance.all_engine_climb_gradient` | `achieved` | yes | `1` | — |
+| `performance.oei_second_segment_climb_gradient` | `achieved` | yes | `1` | — |
 | `performance.full_payload_range` | `achieved` | yes | `m` | — |
 | `performance.zero_payload_ferry_range` | `achieved` | yes | `m` | — |
 | `performance.cruise_mach` | `declared` | no | `1` | `performance.achieved_cruise_mach` |

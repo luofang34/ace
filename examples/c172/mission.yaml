@@ -30,7 +30,7 @@ mission:
       indicated_airspeed: 110 kt
       power_fraction: 0.25
     - id: reserve
-      type: loiter
+      type: reserve
       duration: 45 min
       altitude: 3000 ft
       true_airspeed: 95 kt
@@ -39,4 +39,3 @@ mission:
       type: fixed_time
       duration: 5 min
       power_fraction: 0.10
-

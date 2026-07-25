@@ -17,6 +17,8 @@ use serde_json::{Value, json};
 mod energy_climb;
 #[path = "capabilities/initial_state.rs"]
 mod initial_state;
+#[path = "capabilities/requirement_templates.rs"]
+mod requirement_templates;
 
 const MISSING_OPENVSP: &str = "/path/that/does/not/contain/vspscript";
 
@@ -89,6 +91,7 @@ async fn cli_and_mcp_manifest_match_and_advertised_vocabulary_validates()
     validate_unadvertised_segment_fields(&client).await?;
     validate_requirement_metrics(&client, &mcp).await?;
     validate_requirement_qualifiers(&client, &mcp).await?;
+    requirement_templates::validate(&client, &mcp).await?;
     validate_configurations(&client, &mcp).await?;
     assert_manifest_sections(&mcp)?;
 

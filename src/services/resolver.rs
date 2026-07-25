@@ -17,7 +17,7 @@ use crate::services::assumptions::collect_all_assumptions;
 use crate::services::overrides::apply_overrides;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
 use crate::services::profile_sanity::profile_warnings;
-use crate::services::requirement_resolution::resolve_requirements;
+use crate::services::requirement_resolution::{resolve_requirements, validate_template_context};
 use crate::storage::profile_store::ProfileRepository;
 use crate::storage::project_store::read_yaml_value_blocking;
 
@@ -77,6 +77,7 @@ impl ScenarioResolver {
         let aircraft = resolve_aircraft(aircraft_document)?;
         let mission = resolve_mission(mission_document)?;
         let requirements = resolve_requirements(requirements_document)?;
+        validate_template_context(&requirements, aircraft.propulsion.engine_count)?;
         validate_payload(&aircraft, &mission)?;
         validate_initial_state(&aircraft, &mission)?;
         validate_energy_schedule_limits(&aircraft, &mission)?;

@@ -5,6 +5,23 @@ use crate::test_support::example_scenario;
 use super::estimate_takeoff_distance;
 
 #[test]
+fn piston_field_screen_uses_engine_count_and_sizing_factor()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let baseline = estimate_takeoff_distance(&scenario)?.distance_m;
+
+    scenario.aircraft.propulsion.sizing_factor = 1.5;
+    let resized = estimate_takeoff_distance(&scenario)?.distance_m;
+    assert!(resized < baseline);
+
+    scenario.aircraft.propulsion.sizing_factor = 1.0;
+    scenario.aircraft.propulsion.engine_count = 2;
+    let twin_engine = estimate_takeoff_distance(&scenario)?.distance_m;
+    assert!(twin_engine < baseline);
+    Ok(())
+}
+
+#[test]
 fn turbofan_field_screen_uses_sizing_and_installation_loss()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("b777")?;

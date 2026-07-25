@@ -66,6 +66,40 @@ keeping the requested sweep variables unchanged in its result rows.
 Aspect-ratio linear sweep bounds are dimensionless bare numbers; `1` is also
 accepted as an explicit unit.
 
+Requirement documents may select a shipped, versioned conceptual template:
+
+```yaml
+requirements:
+  id: transport_screen
+  template:
+    id: transport_conceptual
+    version: 1
+    engine_count: 2
+  items:
+    - id: takeoff_field_length
+      value: 10500 ft
+      severity: hard
+      weight: 1.0
+    - id: payload
+      metric: mission.payload_mass
+      operator: ge
+      value: 60000 kg
+      severity: hard
+```
+
+Template items are materialized in registry order. A matching item may
+override only `value`, `severity`, and `weight`; `metric`, `operator`, and
+provenance remain owned by the template. Noncolliding items append as custom
+requirements. The transport template requires `engine_count` of 2, 3, or 4,
+which must match the resolved aircraft. Every resolved and evaluated
+requirement carries structured provenance. Designer defaults are explicitly
+non-regulatory. The transport OEI second-segment gradient is
+regulatory-derived from
+[14 CFR 25.121(b)](https://www.ecfr.gov/current/title-14/section-25.121), while
+the solver and all shipped templates remain conceptual screens rather than
+compliance findings. The complete template vocabulary is generated in
+[`capabilities.md`](capabilities.md).
+
 Each clean, takeoff, or landing aerodynamic configuration may add a
 Mach-dependent polar table while retaining the schema-version-1 scalar fields:
 
