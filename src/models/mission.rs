@@ -2,10 +2,11 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{MissionResult, MissionSegmentResult, ModelMetadata};
 use crate::domain::schema::{EngineProfile, MissionSegment, ResolvedScenario, SegmentKind};
-use crate::models::aerodynamics::{FlightCondition, evaluate as evaluate_aerodynamics};
 use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
-use crate::models::propulsion::{OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion};
+use crate::models::propulsion::OperatingMode;
+
+mod fuel;
 
 #[derive(Debug, Clone)]
 pub(crate) struct MissionSimulator {
@@ -21,13 +22,14 @@ struct MissionState {
     payload_remaining_kg: f64,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct SegmentComputation {
     fuel_burn_kg: f64,
     payload_removed_kg: f64,
     distance_m: f64,
     duration_s: f64,
     end_altitude_m: f64,
+    warnings: Vec<Diagnostic>,
 }
 
 #[derive(Debug)]
@@ -76,6 +78,8 @@ impl MissionSimulator {
         warnings.extend(fuel_load_warning);
         for segment in &self.scenario.mission.segments {
             let computation = self.compute_segment(segment, state)?;
+            let segment_warnings = scoped_segment_warnings(segment, &computation.warnings);
+            warnings.extend(segment_warnings.iter().cloned());
             if computation.fuel_burn_kg > state.fuel_remaining_kg + 1.0e-8 {
                 failed_segment = Some(segment.id.clone());
                 fuel_exhausted = true;
@@ -86,7 +90,12 @@ impl MissionSimulator {
                 ));
                 break;
             }
-            segment_results.push(segment_result(segment, state, computation));
+            segment_results.push(segment_result(
+                segment,
+                state,
+                &computation,
+                segment_warnings,
+            ));
             state.mass_kg -= computation.fuel_burn_kg + computation.payload_removed_kg;
             state.fuel_remaining_kg -= computation.fuel_burn_kg;
             state.payload_remaining_kg -= computation.payload_removed_kg;
@@ -113,12 +122,7 @@ impl MissionSimulator {
             segments: segment_results,
             assumptions: self.scenario.assumptions.clone(),
             warnings,
-            model: ModelMetadata {
-                model_id: "mission.quasi_steady".to_owned(),
-                model_version: "1.0.0".to_owned(),
-                fidelity_level: 1,
-                validity_status: if completed { "valid" } else { "incomplete" }.to_owned(),
-            },
+            model: mission_model(completed),
         })
     }
 
@@ -157,9 +161,9 @@ impl MissionSimulator {
         } else {
             OperatingMode::Economy
         };
-        let fuel_flow = self.available_fuel_flow(state.altitude_m, speed, throttle, mode)?;
+        let fuel_flow = fuel::available(self, state.altitude_m, speed, throttle, mode)?;
         Ok(SegmentComputation {
-            fuel_burn_kg: fuel_flow * duration,
+            fuel_burn_kg: fuel_flow.flow_kg_s * duration,
             payload_removed_kg: 0.0,
             distance_m: if segment.kind == SegmentKind::Takeoff {
                 speed * duration * 0.5
@@ -168,6 +172,7 @@ impl MissionSimulator {
             },
             duration_s: duration,
             end_altitude_m: state.altitude_m,
+            warnings: fuel_flow.warnings,
         })
     }
 
@@ -196,6 +201,7 @@ impl MissionSimulator {
             distance_m: 0.0,
             duration_s: 0.0,
             end_altitude_m: state.altitude_m,
+            warnings: Vec::new(),
         })
     }
 
@@ -227,6 +233,7 @@ impl MissionSimulator {
             distance_m: 0.0,
             duration_s: 0.0,
             end_altitude_m: state.altitude_m,
+            warnings: Vec::new(),
         })
     }
 
@@ -245,21 +252,23 @@ impl MissionSimulator {
         let midpoint = 0.5 * (state.altitude_m + target);
         let speed = representative_speed(segment, &self.scenario, midpoint)?;
         let analyzer = PointAnalyzer::new(self.scenario.clone());
-        let (_, maximum_rate) = analyzer.maximum_rate_of_climb(midpoint, state.mass_kg)?;
+        let climb = analyzer.maximum_rate_of_climb_with_diagnostics(midpoint, state.mass_kg)?;
         let throttle = segment
             .power_fraction
             .or(segment.thrust_fraction)
             .unwrap_or(0.9);
-        let rate = (maximum_rate * throttle).max(0.5);
+        let rate = (climb.maximum_rate_m_s * throttle).max(0.5);
         let duration = (target - state.altitude_m).max(0.0) / rate;
-        let fuel_flow =
-            self.available_fuel_flow(midpoint, speed, throttle, OperatingMode::Climb)?;
+        let fuel_flow = fuel::available(self, midpoint, speed, throttle, OperatingMode::Climb)?;
+        let mut warnings = climb.warnings;
+        extend_unique_diagnostics(&mut warnings, fuel_flow.warnings);
         Ok(SegmentComputation {
-            fuel_burn_kg: fuel_flow * duration,
+            fuel_burn_kg: fuel_flow.flow_kg_s * duration,
             payload_removed_kg: 0.0,
             distance_m: speed * duration * 0.75,
             duration_s: duration,
             end_altitude_m: target,
+            warnings,
         })
     }
 
@@ -276,14 +285,14 @@ impl MissionSimulator {
             .power_fraction
             .or(segment.thrust_fraction)
             .unwrap_or(0.15);
-        let fuel_flow =
-            self.available_fuel_flow(midpoint, speed, throttle, OperatingMode::Economy)?;
+        let fuel_flow = fuel::available(self, midpoint, speed, throttle, OperatingMode::Economy)?;
         Ok(SegmentComputation {
-            fuel_burn_kg: fuel_flow * duration,
+            fuel_burn_kg: fuel_flow.flow_kg_s * duration,
             payload_removed_kg: 0.0,
             distance_m: speed * duration * 0.75,
             duration_s: duration,
             end_altitude_m: target,
+            warnings: fuel_flow.warnings,
         })
     }
 
@@ -302,7 +311,8 @@ impl MissionSimulator {
         let altitude = segment.altitude_m.unwrap_or(state.altitude_m);
         let speed = representative_speed(segment, &self.scenario, altitude)?;
         let duration = distance / speed;
-        let fuel = self.integrated_cruise_fuel(
+        let fuel = fuel::integrated(
+            self,
             altitude,
             speed,
             state.mass_kg,
@@ -310,11 +320,12 @@ impl MissionSimulator {
             OperatingMode::Cruise,
         )?;
         Ok(SegmentComputation {
-            fuel_burn_kg: fuel,
+            fuel_burn_kg: fuel.fuel_kg,
             payload_removed_kg: 0.0,
             distance_m: distance,
             duration_s: duration,
             end_altitude_m: altitude,
+            warnings: fuel.warnings,
         })
     }
 
@@ -332,7 +343,8 @@ impl MissionSimulator {
             )
         })?;
         let speed = representative_speed(segment, &self.scenario, altitude)?;
-        let fuel = self.integrated_cruise_fuel(
+        let fuel = fuel::integrated(
+            self,
             altitude,
             speed,
             state.mass_kg,
@@ -340,93 +352,22 @@ impl MissionSimulator {
             OperatingMode::Economy,
         )?;
         Ok(SegmentComputation {
-            fuel_burn_kg: fuel,
+            fuel_burn_kg: fuel.fuel_kg,
             payload_removed_kg: 0.0,
             distance_m: 0.0,
             duration_s: duration,
             end_altitude_m: altitude,
+            warnings: fuel.warnings,
         })
     }
+}
 
-    fn integrated_cruise_fuel(
-        &self,
-        altitude_m: f64,
-        speed_m_s: f64,
-        start_mass_kg: f64,
-        duration_s: f64,
-        mode: OperatingMode,
-    ) -> AexResult<f64> {
-        let steps = 24_u32;
-        let step_duration = duration_s / f64::from(steps);
-        let mut mass = start_mass_kg;
-        let mut fuel = 0.0;
-        for _ in 0..steps {
-            let flow = self.required_fuel_flow(altitude_m, speed_m_s, mass, mode)?;
-            let burn = flow * step_duration;
-            fuel += burn;
-            mass -= burn;
-        }
-        Ok(fuel)
-    }
-
-    fn required_fuel_flow(
-        &self,
-        altitude_m: f64,
-        speed_m_s: f64,
-        mass_kg: f64,
-        mode: OperatingMode,
-    ) -> AexResult<f64> {
-        let atmosphere = self.atmosphere.evaluate(altitude_m)?;
-        let aero = evaluate_aerodynamics(
-            &self.scenario.aircraft,
-            "clean",
-            FlightCondition {
-                density_kg_m3: atmosphere.density_kg_m3,
-                speed_of_sound_m_s: atmosphere.speed_of_sound_m_s,
-                true_airspeed_m_s: speed_m_s,
-                mass_kg,
-            },
-        )?;
-        match &self.scenario.engine {
-            EngineProfile::Piston(profile) => {
-                let efficiency = self
-                    .scenario
-                    .propeller
-                    .as_ref()
-                    .map_or(0.75, |propeller| propeller.cruise_efficiency);
-                let shaft_power_kw = aero.power_required_w / efficiency / 1000.0;
-                let bsfc = match mode {
-                    OperatingMode::Economy => profile.bsfc_economy_kg_kwh,
-                    _ => profile.bsfc_cruise_kg_kwh,
-                };
-                Ok(bsfc * shaft_power_kw / 3600.0)
-            }
-            EngineProfile::Turbofan(profile) => {
-                Ok(profile.tsfc_cruise_kg_n_hr * aero.drag_n / 3600.0)
-            }
-        }
-    }
-
-    fn available_fuel_flow(
-        &self,
-        altitude_m: f64,
-        speed_m_s: f64,
-        throttle: f64,
-        mode: OperatingMode,
-    ) -> AexResult<f64> {
-        let atmosphere = self.atmosphere.evaluate(altitude_m)?;
-        let propulsion = evaluate_propulsion(
-            &self.scenario,
-            &atmosphere,
-            PropulsionQuery {
-                altitude_m,
-                true_airspeed_m_s: speed_m_s,
-                mach: speed_m_s / atmosphere.speed_of_sound_m_s,
-                throttle,
-                mode,
-            },
-        )?;
-        Ok(propulsion.fuel_flow_kg_s)
+fn mission_model(completed: bool) -> ModelMetadata {
+    ModelMetadata {
+        model_id: "mission.quasi_steady".to_owned(),
+        model_version: "1.0.0".to_owned(),
+        fidelity_level: 1,
+        validity_status: if completed { "valid" } else { "incomplete" }.to_owned(),
     }
 }
 
@@ -472,7 +413,8 @@ fn initial_fuel_load(requested_kg: f64, capacity_kg: f64) -> InitialFuelLoad {
 fn segment_result(
     segment: &MissionSegment,
     state: MissionState,
-    computation: SegmentComputation,
+    computation: &SegmentComputation,
+    warnings: Vec<Diagnostic>,
 ) -> MissionSegmentResult {
     MissionSegmentResult {
         segment_id: segment.id.clone(),
@@ -484,8 +426,34 @@ fn segment_result(
         duration_s: computation.duration_s,
         start_altitude_m: state.altitude_m,
         end_altitude_m: computation.end_altitude_m,
-        warnings: Vec::new(),
+        warnings,
     }
+}
+
+fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diagnostic>) {
+    for diagnostic in diagnostics {
+        if !target
+            .iter()
+            .any(|existing| existing.code == diagnostic.code && existing.path == diagnostic.path)
+        {
+            target.push(diagnostic);
+        }
+    }
+}
+
+fn scoped_segment_warnings(segment: &MissionSegment, warnings: &[Diagnostic]) -> Vec<Diagnostic> {
+    warnings
+        .iter()
+        .cloned()
+        .map(|mut warning| {
+            let base = format!("mission.segments.{}", segment.id);
+            warning.path = warning
+                .path
+                .as_deref()
+                .map_or_else(|| Some(base.clone()), |path| Some(format!("{base}.{path}")));
+            warning
+        })
+        .collect()
 }
 
 #[cfg(test)]
