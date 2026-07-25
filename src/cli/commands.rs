@@ -11,6 +11,7 @@ use crate::cli::{
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::result::{MissionResult, PerformanceSummary, RequirementEvaluation};
+use crate::domain::warning::enforce_strict;
 use crate::mcp::serve_stdio;
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::report::LIMITATION;
@@ -20,7 +21,6 @@ use crate::services::sweep::SweepVariable;
 
 use super::output::{emit_blocking, emit_scenario_blocking};
 use super::plots::execute_plot;
-use super::strict::enforce as enforce_strict;
 
 #[derive(Debug, Serialize)]
 struct AnalysisEnvelope<T: Serialize> {
@@ -290,6 +290,7 @@ fn execute_sweep(service: &ApplicationService, arguments: SweepArgs) -> AexResul
 
 fn execute_compare(service: &ApplicationService, arguments: CompareArgs) -> AexResult<()> {
     let result = service.compare_blocking(&arguments.scenarios, &arguments.metrics)?;
+    enforce_strict(arguments.strict, &result.warnings)?;
     let scenario = arguments.scenarios.first().ok_or_else(|| {
         AexError::validation(
             "MISSING_COMPARISON_SCENARIO",

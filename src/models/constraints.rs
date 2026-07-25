@@ -4,6 +4,7 @@ use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::GRAVITY_M_S2;
 use crate::domain::result::{ConstraintResult, ModelMetadata};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
+use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
 
 #[derive(Debug, Clone)]
@@ -71,7 +72,7 @@ impl ConstraintAnalyzer {
             selected_loading,
             active_controlling_constraint: active,
             warnings: vec![Diagnostic::warning(
-                "APPROXIMATE_TAKEOFF_DISTANCE",
+                WarningCode::ApproximateTakeoffDistance,
                 "Takeoff constraint uses a labeled energy approximation without rotation dynamics.",
                 "analysis.constraints.takeoff_distance",
             )],

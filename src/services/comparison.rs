@@ -8,6 +8,7 @@ use crate::domain::quantity::{GRAVITY_M_S2, QuantityOutput};
 use crate::domain::result::ResultProvenance;
 use crate::domain::schema::EngineProfile;
 use crate::domain::validity::MetricValidity;
+use crate::domain::warning::WarningCode;
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 
@@ -75,7 +76,7 @@ impl ApplicationService {
         }
         if propulsion_kinds.windows(2).any(|pair| pair[0] != pair[1]) {
             warnings.push(Diagnostic::warning(
-                "CROSS_CLASS_COMPARISON",
+                WarningCode::CrossClassComparison,
                 "Power-loading and thrust-loading metrics are not directly comparable.",
                 "scenario_paths",
             ));

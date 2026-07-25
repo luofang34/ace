@@ -20,6 +20,7 @@ use crate::charts::generators::{constraints, payload_range, sweep};
 use crate::charts::renderer::render_svg_blocking;
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
+use crate::domain::warning::enforce_strict;
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::validator::{error_validation, validate_document_value};
 use output::{ObjectOutput, json_output, json_output_for_scenario};
@@ -224,6 +225,7 @@ impl AexMcpServer {
             .service
             .resolve_blocking(Path::new(&request.scenario_path), &request.overrides)
             .map_err(mcp_error)?;
+        enforce_strict(request.strict, &resolved.warnings).map_err(mcp_error)?;
         json_output_for_scenario(
             json!({
                 "resolved_scenario": resolved,
@@ -273,6 +275,7 @@ impl AexMcpServer {
                 },
             )
             .map_err(mcp_error)?;
+        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
         json_output_for_scenario(
             result,
             Path::new(&request.scenario_path),
@@ -305,6 +308,7 @@ impl AexMcpServer {
                 request.wing_loading.count,
             )
             .map_err(mcp_error)?;
+        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
         let chart = constraints(&scenario, &result);
         if let Some(path) = &request.artifact_path {
             render_svg_blocking(&chart, Path::new(path)).map_err(mcp_error)?;
@@ -339,6 +343,7 @@ impl AexMcpServer {
                 &request.metrics,
             )
             .map_err(mcp_error)?;
+        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
         let chart = request
             .metrics
             .first()
@@ -366,6 +371,7 @@ impl AexMcpServer {
             .service
             .compare_blocking(&paths, &request.metrics)
             .map_err(mcp_error)?;
+        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
         let path = paths
             .first()
             .ok_or_else(|| ErrorData::invalid_params("scenario_paths must not be empty", None))?;
@@ -386,6 +392,7 @@ impl AexMcpServer {
             .service
             .compare_blocking(&paths, &request.metrics)
             .map_err(mcp_error)?;
+        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
         let path = paths
             .first()
             .ok_or_else(|| ErrorData::invalid_params("design_paths must not be empty", None))?;
@@ -437,6 +444,7 @@ impl AexMcpServer {
             .service
             .payload_range_blocking(Path::new(&request.scenario_path), &request.overrides)
             .map_err(mcp_error)?;
+        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
         let chart = payload_range(&scenario, &result);
         if let Some(path) = &request.artifact_path {
             render_svg_blocking(&chart, Path::new(path)).map_err(mcp_error)?;

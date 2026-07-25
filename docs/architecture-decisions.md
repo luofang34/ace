@@ -32,7 +32,9 @@ cover canonical SI values only.
 Resolved scalar inputs become assumption-ledger rows with source, confidence,
 explicit/profile/default flags, and units. Every warning has a stable code,
 severity, path, message, and context object. Strict mode promotes model
-extrapolation and agent-assumption warnings to failures.
+extrapolation, agent-assumption, and atypical-profile warnings to failures.
+One typed registry owns the wire vocabulary and every explicit promotion
+decision; CLI and MCP adapters invoke the same enforcement function.
 
 ## ADR-005 — Immutable content-addressed runs
 

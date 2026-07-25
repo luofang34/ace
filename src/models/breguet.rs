@@ -1,6 +1,7 @@
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::GRAVITY_M_S2;
 use crate::domain::schema::{EngineProfile, ResolvedScenario, SegmentKind};
+use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
 
 #[derive(Debug, Clone)]
@@ -44,7 +45,7 @@ pub(crate) fn estimate(
     let mut warnings = Vec::new();
     if usable_burn <= f64::EPSILON {
         warnings.push(Diagnostic::warning(
-            "ZERO_BREGUET_FUEL_BURN",
+            WarningCode::ZeroBreguetFuelBurn,
             "The Breguet estimate is zero because the simulated mission burned no fuel.",
             "mission.total_fuel_burn",
         ));

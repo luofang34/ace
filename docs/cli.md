@@ -38,7 +38,9 @@ omit that file use SI. The option changes only `display_value` and
 `display_unit`, never canonical SI values or persisted run identities. Plot
 `--output` names the SVG and `--spec-output` writes the structured chart
 response separately. Strict mode promotes model extrapolation,
-agent-assumption, and profile `PARAMETER_OUTSIDE_TYPICAL` warnings.
+agent-assumption, and profile `PARAMETER_OUTSIDE_TYPICAL` warnings. Comparison
+accepts `--strict` as well. The exhaustive decisions for every shipped warning
+code are generated in [the strict warning policy](strict-warning-policy.md).
 
 ## Error responses
 

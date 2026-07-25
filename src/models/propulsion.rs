@@ -3,6 +3,7 @@ use crate::domain::result::{AtmosphereState, ModelMetadata, PropulsionState};
 use crate::domain::schema::{
     EngineProfile, PistonProfile, PropellerProfile, ResolvedScenario, TurbofanProfile,
 };
+use crate::domain::warning::WarningCode;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum OperatingMode {
@@ -90,7 +91,7 @@ fn evaluate_piston(
         .is_some_and(|maximum| query.altitude_m > maximum)
     {
         warnings.push(Diagnostic::warning(
-            "MODEL_EXTRAPOLATION",
+            WarningCode::ModelExtrapolation,
             "Piston-engine profile evaluated above its maximum altitude.",
             "aircraft.propulsion.profile",
         ));
@@ -147,7 +148,7 @@ fn evaluate_turbofan(
         query.mach > profile.maximum_mach || query.altitude_m > profile.maximum_altitude_m;
     if extrapolated {
         warnings.push(Diagnostic::warning(
-            "MODEL_EXTRAPOLATION",
+            WarningCode::ModelExtrapolation,
             format!(
                 "Turbofan profile evaluated at {:.0} m and Mach {:.3}.",
                 query.altitude_m, query.mach

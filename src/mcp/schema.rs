@@ -29,6 +29,8 @@ pub(super) struct ScenarioRequest {
     pub(super) scenario_path: String,
     pub(super) units: Option<String>,
     #[serde(default)]
+    pub(super) strict: bool,
+    #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
 }
 
@@ -36,6 +38,8 @@ pub(super) struct ScenarioRequest {
 pub(super) struct PointRequest {
     pub(super) scenario_path: String,
     pub(super) units: Option<String>,
+    #[serde(default)]
+    pub(super) strict: bool,
     pub(super) condition: PointRequestCondition,
     #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
@@ -54,6 +58,8 @@ pub(super) struct PointRequestCondition {
 pub(super) struct ConstraintRequest {
     pub(super) scenario_path: String,
     pub(super) units: Option<String>,
+    #[serde(default)]
+    pub(super) strict: bool,
     pub(super) wing_loading: WingLoadingRequest,
     #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
@@ -71,6 +77,8 @@ pub(super) struct WingLoadingRequest {
 pub(super) struct SweepRequest {
     pub(super) scenario_path: String,
     pub(super) units: Option<String>,
+    #[serde(default)]
+    pub(super) strict: bool,
     pub(super) variables: Vec<SweepVariableRequest>,
     pub(super) metrics: Vec<String>,
 }
@@ -89,6 +97,8 @@ pub(super) struct SweepVariableRequest {
 pub(super) struct CompareRequest {
     pub(super) scenario_paths: Vec<String>,
     pub(super) units: Option<String>,
+    #[serde(default)]
+    pub(super) strict: bool,
     pub(super) metrics: Vec<String>,
 }
 
@@ -113,6 +123,8 @@ pub(super) struct ReportRequest {
 pub(super) struct PayloadRangeRequest {
     pub(super) scenario_path: String,
     pub(super) units: Option<String>,
+    #[serde(default)]
+    pub(super) strict: bool,
     #[serde(default)]
     pub(super) overrides: BTreeMap<String, String>,
     pub(super) artifact_path: Option<String>,
@@ -160,6 +172,8 @@ pub(super) struct AutoRefineDesignRequest {
 pub(super) struct CompareDesignsRequest {
     pub(super) design_paths: Vec<String>,
     pub(super) units: Option<String>,
+    #[serde(default)]
+    pub(super) strict: bool,
     pub(super) metrics: Vec<String>,
 }
 

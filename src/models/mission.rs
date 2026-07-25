@@ -2,6 +2,7 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{MissionResult, MissionSegmentResult, ModelMetadata};
 use crate::domain::schema::{MissionSegment, ResolvedScenario, SegmentKind};
+use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
 use crate::models::propulsion::OperatingMode;
@@ -89,7 +90,7 @@ impl MissionSimulator {
                 failed_segment = Some(segment.id.clone());
                 fuel_exhausted = true;
                 warnings.push(Diagnostic::warning(
-                    "FUEL_EXHAUSTED",
+                    WarningCode::FuelExhausted,
                     format!("Fuel was exhausted during segment {}.", segment.id),
                     format!("mission.segments.{}", segment.id),
                 ));
@@ -383,7 +384,7 @@ fn initial_fuel_load(requested_kg: f64, capacity_kg: f64) -> InitialFuelLoad {
         capacity_exceeded,
         warning: capacity_exceeded.then(|| {
             Diagnostic::warning(
-                "FUEL_CAPACITY_EXCEEDED",
+                WarningCode::FuelCapacityExceeded,
                 format!(
                     "Requested initial fuel load {requested_kg} kg exceeds tank capacity \
                      {capacity_kg} kg."

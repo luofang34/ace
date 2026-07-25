@@ -2,6 +2,7 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{ModelMetadata, PayloadRangePoint, PayloadRangeResult};
 use crate::domain::schema::{EngineProfile, ResolvedScenario, SegmentKind};
+use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::{FlightCondition, evaluate as evaluate_aerodynamics};
 use crate::models::atmosphere::Isa1976;
 use crate::models::mission::{
@@ -57,7 +58,7 @@ impl PayloadRangeAnalyzer {
             points,
             simplified_cruise_assumption: true,
             warnings: vec![Diagnostic::warning(
-                "SIMPLIFIED_PAYLOAD_RANGE",
+                WarningCode::SimplifiedPayloadRange,
                 "Payload-range values use a representative cruise condition, not a full mission.",
                 "analysis.payload_range",
             )],

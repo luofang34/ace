@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 use thiserror::Error;
 
 use crate::domain::validity::ModelDomainViolation;
+use crate::domain::warning::WarningCode;
 
 pub(crate) type AexResult<T> = Result<T, AexError>;
 
@@ -30,21 +31,30 @@ pub(crate) struct Diagnostic {
 
 impl Diagnostic {
     pub(crate) fn warning(
-        code: impl Into<String>,
+        code: WarningCode,
         message: impl Into<String>,
         path: impl Into<String>,
     ) -> Self {
+        Self::warning_with_context(code, message, path, Value::Object(serde_json::Map::new()))
+    }
+
+    pub(crate) fn warning_with_context(
+        code: WarningCode,
+        message: impl Into<String>,
+        path: impl Into<String>,
+        context: Value,
+    ) -> Self {
         Self {
-            code: code.into(),
+            code: code.as_str().to_owned(),
             severity: Severity::Warning,
             message: message.into(),
             path: Some(path.into()),
-            context: Value::Object(serde_json::Map::new()),
+            context,
         }
     }
 
     pub(crate) fn limitation(message: impl Into<String>) -> Self {
-        Self::warning("LOW_FIDELITY_MODEL", message, "models")
+        Self::warning(WarningCode::LowFidelityModel, message, "models")
     }
 }
 

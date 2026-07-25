@@ -9,6 +9,7 @@ use crate::domain::schema::{
     AircraftDocument, MissionDocument, ProfileDocument, RequirementsDocument,
 };
 use crate::domain::study::{StudyDocument, validate_study_document};
+use crate::domain::warning::WarningCode;
 use crate::services::analysis::ApplicationService;
 use crate::services::model_preflight::preflight_model_domains;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
@@ -74,7 +75,7 @@ pub(crate) fn validate_document_value(
                     document_type,
                     errors: Vec::new(),
                     warnings: vec![Diagnostic::warning(
-                        "CERTIFICATION_USE_NOT_PROHIBITED",
+                        WarningCode::CertificationUseNotProhibited,
                         "Example concepts should explicitly prohibit certification use.",
                         "aircraft.metadata.certification_use",
                     )],
