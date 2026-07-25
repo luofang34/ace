@@ -16,7 +16,7 @@ study:
     - id: propulsion_sizing
       path: aircraft.propulsion.sizing_factor
       kind: continuous
-      values: ["0.9", "1.0", "1.1"]
+      values: ["1.0", "1.2", "1.4"]
     - id: fuel_capacity
       path: aircraft.mass.maximum_fuel_mass
       kind: continuous

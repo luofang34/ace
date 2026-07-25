@@ -62,6 +62,16 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     identity. Stored records are create-only, detect malformed JSON and
     content-ID corruption with path context, and never create candidate
     directories.
+21. **Study execution is deterministic, resumable, and feasibility first.**
+    C172 grid and B777 seeded evolutionary workflows return stable candidate
+    order and selection; a truncated C172 archive resumes from 40 evaluations
+    without duplicate evidence. Completed reruns reuse every evaluation.
+    Ranking tests keep hard-infeasible candidates behind feasible candidates,
+    and MCP load, run, query, chart, evidence retrieval, and single-design
+    promotion agree on immutable identifiers. Conditional-grid duplicates do
+    not consume the unique-candidate cap; reused study IDs require an archive
+    discriminator; evidence links are cross-checked; and projected or
+    unavailable charts are explicit.
 
 ## Calibration bands
 

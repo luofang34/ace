@@ -21,11 +21,48 @@ structured JSON output for:
 - `auto_refine_design`
 - `compare_designs`
 - `list_analysis_backends`
+- `load_design_study`
+- `run_design_study`
+- `query_design_study`
+- `promote_study_candidate`
 
 All scenario tools accept repository-relative or absolute paths. Overrides are
 maps of dotted paths to explicit unit strings. Chart tools return a serializable
 chart specification and may write an SVG only when an artifact path is
 supplied. No MCP tool invokes a web service or language model.
+
+## Design studies
+
+`load_design_study` resolves and validates the study and its relative or
+embedded baseline. `run_design_study` performs deterministic grid or seeded
+evolutionary search with native analysis. The result contains bounded Pareto
+and selected-candidate summaries, its immutable archive reference, reuse
+counts, and a two-objective trade-space chart when applicable. Supplying
+`artifact_path` writes that chart as SVG and fails with
+`STUDY_CHART_UNAVAILABLE` when fewer than two objectives are reported. Studies
+with more than two objectives return `STUDY_CHART_PROJECTED`, including the
+displayed and omitted objective IDs.
+
+The service checkpoints immutable archives throughout a run. Repeating a
+completed study returns the same archive and reuses every evaluation. If only
+an incomplete checkpoint exists, execution continues from its candidate set,
+generation, population, and random-number state without duplicating evidence.
+Feasible candidates always rank ahead of candidates that fail a hard
+constraint.
+
+`query_design_study` accepts a study ID, optional archive ID, and optional
+result limit and returns the same archive-backed summaries and chart contract
+as execution. An archive ID is required when multiple study, baseline, or
+evaluator revisions share one study ID; omission returns
+`AMBIGUOUS_STUDY_ARCHIVE` instead of guessing. Supplying a candidate ID
+retrieves its full immutable evidence record. Retrieval verifies that archive,
+candidate, evaluation, study, and feasibility identities agree.
+
+Promotion requires a feasible recorded candidate and selects the archive that
+exactly matches the current study, baseline, and evaluator, even when another
+revision shares the study ID. `promote_study_candidate` writes exactly one
+canonical editable design to the requested design root; intermediate
+candidates remain descriptors and evidence, not directories.
 
 ## Design experiments
 

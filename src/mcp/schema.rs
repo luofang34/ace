@@ -151,3 +151,31 @@ pub(super) struct CompareDesignsRequest {
     pub(super) design_paths: Vec<String>,
     pub(super) metrics: Vec<String>,
 }
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct LoadStudyRequest {
+    pub(super) study_path: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct RunStudyRequest {
+    pub(super) study_path: String,
+    pub(super) artifact_path: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct QueryStudyRequest {
+    pub(super) study_id: String,
+    pub(super) archive_id: Option<String>,
+    pub(super) limit: Option<usize>,
+    pub(super) candidate_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct PromoteStudyCandidateRequest {
+    pub(super) study_path: String,
+    pub(super) candidate_id: String,
+    pub(super) design_id: String,
+    pub(super) display_name: Option<String>,
+    pub(super) design_root: Option<String>,
+}

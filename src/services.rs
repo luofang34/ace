@@ -9,5 +9,6 @@ pub(crate) mod report;
 pub(crate) mod requirement_resolution;
 pub(crate) mod requirements;
 pub(crate) mod resolver;
+pub(crate) mod study;
 pub(crate) mod sweep;
 pub(crate) mod validator;

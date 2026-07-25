@@ -1,5 +1,6 @@
 /target/
 /runs/
+/.ace/
 **/designs/**
 !examples/designs/
 !examples/designs/**

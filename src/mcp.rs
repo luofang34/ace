@@ -2,6 +2,7 @@ mod parameters;
 mod report;
 mod schema;
 pub(crate) mod serialization;
+mod study;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -28,8 +29,9 @@ use parameters::{
 use schema::{
     AutoRefineDesignRequest, CompareDesignsRequest, CompareRequest, ConstraintRequest,
     CreateDesignRequest, EvaluateFeasibilityRequest, ExplainRequest, GetProfileRequest,
-    ListProfilesRequest, PayloadRangeRequest, PointRequest, ReportRequest, ScenarioRequest,
-    SweepRequest, UpdateDesignRequest, ValidateDocumentRequest,
+    ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest, PointRequest,
+    PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
+    ScenarioRequest, SweepRequest, UpdateDesignRequest, ValidateDocumentRequest,
 };
 
 #[derive(Clone)]
@@ -55,6 +57,38 @@ impl AexMcpServer {
 
 #[tool_router]
 impl AexMcpServer {
+    #[tool(description = "Load and validate a portable aircraft design study")]
+    fn load_design_study(
+        &self,
+        Parameters(request): Parameters<LoadStudyRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        study::load(&self.service, request)
+    }
+
+    #[tool(description = "Run or resume a descriptor-based multi-objective design study")]
+    fn run_design_study(
+        &self,
+        Parameters(request): Parameters<RunStudyRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        study::run(&self.service, request)
+    }
+
+    #[tool(description = "Query bounded Pareto and selected-candidate study evidence")]
+    fn query_design_study(
+        &self,
+        Parameters(request): Parameters<QueryStudyRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        study::query(&self.service, request)
+    }
+
+    #[tool(description = "Promote a feasible study candidate into an editable design")]
+    fn promote_study_candidate(
+        &self,
+        Parameters(request): Parameters<PromoteStudyCandidateRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        study::promote(&self.service, request)
+    }
+
     #[tool(description = "Validate an aircraft, mission, requirements, or profile document")]
     fn validate_document(
         &self,

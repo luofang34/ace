@@ -20,6 +20,7 @@ use crate::services::resolver::ScenarioResolver;
 use crate::storage::profile_store::{FileProfileStore, ProfileRepository};
 use crate::storage::project_store::read_yaml_value_blocking;
 use crate::storage::run_store::{FileRunStore, PersistRunRequest, RunRecord, RunRepository};
+use crate::storage::study_store::{FileStudyStore, StudyRepository};
 
 #[derive(Debug, Clone)]
 pub(crate) struct PointCondition {
@@ -35,21 +36,33 @@ pub(crate) struct ApplicationService {
     resolver: ScenarioResolver,
     profiles: Arc<dyn ProfileRepository>,
     runs: Arc<dyn RunRepository>,
+    pub(super) studies: Arc<dyn StudyRepository>,
     pub(super) backends: BackendRegistry,
 }
 
 impl ApplicationService {
     pub(crate) fn filesystem(run_root: PathBuf) -> Self {
+        let study_root = run_root
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .join(".ace")
+            .join("studies");
         let profiles: Arc<dyn ProfileRepository> = Arc::new(FileProfileStore);
         let runs: Arc<dyn RunRepository> = Arc::new(FileRunStore::new(run_root));
-        Self::new(profiles, runs)
+        let studies: Arc<dyn StudyRepository> = Arc::new(FileStudyStore::new(study_root));
+        Self::new(profiles, runs, studies)
     }
 
-    pub(crate) fn new(profiles: Arc<dyn ProfileRepository>, runs: Arc<dyn RunRepository>) -> Self {
+    pub(crate) fn new(
+        profiles: Arc<dyn ProfileRepository>,
+        runs: Arc<dyn RunRepository>,
+        studies: Arc<dyn StudyRepository>,
+    ) -> Self {
         Self {
             resolver: ScenarioResolver::new(Arc::clone(&profiles)),
             profiles,
             runs,
+            studies,
             backends: BackendRegistry::detect_blocking(),
         }
     }

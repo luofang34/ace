@@ -73,8 +73,11 @@ two-dimensional sweeps, comparison, explanation, report, and editable
 aircraft-design experiment tools. `auto_refine_design` performs a bounded
 native search, requires conceptual aerodynamic, structural, mission-power, and
 requirement gates to pass, writes a new design, and can run an explicit final
-OpenVSP verification. It writes protocol messages only to stdout; diagnostics
-use `tracing` on stderr.
+OpenVSP verification. Portable studies can be loaded, run or resumed, queried
+by immutable evidence ID, and explicitly promoted into one editable design.
+Study execution stores content-addressed evaluations and checkpoints under
+`.ace/studies/`; it does not generate candidate directories. The server writes
+protocol messages only to stdout; diagnostics use `tracing` on stderr.
 
 Native conceptual geometry and performance analysis are always available.
 OpenVSP is discovered automatically when its headless `vspscript` executable

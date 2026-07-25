@@ -214,11 +214,27 @@ than canonical aircraft state.
 
 A study archive identifies the study and baseline digests, evaluator
 signature, completion state, candidate descriptors, evaluation IDs, and
-selected candidate IDs. Its content identity covers every field. Selected
-candidate snapshots may also travel with a study document, but immutable
-evaluation records remain separately addressable evidence.
+selected candidate IDs. It also records the optimizer generation, random state,
+population, candidate outcomes, scores, and feasible Pareto set. Its content
+identity covers every field. Selected candidate snapshots may also travel with
+a study document, but immutable evaluation records remain separately
+addressable evidence.
 
 Archives record what was evaluated and selected without treating generated
 candidate directories as durable state. Workflow tools may reconstruct a
 candidate from the baseline and its parameter map, and promotion writes only
-explicit user-selected canonical documents.
+explicit user-selected canonical documents. Grid traversal follows declared
+variable and value order. Evolutionary traversal is seeded, checkpoints its
+random state after every population-construction step, and resumes from the
+furthest matching immutable archive. Feasible-first ranking prevents a hard-infeasible candidate from
+winning through objective score alone. Conditional combinations count toward
+the evaluation limit only after they resolve to a unique descriptor.
+Mass-closure derivations apply propulsion dry-mass changes to operating empty
+mass and maximum takeoff mass together; fuel-capacity changes affect maximum
+takeoff mass without altering operating empty mass.
+
+Study IDs are human-stable names rather than revision identities. Retrieval
+uses an archive ID when more than one study, baseline, or evaluator signature
+shares a study ID. Promotion resolves the exact signature of the supplied
+study document. Archive consumers verify candidate, evaluation, study, and
+feasibility links before returning evidence or creating a design.

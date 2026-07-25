@@ -16,6 +16,10 @@ pub(crate) trait StudyRepository: Send + Sync {
     fn save_archive_blocking(&self, archive: &StudyArchive) -> AexResult<PathBuf>;
 
     fn load_archive_blocking(&self, archive_id: &str) -> AexResult<StudyArchive>;
+
+    fn list_archives_blocking(&self) -> AexResult<Vec<StudyArchive>>;
+
+    fn archive_path(&self, archive_id: &str) -> AexResult<PathBuf>;
 }
 
 #[derive(Debug, Clone)]
@@ -85,6 +89,65 @@ impl StudyRepository for FileStudyStore {
             })?;
         Ok(archive)
     }
+
+    fn list_archives_blocking(&self) -> AexResult<Vec<StudyArchive>> {
+        let root = self.root.join("archives");
+        if !root.exists() {
+            return Ok(Vec::new());
+        }
+        let mut paths = json_paths_blocking(&root)?;
+        paths.sort();
+        paths
+            .iter()
+            .map(|path| {
+                let archive: StudyArchive = read_stored_json_blocking(path)?;
+                archive
+                    .validate()
+                    .map_err(|source| AexError::StoredRecord {
+                        path: path.clone(),
+                        source: Box::new(source),
+                    })?;
+                Ok(archive)
+            })
+            .collect()
+    }
+
+    fn archive_path(&self, archive_id: &str) -> AexResult<PathBuf> {
+        FileStudyStore::archive_path(self, archive_id)
+    }
+}
+
+fn json_paths_blocking(root: &Path) -> AexResult<Vec<PathBuf>> {
+    let entries = fs::read_dir(root).map_err(|source| AexError::Read {
+        path: root.to_path_buf(),
+        source,
+    })?;
+    let mut paths = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|source| AexError::Read {
+            path: root.to_path_buf(),
+            source,
+        })?;
+        let path = entry.path();
+        let file_type = entry.file_type().map_err(|source| AexError::Read {
+            path: path.clone(),
+            source,
+        })?;
+        if file_type.is_dir() {
+            paths.extend(json_paths_blocking(&path)?);
+        } else if file_type.is_file()
+            && path.extension().and_then(|value| value.to_str()) == Some("json")
+        {
+            paths.push(path);
+        } else if file_type.is_symlink() {
+            return Err(AexError::validation(
+                "UNSUPPORTED_STUDY_STORE_ENTRY",
+                path.display().to_string(),
+                "study stores cannot contain symbolic links",
+            ));
+        }
+    }
+    Ok(paths)
 }
 
 fn content_path(root: &Path, collection: &str, prefix: &str, id: &str) -> AexResult<PathBuf> {
