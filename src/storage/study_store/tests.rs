@@ -64,6 +64,7 @@ fn records() -> Result<(EvidenceEnvelope, StudyArchive), Box<dyn std::error::Err
         candidates: vec![candidate.clone()],
         evaluation_ids: vec![evidence.evaluation_id.clone()],
         selected_candidate_ids: vec![candidate.candidate_id],
+        workflow: Default::default(),
     })?;
     Ok((evidence, archive))
 }
@@ -83,6 +84,7 @@ fn records_are_content_addressed_and_idempotent() -> Result<(), Box<dyn std::err
         evidence
     );
     assert_eq!(store.load_archive_blocking(&archive.archive_id)?, archive);
+    assert_eq!(store.list_archives_blocking()?, [archive]);
     assert!(evaluation_path.starts_with(directory.path().join("evaluations")));
     assert!(archive_path.starts_with(directory.path().join("archives")));
     assert!(!directory.path().join("candidates").exists());

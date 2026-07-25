@@ -9,8 +9,13 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 
 pub(crate) mod archive;
+mod workflow;
 
 pub(crate) use archive::StudyArchive;
+pub(crate) use workflow::{
+    CandidateOutcome, CandidateSummary, OptimizerCheckpoint, StudyArchiveWorkflow, StudyLoadResult,
+    StudyRunResult,
+};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

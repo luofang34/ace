@@ -46,11 +46,19 @@ pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<
             .iter()
             .copied()
             .zip(series.values.iter().copied());
-        chart
-            .draw_series(LineSeries::new(points, &color))
-            .map_err(plot_error)?
-            .label(series.label.clone())
-            .legend(move |(x, y)| PathElement::new([(x, y), (x + 20, y)], &color));
+        if spec.chart_type == "scatter" {
+            chart
+                .draw_series(points.map(|point| Circle::new(point, 5, color.filled())))
+                .map_err(plot_error)?
+                .label(series.label.clone())
+                .legend(move |(x, y)| Circle::new((x + 10, y), 5, Palette99::pick(index).filled()));
+        } else {
+            chart
+                .draw_series(LineSeries::new(points, &color))
+                .map_err(plot_error)?
+                .label(series.label.clone())
+                .legend(move |(x, y)| PathElement::new([(x, y), (x + 20, y)], &color));
+        }
     }
     for annotation in &spec.annotations {
         chart

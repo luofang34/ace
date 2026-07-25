@@ -214,11 +214,17 @@ than canonical aircraft state.
 
 A study archive identifies the study and baseline digests, evaluator
 signature, completion state, candidate descriptors, evaluation IDs, and
-selected candidate IDs. Its content identity covers every field. Selected
-candidate snapshots may also travel with a study document, but immutable
-evaluation records remain separately addressable evidence.
+selected candidate IDs. It also records the optimizer generation, random state,
+population, candidate outcomes, scores, and feasible Pareto set. Its content
+identity covers every field. Selected candidate snapshots may also travel with
+a study document, but immutable evaluation records remain separately
+addressable evidence.
 
 Archives record what was evaluated and selected without treating generated
 candidate directories as durable state. Workflow tools may reconstruct a
 candidate from the baseline and its parameter map, and promotion writes only
-explicit user-selected canonical documents.
+explicit user-selected canonical documents. Grid traversal follows declared
+variable and value order. Evolutionary traversal is seeded, checkpoints its
+random state and population, and resumes from the furthest matching immutable
+archive. Feasible-first ranking prevents a hard-infeasible candidate from
+winning through objective score alone.

@@ -122,10 +122,27 @@ baseline digest and normalized parameter map; accepted unit aliases and
 equivalent SI quantities canonicalize before hashing. Evaluation identity
 covers its candidate, inputs, status, analysis method, results, diagnostics,
 and provenance. Archive identity covers the study, evaluator signature,
-completion state, candidate descriptors, evaluation references, and selection.
+completion state, candidate descriptors, evaluation references, selection,
+optimizer checkpoint, candidate outcomes, scores, and Pareto membership.
 
 Evidence records separate analysis identity, metrics and constraint results,
 and provenance. File storage shards immutable evaluation and archive JSON by
 digest prefix under `evaluations/` and `archives/`. An identical write is
 idempotent; changed content cannot replace an existing identity. Candidate
 directories are not part of the storage contract.
+
+Archive workflow data is additive and defaults to empty, so schema-version-1
+archives without it remain valid. A checkpoint records the completed
+generation, deterministic random-number state, and current population.
+Outcomes bind one candidate to one evaluation with feasibility, normalized
+hard-constraint violation, objective values, and ranking score. All references
+must be unique archive members with finite scores.
+
+Grid search uses document variable order and value order. Evolutionary search
+uses the declared seed, population, generation limit, mutation rate, and
+maximum evaluation count. Immutable checkpoints allow execution to resume
+without rewriting an archive or reevaluating a known candidate. Pareto sets
+contain feasible candidates only; hard-infeasible candidates cannot outrank a
+feasible candidate. Study-specific constraints with the same ID as a baseline
+requirement replace that requirement in the study evidence, allowing a study
+to strengthen severity without creating duplicate constraint identities.
