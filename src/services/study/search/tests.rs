@@ -1,11 +1,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::domain::evidence::OptimizerCheckpoint;
 use crate::domain::study::{
     StudyAnalysisPolicy, StudyBaseline, StudyDefinition, StudySearchPolicy, StudyVariable,
     StudyVariableKind,
 };
 
-use super::{DeterministicRng, grid_genes};
+use super::{DeterministicRng, grid_genes, starting_population};
 
 fn study() -> StudyDefinition {
     StudyDefinition {
@@ -62,6 +63,29 @@ fn seeded_rng_repeats_and_handles_empty_choice() {
 
     assert_eq!(first_values, second_values);
     assert_eq!(first.index(0), 0);
+}
+
+#[test]
+fn initial_population_checkpoints_consumed_rng_state() {
+    let mut sparse = study();
+    sparse.variables.truncate(1);
+    let mut checkpoint = OptimizerCheckpoint {
+        generation: 0,
+        rng_state: 17,
+        population: Vec::new(),
+    };
+    let mut uninterrupted_rng = DeterministicRng::new(checkpoint.rng_state);
+    let population = starting_population(&sparse, 4, &mut checkpoint, &mut uninterrupted_rng);
+    checkpoint.population = population.clone();
+
+    assert_ne!(checkpoint.rng_state, 17);
+    let uninterrupted = (0..8).map(|_| uninterrupted_rng.next()).collect::<Vec<_>>();
+    let mut resumed_rng = DeterministicRng::new(checkpoint.rng_state);
+    let resumed_population = starting_population(&sparse, 4, &mut checkpoint, &mut resumed_rng);
+    let resumed = (0..8).map(|_| resumed_rng.next()).collect::<Vec<_>>();
+
+    assert_eq!(resumed_population, population);
+    assert_eq!(resumed, uninterrupted);
 }
 
 #[test]

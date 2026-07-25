@@ -136,11 +136,12 @@ fn run_evolutionary_blocking(
     let population_size = search_limit(search.population)?;
     let maximum = search_limit(search.max_evaluations)?;
     let mut rng = DeterministicRng::new(state.workflow.checkpoint.rng_state);
-    let mut population = if state.workflow.checkpoint.population.is_empty() {
-        initial_population(&prepared.document.study, population_size, &mut rng)
-    } else {
-        state.workflow.checkpoint.population.clone()
-    };
+    let mut population = starting_population(
+        &prepared.document.study,
+        population_size,
+        &mut state.workflow.checkpoint,
+        &mut rng,
+    );
     while state.workflow.checkpoint.generation < search.generations
         && state.workflow.outcomes.len() < maximum
     {
@@ -242,6 +243,21 @@ fn initial_population(
         population.push(random_genes(study, rng));
     }
     population
+}
+
+fn starting_population(
+    study: &StudyDefinition,
+    size: usize,
+    checkpoint: &mut OptimizerCheckpoint,
+    rng: &mut DeterministicRng,
+) -> Vec<BTreeMap<String, String>> {
+    if checkpoint.population.is_empty() {
+        let population = initial_population(study, size, rng);
+        checkpoint.rng_state = rng.state;
+        population
+    } else {
+        checkpoint.population.clone()
+    }
 }
 
 fn breed_population(

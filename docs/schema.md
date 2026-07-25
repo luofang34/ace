@@ -133,7 +133,8 @@ directories are not part of the storage contract.
 
 Archive workflow data is additive and defaults to empty, so schema-version-1
 archives without it remain valid. A checkpoint records the completed
-generation, deterministic random-number state, and current population.
+generation, deterministic random-number state after population construction,
+and current population.
 Outcomes bind one candidate to one evaluation with feasibility, normalized
 hard-constraint violation, objective values, and ranking score. All references
 must be unique archive members with finite scores.

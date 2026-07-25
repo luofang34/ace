@@ -225,8 +225,8 @@ candidate directories as durable state. Workflow tools may reconstruct a
 candidate from the baseline and its parameter map, and promotion writes only
 explicit user-selected canonical documents. Grid traversal follows declared
 variable and value order. Evolutionary traversal is seeded, checkpoints its
-random state and population, and resumes from the furthest matching immutable
-archive. Feasible-first ranking prevents a hard-infeasible candidate from
+random state after every population-construction step, and resumes from the
+furthest matching immutable archive. Feasible-first ranking prevents a hard-infeasible candidate from
 winning through objective score alone. Conditional combinations count toward
 the evaluation limit only after they resolve to a unique descriptor.
 Mass-closure derivations apply propulsion dry-mass changes to operating empty
