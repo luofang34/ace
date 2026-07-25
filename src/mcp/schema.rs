@@ -35,6 +35,18 @@ pub(super) struct ScenarioRequest {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct MissionRequest {
+    pub(super) scenario_path: String,
+    pub(super) units: Option<String>,
+    #[serde(default)]
+    pub(super) strict: bool,
+    #[serde(default)]
+    pub(super) detail: bool,
+    #[serde(default)]
+    pub(super) overrides: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct PointRequest {
     pub(super) scenario_path: String,
     pub(super) units: Option<String>,
