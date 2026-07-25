@@ -102,6 +102,11 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     extrapolation and metric validity propagate through zero-speed screens and
     charts and point reference metrics, and the SR-71 has distinct physical
     subsonic and Mach-3.2 L/D bands.
+27. **MCP domain failures remain tool-level results.** Execution failures set
+    `isError: true` and return stable status, code, violating path, diagnostics,
+    validity range, and a directly applicable inclusive-bound hint when one
+    exists. Malformed requests remain protocol errors, and an unavailable
+    backend cannot create design or artifact output before returning.
 
 ## Calibration bands
 

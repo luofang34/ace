@@ -53,6 +53,10 @@ uses an ordered altitude/speed schedule and remains within 80–120 seconds; the
 B777 climb remains within 15–30 minutes and 5–10 tonnes of fuel. Completed
 missions publish bindable landing fuel and emit `LOW_LANDING_FUEL` below 5%
 of maximum fuel capacity; incomplete missions emit neither.
+MCP execution failures return `isError` tool results with stable codes,
+violating paths, diagnostics, validity ranges, and safe boundary hints when a
+request field maps directly to an inclusive bound. Malformed requests remain
+protocol errors.
 
 ## Original flaws, ranked by how badly they misled an LLM
 

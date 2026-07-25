@@ -1,5 +1,7 @@
 mod capabilities;
 mod design;
+mod domain_error;
+mod handler;
 mod mission;
 mod output;
 mod parameters;
@@ -12,8 +14,8 @@ use std::path::{Path, PathBuf};
 
 use rmcp::handler::server::wrapper::{Json, Parameters};
 use rmcp::{
-    ErrorData, ServerHandler, ServiceExt, handler::server::router::tool::ToolRouter, tool,
-    tool_handler, tool_router, transport::stdio,
+    ErrorData, ServiceExt, handler::server::router::tool::ToolRouter, tool, tool_router,
+    transport::stdio,
 };
 use serde_json::{Value, json};
 
@@ -24,6 +26,7 @@ use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::warning::enforce_strict;
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::validator::{error_validation, validate_document_value};
+use domain_error::mcp_error;
 use output::{ObjectOutput, json_output, json_output_for_scenario};
 use parameters::{
     dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
@@ -466,9 +469,6 @@ impl AexMcpServer {
     }
 }
 
-#[tool_handler(router = self.tool_router)]
-impl ServerHandler for AexMcpServer {}
-
 pub(crate) async fn serve_stdio(service: ApplicationService) -> AexResult<()> {
     let server = AexMcpServer::new(service)
         .serve(stdio())
@@ -479,20 +479,6 @@ pub(crate) async fn serve_stdio(service: ApplicationService) -> AexResult<()> {
         .await
         .map_err(|source| AexError::analysis("MCP_TRANSPORT_ERROR", source.to_string()))?;
     Ok(())
-}
-
-fn mcp_error(source: AexError) -> ErrorData {
-    let detail = source.detail();
-    let message = detail.message.clone();
-    ErrorData::internal_error(
-        message,
-        Some(json!({
-            "code": detail.code,
-            "message": detail.message,
-            "path": detail.path,
-            "context": detail.context,
-        })),
-    )
 }
 
 fn mcp_serialization_error(source: impl std::fmt::Display) -> ErrorData {
