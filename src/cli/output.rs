@@ -6,10 +6,35 @@ use serde::Serialize;
 
 use crate::cli::{OutputArgs, OutputFormat};
 use crate::domain::diagnostic::{AexError, AexResult};
+use crate::domain::presentation::DisplayUnitSystem;
+use crate::storage::project_store::display_unit_system_blocking;
 
 pub(super) fn emit_blocking<T: Serialize>(value: &T, output: &OutputArgs) -> AexResult<()> {
+    let system = output
+        .units
+        .as_deref()
+        .map(|units| DisplayUnitSystem::parse(units, "units"))
+        .transpose()?
+        .unwrap_or_default();
+    emit_with_system_blocking(value, output, system)
+}
+
+pub(super) fn emit_scenario_blocking<T: Serialize>(
+    value: &T,
+    output: &OutputArgs,
+    scenario_path: &Path,
+) -> AexResult<()> {
+    let system = display_unit_system_blocking(scenario_path, output.units.as_deref())?;
+    emit_with_system_blocking(value, output, system)
+}
+
+fn emit_with_system_blocking<T: Serialize>(
+    value: &T,
+    output: &OutputArgs,
+    system: DisplayUnitSystem,
+) -> AexResult<()> {
     let raw = serde_json::to_value(value).map_err(|source| AexError::Json { source })?;
-    let interface_value = crate::mcp::serialization::attach_units(raw);
+    let interface_value = crate::mcp::serialization::attach_units_for(raw, system);
     let bytes = serialize(&interface_value, output.format)?;
     match &output.output {
         Some(path) => fs::write(path, bytes).map_err(|source| AexError::Write {

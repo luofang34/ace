@@ -5,6 +5,7 @@ pub(crate) mod diagnostic;
     reason = "evidence schemas are an adapter-independent persistence boundary"
 )]
 pub(crate) mod evidence;
+pub(crate) mod presentation;
 pub(crate) mod quantity;
 pub(crate) mod result;
 pub(crate) mod schema;

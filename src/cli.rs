@@ -152,6 +152,8 @@ struct PlotArgs {
     format: OutputFormat,
     #[arg(long)]
     spec_output: Option<PathBuf>,
+    #[arg(long)]
+    units: Option<String>,
     #[arg(long, default_value = "0 m")]
     altitude: String,
     #[arg(long)]
@@ -171,6 +173,7 @@ impl PlotArgs {
         OutputArgs {
             format: self.format,
             output: self.spec_output.clone(),
+            units: self.units.clone(),
         }
     }
 }
@@ -220,8 +223,6 @@ enum McpCommand {
 struct CommonArgs {
     #[command(flatten)]
     output: OutputArgs,
-    #[arg(long, default_value = "si")]
-    units: String,
     #[arg(long)]
     strict: bool,
     #[arg(long)]
@@ -248,6 +249,8 @@ struct OutputArgs {
     format: OutputFormat,
     #[arg(long)]
     output: Option<PathBuf>,
+    #[arg(long)]
+    units: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]

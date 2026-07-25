@@ -8,7 +8,7 @@ use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 
 use super::schema::ScenarioRequest;
-use super::{ObjectOutput, json_output, mcp_error};
+use super::{ObjectOutput, json_output_for_scenario, mcp_error};
 
 pub(super) fn simulate(
     service: &ApplicationService,
@@ -43,7 +43,7 @@ pub(super) fn simulate(
         ErrorData::internal_error("mission result did not serialize as an object", None)
     })?;
     fields.insert("hard_requirements_passed".to_owned(), Value::Bool(passed));
-    json_output(response)
+    json_output_for_scenario(response, path, request.units.as_deref())
 }
 
 fn requires_payload_range(scenario: &crate::domain::schema::ResolvedScenario) -> bool {
