@@ -1,11 +1,12 @@
 use crate::domain::capabilities::{RequirementMetric, requirement_metric};
+use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
     MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation, RequirementStatus,
 };
 use crate::domain::schema::{Requirement, ResolvedScenario};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
-use crate::models::field_performance::estimate_takeoff_distance_m;
+use crate::models::field_performance::estimate_takeoff_distance;
 
 struct MetricInput {
     actual: f64,
@@ -26,16 +27,16 @@ pub(crate) fn evaluate_requirements(
     mission: &MissionResult,
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
-) -> Vec<RequirementEvaluation> {
-    scenario
-        .requirements
-        .items
-        .iter()
-        .filter_map(|requirement| {
-            metric_value(requirement, scenario, mission, performance, payload_range)
-                .map(|input| evaluate_one(requirement, input))
-        })
-        .collect()
+) -> AexResult<Vec<RequirementEvaluation>> {
+    let mut evaluations = Vec::new();
+    for requirement in &scenario.requirements.items {
+        if let Some(input) =
+            metric_value(requirement, scenario, mission, performance, payload_range)?
+        {
+            evaluations.push(evaluate_one(requirement, input));
+        }
+    }
+    Ok(evaluations)
 }
 
 pub(crate) fn hard_requirements_passed(
@@ -87,9 +88,11 @@ fn metric_value(
     mission: &MissionResult,
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
-) -> Option<MetricInput> {
-    let metric = requirement_metric(&requirement.metric)?.metric;
-    match metric {
+) -> AexResult<Option<MetricInput>> {
+    let Some(metric) = requirement_metric(&requirement.metric).map(|item| item.metric) else {
+        return Ok(None);
+    };
+    let input = match metric {
         RequirementMetric::MissionPayloadMass => {
             Some(MetricInput::valid(scenario.mission.payload_mass_kg))
         }
@@ -107,9 +110,11 @@ fn metric_value(
             actual: performance.service_ceiling_m,
             validity: performance.validity_for("performance.service_ceiling"),
         }),
-        RequirementMetric::StallSpeedLanding => {
-            Some(MetricInput::valid(performance.stall_speed_landing_m_s))
-        }
+        RequirementMetric::StallSpeedLanding => Some(performance_input(
+            performance,
+            &requirement.metric,
+            performance.stall_speed_landing_m_s,
+        )),
         RequirementMetric::AchievedCruiseMach => performance
             .achieved_cruise_mach
             .map(|actual| performance_input(performance, &requirement.metric, actual)),
@@ -124,7 +129,11 @@ fn metric_value(
             )
         }),
         RequirementMetric::TakeoffFieldLength => {
-            Some(MetricInput::valid(estimate_takeoff_distance_m(scenario)))
+            let estimate = estimate_takeoff_distance(scenario)?;
+            Some(MetricInput {
+                actual: estimate.distance_m,
+                validity: estimate.validity,
+            })
         }
         RequirementMetric::FullPayloadRange => payload_range
             .and_then(|result| point_range(result, "full_payload_mission"))
@@ -135,7 +144,8 @@ fn metric_value(
         RequirementMetric::DeclaredCruiseMach | RequirementMetric::DeclaredCruiseTrueAirspeed => {
             None
         }
-    }
+    };
+    Ok(input)
 }
 
 fn performance_input(performance: &PerformanceSummary, metric: &str, actual: f64) -> MetricInput {

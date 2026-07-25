@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use crate::domain::aerodynamics::{PolarTable, TABLE_POLAR_MODEL_ID};
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::validity::{
@@ -7,6 +8,8 @@ use crate::domain::validity::{
 };
 use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
+use crate::models::validity::scenario_domains;
+use crate::test_support::example_scenario;
 
 use super::archive::StudyArchiveDraft;
 use super::{
@@ -181,6 +184,42 @@ fn evidence_typed_validity_round_trips_and_affects_identity()
     let round_trip: EvidenceEnvelope = serde_json::from_value(stored)?;
     round_trip.validate()?;
     assert_eq!(typed, round_trip);
+    Ok(())
+}
+
+#[test]
+fn evidence_preserves_same_model_domains_for_three_configurations()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    for (configuration, maximum) in [
+        (&mut scenario.aircraft.aerodynamics.clean, 0.8),
+        (&mut scenario.aircraft.aerodynamics.takeoff, 0.4),
+        (&mut scenario.aircraft.aerodynamics.landing, 0.3),
+    ] {
+        configuration.polar_table = Some(PolarTable {
+            mach: vec![0.0, maximum],
+            cd0: vec![configuration.cd0; 2],
+            cl_max: vec![configuration.cl_max; 2],
+            oswald_efficiency: Some(vec![configuration.oswald_efficiency; 2]),
+            induced_drag_factor: None,
+        });
+    }
+    let envelope = evidence_with_domains(
+        candidate("16 m^2")?.candidate_id,
+        120.0,
+        scenario_domains(&scenario)?,
+    )?;
+    let table_domains = envelope
+        .provenance
+        .validity_domains
+        .iter()
+        .filter(|domain| domain.model_id == TABLE_POLAR_MODEL_ID)
+        .collect::<Vec<_>>();
+
+    assert_eq!(table_domains.len(), 3);
+    envelope.validate()?;
+    let round_trip: EvidenceEnvelope = serde_json::from_value(serde_json::to_value(&envelope)?)?;
+    assert_eq!(envelope, round_trip);
     Ok(())
 }
 

@@ -1,10 +1,67 @@
 use crate::backends::contracts::{
     AnalysisBackend, AnalysisRequest, GeometryBackend, GeometryRequest,
 };
+use crate::domain::aerodynamics::PolarTable;
 use crate::models::mission::MissionSimulator;
 use crate::test_support::{example_scenario, fuel_exhaustion_scenario};
 
-use super::{NativeBackend, failed_constraints};
+use super::{NativeBackend, failed_constraints, native_polar};
+
+#[test]
+fn native_polar_retains_reference_mach_extrapolation() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let clean = &mut scenario.aircraft.aerodynamics.clean;
+    clean.polar_table = Some(PolarTable {
+        mach: vec![0.2, 0.8],
+        cd0: vec![clean.cd0; 2],
+        cl_max: vec![clean.cl_max; 2],
+        oswald_efficiency: Some(vec![clean.oswald_efficiency; 2]),
+        induced_drag_factor: None,
+    });
+
+    let (_, warnings) = native_polar(&scenario)?;
+    assert_eq!(warnings.len(), 1);
+    assert_eq!(warnings[0].code, "MODEL_EXTRAPOLATION");
+    assert_eq!(
+        warnings[0].path.as_deref(),
+        Some("aircraft.aerodynamics.clean.polar_table.mach")
+    );
+    Ok(())
+}
+
+#[test]
+fn native_metrics_publish_reference_polar_validity() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let clean = &mut scenario.aircraft.aerodynamics.clean;
+    clean.polar_table = Some(PolarTable {
+        mach: vec![0.2, 0.8],
+        cd0: vec![clean.cd0; 2],
+        cl_max: vec![clean.cl_max; 2],
+        oswald_efficiency: Some(vec![clean.oswald_efficiency; 2]),
+        induced_drag_factor: None,
+    });
+    let backend = NativeBackend;
+    let geometry = backend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let analysis = backend.analyze_blocking(AnalysisRequest {
+        scenario: &scenario,
+        geometry: &geometry,
+    })?;
+
+    for metric in [
+        "performance.stall_speed_clean",
+        "aerodynamics.maximum_lift_to_drag_ratio",
+    ] {
+        assert!(analysis.metrics.contains_key(metric));
+        assert_eq!(
+            analysis.metric_validity[metric].status,
+            crate::domain::validity::ValidityStatus::Extrapolated
+        );
+    }
+    Ok(())
+}
 
 #[test]
 fn native_analysis_publishes_validated_scenario_domains() -> Result<(), Box<dyn std::error::Error>>

@@ -3,7 +3,9 @@ use crate::domain::schema::ResolvedScenario;
 use crate::domain::validity::{
     ModelDomainViolation, ModelValidityDomain, ValidityBound, ValidityVariable,
 };
-use crate::models::validity::{ModelDomainRole, scenario_domain_registrations};
+use crate::models::validity::{
+    ModelDomainRole, aerodynamic_configuration_domain, scenario_domain_registrations,
+};
 
 mod mission;
 mod speed;
@@ -21,11 +23,12 @@ struct Declaration {
 
 pub(crate) fn preflight_model_domains(scenario: &ResolvedScenario) -> AexResult<()> {
     let declarations = declarations(scenario)?;
-    preflight_declarations(scenario, &declarations)
+    preflight_declarations(scenario, &declarations, None)
 }
 
 pub(crate) fn preflight_operating_point(
     scenario: &ResolvedScenario,
+    configuration: &str,
     altitude_m: f64,
     speed_m_s: Option<f64>,
     mach: Option<f64>,
@@ -48,12 +51,14 @@ pub(crate) fn preflight_operating_point(
         "condition.mass",
         mass_kg,
     );
-    preflight_declarations(scenario, &declarations)
+    let aerodynamic_domain = aerodynamic_configuration_domain(scenario, configuration)?;
+    preflight_declarations(scenario, &declarations, Some(&aerodynamic_domain))
 }
 
 fn preflight_declarations(
     scenario: &ResolvedScenario,
     declarations: &[Declaration],
+    aerodynamic_override: Option<&ModelValidityDomain>,
 ) -> AexResult<()> {
     reject_non_finite_declaration(declarations)?;
     let mut violations = Vec::new();
@@ -61,9 +66,20 @@ fn preflight_declarations(
         if registration.role == ModelDomainRole::ConditionalAerodynamics {
             continue;
         }
+        if aerodynamic_override.is_some() && registration.role == ModelDomainRole::Aerodynamics {
+            continue;
+        }
         collect_domain_violations(
             &registration.domain,
             registration.role,
+            declarations,
+            &mut violations,
+        );
+    }
+    if let Some(domain) = aerodynamic_override {
+        collect_domain_violations(
+            domain,
+            ModelDomainRole::Aerodynamics,
             declarations,
             &mut violations,
         );
@@ -328,3 +344,6 @@ fn violation_summary(violations: &[ModelDomainViolation]) -> String {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod point_tests;

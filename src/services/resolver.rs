@@ -25,6 +25,7 @@ mod embedded;
 mod energy_climb;
 mod initial_state;
 mod planform;
+mod polar;
 mod segments;
 
 pub(crate) use embedded::resolve_embedded_study;
@@ -244,6 +245,7 @@ fn resolve_mass(raw: &crate::domain::schema::RawMass) -> AexResult<MassPropertie
 }
 
 fn resolve_aero(raw: RawAeroConfiguration, name: &str) -> AexResult<AeroConfiguration> {
+    let polar_table = polar::resolve(raw.polar_table, raw.wave_drag.as_ref(), name)?;
     Ok(AeroConfiguration {
         cd0: positive(raw.cd0, &format!("aircraft.aerodynamics.{name}.cd0"))?,
         oswald_efficiency: fraction(
@@ -257,6 +259,7 @@ fn resolve_aero(raw: RawAeroConfiguration, name: &str) -> AexResult<AeroConfigur
         )?,
         mach_critical: raw.mach_critical,
         wave_drag: raw.wave_drag,
+        polar_table,
     })
 }
 

@@ -131,7 +131,7 @@ fn execute_mission(service: &ApplicationService, arguments: ScenarioArgs) -> Aex
     let (_, performance) = service.performance_blocking(&arguments.scenario, &overrides)?;
     let (_, payload_range) = service.payload_range_blocking(&arguments.scenario, &overrides)?;
     let requirements =
-        evaluate_requirements(&scenario, &mission, &performance, Some(&payload_range));
+        evaluate_requirements(&scenario, &mission, &performance, Some(&payload_range))?;
     enforce_strict(arguments.common.strict, &mission.warnings)?;
     let run = service.persist_blocking(
         &scenario,

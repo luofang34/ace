@@ -34,7 +34,8 @@ pub(super) fn simulate(
         None
     };
     let requirements =
-        evaluate_requirements(&scenario, &mission, &performance, payload_range.as_ref());
+        evaluate_requirements(&scenario, &mission, &performance, payload_range.as_ref())
+            .map_err(mcp_error)?;
     let passed = hard_requirements_passed(
         mission.completed,
         &scenario.requirements.items,

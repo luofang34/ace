@@ -108,7 +108,7 @@ fn typed_fixture_documents_validate_independently() -> Result<(), Box<dyn Error>
 fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     for (name, expected_count, required_path) in [
-        ("sr71", 7, "mission.segments.supersonic_cruise.altitude"),
+        ("sr71", 4, "mission.segments.supersonic_cruise.altitude"),
         ("x15", 6, "mission.segments.boost_climb.schedule.2.mach"),
     ] {
         let scenario = fixture_path(name, "scenario.yaml");
@@ -137,6 +137,13 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
                 .iter()
                 .any(|violation| violation["path"] == required_path)
         );
+        if name == "sr71" {
+            assert!(
+                violations
+                    .iter()
+                    .all(|violation| violation["model_id"] != "aero.polar_table")
+            );
+        }
         assert!(violations.iter().all(|violation| {
             violation["declared_value"].is_number()
                 && violation["declared_unit"].is_string()

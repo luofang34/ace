@@ -1,3 +1,4 @@
+pub(crate) mod aerodynamics;
 pub(crate) mod capabilities;
 pub(crate) mod content_identity;
 pub(crate) mod diagnostic;

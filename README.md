@@ -93,14 +93,14 @@ error; it never causes an implicit substitution with native estimates.
 
 ## Model scope
 
-The MVP implements ISA through 20 km, a parabolic drag polar with optional
-transonic drag rise, density-lapsed piston power, simple and tabulated
-turbofan thrust/fuel decks, bounded speed and ceiling solves, mission integration,
-constraint diagrams, payload-range, requirement margins, SVG charts, and
-content-addressed run manifests. Concept-design feasibility also includes a
-bounded weight iteration, empirical tail sizing, Breguet range/endurance, and
-takeoff/landing estimates, mission operating-point power reserve, and a
-conceptual wing-spar/tail-volume structural screen with explicit provenance
+The MVP implements ISA through 20 km, scalar and Mach-tabulated parabolic drag
+polars with explicit transonic behavior, density-lapsed piston power, simple
+and tabulated turbofan thrust/fuel decks, bounded speed and ceiling solves,
+mission integration, constraint diagrams, payload-range, requirement margins,
+SVG charts, and content-addressed run manifests. Concept-design feasibility
+also includes a bounded weight iteration, empirical tail sizing, Breguet
+range/endurance, takeoff/landing estimates, mission operating-point power
+reserve, and a conceptual wing-spar/tail-volume structural screen with explicit provenance
 and validity limits.
 
 The C172-class and B777-300ER-class files are calibration examples rather than

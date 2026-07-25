@@ -1,3 +1,5 @@
+#![allow(clippy::expect_used)]
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
@@ -5,10 +7,11 @@ use std::sync::Arc;
 
 use serde::de::DeserializeOwned;
 
+use crate::domain::aerodynamics::PolarTable;
 use crate::domain::diagnostic::AexError;
 use crate::domain::schema::{
     AircraftDocument, MissionDocument, ProfileDocument, RawMissionInitialState,
-    RequirementsDocument, ScenarioDocument,
+    RequirementsDocument, ScenarioDocument, WaveDrag,
 };
 use crate::domain::study::EmbeddedStudyBaseline;
 use crate::services::analysis::ApplicationService;
@@ -18,6 +21,16 @@ use super::{
     ScenarioResolver, resolve_aircraft, resolve_embedded_study, resolve_mission,
     validate_initial_state,
 };
+
+fn valid_polar_table() -> PolarTable {
+    PolarTable {
+        mach: vec![0.0, 1.0],
+        cd0: vec![0.02, 0.03],
+        cl_max: vec![1.4, 1.0],
+        oswald_efficiency: Some(vec![0.8, 0.6]),
+        induced_drag_factor: None,
+    }
+}
 
 fn c172_aircraft_document() -> Result<AircraftDocument, Box<dyn std::error::Error>> {
     read_c172_document("aircraft.yaml")
@@ -94,6 +107,85 @@ fn absent_topology_preserves_legacy_inference() -> Result<(), Box<dyn std::error
     assert!(aircraft.topology.has_component_kind("propeller"));
     assert!(!aircraft.topology.has_component_kind("lifting_body"));
     Ok(())
+}
+
+#[test]
+fn aircraft_resolves_additive_polar_table() -> Result<(), Box<dyn std::error::Error>> {
+    let mut document = c172_aircraft_document()?;
+    document.aircraft.aerodynamics.clean.polar_table = Some(valid_polar_table());
+    let aircraft = resolve_aircraft(document)?;
+
+    let table = aircraft
+        .aerodynamics
+        .clean
+        .polar_table
+        .ok_or_else(|| std::io::Error::other("polar table was not resolved"))?;
+    assert_eq!(table.mach, vec![0.0, 1.0]);
+    Ok(())
+}
+
+#[test]
+fn polar_table_validation_rejects_malformed_data() {
+    let mut short_axis = valid_polar_table();
+    short_axis.mach = vec![0.0];
+    let mut unsorted_axis = valid_polar_table();
+    unsorted_axis.mach = vec![1.0, 0.0];
+    let mut negative_axis = valid_polar_table();
+    negative_axis.mach = vec![-0.1, 1.0];
+    let mut bad_dimensions = valid_polar_table();
+    bad_dimensions.cd0 = vec![0.02];
+    let mut bad_cell = valid_polar_table();
+    bad_cell.cl_max[1] = 0.0;
+    let mut nonfinite_cell = valid_polar_table();
+    nonfinite_cell.cd0[1] = f64::NAN;
+    let mut bad_efficiency = valid_polar_table();
+    bad_efficiency.oswald_efficiency = Some(vec![0.8, 1.1]);
+    let mut missing_induced = valid_polar_table();
+    missing_induced.oswald_efficiency = None;
+    let mut conflicting_induced = valid_polar_table();
+    conflicting_induced.induced_drag_factor = Some(vec![0.1, 0.2]);
+
+    for (table, expected) in [
+        (short_axis, "INVALID_POLAR_TABLE_AXIS"),
+        (unsorted_axis, "UNSORTED_POLAR_TABLE_AXIS"),
+        (negative_axis, "INVALID_POLAR_TABLE_AXIS"),
+        (bad_dimensions, "INVALID_POLAR_TABLE_DIMENSIONS"),
+        (bad_cell, "INVALID_POLAR_TABLE_CELL"),
+        (nonfinite_cell, "INVALID_POLAR_TABLE_CELL"),
+        (bad_efficiency, "INVALID_OSWALD_EFFICIENCY"),
+        (missing_induced, "POLAR_INDUCED_FIELD_EXCLUSIVITY"),
+        (conflicting_induced, "POLAR_INDUCED_FIELD_EXCLUSIVITY"),
+    ] {
+        let error = super::polar::resolve(Some(table), None, "clean")
+            .expect_err("malformed polar table must fail");
+        assert_eq!(error.detail().code, expected);
+        assert!(
+            error
+                .detail()
+                .path
+                .as_deref()
+                .is_some_and(|path| path.starts_with("aircraft.aerodynamics.clean.polar_table"))
+        );
+    }
+}
+
+#[test]
+fn polar_table_rejects_legacy_wave_drag() {
+    let error = super::polar::resolve(
+        Some(valid_polar_table()),
+        Some(&WaveDrag {
+            coefficient: 0.01,
+            exponent: 0.5,
+        }),
+        "clean",
+    )
+    .expect_err("overlapping Mach drag definitions must fail");
+
+    assert_eq!(error.detail().code, "POLAR_MODEL_CONFLICT");
+    assert_eq!(
+        error.detail().path.as_deref(),
+        Some("aircraft.aerodynamics.clean.polar_table")
+    );
 }
 
 #[test]

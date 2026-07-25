@@ -6,12 +6,10 @@ use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
     MissionPowerScreen, MissionResult, PayloadRangeResult, PerformanceSummary, StructuralScreen,
 };
-use crate::domain::schema::ResolvedScenario;
 use crate::models::breguet::BreguetEstimate;
-use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
+use crate::models::field_performance::FieldPerformanceEstimate;
 
 pub(super) struct NativeMetricInputs<'a> {
-    pub(super) scenario: &'a ResolvedScenario,
     pub(super) geometry: &'a GeometryOutput,
     pub(super) performance: &'a PerformanceSummary,
     pub(super) mission: &'a MissionResult,
@@ -19,6 +17,8 @@ pub(super) struct NativeMetricInputs<'a> {
     pub(super) breguet: &'a BreguetEstimate,
     pub(super) structural: &'a StructuralScreen,
     pub(super) mission_power: &'a MissionPowerScreen,
+    pub(super) takeoff_field: &'a FieldPerformanceEstimate,
+    pub(super) landing_field: &'a FieldPerformanceEstimate,
     pub(super) weight_kg: f64,
 }
 
@@ -54,7 +54,7 @@ fn insert_aircraft_metrics(
         input.performance.maximum_lift_to_drag_ratio,
         "1",
     );
-    insert_performance(metrics, input.performance, input.scenario)
+    insert_performance(metrics, input.performance, input)
 }
 
 fn insert_mission_metrics(
@@ -160,7 +160,7 @@ fn insert_payload_range(
 fn insert_performance(
     metrics: &mut BTreeMap<String, QuantityOutput>,
     performance: &PerformanceSummary,
-    scenario: &ResolvedScenario,
+    input: &NativeMetricInputs<'_>,
 ) -> AexResult<()> {
     insert(
         metrics,
@@ -190,13 +190,13 @@ fn insert_performance(
     insert(
         metrics,
         "performance.takeoff_field_length",
-        estimate_takeoff_distance_m(scenario),
+        input.takeoff_field.distance_m,
         "m",
     );
     insert(
         metrics,
         "performance.landing_field_length",
-        estimate_landing_distance_m(scenario)?,
+        input.landing_field.distance_m,
         "m",
     );
     Ok(())

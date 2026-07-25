@@ -1,5 +1,6 @@
 use serde_json::json;
 
+use crate::domain::aerodynamics::{PolarTable, TABLE_POLAR_MODEL_ID};
 use crate::domain::validity::ValidityBasis;
 use crate::models::atmosphere::Isa1976;
 use crate::test_support::example_scenario;
@@ -72,6 +73,71 @@ fn generic_turbofan_domain_declares_profile_resolved_mach() -> Result<(), Box<dy
     assert_eq!(resolved_mach.maximum, Some(0.9));
     assert_eq!(resolved_mach.minimum, Some(0.0));
     assert_eq!(resolved_mach.basis, ValidityBasis::TabulatedData);
+    Ok(())
+}
+
+#[test]
+fn resolved_polar_table_domain_uses_exact_mach_support() -> Result<(), Box<dyn std::error::Error>> {
+    let sr71 = example_scenario("sr71")?;
+    let domain = scenario_domains(&sr71)?
+        .into_iter()
+        .find(|domain| domain.model_id == TABLE_POLAR_MODEL_ID)
+        .ok_or("SR-71 table-polar domain is missing")?;
+    let mach = domain
+        .bounds
+        .iter()
+        .find(|bound| bound.variable == ValidityVariable::Mach)
+        .ok_or("table-polar Mach bound is missing")?;
+
+    assert_eq!(mach.minimum, Some(0.0));
+    assert_eq!(mach.maximum, Some(3.3));
+    assert_eq!(mach.basis, ValidityBasis::TabulatedData);
+    assert_eq!(
+        domain.applicability_path.as_deref(),
+        Some("aircraft.aerodynamics.clean")
+    );
+    let decoded = serde_json::from_value(serde_json::to_value(&domain)?)?;
+    assert_eq!(domain, decoded);
+    Ok(())
+}
+
+#[test]
+fn every_configuration_table_publishes_its_own_domain() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    for (configuration, maximum) in [
+        (&mut scenario.aircraft.aerodynamics.clean, 0.8),
+        (&mut scenario.aircraft.aerodynamics.takeoff, 0.4),
+        (&mut scenario.aircraft.aerodynamics.landing, 0.3),
+    ] {
+        configuration.polar_table = Some(PolarTable {
+            mach: vec![0.0, maximum],
+            cd0: vec![configuration.cd0; 2],
+            cl_max: vec![configuration.cl_max; 2],
+            oswald_efficiency: Some(vec![configuration.oswald_efficiency; 2]),
+            induced_drag_factor: None,
+        });
+    }
+    let domains = scenario_domains(&scenario)?
+        .into_iter()
+        .filter(|domain| domain.model_id == TABLE_POLAR_MODEL_ID)
+        .collect::<Vec<_>>();
+
+    assert_eq!(domains.len(), 3);
+    for (domain, (path, maximum)) in domains.iter().zip([
+        ("aircraft.aerodynamics.clean", 0.8),
+        ("aircraft.aerodynamics.takeoff", 0.4),
+        ("aircraft.aerodynamics.landing", 0.3),
+    ]) {
+        assert_eq!(domain.applicability_path.as_deref(), Some(path));
+        assert_eq!(
+            domain
+                .bounds
+                .iter()
+                .find(|bound| bound.variable == ValidityVariable::Mach)
+                .and_then(|bound| bound.maximum),
+            Some(maximum)
+        );
+    }
     Ok(())
 }
 

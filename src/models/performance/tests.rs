@@ -1,3 +1,4 @@
+use crate::domain::aerodynamics::PolarTable;
 use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::KNOT_M_S;
 use crate::domain::result::PerformanceSummary;
@@ -42,9 +43,98 @@ fn both_reference_aircraft_have_finite_service_ceilings() {
 }
 
 #[test]
-fn sr71_distinguishes_boundary_ceiling_from_extrapolated_speed()
+fn zero_mach_reference_metrics_retain_configuration_validity()
 -> Result<(), Box<dyn std::error::Error>> {
-    let result = summary(example_scenario("sr71")?)?;
+    let mut scenario = example_scenario("c172")?;
+    for configuration in [
+        &mut scenario.aircraft.aerodynamics.clean,
+        &mut scenario.aircraft.aerodynamics.landing,
+    ] {
+        configuration.polar_table = Some(PolarTable {
+            mach: vec![0.2, 0.8],
+            cd0: vec![configuration.cd0; 2],
+            cl_max: vec![configuration.cl_max; 2],
+            oswald_efficiency: Some(vec![configuration.oswald_efficiency; 2]),
+            induced_drag_factor: None,
+        });
+    }
+
+    let result = summary(scenario)?;
+    for metric in [
+        "performance.stall_speed",
+        "performance.stall_speed_clean",
+        "performance.best_glide_speed",
+        "performance.minimum_power_speed",
+        "aerodynamics.maximum_lift_to_drag_ratio",
+        "performance.stall_speed_landing",
+    ] {
+        assert_eq!(
+            result.validity_for(metric).status,
+            ValidityStatus::Extrapolated,
+            "{metric}"
+        );
+    }
+    for configuration in ["clean", "landing"] {
+        let path = format!("aircraft.aerodynamics.{configuration}.polar_table.mach");
+        assert!(result.warnings.iter().any(|warning| {
+            warning.code == "MODEL_EXTRAPOLATION" && warning.path.as_deref() == Some(path.as_str())
+        }));
+    }
+    Ok(())
+}
+
+#[test]
+fn point_result_uses_configuration_reference_validity_and_legacy_defaults()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let clean = &mut scenario.aircraft.aerodynamics.clean;
+    clean.polar_table = Some(PolarTable {
+        mach: vec![0.0, 0.8],
+        cd0: vec![clean.cd0; 2],
+        cl_max: vec![clean.cl_max; 2],
+        oswald_efficiency: Some(vec![clean.oswald_efficiency; 2]),
+        induced_drag_factor: None,
+    });
+    let landing = &mut scenario.aircraft.aerodynamics.landing;
+    landing.polar_table = Some(PolarTable {
+        mach: vec![0.2, 0.8],
+        cd0: vec![landing.cd0; 2],
+        cl_max: vec![landing.cl_max; 2],
+        oswald_efficiency: Some(vec![landing.oswald_efficiency; 2]),
+        induced_drag_factor: None,
+    });
+    let result = PointAnalyzer::new(scenario).point(0.0, 170.0, 1_000.0, "landing")?;
+
+    assert_eq!(
+        result.metric_validity["performance.stall_speed"].status,
+        ValidityStatus::Extrapolated
+    );
+    for metric in [
+        "performance.best_glide_speed",
+        "aerodynamics.maximum_lift_to_drag_ratio",
+    ] {
+        assert_eq!(result.metric_validity[metric].status, ValidityStatus::Valid);
+    }
+    assert!(result.warnings.iter().any(|warning| {
+        warning.code == "MODEL_EXTRAPOLATION"
+            && warning.path.as_deref() == Some("aircraft.aerodynamics.landing.polar_table.mach")
+    }));
+    let mut stored = serde_json::to_value(result)?;
+    stored
+        .as_object_mut()
+        .ok_or("point result must be an object")?
+        .remove("metric_validity");
+    let legacy: crate::domain::result::PointPerformanceResult = serde_json::from_value(stored)?;
+    assert!(legacy.metric_validity.is_empty());
+    Ok(())
+}
+
+#[test]
+fn sr71_distinguishes_boundary_ceiling_from_table_supported_speed()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("sr71")?;
+    scenario.aircraft.propulsion.sizing_factor = 2.0;
+    let result = summary(scenario)?;
 
     assert_eq!(result.service_ceiling_m, 19_900.0);
     assert_eq!(
@@ -55,7 +145,7 @@ fn sr71_distinguishes_boundary_ceiling_from_extrapolated_speed()
         result
             .validity_for("performance.maximum_level_speed")
             .status,
-        ValidityStatus::Extrapolated
+        ValidityStatus::Valid
     );
     assert_eq!(result.model.validity_status, "boundary_limited");
     assert_eq!(result.cruise_mach, Some(3.2));

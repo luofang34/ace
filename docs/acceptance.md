@@ -93,6 +93,15 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     `mission.landing_fuel` and receive `LOW_LANDING_FUEL` below 5% of maximum
     fuel capacity. Incomplete missions publish neither; hard floors use the
     normal requirement verdict.
+26. **Mach-dependent polar data defines its own envelope.** Per-configuration
+    tables interpolate CD0, CLmax, and either Oswald efficiency or induced
+    factor at the actual Mach. A constant two-point table reproduces the scalar
+    polar, each configuration publishes its own scoped validity domain,
+    point preflight selects the requested configuration domain,
+    study evidence preserves those domains independently, table-axis
+    extrapolation and metric validity propagate through zero-speed screens and
+    charts and point reference metrics, and the SR-71 has distinct physical
+    subsonic and Mach-3.2 L/D bands.
 
 ## Calibration bands
 
@@ -105,5 +114,6 @@ Current deterministic reference behavior is checked against:
   0.25–0.35, cruise L/D 16–22. Its energy climb completes in 15–30 minutes
   while consuming 5–10 tonnes of fuel.
 - X-15 energy-climb boost duration is 80–120 seconds.
+- SR-71 maximum L/D is 8–10 subsonically and 5–6.5 at Mach 3.2.
 
 These are software-validation bands, not claims about certified aircraft.

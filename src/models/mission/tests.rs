@@ -28,6 +28,21 @@ fn cruise_probe(
     Ok(segment)
 }
 
+fn constrain_sr71_polar(
+    scenario: &mut crate::domain::schema::ResolvedScenario,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let maximum = scenario
+        .aircraft
+        .aerodynamics
+        .clean
+        .polar_table
+        .as_mut()
+        .and_then(|table| table.mach.last_mut())
+        .ok_or_else(|| io::Error::other("SR-71 fixture has no polar-table boundary"))?;
+    *maximum = 3.25;
+    Ok(())
+}
+
 #[test]
 fn mission_mass_is_continuous_and_non_increasing() {
     let scenario = example_scenario("c172");
@@ -364,11 +379,12 @@ fn stored_mission_defaults_additive_fuel_fields() -> Result<(), Box<dyn std::err
 fn cruise_model_diagnostics_are_scoped_and_deduplicated() -> Result<(), Box<dyn std::error::Error>>
 {
     let mut scenario = example_scenario("sr71")?;
+    constrain_sr71_polar(&mut scenario)?;
     scenario.mission.segments = vec![cruise_probe(
         &scenario,
         "strict_probe",
         19_507.2,
-        Some(3.2),
+        Some(3.3),
     )?];
 
     let mission = MissionSimulator::new(scenario).simulate()?;
@@ -385,7 +401,7 @@ fn cruise_model_diagnostics_are_scoped_and_deduplicated() -> Result<(), Box<dyn 
     assert_eq!(extrapolations.len(), 1);
     assert_eq!(
         extrapolations[0].path.as_deref(),
-        Some("mission.segments.strict_probe.condition.mach")
+        Some("mission.segments.strict_probe.aircraft.aerodynamics.clean.polar_table.mach")
     );
     assert!(mission.warnings.contains(extrapolations[0]));
     Ok(())
@@ -395,9 +411,10 @@ fn cruise_model_diagnostics_are_scoped_and_deduplicated() -> Result<(), Box<dyn 
 fn identical_diagnostics_remain_distinct_across_segments() -> Result<(), Box<dyn std::error::Error>>
 {
     let mut scenario = example_scenario("sr71")?;
+    constrain_sr71_polar(&mut scenario)?;
     scenario.mission.segments = vec![
-        cruise_probe(&scenario, "high_speed_one", 19_507.2, Some(3.2))?,
-        cruise_probe(&scenario, "high_speed_two", 19_507.2, Some(3.2))?,
+        cruise_probe(&scenario, "high_speed_one", 19_507.2, Some(3.3))?,
+        cruise_probe(&scenario, "high_speed_two", 19_507.2, Some(3.3))?,
     ];
 
     let mission = MissionSimulator::new(scenario).simulate()?;
@@ -411,8 +428,8 @@ fn identical_diagnostics_remain_distinct_across_segments() -> Result<(), Box<dyn
     assert_eq!(
         paths,
         [
-            "mission.segments.high_speed_one.condition.mach",
-            "mission.segments.high_speed_two.condition.mach",
+            "mission.segments.high_speed_one.aircraft.aerodynamics.clean.polar_table.mach",
+            "mission.segments.high_speed_two.aircraft.aerodynamics.clean.polar_table.mach",
         ]
     );
     Ok(())

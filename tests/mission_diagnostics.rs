@@ -26,6 +26,10 @@ fn create_sr71_probe(directory: &Path) -> Result<PathBuf, Box<dyn Error>> {
     let aircraft = fs::read_to_string(source.join("aircraft.yaml"))?
         .replace("span: 16.94 m", "span: 29.16 m")
         .replace("aspect_ratio: 1.69", "aspect_ratio: 5.0")
+        .replace(
+            "mach: [0.0, 0.85, 1.15, 2.0, 3.2, 3.3]",
+            "mach: [0.0, 0.4, 0.6, 0.8, 1.0, 1.2]",
+        )
         .replace("maximum_operating_mach: 3.3", "maximum_operating_mach: 0.9")
         .replace(
             "maximum_operating_altitude: 85000 ft",

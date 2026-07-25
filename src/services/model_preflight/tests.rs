@@ -266,6 +266,7 @@ fn point_condition_is_preflighted_before_model_evaluation() -> Result<(), Box<dy
     let scenario = example_scenario("c172")?;
     let error = preflight_operating_point(
         &scenario,
+        "clean",
         21_000.0,
         Some(50.0),
         None,
@@ -307,9 +308,10 @@ fn declared_aerodynamic_id_cannot_detach_the_runtime_polar_domain()
 fn point_preflight_uses_effective_models_and_speed_representation()
 -> Result<(), Box<dyn std::error::Error>> {
     let scenario = example_scenario("c172")?;
-    preflight_operating_point(&scenario, 0.0, Some(50.0), Some(2.0), 1_000.0)?;
-    let speed_error = preflight_operating_point(&scenario, 0.0, Some(400.0), Some(0.2), 1_000.0)
-        .expect_err("effective Mach derived from speed must be preflighted");
+    preflight_operating_point(&scenario, "clean", 0.0, Some(50.0), Some(2.0), 1_000.0)?;
+    let speed_error =
+        preflight_operating_point(&scenario, "clean", 0.0, Some(400.0), Some(0.2), 1_000.0)
+            .expect_err("effective Mach derived from speed must be preflighted");
     let AexError::ModelDomainUnsupported { violations, .. } = speed_error else {
         panic!("expected model-domain error");
     };
@@ -320,7 +322,7 @@ fn point_preflight_uses_effective_models_and_speed_representation()
             && item.declared_value > 0.9
     }));
 
-    let error = preflight_operating_point(&scenario, 0.0, Some(50.0), None, -1.0)
+    let error = preflight_operating_point(&scenario, "clean", 0.0, Some(50.0), None, -1.0)
         .expect_err("negative point mass must breach the aerodynamic domain");
     let AexError::ModelDomainUnsupported { violations, .. } = error else {
         panic!("expected model-domain error");
