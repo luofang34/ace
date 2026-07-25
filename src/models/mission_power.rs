@@ -85,7 +85,9 @@ fn required_reserve_power_w(scenario: &ResolvedScenario, speed_m_s: f64) -> f64 
     match &scenario.engine {
         EngineProfile::Piston(profile) => 0.03 * profile.rated_power_w * count * sizing,
         EngineProfile::Turbofan(profile) => {
-            0.03 * profile.sea_level_static_thrust_n * count * sizing * speed_m_s
+            0.03 * profile
+                .installed_reference_thrust_n(scenario.aircraft.propulsion.engine_count, sizing)
+                * speed_m_s
         }
     }
 }

@@ -1,4 +1,5 @@
 use crate::domain::diagnostic::AexResult;
+use crate::domain::propulsion::TABLE_PROPULSION_MODEL_ID;
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::validity::{
     ModelValidityDomain, ValidityBasis, ValidityBound, ValidityVariable,
@@ -15,6 +16,7 @@ pub(crate) enum RegisteredModel {
     WaveDrag,
     PistonPropulsion,
     TurbofanPropulsion,
+    TablePropulsion,
     FieldPerformance,
     ConventionalStructure,
     BlendedWingStructure,
@@ -37,12 +39,13 @@ pub(crate) struct ScenarioDomainRegistration {
 }
 
 impl RegisteredModel {
-    pub(crate) const ALL: [Self; 8] = [
+    pub(crate) const ALL: [Self; 9] = [
         Self::Atmosphere,
         Self::ParabolicPolar,
         Self::WaveDrag,
         Self::PistonPropulsion,
         Self::TurbofanPropulsion,
+        Self::TablePropulsion,
         Self::FieldPerformance,
         Self::ConventionalStructure,
         Self::BlendedWingStructure,
@@ -55,6 +58,7 @@ impl RegisteredModel {
             Self::WaveDrag => "aero.wave_drag_power_law",
             Self::PistonPropulsion => "propulsion.piston_prop_simple",
             Self::TurbofanPropulsion => "propulsion.turbofan_simple_deck",
+            Self::TablePropulsion => TABLE_PROPULSION_MODEL_ID,
             Self::FieldPerformance => "performance.field_length_simple",
             Self::ConventionalStructure => "structures.conventional_conceptual_screen",
             Self::BlendedWingStructure => "structures.blended_wing_conceptual_screen",
@@ -70,6 +74,7 @@ impl ValidityDomainProvider for RegisteredModel {
             Self::WaveDrag => wave_drag_domain(0.0),
             Self::PistonPropulsion => generic_propulsion_domain(self.model_id(), None),
             Self::TurbofanPropulsion => generic_turbofan_domain(self.model_id(), None, None),
+            Self::TablePropulsion => generic_turbofan_domain(self.model_id(), None, None),
             Self::FieldPerformance => field_performance_domain(),
             Self::ConventionalStructure => structural_domain(false),
             Self::BlendedWingStructure => structural_domain(true),
@@ -89,11 +94,22 @@ impl ValidityDomainProvider for EngineProfile {
             Self::Piston(profile) => {
                 generic_propulsion_domain(&profile.model, profile.maximum_altitude_m)
             }
-            Self::Turbofan(profile) => generic_turbofan_domain(
-                &profile.model,
-                Some(profile.maximum_altitude_m),
-                Some(profile.maximum_mach),
-            ),
+            Self::Turbofan(profile) => {
+                if let Some(deck) = &profile.table_deck {
+                    table_propulsion_domain(&profile.model, deck)
+                } else {
+                    profile.simple_deck.as_ref().map_or_else(
+                        || generic_turbofan_domain(&profile.model, None, None),
+                        |deck| {
+                            generic_turbofan_domain(
+                                &profile.model,
+                                Some(deck.maximum_altitude_m),
+                                Some(deck.maximum_mach),
+                            )
+                        },
+                    )
+                }
+            }
         }
     }
 }
@@ -261,6 +277,35 @@ fn generic_turbofan_domain(
         ),
     );
     domain
+}
+
+fn table_propulsion_domain(
+    model_id: &str,
+    deck: &crate::domain::propulsion::TablePropulsionDeck,
+) -> ModelValidityDomain {
+    ModelValidityDomain {
+        model_id: model_id.to_owned(),
+        bounds: vec![
+            inclusive_bound(
+                ValidityVariable::Altitude,
+                deck.altitude_axis_m.first().copied(),
+                deck.altitude_axis_m.last().copied(),
+                ValidityBasis::TabulatedData,
+            ),
+            inclusive_bound(
+                ValidityVariable::Mach,
+                deck.mach_axis.first().copied(),
+                deck.mach_axis.last().copied(),
+                ValidityBasis::TabulatedData,
+            ),
+            inclusive_bound(
+                ValidityVariable::Throttle,
+                Some(0.0),
+                Some(1.0),
+                ValidityBasis::ModelForm,
+            ),
+        ],
+    }
 }
 
 fn field_performance_domain() -> ModelValidityDomain {

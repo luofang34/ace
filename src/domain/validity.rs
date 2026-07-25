@@ -45,6 +45,8 @@ pub enum ValidityBasis {
     ModelForm,
     /// Bound is resolved from a selected data profile.
     ResolvedProfile,
+    /// Bound is the convex axis support of tabulated source data.
+    TabulatedData,
     /// Bound is a declared conceptual-screening assumption.
     ScreeningAssumption,
 }

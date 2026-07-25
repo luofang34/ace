@@ -144,23 +144,24 @@ fn piston_value(profile: &PistonProfile, path: &str) -> Option<f64> {
 }
 
 fn turbofan_value(profile: &TurbofanProfile, path: &str) -> Option<f64> {
+    let simple = profile.simple_deck.as_ref();
     match path {
-        "sea_level_static_thrust" => Some(profile.sea_level_static_thrust_n),
+        "sea_level_static_thrust" => simple.map(|deck| deck.sea_level_static_thrust_n),
         "dry_mass" => Some(profile.dry_mass_kg),
         "bypass_ratio" => Some(profile.bypass_ratio),
-        "thrust_lapse.altitude_exponent" => Some(profile.altitude_exponent),
-        "thrust_lapse.mach_linear_coefficient" => Some(profile.mach_linear_coefficient),
-        "thrust_lapse.minimum_fraction" => Some(profile.minimum_thrust_fraction),
-        "tsfc.sea_level_takeoff" => Some(profile.tsfc_takeoff_kg_n_hr),
-        "tsfc.cruise_reference" => Some(profile.tsfc_cruise_kg_n_hr),
-        "tsfc.cruise_reference_altitude" => Some(profile.cruise_reference_altitude_m),
-        "tsfc.cruise_reference_mach" => Some(profile.cruise_reference_mach),
+        "thrust_lapse.altitude_exponent" => simple.map(|deck| deck.altitude_exponent),
+        "thrust_lapse.mach_linear_coefficient" => simple.map(|deck| deck.mach_linear_coefficient),
+        "thrust_lapse.minimum_fraction" => simple.map(|deck| deck.minimum_thrust_fraction),
+        "tsfc.sea_level_takeoff" => simple.map(|deck| deck.tsfc_takeoff_kg_n_hr),
+        "tsfc.cruise_reference" => simple.map(|deck| deck.tsfc_cruise_kg_n_hr),
+        "tsfc.cruise_reference_altitude" => simple.map(|deck| deck.cruise_reference_altitude_m),
+        "tsfc.cruise_reference_mach" => simple.map(|deck| deck.cruise_reference_mach),
         "installation.thrust_loss_fraction" => Some(profile.thrust_loss_fraction),
         "installation.nacelle_drag_area" => Some(profile.nacelle_drag_area_m2),
         "dimensions.overall_length" => profile.overall_length_m,
         "dimensions.maximum_diameter" => profile.maximum_diameter_m,
-        "limits.maximum_mach" => Some(profile.maximum_mach),
-        "limits.maximum_altitude" => Some(profile.maximum_altitude_m),
+        "limits.maximum_mach" => simple.map(|deck| deck.maximum_mach),
+        "limits.maximum_altitude" => simple.map(|deck| deck.maximum_altitude_m),
         _ => None,
     }
 }

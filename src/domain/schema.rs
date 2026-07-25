@@ -6,6 +6,7 @@ use serde_yaml::Value;
 
 use crate::domain::capabilities::{AeroConfigurationKind, aero_configuration};
 use crate::domain::diagnostic::Diagnostic;
+use crate::domain::propulsion::TablePropulsionDeck;
 use crate::domain::topology::{AircraftTopology, RawAircraftTopology};
 
 mod mission;
@@ -367,9 +368,23 @@ pub(crate) struct TurbofanProfile {
     pub(crate) model: String,
     pub(crate) source: String,
     pub(crate) confidence: String,
-    pub(crate) sea_level_static_thrust_n: f64,
     pub(crate) dry_mass_kg: f64,
     pub(crate) bypass_ratio: f64,
+    pub(crate) thrust_loss_fraction: f64,
+    pub(crate) nacelle_drag_area_m2: f64,
+    pub(crate) overall_length_m: Option<f64>,
+    pub(crate) maximum_diameter_m: Option<f64>,
+    #[serde(flatten)]
+    pub(crate) simple_deck: Option<SimpleTurbofanDeck>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) table_deck: Option<TablePropulsionDeck>,
+    #[serde(skip)]
+    pub(crate) reference_thrust_n: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct SimpleTurbofanDeck {
+    pub(crate) sea_level_static_thrust_n: f64,
     pub(crate) altitude_exponent: f64,
     pub(crate) mach_linear_coefficient: f64,
     pub(crate) minimum_thrust_fraction: f64,
@@ -377,10 +392,19 @@ pub(crate) struct TurbofanProfile {
     pub(crate) tsfc_cruise_kg_n_hr: f64,
     pub(crate) cruise_reference_altitude_m: f64,
     pub(crate) cruise_reference_mach: f64,
-    pub(crate) thrust_loss_fraction: f64,
-    pub(crate) nacelle_drag_area_m2: f64,
-    pub(crate) overall_length_m: Option<f64>,
-    pub(crate) maximum_diameter_m: Option<f64>,
     pub(crate) maximum_mach: f64,
     pub(crate) maximum_altitude_m: f64,
+}
+
+impl TurbofanProfile {
+    pub(crate) fn installed_reference_thrust_n(
+        &self,
+        engine_count: u32,
+        sizing_factor: f64,
+    ) -> f64 {
+        self.reference_thrust_n
+            * f64::from(engine_count)
+            * sizing_factor
+            * (1.0 - self.thrust_loss_fraction)
+    }
 }

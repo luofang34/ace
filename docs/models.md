@@ -22,7 +22,19 @@ speed-dependent propeller efficiency, bounded static thrust, and profile BSFC.
 installation loss, throttle, and mode-specific TSFC. Profiles warn outside
 their Mach/altitude envelopes.
 
+`propulsion.table_deck` bilinearly interpolates per-engine thrust and either
+TSFC or specific impulse on strictly increasing Mach and altitude axes for
+takeoff, climb, cruise, and economy modes. Matrices are altitude rows by Mach
+columns. Engine count, sizing, installation loss, and throttle apply after
+interpolation. TSFC uses `T * TSFC`; specific impulse uses `T / (Isp * g0)`.
+Queries beyond either axis extrapolate from the nearest interval and emit a
+`MODEL_EXTRAPOLATION` warning containing the data bounds. The axes are the
+profile's typed validity domain with basis `tabulated_data`.
+
 The canonical propulsion `sizing_factor` scales installed power or thrust.
+Sea-level native screens interpolate a table at zero altitude and Mach before
+applying engine count, sizing, and installation loss; they do not assume the
+first table cell represents sea level.
 Automatic refinement also charges 1.15 times the corresponding engine
 dry-mass change to operating empty mass.
 
@@ -103,8 +115,9 @@ Native analysis provenance publishes typed validity domains for the atmosphere,
 polar and optional wave-drag increment, resolved propulsion profile,
 sea-level field-performance screen, and selected structural screen. Bounds use
 canonical SI units and identify whether they come from a published
-specification, the model form, resolved profile data, or a screening
-assumption. Human-readable `validity_range` text remains part of provenance.
+specification, the model form, resolved profile data, tabulated data, or a
+screening assumption. Human-readable `validity_range` text remains part of
+provenance.
 
 ## Constraints and payload-range
 
@@ -112,3 +125,7 @@ Constraint diagrams sample P/W vs W/S or T/W vs W/S for stall, cruise, climb,
 and approximate takeoff. Payload-range uses representative cruise fuel flow,
 MTOW, OEW, maximum payload, maximum fuel, and an explicit reserve fraction.
 Both are fidelity level 0 and label their limitations.
+
+Breguet jet estimates use the cruise table's actual fuel basis. Their
+assumption ledger names TSFC or specific impulse consistently with the
+selected table mode.

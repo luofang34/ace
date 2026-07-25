@@ -431,7 +431,11 @@ fn engine_domain_role_is_independent_of_its_free_form_model_id()
         panic!("B777 must use a turbofan profile");
     };
     profile.model = "atmosphere.isa1976".to_owned();
-    profile.maximum_mach = 0.2;
+    let deck = profile
+        .table_deck
+        .as_mut()
+        .ok_or("B777 requires a table deck")?;
+    deck.mach_axis = vec![0.0, 0.2];
 
     let error = preflight_model_domains(&scenario)
         .expect_err("engine domain must retain propulsion scope when model IDs collide");

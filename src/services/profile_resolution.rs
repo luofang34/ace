@@ -2,10 +2,13 @@ use serde_yaml::Value;
 
 use crate::domain::capabilities::{ProfileRole, profile_type};
 use crate::domain::diagnostic::{AexError, AexResult};
+use crate::domain::propulsion::TABLE_PROPULSION_MODEL_ID;
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{
-    EngineProfile, PistonProfile, PropellerProfile, RawProfile, TurbofanProfile,
+    EngineProfile, PistonProfile, PropellerProfile, RawProfile, SimpleTurbofanDeck, TurbofanProfile,
 };
+
+mod table_deck;
 
 pub(crate) fn parse_engine_profile(raw: RawProfile) -> AexResult<EngineProfile> {
     let profile = profile_type(&raw.kind);
@@ -83,41 +86,22 @@ fn parse_piston_profile(raw: RawProfile) -> AexResult<PistonProfile> {
 
 fn parse_turbofan_profile(raw: RawProfile) -> AexResult<TurbofanProfile> {
     let source = profile_source(&raw);
+    let table_deck = table_deck::parse(&raw.parameters)?;
+    validate_turbofan_deck_selection(&raw, table_deck.is_some())?;
+    let simple_deck = if table_deck.is_none() {
+        Some(parse_simple_turbofan_deck(&raw.parameters)?)
+    } else {
+        None
+    };
+    let reference_thrust_n = reference_turbofan_thrust(&simple_deck, &table_deck)?;
     Ok(TurbofanProfile {
         id: raw.id,
         version: raw.version,
         model: raw.model,
         source: source.0,
         confidence: source.1,
-        sea_level_static_thrust_n: profile_quantity(
-            &raw.parameters,
-            "sea_level_static_thrust",
-            Dimension::Force,
-        )?,
         dry_mass_kg: profile_quantity(&raw.parameters, "dry_mass", Dimension::Mass)?,
         bypass_ratio: profile_number(&raw.parameters, "bypass_ratio")?,
-        altitude_exponent: profile_number(&raw.parameters, "thrust_lapse.altitude_exponent")?,
-        mach_linear_coefficient: profile_number(
-            &raw.parameters,
-            "thrust_lapse.mach_linear_coefficient",
-        )?,
-        minimum_thrust_fraction: profile_number(&raw.parameters, "thrust_lapse.minimum_fraction")?,
-        tsfc_takeoff_kg_n_hr: profile_number_with_unit(
-            &raw.parameters,
-            "tsfc.sea_level_takeoff",
-            "kg/N/hr",
-        )?,
-        tsfc_cruise_kg_n_hr: profile_number_with_unit(
-            &raw.parameters,
-            "tsfc.cruise_reference",
-            "kg/N/hr",
-        )?,
-        cruise_reference_altitude_m: profile_quantity(
-            &raw.parameters,
-            "tsfc.cruise_reference_altitude",
-            Dimension::Length,
-        )?,
-        cruise_reference_mach: profile_number(&raw.parameters, "tsfc.cruise_reference_mach")?,
         thrust_loss_fraction: profile_number(&raw.parameters, "installation.thrust_loss_fraction")?,
         nacelle_drag_area_m2: profile_quantity(
             &raw.parameters,
@@ -134,9 +118,94 @@ fn parse_turbofan_profile(raw: RawProfile) -> AexResult<TurbofanProfile> {
             "dimensions.maximum_diameter",
             Dimension::Length,
         )?,
-        maximum_mach: profile_number(&raw.parameters, "limits.maximum_mach")?,
+        simple_deck,
+        table_deck,
+        reference_thrust_n,
+    })
+}
+
+fn reference_turbofan_thrust(
+    simple: &Option<SimpleTurbofanDeck>,
+    table: &Option<crate::domain::propulsion::TablePropulsionDeck>,
+) -> AexResult<f64> {
+    if let Some(deck) = table {
+        return deck
+            .interpolate(crate::domain::propulsion::PropulsionMode::Takeoff, 0.0, 0.0)
+            .map(|point| point.thrust_per_engine_n)
+            .filter(|thrust| thrust.is_finite() && *thrust > 0.0)
+            .ok_or_else(|| {
+                AexError::validation(
+                    "INVALID_TABLE_EXTRAPOLATION",
+                    "profile.parameters.table_deck.modes.takeoff.thrust",
+                    "table must produce finite positive takeoff thrust at sea level and Mach zero",
+                )
+            });
+    }
+    simple
+        .as_ref()
+        .map(|deck| deck.sea_level_static_thrust_n)
+        .ok_or_else(|| {
+            AexError::validation(
+                "MISSING_PROPULSION_DECK",
+                "profile.parameters",
+                "turbofan profile requires one propulsion deck",
+            )
+        })
+}
+
+fn validate_turbofan_deck_selection(raw: &RawProfile, has_table: bool) -> AexResult<()> {
+    let has_simple = ["sea_level_static_thrust", "thrust_lapse", "tsfc", "limits"]
+        .into_iter()
+        .any(|field| raw.parameters.get(field).is_some());
+    if has_table && has_simple {
+        return Err(AexError::validation(
+            "PROPULSION_DECK_EXCLUSIVITY",
+            "profile.parameters",
+            "table and simple turbofan deck parameters are mutually exclusive",
+        ));
+    }
+    if has_table != (raw.model == TABLE_PROPULSION_MODEL_ID) {
+        return Err(AexError::validation(
+            "INCOMPATIBLE_PROPULSION_MODEL",
+            "profile.model",
+            "propulsion.table_deck model and table_deck parameters must be selected together",
+        ));
+    }
+    Ok(())
+}
+
+fn parse_simple_turbofan_deck(parameters: &Value) -> AexResult<SimpleTurbofanDeck> {
+    Ok(SimpleTurbofanDeck {
+        sea_level_static_thrust_n: profile_quantity(
+            parameters,
+            "sea_level_static_thrust",
+            Dimension::Force,
+        )?,
+        altitude_exponent: profile_number(parameters, "thrust_lapse.altitude_exponent")?,
+        mach_linear_coefficient: profile_number(
+            parameters,
+            "thrust_lapse.mach_linear_coefficient",
+        )?,
+        minimum_thrust_fraction: profile_number(parameters, "thrust_lapse.minimum_fraction")?,
+        tsfc_takeoff_kg_n_hr: profile_number_with_unit(
+            parameters,
+            "tsfc.sea_level_takeoff",
+            "kg/N/hr",
+        )?,
+        tsfc_cruise_kg_n_hr: profile_number_with_unit(
+            parameters,
+            "tsfc.cruise_reference",
+            "kg/N/hr",
+        )?,
+        cruise_reference_altitude_m: profile_quantity(
+            parameters,
+            "tsfc.cruise_reference_altitude",
+            Dimension::Length,
+        )?,
+        cruise_reference_mach: profile_number(parameters, "tsfc.cruise_reference_mach")?,
+        maximum_mach: profile_number(parameters, "limits.maximum_mach")?,
         maximum_altitude_m: profile_quantity(
-            &raw.parameters,
+            parameters,
             "limits.maximum_altitude",
             Dimension::Length,
         )?,
@@ -218,3 +287,6 @@ fn profile_number_with_unit(parameters: &Value, path: &str, unit: &str) -> AexRe
         AexError::validation("INVALID_PROFILE_PARAMETER", path, source.to_string())
     })
 }
+
+#[cfg(test)]
+mod tests;

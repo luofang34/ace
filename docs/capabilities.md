@@ -82,6 +82,7 @@ Operators: `ge`, `le`, `eq`. Severities: `hard`, `soft`, `report_only`.
 - `aero.wave_drag_power_law`
 - `propulsion.piston_prop_simple`
 - `propulsion.turbofan_simple_deck`
+- `propulsion.table_deck`
 - `performance.field_length_simple`
 - `structures.conventional_conceptual_screen`
 - `structures.blended_wing_conceptual_screen`

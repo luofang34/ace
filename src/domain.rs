@@ -7,6 +7,7 @@ pub(crate) mod diagnostic;
 )]
 pub(crate) mod evidence;
 pub(crate) mod presentation;
+pub(crate) mod propulsion;
 pub(crate) mod quantity;
 pub(crate) mod result;
 pub(crate) mod schema;

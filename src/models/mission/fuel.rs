@@ -1,7 +1,9 @@
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::schema::EngineProfile;
 use crate::models::aerodynamics::{FlightCondition, evaluate as evaluate_aerodynamics};
-use crate::models::propulsion::{OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion};
+use crate::models::propulsion::{
+    OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion, fuel_flow_for_required_thrust,
+};
 
 use super::{MissionSimulator, extend_unique_diagnostics};
 
@@ -79,11 +81,13 @@ fn required(
             mode,
         },
     )?;
-    let flow_kg_s = required_flow(simulator, &aero, mode);
+    let mach = speed_m_s / atmosphere.speed_of_sound_m_s;
+    let flow = required_flow(simulator, &aero, altitude_m, mach, mode)?;
     let mut warnings = aero.warnings;
     extend_unique_diagnostics(&mut warnings, propulsion.warnings);
+    extend_unique_diagnostics(&mut warnings, flow.warnings);
     Ok(FuelFlowEvaluation {
-        flow_kg_s,
+        flow_kg_s: flow.flow_kg_s,
         warnings,
     })
 }
@@ -91,8 +95,10 @@ fn required(
 fn required_flow(
     simulator: &MissionSimulator,
     aero: &crate::domain::result::AerodynamicState,
+    altitude_m: f64,
+    mach: f64,
     mode: OperatingMode,
-) -> f64 {
+) -> AexResult<FuelFlowEvaluation> {
     match &simulator.scenario.engine {
         EngineProfile::Piston(profile) => {
             let efficiency = simulator
@@ -105,9 +111,19 @@ fn required_flow(
                 OperatingMode::Economy => profile.bsfc_economy_kg_kwh,
                 _ => profile.bsfc_cruise_kg_kwh,
             };
-            bsfc * shaft_power_kw / 3600.0
+            Ok(FuelFlowEvaluation {
+                flow_kg_s: bsfc * shaft_power_kw / 3600.0,
+                warnings: Vec::new(),
+            })
         }
-        EngineProfile::Turbofan(profile) => profile.tsfc_cruise_kg_n_hr * aero.drag_n / 3600.0,
+        EngineProfile::Turbofan(profile) => {
+            let result =
+                fuel_flow_for_required_thrust(profile, altitude_m, mach, mode, aero.drag_n)?;
+            Ok(FuelFlowEvaluation {
+                flow_kg_s: result.flow_kg_s,
+                warnings: result.warnings,
+            })
+        }
     }
 }
 
