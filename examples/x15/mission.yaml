@@ -18,7 +18,7 @@ mission:
       thrust_fraction: 1.0
     - id: boost_climb
       type: energy_climb
-      thrust_fraction: 0.95
+      thrust_fraction: 0.92
       schedule:
         - altitude: 45000 ft
           mach: 0.5

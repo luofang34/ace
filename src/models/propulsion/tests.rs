@@ -1,7 +1,9 @@
 use crate::models::atmosphere::Isa1976;
 use crate::test_support::example_scenario;
 
-use super::{OperatingMode, PropulsionQuery, evaluate};
+use super::{
+    OperatingMode, PropulsionQuery, ThrustFuelBasis, evaluate, fuel_flow_for_required_thrust,
+};
 
 #[test]
 fn piston_power_and_turbofan_thrust_lapse_with_altitude() {
@@ -204,6 +206,85 @@ fn specific_impulse_table_uses_the_rocket_mass_flow_relation()
         .ok_or("turbofan result requires thrust")?;
     let expected = thrust / (300.0 * crate::domain::quantity::GRAVITY_M_S2);
     assert!((state.fuel_flow_kg_s - expected).abs() < 1.0e-12);
+    Ok(())
+}
+
+#[test]
+fn j58_subsonic_required_thrust_flow_is_in_calibration_band()
+-> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("sr71")?;
+    let altitude_m = 25_000.0 * 0.3048;
+    let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
+    let speed_m_s = 0.85 * atmosphere.speed_of_sound_m_s;
+    let required_thrust = crate::models::performance::PointAnalyzer::new(scenario.clone())
+        .point(
+            altitude_m,
+            speed_m_s,
+            scenario.aircraft.mass.maximum_takeoff_mass_kg,
+            "clean",
+        )?
+        .thrust_required_n;
+    let crate::domain::schema::EngineProfile::Turbofan(profile) = &scenario.engine else {
+        return Err("SR-71 requires a table thrust profile".into());
+    };
+    let flow = fuel_flow_for_required_thrust(
+        profile,
+        altitude_m,
+        0.85,
+        OperatingMode::Cruise,
+        required_thrust,
+    )?;
+    let tonnes_per_hour = flow.flow_kg_s * 3.6;
+    assert!(
+        (3.0..=5.0).contains(&tonnes_per_hour),
+        "J58 subsonic flow was {tonnes_per_hour} t/hr at {required_thrust} N"
+    );
+    assert_eq!(flow.basis, ThrustFuelBasis::Tsfc);
+    assert!(flow.warnings.is_empty());
+    let high_speed = fuel_flow_for_required_thrust(
+        profile,
+        78_000.0 * 0.3048,
+        3.2,
+        OperatingMode::Cruise,
+        100_000.0,
+    )?;
+    assert!(high_speed.warnings.is_empty());
+    Ok(())
+}
+
+#[test]
+fn xlr99_full_throttle_uses_public_thrust_and_flow_anchors()
+-> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("x15")?;
+    let altitude_m = 45_000.0 * 0.3048;
+    let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
+    let state = evaluate(
+        &scenario,
+        &atmosphere,
+        PropulsionQuery {
+            altitude_m,
+            true_airspeed_m_s: 0.5 * atmosphere.speed_of_sound_m_s,
+            mach: 0.5,
+            throttle: 1.0,
+            mode: OperatingMode::Climb,
+        },
+    )?;
+    let thrust = state
+        .thrust_available_n
+        .ok_or("rocket table requires thrust")?;
+    assert!((thrust - 253_549.0).abs() < 1.0);
+    assert!((95.0..=100.0).contains(&state.fuel_flow_kg_s));
+    assert_eq!(state.model.validity_status, "valid");
+    assert!(state.warnings.is_empty());
+    let profile = match &scenario.engine {
+        crate::domain::schema::EngineProfile::Turbofan(profile) => profile,
+        crate::domain::schema::EngineProfile::Piston(_) => {
+            return Err("X-15 requires a table thrust profile".into());
+        }
+    };
+    let required =
+        fuel_flow_for_required_thrust(profile, altitude_m, 0.5, OperatingMode::Climb, thrust)?;
+    assert_eq!(required.basis, ThrustFuelBasis::SpecificImpulse);
     Ok(())
 }
 

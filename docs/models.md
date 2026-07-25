@@ -50,6 +50,12 @@ Queries beyond either axis extrapolate from the nearest interval and emit a
 `MODEL_EXTRAPOLATION` warning containing the data bounds. The axes are the
 profile's typed validity domain with basis `tabulated_data`.
 
+Schema-v1 table profiles may identify as `turbofan_engine`,
+`turbojet_engine`, or `rocket_engine`. Turbojet and rocket types require the
+table model and may omit bypass ratio. The shipped J58 profile uses installed
+thrust/TSFC cells through Mach 3.3; the XLR99 uses the public 57,000 lbf thrust
+anchor and 263 s Isp, producing about 98 kg/s at full throttle.
+
 The canonical propulsion `sizing_factor` scales installed power or thrust.
 Sea-level native screens interpolate a table at zero altitude and Mach before
 applying engine count, sizing, and installation loss; they do not assume the

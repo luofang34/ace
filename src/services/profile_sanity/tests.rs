@@ -185,8 +185,8 @@ fn every_registered_path_maps_to_a_finite_resolved_value() -> Result<(), Box<dyn
 }
 
 #[test]
-fn surrogate_profiles_report_all_non_typical_parameters() -> Result<(), Box<dyn std::error::Error>>
-{
+fn specialized_profiles_report_only_applicable_typical_ranges()
+-> Result<(), Box<dyn std::error::Error>> {
     let j58 = engine("examples/sr71/profiles/j58.yaml")?;
     let xlr99 = engine("examples/x15/profiles/xlr99.yaml")?;
     let j58_warnings = profile_warnings(&j58, None);
@@ -196,29 +196,11 @@ fn surrogate_profiles_report_all_non_typical_parameters() -> Result<(), Box<dyn 
 
     assert_eq!(
         j58_paths,
-        [
-            "profile.parameters.bypass_ratio",
-            "profile.parameters.thrust_lapse.mach_linear_coefficient",
-            "profile.parameters.tsfc.cruise_reference_mach",
-            "profile.parameters.installation.nacelle_drag_area",
-            "profile.parameters.limits.maximum_mach",
-            "profile.parameters.limits.maximum_altitude",
-        ]
+        ["profile.parameters.installation.nacelle_drag_area"]
     );
     assert_eq!(
         xlr99_paths,
-        [
-            "profile.parameters.bypass_ratio",
-            "profile.parameters.thrust_lapse.altitude_exponent",
-            "profile.parameters.thrust_lapse.mach_linear_coefficient",
-            "profile.parameters.thrust_lapse.minimum_fraction",
-            "profile.parameters.tsfc.sea_level_takeoff",
-            "profile.parameters.tsfc.cruise_reference",
-            "profile.parameters.tsfc.cruise_reference_mach",
-            "profile.parameters.installation.nacelle_drag_area",
-            "profile.parameters.limits.maximum_mach",
-            "profile.parameters.limits.maximum_altitude",
-        ]
+        ["profile.parameters.installation.nacelle_drag_area"]
     );
     assert!(
         j58_warnings

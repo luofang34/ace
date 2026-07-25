@@ -115,5 +115,8 @@ Current deterministic reference behavior is checked against:
   while consuming 5–10 tonnes of fuel.
 - X-15 energy-climb boost duration is 80–120 seconds.
 - SR-71 maximum L/D is 8–10 subsonically and 5–6.5 at Mach 3.2.
+- J58 subsonic required-thrust fuel flow is 3–5 t/hr at 25,000 ft/Mach 0.85;
+  its Mach 3.2/78,000 ft point remains table-supported.
+- XLR99 full-throttle thrust is 57,000 lbf and table-Isp flow is 85–105 kg/s.
 
 These are software-validation bands, not claims about certified aircraft.
