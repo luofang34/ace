@@ -88,6 +88,10 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     minimum excess power evaluate every cruise condition, aggregate at the
     weakest power condition, and make native feasibility false when any
     condition cannot close.
+25. **Landing fuel is truthful and bindable.** Completed missions publish
+    `mission.landing_fuel` and receive `LOW_LANDING_FUEL` below 5% of maximum
+    fuel capacity. Incomplete missions publish neither; hard floors use the
+    normal requirement verdict.
 
 ## Calibration bands
 

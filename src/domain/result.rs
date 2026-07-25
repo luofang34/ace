@@ -166,6 +166,8 @@ pub(crate) struct MissionResult {
     pub(crate) total_duration_s: f64,
     pub(crate) total_fuel_burn_kg: f64,
     pub(crate) reserve_fuel_remaining_kg: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) landing_fuel: Option<QuantityOutput>,
     pub(crate) initial_takeoff_mass_kg: f64,
     pub(crate) final_mass_kg: f64,
     pub(crate) final_payload_mass_kg: f64,

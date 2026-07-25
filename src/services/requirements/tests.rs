@@ -4,7 +4,7 @@ use crate::domain::schema::{MissionInitialState, Requirement, SegmentKind};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::models::mission::MissionSimulator;
 use crate::models::performance::PointAnalyzer;
-use crate::test_support::example_scenario;
+use crate::test_support::{example_scenario, low_landing_fuel_sr71_scenario};
 
 use super::{
     MetricInput, evaluate_one, evaluate_requirements, failed_hard_requirement_ids,
@@ -224,5 +224,35 @@ fn achieved_cruise_requirement_uses_the_simulated_inherited_speed()
     assert_eq!(performance.cruise_conditions.len(), 1);
     assert!((performance.cruise_conditions[0].declared_true_airspeed_m_s - 60.0).abs() < 1.0e-8);
     assert_eq!(cruise.resolved_status(), RequirementStatus::Pass);
+    Ok(())
+}
+
+#[test]
+fn hard_landing_fuel_floor_uses_completed_mission_fuel() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = low_landing_fuel_sr71_scenario()?;
+    scenario.requirements.items = vec![Requirement {
+        id: "landing_fuel_floor".to_owned(),
+        metric: "mission.landing_fuel".to_owned(),
+        operator: "ge".to_owned(),
+        required: 1_000.0,
+        unit: "kg".to_owned(),
+        severity: "hard".to_owned(),
+        weight: None,
+    }];
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    let landing_fuel = evaluations
+        .first()
+        .ok_or("missing landing-fuel requirement evaluation")?;
+
+    assert_eq!(landing_fuel.metric, "mission.landing_fuel");
+    assert_eq!(landing_fuel.actual.unit, "kg");
+    assert_eq!(landing_fuel.resolved_status(), RequirementStatus::Fail);
+    assert!(!hard_requirements_passed(
+        mission.completed,
+        &scenario.requirements.items,
+        &evaluations
+    ));
     Ok(())
 }

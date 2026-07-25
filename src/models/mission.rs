@@ -10,6 +10,7 @@ use crate::models::propulsion::OperatingMode;
 mod energy_climb;
 mod fuel;
 mod initial_state;
+mod landing_fuel;
 mod operating_condition;
 mod record;
 
@@ -94,6 +95,12 @@ impl MissionSimulator {
             total_fuel += computation.fuel_burn_kg;
         }
         let completed = failed_segment.is_none();
+        let landing_fuel = landing_fuel::evaluate(
+            completed,
+            state.fuel_remaining_kg,
+            aircraft.mass.maximum_fuel_mass_kg,
+        );
+        warnings.extend(landing_fuel.warning);
         Ok(MissionResult {
             scenario_id: self.scenario.id.clone(),
             completed,
@@ -101,6 +108,7 @@ impl MissionSimulator {
             total_duration_s: total_duration,
             total_fuel_burn_kg: total_fuel,
             reserve_fuel_remaining_kg: state.fuel_remaining_kg,
+            landing_fuel: landing_fuel.value,
             initial_takeoff_mass_kg: initial_takeoff_mass,
             final_mass_kg: state.mass_kg,
             final_payload_mass_kg: state.payload_remaining_kg,

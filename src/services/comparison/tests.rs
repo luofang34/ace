@@ -81,6 +81,7 @@ fn comparison_propagates_achieved_cruise_metrics_and_validity()
         "performance.achieved_cruise_true_airspeed".to_owned(),
         "performance.minimum_cruise_excess_power".to_owned(),
         "performance.cruise_feasible".to_owned(),
+        "mission.landing_fuel".to_owned(),
     ];
     let comparison = service.compare_blocking(&[path], &metrics)?;
     let row = &comparison.scenarios[0];
@@ -88,8 +89,10 @@ fn comparison_propagates_achieved_cruise_metrics_and_validity()
     assert!(row.metrics[&metrics[0]].value > 0.0);
     assert!(row.metrics[&metrics[1]].value > 0.0);
     assert_eq!(row.metrics[&metrics[2]].value, 1.0);
-    for metric in metrics {
-        assert!(row.metric_validity.contains_key(&metric));
+    assert!(row.metrics[&metrics[3]].value > 0.0);
+    assert_eq!(row.metrics[&metrics[3]].unit, "kg");
+    for metric in &metrics[..3] {
+        assert!(row.metric_validity.contains_key(metric));
     }
     Ok(())
 }

@@ -202,6 +202,7 @@ fn metric_values(
                 }
                 "performance.thrust_or_power_loading" => installed_loading(scenario),
                 "mission.total_fuel" => mission.total_fuel_burn_kg,
+                "mission.landing_fuel" => landing_fuel_metric(mission)?,
                 "mission.completed_distance" | "mission.range" => mission.total_distance.value,
                 "mission.breguet_range" => breguet.range_m,
                 "mission.breguet_endurance" => breguet.endurance_s,
@@ -231,6 +232,19 @@ fn metric_values(
             Ok((metric.clone(), value))
         })
         .collect()
+}
+
+fn landing_fuel_metric(mission: &crate::domain::result::MissionResult) -> AexResult<f64> {
+    mission
+        .landing_fuel
+        .as_ref()
+        .map(|fuel| fuel.value)
+        .ok_or_else(|| {
+            AexError::analysis(
+                "MISSION_LANDING_FUEL_UNAVAILABLE",
+                "mission.landing_fuel is available only for a completed mission",
+            )
+        })
 }
 
 fn optional_performance_metric(metric: &str, value: Option<f64>) -> AexResult<f64> {

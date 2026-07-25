@@ -34,6 +34,8 @@ fn native_analysis_publishes_validated_scenario_domains() -> Result<(), Box<dyn 
     for domain in domains {
         domain.validate()?;
     }
+    assert!(analysis.metrics["mission.landing_fuel"].value > 0.0);
+    assert_eq!(analysis.metrics["mission.landing_fuel"].unit, "kg");
     for metric in [
         "performance.maximum_level_speed",
         "performance.service_ceiling",

@@ -34,6 +34,30 @@ pub(crate) fn fuel_exhaustion_scenario() -> AexResult<ResolvedScenario> {
     Ok(scenario)
 }
 
+pub(crate) fn low_landing_fuel_sr71_scenario() -> AexResult<ResolvedScenario> {
+    let mut scenario = example_scenario("sr71")?;
+    scenario.mission.initial_state = Some(crate::domain::schema::MissionInitialState {
+        altitude_m: Some(0.0),
+        indicated_airspeed_m_s: None,
+        true_airspeed_m_s: None,
+        mach: None,
+        fuel_fraction: None,
+        fuel_mass_kg: Some(7.06),
+    });
+    let mut landing_probe = scenario.mission.segments.first().cloned().ok_or_else(|| {
+        crate::domain::diagnostic::AexError::validation(
+            "MISSING_TEST_SEGMENT",
+            "mission.segments",
+            "SR-71 fixture requires a timed segment",
+        )
+    })?;
+    landing_probe.id = "landing_fuel_probe".to_owned();
+    landing_probe.power_fraction = None;
+    landing_probe.thrust_fraction = Some(0.0);
+    scenario.mission.segments = vec![landing_probe];
+    Ok(scenario)
+}
+
 pub(crate) fn set_inferred_configuration(
     scenario: &mut ResolvedScenario,
     configuration: &str,

@@ -103,6 +103,20 @@ fn requirement_quantities_use_metric_semantics() {
                     "display_value": 609.6,
                     "display_unit": "m"
                 }
+            }, {
+                "metric": "mission.landing_fuel",
+                "actual": {
+                    "value": 45.359237,
+                    "unit": "kg",
+                    "display_value": 45.359237,
+                    "display_unit": "kg"
+                },
+                "required": {
+                    "value": 90.718474,
+                    "unit": "kg",
+                    "display_value": 90.718474,
+                    "display_unit": "kg"
+                }
             }]
         }),
         DisplayUnitSystem::AviationUs,
@@ -113,6 +127,12 @@ fn requirement_quantities_use_metric_semantics() {
     assert_eq!(result["requirements"][0]["required"]["display_value"], 2.0);
     assert_eq!(result["requirements"][1]["actual"]["display_unit"], "ft");
     assert_eq!(result["requirements"][1]["actual"]["display_value"], 1000.0);
+    assert_eq!(result["requirements"][2]["actual"]["display_unit"], "lb");
+    assert_eq!(result["requirements"][2]["actual"]["display_value"], 100.0);
+    assert_eq!(
+        result["requirements"][2]["required"]["display_value"],
+        200.0
+    );
 }
 
 #[test]

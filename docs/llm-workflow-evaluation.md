@@ -50,7 +50,9 @@ low-fidelity mission vocabulary: engine-off captive carry, glide, and landing
 burn exactly zero fuel, retain their kinematics, inherit the explicit 45,000
 ft initial state, and do not report `FUEL_EXHAUSTED`. Its energy-method boost
 uses an ordered altitude/speed schedule and remains within 80–120 seconds; the
-B777 climb remains within 15–30 minutes and 5–10 tonnes of fuel.
+B777 climb remains within 15–30 minutes and 5–10 tonnes of fuel. Completed
+missions publish bindable landing fuel and emit `LOW_LANDING_FUEL` below 5%
+of maximum fuel capacity; incomplete missions emit neither.
 
 ## Original flaws, ranked by how badly they misled an LLM
 

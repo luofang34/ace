@@ -88,6 +88,9 @@ fn insert_mission_metrics(
         input.mission.total_fuel_burn_kg,
         "kg",
     );
+    if let Some(landing_fuel) = &input.mission.landing_fuel {
+        metrics.insert("mission.landing_fuel".to_owned(), landing_fuel.clone());
+    }
 }
 
 fn insert_structural_metrics(
