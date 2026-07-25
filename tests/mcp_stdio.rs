@@ -11,6 +11,8 @@ use rmcp::model::CallToolRequestParams;
 use rmcp::transport::TokioChildProcess;
 use serde_json::json;
 
+#[path = "mcp_stdio/compact_mission.rs"]
+mod compact_mission;
 #[path = "mcp_stdio/fixtures.rs"]
 mod fixtures;
 
@@ -36,8 +38,10 @@ fn arguments(
 
 #[tokio::test]
 async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
+    let temporary = tempfile::tempdir()?;
     let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
     command.args(["mcp", "serve"]);
+    command.current_dir(temporary.path());
     command.env(
         "ACE_OPENVSP_EXECUTABLE",
         "/path/that/does/not/contain/vspscript",
@@ -73,6 +77,7 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
             name: "simulate_mission".into(),
             arguments: Some(arguments(json!({
                 "scenario_path": scenario("c172"),
+                "detail": true,
                 "overrides": {}
             }))?),
             task: None,
@@ -208,11 +213,12 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
 
 #[tokio::test]
 async fn mission_verdict_is_completion_gated_in_mcp() -> Result<(), Box<dyn Error>> {
+    let temporary = tempfile::tempdir()?;
     let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
     command.args(["mcp", "serve"]);
+    command.current_dir(temporary.path());
     let client = ().serve(TokioChildProcess::new(command)?).await?;
 
-    let temporary = tempfile::tempdir()?;
     let incomplete = fuel_exhaustion_scenario(&temporary.path().join("incomplete"))?;
     for (fixture, completed, hard_passed) in
         [(scenario("c172"), true, true), (incomplete, false, false)]
@@ -222,6 +228,7 @@ async fn mission_verdict_is_completion_gated_in_mcp() -> Result<(), Box<dyn Erro
             "simulate_mission",
             json!({
                 "scenario_path": fixture,
+                "detail": true,
                 "overrides": {}
             }),
         )
@@ -242,7 +249,7 @@ async fn mission_verdict_is_completion_gated_in_mcp() -> Result<(), Box<dyn Erro
     let result = call_tool(
         &client,
         "simulate_mission",
-        json!({ "scenario_path": no_cruise, "overrides": {} }),
+        json!({ "scenario_path": no_cruise, "detail": true, "overrides": {} }),
     )
     .await?;
     assert_eq!(result["completed"], true);

@@ -107,6 +107,11 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     validity range, and a directly applicable inclusive-bound hint when one
     exists. Malformed requests remain protocol errors, and an unavailable
     backend cannot create design or artifact output before returning.
+28. **Mission responses are compact and evidence-backed.** Default MCP mission
+    simulation returns verdict, totals, bounded segment data, diagnostics, and
+    an immutable run reference below 8 KiB for the B777. `detail: true`
+    preserves the full shape, while the advertised `generate_report` request
+    retrieves the identical stored detail without rerunning simulation.
 
 ## Calibration bands
 

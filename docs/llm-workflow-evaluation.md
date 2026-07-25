@@ -57,6 +57,9 @@ MCP execution failures return `isError` tool results with stable codes,
 violating paths, diagnostics, validity ranges, and safe boundary hints when a
 request field maps directly to an inclusive bound. Malformed requests remain
 protocol errors.
+Mission simulation persists the canonical full result but returns a compact
+verdict, totals, segment table, diagnostics, and run reference by default.
+Full detail is opt-in and retrievable by run ID without recomputation.
 
 ## Original flaws, ranked by how badly they misled an LLM
 

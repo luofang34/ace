@@ -27,7 +27,7 @@ use crate::domain::warning::enforce_strict;
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::validator::{error_validation, validate_document_value};
 use domain_error::mcp_error;
-use output::{ObjectOutput, json_output, json_output_for_scenario};
+use output::{ObjectOutput, json_output, json_output_for_scenario, json_output_for_units};
 use parameters::{
     dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
     sweep_variable,
@@ -35,7 +35,7 @@ use parameters::{
 use schema::{
     AutoRefineDesignRequest, CompareDesignsRequest, CompareRequest, ConstraintRequest,
     CreateDesignRequest, EvaluateFeasibilityRequest, ExplainRequest, GetProfileRequest,
-    ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest, PointRequest,
+    ListProfilesRequest, LoadStudyRequest, MissionRequest, PayloadRangeRequest, PointRequest,
     PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
     ScenarioRequest, SweepRequest, UpdateDesignRequest, ValidateDocumentRequest,
 };
@@ -294,7 +294,7 @@ impl AexMcpServer {
     #[tool(description = "Simulate an ordered quasi-steady mission with mass continuity")]
     fn simulate_mission(
         &self,
-        Parameters(request): Parameters<ScenarioRequest>,
+        Parameters(request): Parameters<MissionRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
         mission::simulate(&self.service, request)
     }
@@ -439,7 +439,7 @@ impl AexMcpServer {
         let value = report::generate_report_blocking(&self.service, request).map_err(mcp_error)?;
         match scenario_path {
             Some(path) => json_output_for_scenario(value, Path::new(&path), units.as_deref()),
-            None => json_output(value),
+            None => json_output_for_units(value, units.as_deref()),
         }
     }
 

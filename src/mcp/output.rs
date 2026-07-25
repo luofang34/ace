@@ -31,7 +31,19 @@ pub(super) fn json_output_for_scenario<T: Serialize>(
     json_output_with_system(value, system)
 }
 
-fn json_output_with_system<T: Serialize>(
+pub(super) fn json_output_for_units<T: Serialize>(
+    value: T,
+    explicit_units: Option<&str>,
+) -> Result<Json<ObjectOutput>, ErrorData> {
+    let system = explicit_units
+        .map(|units| DisplayUnitSystem::parse(units, "units"))
+        .transpose()
+        .map_err(mcp_error)?
+        .unwrap_or_default();
+    json_output_with_system(value, system)
+}
+
+pub(super) fn json_output_with_system<T: Serialize>(
     value: T,
     system: DisplayUnitSystem,
 ) -> Result<Json<ObjectOutput>, ErrorData> {
