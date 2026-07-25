@@ -120,6 +120,7 @@ impl AnalysisBackend for OpenVspBackend {
         }
         Ok(AnalysisOutput {
             metrics,
+            metric_validity: BTreeMap::new(),
             polar,
             stability,
             structural_screen: None,

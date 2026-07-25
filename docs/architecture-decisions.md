@@ -241,3 +241,18 @@ uses an archive ID when more than one study, baseline, or evaluator signature
 shares a study ID. Promotion resolves the exact signature of the supplied
 study document. Archive consumers verify candidate, evaluation, study, and
 feasibility links before returning evidence or creating a design.
+
+## ADR-026 — Solver boundaries are not physical roots
+
+Bounded performance solves return a numeric value together with per-metric
+validity. Interior roots are valid unless their operating condition requires
+model extrapolation. Saturation at an atmosphere or default search boundary is
+boundary-limited. A declared aircraft operating limit is an intentional
+physical input and remains a valid limiting value.
+
+Requirement evaluation is tri-state. A boundary-limited actual produces an
+indeterminate result, with `passed: null` for compatibility, regardless of its
+numeric margin. Hard indeterminate requirements and study constraints cannot
+satisfy feasibility or enter a feasible Pareto set; evidence assigns them a
+positive normalized violation. Extrapolated interior values remain distinct
+from boundary-limited values so policy can treat them separately.

@@ -179,6 +179,12 @@ fn insert_performance(
     );
     insert(
         metrics,
+        "performance.absolute_ceiling",
+        performance.absolute_ceiling_m,
+        "m",
+    );
+    insert(
+        metrics,
         "performance.takeoff_field_length",
         estimate_takeoff_distance_m(scenario),
         "m",

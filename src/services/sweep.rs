@@ -8,6 +8,7 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{GRAVITY_M_S2, parse_quantity};
 use crate::domain::result::{ResultProvenance, SweepResult, SweepRow};
 use crate::domain::schema::{EngineProfile, Wing};
+use crate::domain::validity::MetricValidity;
 use crate::models::breguet;
 use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
 use crate::services::analysis::ApplicationService;
@@ -23,6 +24,7 @@ pub(crate) struct SweepVariable {
 #[derive(Debug, Clone)]
 struct SweepEvaluation {
     metrics: BTreeMap<String, f64>,
+    metric_validity: BTreeMap<String, MetricValidity>,
     warnings: Vec<Diagnostic>,
 }
 
@@ -132,6 +134,15 @@ impl ApplicationService {
             self.payload_range_blocking(scenario_path, &evaluation_overrides)?;
         let evaluation = SweepEvaluation {
             metrics: metric_values(&scenario, &performance, &mission, &payload_range, metrics)?,
+            metric_validity: metrics
+                .iter()
+                .filter_map(|metric| {
+                    performance
+                        .metric_validity
+                        .get(metric)
+                        .map(|validity| (metric.clone(), validity.clone()))
+                })
+                .collect(),
             warnings: analysis_warnings(&performance, &mission, &payload_range),
         };
         cache
@@ -268,6 +279,7 @@ fn row(overrides: &BTreeMap<String, String>, evaluation: SweepEvaluation) -> Swe
             .map(|(path, value)| (path.clone(), serde_json::Value::String(value.clone())))
             .collect(),
         metrics: evaluation.metrics,
+        metric_validity: evaluation.metric_validity,
         warnings: evaluation.warnings,
     }
 }

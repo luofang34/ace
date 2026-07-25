@@ -44,6 +44,7 @@ fn records() -> Result<(EvidenceEnvelope, StudyArchive), Box<dyn std::error::Err
                 "mission.total_fuel".to_owned(),
                 QuantityOutput::si(120.0, "kg"),
             )]),
+            metric_validity: BTreeMap::new(),
             constraints: Vec::new(),
             diagnostics: Vec::new(),
         },

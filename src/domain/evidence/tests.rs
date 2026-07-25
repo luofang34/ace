@@ -2,7 +2,9 @@ use std::collections::BTreeMap;
 
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
-use crate::domain::validity::{ModelValidityDomain, ValidityDomainProvider};
+use crate::domain::validity::{
+    MetricValidity, ModelValidityDomain, ValidityDomainProvider, ValidityStatus,
+};
 use crate::models::atmosphere::Isa1976;
 
 use super::archive::StudyArchiveDraft;
@@ -36,6 +38,20 @@ fn evidence_with_domains(
     metric_value: f64,
     validity_domains: Vec<ModelValidityDomain>,
 ) -> Result<EvidenceEnvelope, Box<dyn std::error::Error>> {
+    evidence_with_metadata(
+        candidate_id,
+        metric_value,
+        validity_domains,
+        BTreeMap::new(),
+    )
+}
+
+fn evidence_with_metadata(
+    candidate_id: String,
+    metric_value: f64,
+    validity_domains: Vec<ModelValidityDomain>,
+    metric_validity: BTreeMap<String, MetricValidity>,
+) -> Result<EvidenceEnvelope, Box<dyn std::error::Error>> {
     let draft = EvidenceDraft {
         study_id: "wing-trade".to_owned(),
         candidate_id,
@@ -55,6 +71,7 @@ fn evidence_with_domains(
                 "mission.total_fuel".to_owned(),
                 QuantityOutput::si(metric_value, "kg"),
             )]),
+            metric_validity,
             constraints: vec![EvidenceConstraint {
                 id: "fuel-floor".to_owned(),
                 metric: "mission.total_fuel".to_owned(),
@@ -163,6 +180,36 @@ fn evidence_typed_validity_round_trips_and_affects_identity()
     let round_trip: EvidenceEnvelope = serde_json::from_value(stored)?;
     round_trip.validate()?;
     assert_eq!(typed, round_trip);
+    Ok(())
+}
+
+#[test]
+fn evidence_metric_validity_round_trips_and_affects_identity()
+-> Result<(), Box<dyn std::error::Error>> {
+    let candidate = candidate("16 m^2")?;
+    let legacy = evidence(candidate.candidate_id.clone(), 120.0)?;
+    let typed = evidence_with_metadata(
+        candidate.candidate_id,
+        120.0,
+        Vec::new(),
+        BTreeMap::from([(
+            "mission.total_fuel".to_owned(),
+            MetricValidity::boundary_limited("solver.maximum_fuel_search"),
+        )]),
+    )?;
+
+    assert_ne!(legacy.evaluation_id, typed.evaluation_id);
+    let stored = serde_json::to_value(&typed)?;
+    assert_eq!(
+        stored["results"]["metric_validity"]["mission.total_fuel"]["status"],
+        "boundary_limited"
+    );
+    let round_trip: EvidenceEnvelope = serde_json::from_value(stored)?;
+    round_trip.validate()?;
+    assert_eq!(
+        round_trip.results.metric_validity["mission.total_fuel"].status,
+        ValidityStatus::BoundaryLimited
+    );
     Ok(())
 }
 

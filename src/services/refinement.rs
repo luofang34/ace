@@ -121,7 +121,7 @@ impl ApplicationService {
                 .analysis
                 .requirements
                 .iter()
-                .all(|requirement| requirement.passed)
+                .all(crate::domain::result::RequirementEvaluation::is_passed)
             && backend_verification_passed;
         Ok(RefinementResult {
             source_scenario_id: baseline.id,
@@ -214,7 +214,7 @@ impl ApplicationService {
         let unmet_requirements = analysis
             .requirements
             .iter()
-            .filter(|requirement| !requirement.passed)
+            .filter(|requirement| !requirement.is_passed())
             .map(|requirement| requirement.id.clone())
             .collect::<Vec<_>>();
         let score = candidate_score(&analysis, state, initial);
@@ -370,7 +370,7 @@ fn candidate_score(
     let requirement_penalty = analysis
         .requirements
         .iter()
-        .filter(|requirement| !requirement.passed)
+        .filter(|requirement| !requirement.is_passed())
         .map(|requirement| {
             let severity = if requirement.severity == "hard" {
                 10_000.0

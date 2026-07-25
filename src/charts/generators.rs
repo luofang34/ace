@@ -1,8 +1,9 @@
 use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec};
-use crate::domain::diagnostic::{AexError, AexResult};
+use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::KNOT_M_S;
 use crate::domain::result::{
-    ConstraintResult, MissionResult, PayloadRangeResult, RequirementEvaluation, SweepResult,
+    ConstraintResult, MissionResult, PayloadRangeResult, RequirementEvaluation, RequirementStatus,
+    SweepResult,
 };
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::models::aerodynamics::stall_speed_m_s;
@@ -350,6 +351,17 @@ pub(crate) fn requirement_margins(
     scenario: &ResolvedScenario,
     evaluations: &[RequirementEvaluation],
 ) -> ChartSpec {
+    let mut warnings = scenario.warnings.clone();
+    if evaluations
+        .iter()
+        .any(|item| item.resolved_status() == RequirementStatus::Indeterminate)
+    {
+        warnings.push(Diagnostic::warning(
+            "INDETERMINATE_REQUIREMENT",
+            "Boundary-limited requirement margins are omitted from the chart.",
+            "requirements",
+        ));
+    }
     ChartSpec {
         chart_type: "bar".to_owned(),
         title: format!("{}: requirement margins", scenario.name),
@@ -367,20 +379,29 @@ pub(crate) fn requirement_margins(
             id: "margin".to_owned(),
             label: "Requirement margin".to_owned(),
             unit: "%".to_owned(),
-            values: evaluations
-                .iter()
-                .map(|item| item.percentage_margin.unwrap_or(0.0))
-                .collect(),
+            values: evaluations.iter().map(chart_margin).collect(),
         }],
         annotations: evaluations
             .iter()
             .enumerate()
             .map(|(index, item)| Annotation {
                 x: index as f64,
-                y: item.percentage_margin.unwrap_or(0.0),
-                label: item.id.clone(),
+                y: chart_margin(item),
+                label: if item.resolved_status() == RequirementStatus::Indeterminate {
+                    format!("{} (indeterminate)", item.id)
+                } else {
+                    item.id.clone()
+                },
             })
             .collect(),
-        warnings: scenario.warnings.clone(),
+        warnings,
+    }
+}
+
+fn chart_margin(item: &RequirementEvaluation) -> f64 {
+    if item.resolved_status() == RequirementStatus::Indeterminate {
+        0.0
+    } else {
+        item.percentage_margin.unwrap_or(0.0)
     }
 }

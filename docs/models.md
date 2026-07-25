@@ -49,6 +49,14 @@ and service/absolute ceilings. Maximum speed uses the high-speed root unless
 an explicit operating limit controls first. Ceilings solve maximum climb rate
 against configurable class thresholds.
 
+Performance results include `metric_validity` for maximum level speed, service
+ceiling, and absolute ceiling. An interior root is `valid`; an interior root
+that uses a model outside its registered envelope is `extrapolated`; a result
+pinned to the atmosphere or a default search cap is `boundary_limited`.
+Explicit aircraft operating limits are treated as valid declared limits rather
+than artificial solver caps. A boundary-limited value is not evidence that the
+physical threshold occurs at that value.
+
 ## Mission
 
 Quasi-steady segments integrate fuel and enforce mass continuity. Cruise and

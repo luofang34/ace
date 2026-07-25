@@ -34,6 +34,14 @@ fn native_analysis_publishes_validated_scenario_domains() -> Result<(), Box<dyn 
     for domain in domains {
         domain.validate()?;
     }
+    for metric in [
+        "performance.maximum_level_speed",
+        "performance.service_ceiling",
+        "performance.absolute_ceiling",
+    ] {
+        assert!(analysis.metrics.contains_key(metric));
+        assert!(analysis.metric_validity.contains_key(metric));
+    }
     Ok(())
 }
 

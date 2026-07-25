@@ -78,6 +78,11 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     `INCONSISTENT_WING_PLANFORM`. Direct overrides, all shipped examples,
     study candidates, sweep rows, and refinement outputs are regression tested
     against `aspect_ratio = span² / area`.
+23. **Bounded solver results cannot masquerade as roots.** Interior envelope
+    roots are valid or explicitly extrapolated, while atmosphere and default
+    search-cap saturation is `boundary_limited`. Requirements bound to those
+    values are indeterminate with nullable legacy `passed`; hard indeterminate
+    constraints are infeasible and carry nonzero study violation.
 
 ## Calibration bands
 

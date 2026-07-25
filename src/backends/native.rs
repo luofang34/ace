@@ -177,6 +177,7 @@ impl AnalysisBackend for NativeBackend {
         ));
         Ok(AnalysisOutput {
             metrics,
+            metric_validity: performance.metric_validity.clone(),
             polar: native_polar(scenario),
             stability: StabilitySummary {
                 pitching_moment_slope_per_deg: None,
@@ -216,7 +217,7 @@ fn failed_constraints(
 ) -> Vec<String> {
     let mut failed: Vec<String> = requirements
         .iter()
-        .filter(|item| !item.passed)
+        .filter(|item| !item.is_passed())
         .map(|item| item.id.clone())
         .collect();
     for id in failed_hard_requirement_ids(declared, requirements) {

@@ -11,6 +11,7 @@ use crate::charts::spec::{AxisSpec, ChartSpec, SeriesSpec};
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::result::{
     ConstraintResult, MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation,
+    RequirementStatus,
 };
 use crate::domain::schema::{ResolvedScenario, SegmentKind};
 use crate::services::analysis::ApplicationService;
@@ -353,14 +354,21 @@ pub(crate) fn markdown_report(
     .map_err(format_error)?;
     writeln!(output, "\n## Requirements").map_err(format_error)?;
     for item in requirements {
-        writeln!(
-            output,
-            "\n- {}: {} (margin {:.3})",
-            item.id,
-            if item.passed { "PASS" } else { "FAIL" },
-            item.absolute_margin
-        )
-        .map_err(format_error)?;
+        let label = match item.resolved_status() {
+            RequirementStatus::Pass => "PASS",
+            RequirementStatus::Fail => "FAIL",
+            RequirementStatus::Indeterminate => "INDETERMINATE",
+        };
+        if item.resolved_status() == RequirementStatus::Indeterminate {
+            writeln!(output, "\n- {}: {label}", item.id).map_err(format_error)?;
+        } else {
+            writeln!(
+                output,
+                "\n- {}: {label} (margin {:.3})",
+                item.id, item.absolute_margin
+            )
+            .map_err(format_error)?;
+        }
     }
     writeln!(output, "\n## Assumptions").map_err(format_error)?;
     writeln!(

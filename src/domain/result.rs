@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::AssumptionEntry;
-use crate::domain::validity::ModelValidityDomain;
+use crate::domain::validity::{MetricValidity, ModelValidityDomain};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct ResultProvenance {
@@ -97,8 +97,19 @@ pub(crate) struct PerformanceSummary {
     pub(crate) service_ceiling_m: f64,
     pub(crate) absolute_ceiling_m: f64,
     pub(crate) cruise_mach: Option<f64>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     pub(crate) model: ModelMetadata,
     pub(crate) warnings: Vec<Diagnostic>,
+}
+
+impl PerformanceSummary {
+    pub(crate) fn validity_for(&self, metric: &str) -> MetricValidity {
+        self.metric_validity
+            .get(metric)
+            .cloned()
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -137,6 +148,14 @@ pub(crate) struct MissionResult {
     pub(crate) model: ModelMetadata,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum RequirementStatus {
+    Pass,
+    Fail,
+    Indeterminate,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct RequirementEvaluation {
     pub(crate) id: String,
@@ -144,11 +163,28 @@ pub(crate) struct RequirementEvaluation {
     pub(crate) actual: QuantityOutput,
     pub(crate) required: QuantityOutput,
     pub(crate) operator: String,
-    pub(crate) passed: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) status: Option<RequirementStatus>,
+    pub(crate) passed: Option<bool>,
+    #[serde(default)]
+    pub(crate) validity: MetricValidity,
     pub(crate) absolute_margin: f64,
     pub(crate) percentage_margin: Option<f64>,
     pub(crate) severity: String,
     pub(crate) warning_state: bool,
+}
+
+impl RequirementEvaluation {
+    pub(crate) fn resolved_status(&self) -> RequirementStatus {
+        self.status.unwrap_or(match self.passed {
+            Some(true) => RequirementStatus::Pass,
+            Some(false) | None => RequirementStatus::Fail,
+        })
+    }
+
+    pub(crate) fn is_passed(&self) -> bool {
+        self.resolved_status() == RequirementStatus::Pass
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -228,6 +264,8 @@ pub(crate) struct ConstraintResult {
 pub(crate) struct SweepRow {
     pub(crate) variables: std::collections::BTreeMap<String, serde_json::Value>,
     pub(crate) metrics: std::collections::BTreeMap<String, f64>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     pub(crate) warnings: Vec<Diagnostic>,
 }
 
