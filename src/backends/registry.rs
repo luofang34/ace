@@ -5,7 +5,7 @@ use std::process::Command;
 
 use crate::backends::contracts::{BackendDescriptor, GeometryBackend};
 use crate::backends::native::NativeBackend;
-use crate::backends::openvsp::{OpenVspBackend, openvsp_topology_capabilities};
+use crate::backends::openvsp::{OpenVspBackend, openvsp_descriptor};
 use crate::domain::diagnostic::{AexError, AexResult};
 
 const OPENVSP_ENV: &str = "ACE_OPENVSP_EXECUTABLE";
@@ -24,11 +24,17 @@ impl BackendRegistry {
         match discovery {
             Ok(path) => {
                 let search_path = backend_search_path(&path);
-                let version = probe_version_blocking(&path, &search_path);
-                Self {
-                    native: NativeBackend,
-                    openvsp: Some(OpenVspBackend::new(path, version, search_path)),
-                    openvsp_unavailable_reason: None,
+                match probe_version_blocking(&path, &search_path) {
+                    Ok(version) => Self {
+                        native: NativeBackend,
+                        openvsp: Some(OpenVspBackend::new(path, Some(version), search_path)),
+                        openvsp_unavailable_reason: None,
+                    },
+                    Err(reason) => Self {
+                        native: NativeBackend,
+                        openvsp: None,
+                        openvsp_unavailable_reason: Some(reason),
+                    },
                 }
             }
             Err(reason) => Self {
@@ -58,22 +64,7 @@ impl BackendRegistry {
     pub(crate) fn descriptors(&self) -> Vec<BackendDescriptor> {
         let native = GeometryBackend::descriptor(&self.native);
         let openvsp = self.openvsp.as_ref().map_or_else(
-            || BackendDescriptor {
-                id: "openvsp".to_owned(),
-                display_name: "OpenVSP subprocess refinement".to_owned(),
-                available: false,
-                version: None,
-                capabilities: vec![
-                    "vsp3_geometry".to_owned(),
-                    "wetted_area".to_owned(),
-                    "vspaero_polar".to_owned(),
-                    "static_pitching_moment".to_owned(),
-                ],
-                disciplines: vec!["geometry".to_owned(), "aerodynamics".to_owned()],
-                fidelity_levels: vec![1, 2],
-                topology: openvsp_topology_capabilities(),
-                unavailable_reason: self.openvsp_unavailable_reason.clone(),
-            },
+            || openvsp_descriptor(false, None, self.openvsp_unavailable_reason.clone()),
             GeometryBackend::descriptor,
         );
         vec![native, openvsp]
@@ -106,7 +97,18 @@ fn discover_openvsp() -> Result<PathBuf, String> {
 }
 
 fn executable_path(path: &Path) -> Option<PathBuf> {
-    path.is_file().then(|| path.to_path_buf())
+    let metadata = path.metadata().ok()?;
+    if !metadata.is_file() {
+        return None;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if metadata.permissions().mode() & 0o111 == 0 {
+            return None;
+        }
+    }
+    Some(path.to_path_buf())
 }
 
 fn backend_search_path(executable: &Path) -> OsString {
@@ -121,12 +123,19 @@ fn backend_search_path(executable: &Path) -> OsString {
     env::join_paths(paths).unwrap_or_else(|_| OsString::from("/usr/bin:/bin"))
 }
 
-fn probe_version_blocking(executable: &Path, search_path: &OsString) -> Option<String> {
+fn probe_version_blocking(executable: &Path, search_path: &OsString) -> Result<String, String> {
     let output = Command::new(executable)
         .arg("-help")
         .env("PATH", search_path)
         .output()
-        .ok()?;
+        .map_err(|source| format!("failed to probe {}: {source}", executable.display()))?;
+    if !output.status.success() {
+        return Err(format!(
+            "{} -help exited with status {}",
+            executable.display(),
+            output.status
+        ));
+    }
     let stdout = String::from_utf8_lossy(&output.stdout);
     stdout
         .lines()
@@ -134,4 +143,13 @@ fn probe_version_blocking(executable: &Path, search_path: &OsString) -> Option<S
         .find(|line| line.starts_with("Vehicle Sketch Pad"))
         .and_then(|line| line.split_whitespace().last())
         .map(str::to_owned)
+        .ok_or_else(|| {
+            format!(
+                "{} -help did not identify a Vehicle Sketch Pad version",
+                executable.display()
+            )
+        })
 }
+
+#[cfg(test)]
+mod tests;

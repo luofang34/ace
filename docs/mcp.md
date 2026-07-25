@@ -3,6 +3,7 @@
 Start the stdio server with `aex mcp serve`. The official Rust MCP SDK exposes
 structured JSON output for:
 
+- `get_capabilities`
 - `validate_document`
 - `list_profiles`
 - `get_profile`
@@ -25,6 +26,13 @@ structured JSON output for:
 - `run_design_study`
 - `query_design_study`
 - `promote_study_candidate`
+
+`get_capabilities` returns the same manifest as `aex capabilities --format
+json`. Agents can discover legal document/profile types, configurations,
+mission fields, bindable metrics and declared-only replacements, model
+domains, warning policy, and backend availability before constructing a
+request. The stable vocabulary also generates the
+[capability reference](capabilities.md).
 
 All scenario tools accept repository-relative or absolute paths. Overrides are
 maps of dotted paths to explicit unit strings. Chart tools return a serializable

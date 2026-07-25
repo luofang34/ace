@@ -14,6 +14,7 @@ Rust 1.88 or newer is required.
 
 ```bash
 cargo build
+cargo run --bin aex -- capabilities --format json
 cargo run --bin aex -- validate examples/c172/scenario.yaml --format json
 cargo run --bin aex -- analyze point examples/c172/scenario.yaml \
   --altitude "8000 ft" --speed "115 kt" --format json

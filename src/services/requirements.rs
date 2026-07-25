@@ -1,3 +1,4 @@
+use crate::domain::capabilities::{RequirementMetric, requirement_metric};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
     MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation, RequirementStatus,
@@ -87,42 +88,49 @@ fn metric_value(
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
 ) -> Option<MetricInput> {
-    match requirement.metric.as_str() {
-        "mission.payload_mass" => Some(MetricInput::valid(scenario.mission.payload_mass_kg)),
-        "performance.achieved_cruise_true_airspeed" => performance
+    let metric = requirement_metric(&requirement.metric)?.metric;
+    match metric {
+        RequirementMetric::MissionPayloadMass => {
+            Some(MetricInput::valid(scenario.mission.payload_mass_kg))
+        }
+        RequirementMetric::AchievedCruiseTrueAirspeed => performance
             .achieved_cruise_true_airspeed_m_s
             .map(|actual| performance_input(performance, &requirement.metric, actual)),
-        "mission.completed_distance" => Some(MetricInput::valid(mission.total_distance.value)),
-        "performance.service_ceiling" => Some(MetricInput {
+        RequirementMetric::MissionCompletedDistance => {
+            Some(MetricInput::valid(mission.total_distance.value))
+        }
+        RequirementMetric::ServiceCeiling => Some(MetricInput {
             actual: performance.service_ceiling_m,
             validity: performance.validity_for("performance.service_ceiling"),
         }),
-        "performance.stall_speed_landing" => {
+        RequirementMetric::StallSpeedLanding => {
             Some(MetricInput::valid(performance.stall_speed_landing_m_s))
         }
-        "performance.achieved_cruise_mach" => performance
+        RequirementMetric::AchievedCruiseMach => performance
             .achieved_cruise_mach
             .map(|actual| performance_input(performance, &requirement.metric, actual)),
-        "performance.minimum_cruise_excess_power" => performance
+        RequirementMetric::MinimumCruiseExcessPower => performance
             .minimum_cruise_excess_power_w
             .map(|actual| performance_input(performance, &requirement.metric, actual)),
-        "performance.cruise_feasible" => performance.cruise_feasible.map(|actual| {
+        RequirementMetric::CruiseFeasible => performance.cruise_feasible.map(|actual| {
             performance_input(
                 performance,
                 &requirement.metric,
                 f64::from(u8::from(actual)),
             )
         }),
-        "performance.takeoff_field_length" => {
+        RequirementMetric::TakeoffFieldLength => {
             Some(MetricInput::valid(estimate_takeoff_distance_m(scenario)))
         }
-        "performance.full_payload_range" => payload_range
+        RequirementMetric::FullPayloadRange => payload_range
             .and_then(|result| point_range(result, "full_payload_mission"))
             .map(MetricInput::valid),
-        "performance.zero_payload_ferry_range" => payload_range
+        RequirementMetric::ZeroPayloadFerryRange => payload_range
             .and_then(|result| point_range(result, "zero_payload_ferry"))
             .map(MetricInput::valid),
-        _ => None,
+        RequirementMetric::DeclaredCruiseMach | RequirementMetric::DeclaredCruiseTrueAirspeed => {
+            None
+        }
     }
 }
 

@@ -1,3 +1,4 @@
+mod capabilities;
 mod design;
 mod mission;
 mod output;
@@ -53,6 +54,10 @@ impl AexMcpServer {
 
 #[tool_router]
 impl AexMcpServer {
+    #[tool(description = "Discover accepted vocabulary, models, warnings, and backends")]
+    fn get_capabilities(&self) -> Result<Json<ObjectOutput>, ErrorData> {
+        capabilities::get(&self.service)
+    }
     #[tool(description = "Load and validate a portable aircraft design study")]
     fn load_design_study(
         &self,
@@ -85,7 +90,7 @@ impl AexMcpServer {
         study::promote(&self.service, request)
     }
 
-    #[tool(description = "Validate an aircraft, mission, requirements, or profile document")]
+    #[tool(description = "Validate a supported portable document")]
     fn validate_document(
         &self,
         Parameters(request): Parameters<ValidateDocumentRequest>,

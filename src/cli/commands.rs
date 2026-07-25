@@ -48,6 +48,7 @@ struct MissionEnvelope {
 pub(super) async fn execute(command: Command) -> AexResult<()> {
     let service = service_blocking()?;
     match command {
+        Command::Capabilities { output } => emit_blocking(&service.capabilities()?, &output),
         Command::Validate { path, output } => {
             let result = service.validate_path_blocking(&path)?;
             emit_blocking(&result, &output)

@@ -1,5 +1,6 @@
 use serde_yaml::Value;
 
+use crate::domain::capabilities::{ProfileRole, profile_type};
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{
@@ -7,9 +8,14 @@ use crate::domain::schema::{
 };
 
 pub(crate) fn parse_engine_profile(raw: RawProfile) -> AexResult<EngineProfile> {
-    match raw.kind.as_str() {
-        "piston_engine" => Ok(EngineProfile::Piston(parse_piston_profile(raw)?)),
-        "turbofan_engine" => Ok(EngineProfile::Turbofan(parse_turbofan_profile(raw)?)),
+    let profile = profile_type(&raw.kind);
+    match profile.map(|item| (item.id, item.role)) {
+        Some(("piston_engine", ProfileRole::Engine)) => {
+            Ok(EngineProfile::Piston(parse_piston_profile(raw)?))
+        }
+        Some(("turbofan_engine", ProfileRole::Engine)) => {
+            Ok(EngineProfile::Turbofan(parse_turbofan_profile(raw)?))
+        }
         _ => Err(AexError::validation(
             "UNSUPPORTED_PROPULSION_PROFILE",
             "profile.type",
@@ -19,7 +25,7 @@ pub(crate) fn parse_engine_profile(raw: RawProfile) -> AexResult<EngineProfile> 
 }
 
 pub(crate) fn parse_propeller_profile(raw: RawProfile) -> AexResult<PropellerProfile> {
-    if raw.kind != "propeller" {
+    if profile_type(&raw.kind).map(|item| item.role) != Some(ProfileRole::Propeller) {
         return Err(AexError::validation(
             "INCOMPATIBLE_PROFILE_TYPE",
             "aircraft.propulsion.propeller_profile",

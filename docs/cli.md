@@ -10,6 +10,7 @@ aex
 Primary commands:
 
 ```text
+aex capabilities
 aex validate DOCUMENT
 aex resolve SCENARIO
 aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE)
@@ -25,6 +26,11 @@ aex plot drag-polar|power-curves|thrust-curves|climb-envelope
 aex report RUN_ID
 aex mcp serve
 ```
+
+`aex capabilities --format json` returns the versioned machine-readable
+vocabulary accepted by validation and analysis, plus runtime backend status,
+registered model domains, and strict-warning decisions. The stable sections
+generate the [capability reference](capabilities.md).
 
 `aex validate` accepts aircraft, mission, requirements, profile, scenario, and
 study documents. For a study with a relative scenario baseline, it validates

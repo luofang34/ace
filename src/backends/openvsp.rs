@@ -135,23 +135,7 @@ impl AnalysisBackend for OpenVspBackend {
 
 impl OpenVspBackend {
     fn descriptor_value(&self) -> BackendDescriptor {
-        BackendDescriptor {
-            id: "openvsp".to_owned(),
-            display_name: "OpenVSP subprocess refinement".to_owned(),
-            available: true,
-            version: self.version.clone(),
-            capabilities: vec![
-                "vsp3_geometry".to_owned(),
-                "tailless_bwb_geometry".to_owned(),
-                "wetted_area".to_owned(),
-                "vspaero_polar".to_owned(),
-                "static_pitching_moment".to_owned(),
-            ],
-            disciplines: vec!["geometry".to_owned(), "aerodynamics".to_owned()],
-            fidelity_levels: vec![1, 2],
-            topology: openvsp_topology_capabilities(),
-            unavailable_reason: None,
-        }
+        openvsp_descriptor(true, self.version.clone(), None)
     }
 
     fn run_script_blocking(
@@ -199,6 +183,30 @@ impl OpenVspBackend {
             return Err(backend_failure(operation, &output, result.status.code()));
         }
         Ok(output)
+    }
+}
+
+pub(super) fn openvsp_descriptor(
+    available: bool,
+    version: Option<String>,
+    unavailable_reason: Option<String>,
+) -> BackendDescriptor {
+    BackendDescriptor {
+        id: "openvsp".to_owned(),
+        display_name: "OpenVSP subprocess refinement".to_owned(),
+        available,
+        version,
+        capabilities: vec![
+            "vsp3_geometry".to_owned(),
+            "tailless_bwb_geometry".to_owned(),
+            "wetted_area".to_owned(),
+            "vspaero_polar".to_owned(),
+            "static_pitching_moment".to_owned(),
+        ],
+        disciplines: vec!["geometry".to_owned(), "aerodynamics".to_owned()],
+        fidelity_levels: vec![1, 2],
+        topology: openvsp_topology_capabilities(),
+        unavailable_reason,
     }
 }
 

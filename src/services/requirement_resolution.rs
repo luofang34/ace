@@ -2,8 +2,12 @@ use std::collections::BTreeSet;
 
 use serde_yaml::Value;
 
+use crate::domain::capabilities::{
+    REQUIREMENT_OPERATORS, REQUIREMENT_SEVERITIES, RequirementMetricCapability,
+    RequirementValueKind, requirement_metric,
+};
 use crate::domain::diagnostic::{AexError, AexResult};
-use crate::domain::quantity::{Dimension, parse_quantity};
+use crate::domain::quantity::parse_quantity;
 use crate::domain::schema::{RawRequirement, Requirement, Requirements, RequirementsDocument};
 
 pub(crate) fn resolve_requirements(document: RequirementsDocument) -> AexResult<Requirements> {
@@ -35,7 +39,15 @@ fn ensure_unique_requirement_ids(items: &[RawRequirement]) -> AexResult<()> {
 }
 
 fn resolve_requirement(raw: RawRequirement) -> AexResult<Requirement> {
-    if let Some(replacement) = declared_metric_replacement(&raw.metric) {
+    let capability = requirement_metric(&raw.metric).ok_or_else(|| {
+        AexError::validation(
+            "UNSUPPORTED_REQUIREMENT_METRIC",
+            &raw.metric,
+            "metric is not implemented",
+        )
+    })?;
+    if !capability.bindable {
+        let replacement = capability.replacement.unwrap_or("an achieved metric");
         return Err(AexError::validation(
             "DECLARED_METRIC_NOT_BINDABLE",
             format!("requirements.items.{}.metric", raw.id),
@@ -45,15 +57,15 @@ fn resolve_requirement(raw: RawRequirement) -> AexResult<Requirement> {
             ),
         ));
     }
-    let (required, unit) = requirement_value(&raw.metric, &raw.value)?;
-    if !matches!(raw.operator.as_str(), "ge" | "le" | "eq") {
+    let (required, unit) = requirement_value(capability, &raw.value)?;
+    if !REQUIREMENT_OPERATORS.contains(&raw.operator.as_str()) {
         return Err(AexError::validation(
             "INVALID_REQUIREMENT_OPERATOR",
             format!("requirements.items.{}.operator", raw.id),
             format!("unsupported operator {}", raw.operator),
         ));
     }
-    if !matches!(raw.severity.as_str(), "hard" | "soft" | "report_only") {
+    if !REQUIREMENT_SEVERITIES.contains(&raw.severity.as_str()) {
         return Err(AexError::validation(
             "INVALID_REQUIREMENT_SEVERITY",
             format!("requirements.items.{}.severity", raw.id),
@@ -71,53 +83,39 @@ fn resolve_requirement(raw: RawRequirement) -> AexResult<Requirement> {
     })
 }
 
-fn requirement_value(metric: &str, value: &Value) -> AexResult<(f64, String)> {
-    let dimension = match metric {
-        "mission.payload_mass" => Some((Dimension::Mass, "kg")),
-        "performance.achieved_cruise_true_airspeed" | "performance.stall_speed_landing" => {
-            Some((Dimension::Speed, "m/s"))
-        }
-        "performance.minimum_cruise_excess_power" => Some((Dimension::Power, "W")),
-        "mission.completed_distance"
-        | "performance.full_payload_range"
-        | "performance.zero_payload_ferry_range" => Some((Dimension::Length, "m")),
-        "performance.service_ceiling" | "performance.takeoff_field_length" => {
-            Some((Dimension::Length, "m"))
-        }
-        "performance.achieved_cruise_mach" | "performance.cruise_feasible" => None,
-        _ => {
-            return Err(AexError::validation(
-                "UNSUPPORTED_REQUIREMENT_METRIC",
-                metric,
-                "metric is not implemented",
-            ));
-        }
-    };
-    match dimension {
-        Some((kind, unit)) => {
+fn requirement_value(
+    capability: RequirementMetricCapability,
+    value: &Value,
+) -> AexResult<(f64, String)> {
+    match capability.value_kind.dimension() {
+        Some(dimension) => {
             let raw = value.as_str().ok_or_else(|| {
                 AexError::validation(
                     "AMBIGUOUS_UNITLESS_VALUE",
-                    metric,
+                    capability.id,
                     "physical requirements require a unit",
                 )
             })?;
-            Ok((parse_quantity(raw, kind)?, unit.to_owned()))
+            Ok((
+                parse_quantity(raw, dimension)?,
+                capability.canonical_unit.to_owned(),
+            ))
         }
-        None => value
+        None if capability.value_kind == RequirementValueKind::Scalar => value
             .as_f64()
-            .map(|number| (number, "1".to_owned()))
+            .map(|number| (number, capability.canonical_unit.to_owned()))
             .ok_or_else(|| {
-                AexError::validation("INVALID_REQUIREMENT_VALUE", metric, "expected number")
+                AexError::validation(
+                    "INVALID_REQUIREMENT_VALUE",
+                    capability.id,
+                    "expected number",
+                )
             }),
-    }
-}
-
-fn declared_metric_replacement(metric: &str) -> Option<&'static str> {
-    match metric {
-        "performance.cruise_mach" => Some("performance.achieved_cruise_mach"),
-        "performance.cruise_true_airspeed" => Some("performance.achieved_cruise_true_airspeed"),
-        _ => None,
+        None => Err(AexError::validation(
+            "INVALID_REQUIREMENT_VALUE_KIND",
+            capability.id,
+            "physical requirement metric has no quantity dimension",
+        )),
     }
 }
 

@@ -1,5 +1,6 @@
 pub(crate) mod analysis;
 pub(crate) mod assumptions;
+pub(crate) mod capabilities;
 pub(crate) mod comparison;
 pub(crate) mod design_experiments;
 pub(crate) mod model_preflight;

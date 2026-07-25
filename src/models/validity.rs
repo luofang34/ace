@@ -69,7 +69,7 @@ impl ValidityDomainProvider for RegisteredModel {
             Self::ParabolicPolar => polar_domain(),
             Self::WaveDrag => wave_drag_domain(0.0),
             Self::PistonPropulsion => generic_propulsion_domain(self.model_id(), None),
-            Self::TurbofanPropulsion => generic_propulsion_domain(self.model_id(), None),
+            Self::TurbofanPropulsion => generic_turbofan_domain(self.model_id(), None, None),
             Self::FieldPerformance => field_performance_domain(),
             Self::ConventionalStructure => structural_domain(false),
             Self::BlendedWingStructure => structural_domain(true),
@@ -89,29 +89,11 @@ impl ValidityDomainProvider for EngineProfile {
             Self::Piston(profile) => {
                 generic_propulsion_domain(&profile.model, profile.maximum_altitude_m)
             }
-            Self::Turbofan(profile) => ModelValidityDomain {
-                model_id: profile.model.clone(),
-                bounds: vec![
-                    inclusive_bound(
-                        ValidityVariable::Altitude,
-                        Some(0.0),
-                        Some(profile.maximum_altitude_m),
-                        ValidityBasis::ResolvedProfile,
-                    ),
-                    inclusive_bound(
-                        ValidityVariable::Mach,
-                        Some(0.0),
-                        Some(profile.maximum_mach),
-                        ValidityBasis::ResolvedProfile,
-                    ),
-                    inclusive_bound(
-                        ValidityVariable::Throttle,
-                        Some(0.0),
-                        Some(1.0),
-                        ValidityBasis::ModelForm,
-                    ),
-                ],
-            },
+            Self::Turbofan(profile) => generic_turbofan_domain(
+                &profile.model,
+                Some(profile.maximum_altitude_m),
+                Some(profile.maximum_mach),
+            ),
         }
     }
 }
@@ -120,6 +102,14 @@ pub(crate) fn scenario_domains(scenario: &ResolvedScenario) -> AexResult<Vec<Mod
     Ok(scenario_domain_registrations(scenario)?
         .into_iter()
         .map(|registration| registration.domain)
+        .collect())
+}
+
+pub(crate) fn registered_model_domains() -> AexResult<Vec<ModelValidityDomain>> {
+    validate_registered_domains()?;
+    Ok(RegisteredModel::ALL
+        .into_iter()
+        .map(|model| model.validity_domain())
         .collect())
 }
 
@@ -253,6 +243,24 @@ fn generic_propulsion_domain(
             ),
         ],
     }
+}
+
+fn generic_turbofan_domain(
+    model_id: &str,
+    maximum_altitude_m: Option<f64>,
+    maximum_mach: Option<f64>,
+) -> ModelValidityDomain {
+    let mut domain = generic_propulsion_domain(model_id, maximum_altitude_m);
+    domain.bounds.insert(
+        1,
+        inclusive_bound(
+            ValidityVariable::Mach,
+            Some(0.0),
+            maximum_mach,
+            ValidityBasis::ResolvedProfile,
+        ),
+    );
+    domain
 }
 
 fn field_performance_domain() -> ModelValidityDomain {
