@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use serde_yaml::Value;
 
 use crate::domain::diagnostic::{AexError, AexResult};
@@ -6,12 +8,30 @@ use crate::domain::schema::{RawRequirement, Requirement, Requirements, Requireme
 
 pub(crate) fn resolve_requirements(document: RequirementsDocument) -> AexResult<Requirements> {
     let raw = document.requirements;
+    ensure_unique_requirement_ids(&raw.items)?;
     let items = raw
         .items
         .into_iter()
         .map(resolve_requirement)
         .collect::<AexResult<Vec<_>>>()?;
     Ok(Requirements { id: raw.id, items })
+}
+
+fn ensure_unique_requirement_ids(items: &[RawRequirement]) -> AexResult<()> {
+    let mut ids = BTreeSet::new();
+    for (index, requirement) in items.iter().enumerate() {
+        if !ids.insert(requirement.id.as_str()) {
+            return Err(AexError::validation(
+                "DUPLICATE_REQUIREMENT_ID",
+                format!("requirements.items.{index}.id"),
+                format!(
+                    "requirement id {} is declared more than once",
+                    requirement.id
+                ),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn resolve_requirement(raw: RawRequirement) -> AexResult<Requirement> {
@@ -81,3 +101,6 @@ fn requirement_value(metric: &str, value: &Value) -> AexResult<(f64, String)> {
             }),
     }
 }
+
+#[cfg(test)]
+mod tests;

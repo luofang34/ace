@@ -88,6 +88,7 @@ fn mission_outputs_use_nautical_mile_display() -> Result<(), Box<dyn Error>> {
         let path = scenario_path.to_string_lossy();
         let result = json_output(&["analyze", "mission", &path, "--format", "json"])?;
         assert_eq!(result["mission"]["completed"], true);
+        assert_eq!(result["hard_requirements_passed"], true);
         assert_eq!(result["mission"]["total_distance"]["display_unit"], "nmi");
         assert!(
             result["mission"]["segments"]

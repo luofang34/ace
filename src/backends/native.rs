@@ -11,19 +11,22 @@ use crate::domain::schema::ResolvedScenario;
 use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::breguet;
 use crate::models::concept_geometry::ConceptGeometry;
-use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
 use crate::models::mission::MissionSimulator;
 use crate::models::mission_power;
 use crate::models::payload_range::PayloadRangeAnalyzer;
 use crate::models::performance::PointAnalyzer;
 use crate::models::structural_screen;
 use crate::models::weight::{WeightClosureInput, solve_weight_closure};
-use crate::services::requirements::evaluate_requirements;
+use crate::services::requirements::{
+    evaluate_requirements, failed_hard_requirement_ids, hard_requirements_passed,
+};
 
 mod descriptor;
+mod metrics;
 mod topology;
 
 use descriptor::native_descriptor;
+use metrics::{NativeMetricInputs, native_metrics};
 pub(crate) use topology::native_topology_violations;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -147,17 +150,17 @@ impl AnalysisBackend for NativeBackend {
             mission_power: &mission_power_screen,
             weight_kg: weight,
         })?;
-        let feasible = mission.completed
-            && !mission.fuel_exhausted
+        let feasible = hard_requirements_passed(
+            mission.completed,
+            &request.scenario.requirements.items,
+            &requirements,
+        ) && !mission.fuel_exhausted
             && !mission.fuel_capacity_violation
             && !mission.takeoff_mass_violation
             && structural_screen.passed
-            && mission_power_screen.passed
-            && requirements
-                .iter()
-                .filter(|item| item.severity == "hard")
-                .all(|item| item.passed);
-        let mut failed_constraints = failed_constraints(&requirements, &mission);
+            && mission_power_screen.passed;
+        let mut failed_constraints =
+            failed_constraints(&scenario.requirements.items, &requirements, &mission);
         failed_constraints.extend(structural_screen.failed_constraints.clone());
         failed_constraints.extend(mission_power_screen.failed_constraints.clone());
         let mut warnings = performance.warnings.clone();
@@ -205,164 +208,8 @@ fn weight_estimate(scenario: &ResolvedScenario, fuel_kg: f64) -> AexResult<f64> 
     Ok(result.takeoff_mass_kg)
 }
 
-struct NativeMetricInputs<'a> {
-    scenario: &'a ResolvedScenario,
-    geometry: &'a GeometryOutput,
-    performance: &'a crate::domain::result::PerformanceSummary,
-    mission: &'a crate::domain::result::MissionResult,
-    payload_range: &'a crate::domain::result::PayloadRangeResult,
-    breguet: &'a breguet::BreguetEstimate,
-    structural: &'a crate::domain::result::StructuralScreen,
-    mission_power: &'a crate::domain::result::MissionPowerScreen,
-    weight_kg: f64,
-}
-
-fn native_metrics(input: NativeMetricInputs<'_>) -> AexResult<BTreeMap<String, QuantityOutput>> {
-    let mut metrics = BTreeMap::new();
-    insert(
-        &mut metrics,
-        "weight.estimated_takeoff_mass",
-        input.weight_kg,
-        "kg",
-    );
-    insert(
-        &mut metrics,
-        "geometry.wing_area",
-        input.geometry.metrics.wing_area.value,
-        "m^2",
-    );
-    insert(
-        &mut metrics,
-        "aerodynamics.maximum_lift_to_drag_ratio",
-        input.performance.maximum_lift_to_drag_ratio,
-        "1",
-    );
-    insert_performance(&mut metrics, input.performance, input.scenario)?;
-    metrics.insert(
-        "mission.breguet_range".to_owned(),
-        QuantityOutput::range(input.breguet.range_m),
-    );
-    insert(
-        &mut metrics,
-        "mission.breguet_endurance",
-        input.breguet.endurance_s,
-        "s",
-    );
-    metrics.insert(
-        "mission.simulated_range".to_owned(),
-        input.mission.total_distance.clone(),
-    );
-    insert_payload_range(&mut metrics, input.payload_range);
-    insert(
-        &mut metrics,
-        "mission.fuel_burn",
-        input.mission.total_fuel_burn_kg,
-        "kg",
-    );
-    insert(
-        &mut metrics,
-        "structures.wing_root_bending_moment",
-        input.structural.wing_root_bending_moment.value,
-        "N*m",
-    );
-    insert(
-        &mut metrics,
-        "structures.spar_cap_packaging_ratio",
-        input.structural.spar_cap_packaging_ratio,
-        "1",
-    );
-    if let Some(volume) = &input.structural.estimated_usable_internal_volume {
-        insert(
-            &mut metrics,
-            "structures.estimated_usable_internal_volume",
-            volume.value,
-            "m^3",
-        );
-    }
-    if let Some(ratio) = input.structural.fuel_volume_utilization_ratio {
-        insert(
-            &mut metrics,
-            "structures.fuel_volume_utilization_ratio",
-            ratio,
-            "1",
-        );
-    }
-    insert(
-        &mut metrics,
-        "mission.minimum_excess_power",
-        input.mission_power.minimum_excess_power.value,
-        "W",
-    );
-    insert(
-        &mut metrics,
-        "mission.minimum_power_reserve_margin",
-        input.mission_power.minimum_reserve_margin.value,
-        "W",
-    );
-    Ok(metrics)
-}
-
-fn insert_payload_range(
-    metrics: &mut BTreeMap<String, QuantityOutput>,
-    payload_range: &crate::domain::result::PayloadRangeResult,
-) {
-    for (point_id, metric_id) in [
-        ("full_payload_mission", "performance.full_payload_range"),
-        ("zero_payload_ferry", "performance.zero_payload_ferry_range"),
-    ] {
-        if let Some(point) = payload_range
-            .points
-            .iter()
-            .find(|point| point.id == point_id)
-        {
-            metrics.insert(metric_id.to_owned(), point.range.clone());
-        }
-    }
-}
-
-fn insert_performance(
-    metrics: &mut BTreeMap<String, QuantityOutput>,
-    performance: &crate::domain::result::PerformanceSummary,
-    scenario: &ResolvedScenario,
-) -> AexResult<()> {
-    insert(
-        metrics,
-        "performance.stall_speed_clean",
-        performance.stall_speed_clean_m_s,
-        "m/s",
-    );
-    insert(
-        metrics,
-        "performance.maximum_level_speed",
-        performance.maximum_level_speed_m_s,
-        "m/s",
-    );
-    insert(
-        metrics,
-        "performance.service_ceiling",
-        performance.service_ceiling_m,
-        "m",
-    );
-    insert(
-        metrics,
-        "performance.takeoff_field_length",
-        estimate_takeoff_distance_m(scenario),
-        "m",
-    );
-    insert(
-        metrics,
-        "performance.landing_field_length",
-        estimate_landing_distance_m(scenario)?,
-        "m",
-    );
-    Ok(())
-}
-
-fn insert(metrics: &mut BTreeMap<String, QuantityOutput>, name: &str, value: f64, unit: &str) {
-    metrics.insert(name.to_owned(), QuantityOutput::si(value, unit));
-}
-
 fn failed_constraints(
+    declared: &[crate::domain::schema::Requirement],
     requirements: &[crate::domain::result::RequirementEvaluation],
     mission: &crate::domain::result::MissionResult,
 ) -> Vec<String> {
@@ -371,6 +218,11 @@ fn failed_constraints(
         .filter(|item| !item.passed)
         .map(|item| item.id.clone())
         .collect();
+    for id in failed_hard_requirement_ids(declared, requirements) {
+        if !failed.iter().any(|failed_id| failed_id == &id) {
+            failed.push(id);
+        }
+    }
     if !mission.completed {
         failed.push("mission_completion".to_owned());
     }

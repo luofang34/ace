@@ -152,7 +152,12 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
     assert_eq!(result["mission"]["completed"], false);
     assert_eq!(result["mission"]["fuel_exhausted"], true);
     assert_eq!(result["mission"]["fuel_capacity_violation"], false);
-    assert_eq!(result["hard_requirements_passed"], true);
+    assert_eq!(result["hard_requirements_passed"], false);
+    assert!(
+        result["report_markdown"]
+            .as_str()
+            .is_some_and(|report| report.contains("Hard requirements passed: false"))
+    );
     let warnings = result["mission"]["warnings"]
         .as_array()
         .ok_or("missing mission warnings")?;

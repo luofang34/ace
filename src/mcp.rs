@@ -1,3 +1,4 @@
+mod mission;
 mod parameters;
 mod report;
 mod schema;
@@ -319,11 +320,7 @@ impl AexMcpServer {
         &self,
         Parameters(request): Parameters<ScenarioRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let (_, result) = self
-            .service
-            .mission_blocking(Path::new(&request.scenario_path), &request.overrides)
-            .map_err(mcp_error)?;
-        json_output(result)
+        mission::simulate(&self.service, request)
     }
 
     #[tool(description = "Generate structured constraint data and an optional SVG artifact")]

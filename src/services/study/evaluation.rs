@@ -1,5 +1,5 @@
 mod constraints;
-
+mod verdict;
 use std::collections::BTreeMap;
 
 use crate::backends::contracts::{
@@ -8,14 +8,16 @@ use crate::backends::contracts::{
 use crate::domain::content_identity::digest_serializable;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic, Severity};
 use crate::domain::evidence::{
-    CandidateDescriptor, CandidateOutcome, ConstraintStatus, EvaluationStatus, EvidenceAnalysis,
-    EvidenceDraft, EvidenceEnvelope, EvidenceProvenance, EvidenceResults,
+    CandidateDescriptor, CandidateOutcome, EvaluationStatus, EvidenceAnalysis, EvidenceDraft,
+    EvidenceEnvelope, EvidenceProvenance, EvidenceResults,
 };
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::study::StudyDefinition;
 use crate::services::analysis::ApplicationService;
 use crate::services::study::loading::PreparedStudy;
+
+use verdict::{candidate_is_feasible, insert_metric_aliases};
 
 const FAILED_RANK: f64 = 1.0e12;
 
@@ -70,7 +72,7 @@ pub(super) fn evaluate_candidate_blocking(
 }
 
 pub(super) fn evaluator_signature() -> String {
-    format!("native-study-evidence-v4:{}", env!("CARGO_PKG_VERSION"))
+    format!("native-study-evidence-v6:{}", env!("CARGO_PKG_VERSION"))
 }
 
 fn evaluate_native_blocking(
@@ -96,7 +98,11 @@ fn evaluate_native_blocking(
     insert_requirement_metrics(&mut metrics, &analysis.requirements);
     insert_geometry_metrics(&mut metrics, &geometry.metrics);
     insert_scenario_metrics(&mut metrics, &scenario);
-    insert_metric_aliases(&mut metrics, &analysis.failed_constraints);
+    let mission_completed = insert_metric_aliases(
+        &mut metrics,
+        &scenario.requirements.items,
+        &analysis.requirements,
+    );
     let constraints = constraints::collect(
         &analysis.requirements,
         &analysis.failed_constraints,
@@ -107,11 +113,14 @@ fn evaluate_native_blocking(
     diagnostics.extend(analysis.provenance.warnings.clone());
     let objective_values = objective_values(&prepared.document.study, &metrics, &mut diagnostics);
     let objectives_available = objective_values.len() == prepared.document.study.objectives.len();
-    let hard_constraints_pass = constraints.iter().all(|constraint| {
-        constraint.severity != "hard" || constraint.status == ConstraintStatus::Pass
-    });
-    let feasible =
-        analysis.feasible.unwrap_or(false) && hard_constraints_pass && objectives_available;
+    let feasible = candidate_is_feasible(
+        &scenario.requirements.items,
+        &analysis.requirements,
+        mission_completed,
+        analysis.feasible.unwrap_or(false),
+        &constraints,
+        objectives_available,
+    );
     let violation = hard_constraint_violation(&constraints);
     let status = if objectives_available {
         EvaluationStatus::Succeeded
@@ -236,25 +245,6 @@ fn insert_scenario_metrics(
     ] {
         metrics.insert(id.to_owned(), QuantityOutput::si(value, "kg"));
     }
-}
-
-fn insert_metric_aliases(
-    metrics: &mut BTreeMap<String, QuantityOutput>,
-    failed_constraints: &[String],
-) {
-    if let Some(fuel) = metrics.get("mission.fuel_burn").cloned() {
-        metrics.insert("mission.total_fuel".to_owned(), fuel);
-    }
-    if let Some(distance) = metrics.get("mission.simulated_range").cloned() {
-        metrics.insert("mission.completed_distance".to_owned(), distance);
-    }
-    let completed = !failed_constraints
-        .iter()
-        .any(|constraint| constraint == "mission_completion");
-    metrics.insert(
-        "mission.completed".to_owned(),
-        QuantityOutput::si(if completed { 1.0 } else { 0.0 }, "bool"),
-    );
 }
 
 fn objective_values(
@@ -484,3 +474,5 @@ fn failed_evaluation(
         evidence,
     })
 }
+#[cfg(test)]
+mod tests;

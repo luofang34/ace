@@ -11,7 +11,7 @@ use crate::domain::schema::{EngineProfile, Wing};
 use crate::models::breguet;
 use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
 use crate::services::analysis::ApplicationService;
-use crate::services::requirements::evaluate_requirements;
+use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::services::resolver::complete_planform_overrides;
 
 #[derive(Debug, Clone)]
@@ -176,11 +176,11 @@ fn metric_values(
                     payload_range_metric(payload_range, "zero_payload_ferry")?
                 }
                 "feasibility.hard_constraints_passed" => {
-                    let passed = mission.completed
-                        && requirements
-                            .iter()
-                            .filter(|item| item.severity == "hard")
-                            .all(|item| item.passed);
+                    let passed = hard_requirements_passed(
+                        mission.completed,
+                        &scenario.requirements.items,
+                        &requirements,
+                    );
                     f64::from(u8::from(passed))
                 }
                 _ => {

@@ -31,6 +31,11 @@ maps of dotted paths to explicit unit strings. Chart tools return a serializable
 chart specification and may write an SVG only when an artifact path is
 supplied. No MCP tool invokes a web service or language model.
 
+`simulate_mission` preserves the mission result fields at the response root and
+adds `hard_requirements_passed`. That headline is true only when the mission
+completes and every hard requirement passes; incomplete missions report false
+even when their individually evaluated requirement margins are positive.
+
 ## Design studies
 
 `load_design_study` resolves and validates the study and its relative or
@@ -125,6 +130,9 @@ including:
 - `performance.full_payload_range`
 - `performance.zero_payload_ferry_range`
 - `feasibility.hard_constraints_passed`
+
+The same `feasibility.hard_constraints_passed` metric is available to scenario
+and design comparisons and to study constraints and objectives.
 
 `auto_refine_design` runs a deterministic bounded native search over wing area,
 aspect ratio, propulsion sizing, and fuel capacity. Wing span remains consistent

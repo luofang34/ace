@@ -17,6 +17,7 @@ use crate::services::analysis::ApplicationService;
 use crate::services::design_experiments::{
     BackendEvaluation, CompletedFeasibility, FeasibilityResult,
 };
+use crate::services::requirements::{hard_requirement_counts, hard_requirements_passed};
 
 pub(crate) const LIMITATION: &str = "Results are conceptual estimates based on the selected \
 low-fidelity models and are not suitable for certification, operational flight planning, or \
@@ -68,7 +69,7 @@ impl ApplicationService {
             self.payload_range_blocking(scenario_path, &Default::default())?;
         let (_, constraint_result) =
             self.constraints_blocking(scenario_path, &Default::default(), 300.0, 9_000.0, 80)?;
-        let decision = concept_decision(completed);
+        let decision = concept_decision(completed, &mission, &scenario);
         let charts = concept_charts(
             &scenario,
             completed,
@@ -91,17 +92,24 @@ impl ApplicationService {
     }
 }
 
-fn concept_decision(feasibility: &CompletedFeasibility) -> ConceptReportDecision {
+fn concept_decision(
+    feasibility: &CompletedFeasibility,
+    mission: &MissionResult,
+    scenario: &ResolvedScenario,
+) -> ConceptReportDecision {
     let requirements = &feasibility.baseline.analysis.requirements;
     let native_feasible = feasibility.baseline.analysis.feasible.unwrap_or(false);
-    let hard = requirements
-        .iter()
-        .filter(|requirement| requirement.severity == "hard")
-        .collect::<Vec<_>>();
+    let (hard_passed_count, hard_total_count) =
+        hard_requirement_counts(&scenario.requirements.items, requirements);
     ConceptReportDecision {
-        feasible: feasibility.feasible,
-        hard_requirements_passed: hard.iter().filter(|item| item.passed).count(),
-        hard_requirements_total: hard.len(),
+        feasible: feasibility.feasible
+            && hard_requirements_passed(
+                mission.completed,
+                &scenario.requirements.items,
+                requirements,
+            ),
+        hard_requirements_passed: hard_passed_count,
+        hard_requirements_total: hard_total_count,
         failed_constraints: feasibility.failed_constraints.clone(),
         refinement_changes_native_verdict: feasibility
             .refinement
@@ -312,10 +320,11 @@ pub(crate) fn markdown_report(
     performance: &PerformanceSummary,
     requirements: &[RequirementEvaluation],
 ) -> AexResult<String> {
-    let hard_passed = requirements
-        .iter()
-        .filter(|item| item.severity == "hard")
-        .all(|item| item.passed);
+    let hard_passed = hard_requirements_passed(
+        mission.completed,
+        &scenario.requirements.items,
+        requirements,
+    );
     let mut output = String::new();
     writeln!(output, "# {}", scenario.name).map_err(format_error)?;
     writeln!(output, "\n- Run ID: `{run_id}`").map_err(format_error)?;
