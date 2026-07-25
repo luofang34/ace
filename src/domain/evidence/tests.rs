@@ -3,10 +3,10 @@ use std::collections::BTreeMap;
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
 
+use super::archive::StudyArchiveDraft;
 use super::{
     CandidateDescriptor, ConstraintStatus, EvaluationStatus, EvidenceAnalysis, EvidenceConstraint,
     EvidenceDraft, EvidenceEnvelope, EvidenceProvenance, EvidenceResults, StudyArchive,
-    StudyArchiveDraft,
 };
 
 fn digest(character: char) -> String {
@@ -101,8 +101,17 @@ fn candidate_id_is_order_independent_and_change_sensitive() -> Result<(), Box<dy
         ]),
     )?;
     let changed = candidate("17 m^2")?;
+    let equivalent_units = candidate("16 m2")?;
 
     assert_eq!(first.candidate_id, second.candidate_id);
+    assert_eq!(
+        candidate("16 m^2")?.candidate_id,
+        equivalent_units.candidate_id
+    );
+    assert_eq!(
+        equivalent_units.parameters["aircraft.geometry.wing.area"],
+        "16 m^2"
+    );
     assert_ne!(first.candidate_id, changed.candidate_id);
     first.validate()?;
     Ok(())

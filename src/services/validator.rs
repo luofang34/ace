@@ -8,11 +8,11 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic, Severity};
 use crate::domain::schema::{
     AircraftDocument, MissionDocument, ProfileDocument, RequirementsDocument,
 };
-use crate::domain::study::{EmbeddedStudyBaseline, StudyDocument, validate_study_document};
+use crate::domain::study::{StudyDocument, validate_study_document};
 use crate::services::analysis::ApplicationService;
-use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
+use crate::services::profile_resolution::parse_engine_profile;
 use crate::services::requirement_resolution::resolve_requirements;
-use crate::services::resolver::{resolve_aircraft, resolve_mission};
+use crate::services::resolver::{resolve_aircraft, resolve_embedded_study, resolve_mission};
 use crate::storage::project_store::read_yaml_value_blocking;
 
 #[derive(Debug, Clone, Serialize)]
@@ -37,7 +37,7 @@ impl ApplicationService {
                 let directory = path.parent().unwrap_or_else(|| Path::new("."));
                 self.resolve_blocking(&directory.join(relative), &BTreeMap::new())?;
             } else if let Some(embedded) = &typed.study.baseline.embedded {
-                validate_embedded_study(embedded)?;
+                resolve_embedded_study(embedded)?;
             }
             return Ok(valid_result("study"));
         }
@@ -94,7 +94,7 @@ pub(crate) fn validate_document_value(
             let typed: StudyDocument = from_value(document.clone(), "study")?;
             validate_study_document(&typed)?;
             if let Some(embedded) = &typed.study.baseline.embedded {
-                validate_embedded_study(embedded)?;
+                resolve_embedded_study(embedded)?;
             }
         }
         _ => {
@@ -121,20 +121,6 @@ pub(crate) fn error_validation(document_type: &str, error: &AexError) -> Validat
         }],
         warnings: Vec::new(),
     }
-}
-
-fn validate_embedded_study(embedded: &EmbeddedStudyBaseline) -> AexResult<()> {
-    resolve_aircraft(embedded.aircraft.clone())?;
-    resolve_mission(embedded.mission.clone())?;
-    resolve_requirements(embedded.requirements.clone())?;
-    for profile in &embedded.profiles {
-        if profile.profile.kind == "propeller" {
-            parse_propeller_profile(profile.profile.clone())?;
-        } else {
-            parse_engine_profile(profile.profile.clone())?;
-        }
-    }
-    Ok(())
 }
 
 fn from_value<T: serde::de::DeserializeOwned>(value: Value, path: &str) -> AexResult<T> {

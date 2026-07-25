@@ -6,13 +6,11 @@ use crate::domain::content_identity::{
     content_id, validate_content_id, validate_digest, validate_safe_id,
 };
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
-use crate::domain::quantity::QuantityOutput;
+use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 
-mod archive;
+pub(crate) mod archive;
 
 pub(crate) use archive::StudyArchive;
-#[cfg(test)]
-pub(crate) use archive::StudyArchiveDraft;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -44,7 +42,7 @@ impl CandidateDescriptor {
         parameters: BTreeMap<String, String>,
     ) -> AexResult<Self> {
         validate_digest(&baseline_digest, "candidate.baseline_digest")?;
-        validate_parameters(&parameters)?;
+        let parameters = normalize_parameters(&parameters)?;
         let candidate_id = candidate_content_id(&baseline_digest, &parameters)?;
         Ok(Self {
             candidate_id,
@@ -56,7 +54,14 @@ impl CandidateDescriptor {
     pub(crate) fn validate(&self) -> AexResult<()> {
         validate_digest(&self.baseline_digest, "candidate.baseline_digest")?;
         validate_content_id(&self.candidate_id, "candidate_", "candidate.candidate_id")?;
-        validate_parameters(&self.parameters)?;
+        let normalized = normalize_parameters(&self.parameters)?;
+        if normalized != self.parameters {
+            return Err(AexError::validation(
+                "NONCANONICAL_CANDIDATE_PARAMETER",
+                "candidate.parameters",
+                "candidate parameters must use normalized paths and values",
+            ));
+        }
         let expected = candidate_content_id(&self.baseline_digest, &self.parameters)?;
         require_matching_id(&self.candidate_id, &expected, "candidate.candidate_id")
     }
@@ -83,18 +88,71 @@ fn candidate_content_id(
     )
 }
 
-fn validate_parameters(parameters: &BTreeMap<String, String>) -> AexResult<()> {
-    if parameters
-        .iter()
-        .any(|(path, value)| path.trim().is_empty() || value.trim().is_empty())
-    {
-        return Err(AexError::validation(
-            "INVALID_CANDIDATE_PARAMETER",
-            "candidate.parameters",
-            "parameter paths and values must be non-empty",
-        ));
+fn normalize_parameters(
+    parameters: &BTreeMap<String, String>,
+) -> AexResult<BTreeMap<String, String>> {
+    let mut normalized = BTreeMap::new();
+    for (path, value) in parameters {
+        let path = path.trim();
+        let value = normalize_parameter_value(value)?;
+        if path.is_empty()
+            || value.is_empty()
+            || normalized.insert(path.to_owned(), value).is_some()
+        {
+            return Err(AexError::validation(
+                "INVALID_CANDIDATE_PARAMETER",
+                "candidate.parameters",
+                "normalized parameter paths must be unique and values must be non-empty",
+            ));
+        }
     }
-    Ok(())
+    Ok(normalized)
+}
+
+fn normalize_parameter_value(value: &str) -> AexResult<String> {
+    let value = value.trim();
+    if let Some((dimension, unit)) = quantity_dimension(value) {
+        let normalized = parse_quantity(value, dimension)?;
+        return Ok(format!("{} {unit}", canonical_number(normalized)));
+    }
+    if let Ok(number) = value.parse::<f64>() {
+        if !number.is_finite() {
+            return Err(AexError::validation(
+                "INVALID_CANDIDATE_PARAMETER",
+                "candidate.parameters",
+                "numeric parameter values must be finite",
+            ));
+        }
+        return Ok(canonical_number(number));
+    }
+    if let Ok(boolean) = value.parse::<bool>() {
+        return Ok(boolean.to_string());
+    }
+    Ok(value.to_owned())
+}
+
+fn quantity_dimension(value: &str) -> Option<(Dimension, &'static str)> {
+    let unit = value.split_once(char::is_whitespace)?.1.trim();
+    match unit {
+        "kg" | "lb" | "lbs" | "t" | "tonne" | "tonnes" => Some((Dimension::Mass, "kg")),
+        "m" | "ft" | "nmi" | "NM" | "km" => Some((Dimension::Length, "m")),
+        "m^2" | "m2" | "ft^2" | "ft2" => Some((Dimension::Area, "m^2")),
+        "m/s" | "kt" | "kts" | "knot" | "knots" | "mph" => Some((Dimension::Speed, "m/s")),
+        "s" | "sec" | "min" | "h" | "hr" | "hour" => Some((Dimension::Time, "s")),
+        "W" | "kW" | "hp" => Some((Dimension::Power, "W")),
+        "N" | "kN" | "lbf" => Some((Dimension::Force, "N")),
+        "rad" | "deg" | "degree" => Some((Dimension::Angle, "rad")),
+        "rad/s" | "rpm" => Some((Dimension::RotationSpeed, "rad/s")),
+        _ => None,
+    }
+}
+
+fn canonical_number(value: f64) -> String {
+    if value == 0.0 {
+        "0".to_owned()
+    } else {
+        value.to_string()
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

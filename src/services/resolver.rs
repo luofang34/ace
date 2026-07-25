@@ -21,6 +21,10 @@ use crate::services::requirement_resolution::resolve_requirements;
 use crate::storage::profile_store::ProfileRepository;
 use crate::storage::project_store::read_yaml_value_blocking;
 
+mod embedded;
+
+pub(crate) use embedded::resolve_embedded_study;
+
 #[derive(Clone)]
 pub(crate) struct ScenarioResolver {
     profiles: Arc<dyn ProfileRepository>,

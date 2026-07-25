@@ -4,9 +4,10 @@ use std::fs;
 use tempfile::tempdir;
 
 use crate::domain::diagnostic::AexError;
+use crate::domain::evidence::archive::StudyArchiveDraft;
 use crate::domain::evidence::{
     CandidateDescriptor, EvaluationStatus, EvidenceAnalysis, EvidenceDraft, EvidenceEnvelope,
-    EvidenceProvenance, EvidenceResults, StudyArchive, StudyArchiveDraft,
+    EvidenceProvenance, EvidenceResults, StudyArchive,
 };
 use crate::domain::quantity::QuantityOutput;
 

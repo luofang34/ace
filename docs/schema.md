@@ -118,10 +118,11 @@ their example directories.
 
 Candidate, evaluation, and archive IDs are SHA-256 content identities with
 `candidate_`, `eval_`, and `archive_` prefixes. Candidate identity covers the
-baseline digest and normalized parameter map. Evaluation identity covers its
-candidate, inputs, status, analysis method, results, diagnostics, and
-provenance. Archive identity covers the study, evaluator signature, completion
-state, candidate descriptors, evaluation references, and selection.
+baseline digest and normalized parameter map; accepted unit aliases and
+equivalent SI quantities canonicalize before hashing. Evaluation identity
+covers its candidate, inputs, status, analysis method, results, diagnostics,
+and provenance. Archive identity covers the study, evaluator signature,
+completion state, candidate descriptors, evaluation references, and selection.
 
 Evidence records separate analysis identity, metrics and constraint results,
 and provenance. File storage shards immutable evaluation and archive JSON by
