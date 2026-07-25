@@ -130,6 +130,8 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          ## Aerodynamic configurations\n\n{configurations}\n\n\
          ## Mission segments\n\n\
          | Type | Legal fields |\n| --- | --- |\n{segments}\n\
+         Fields in the same `at_most_one` group are mutually exclusive. Fields in an \
+         `exactly_one` group require one and only one representation. Unlisted fields are rejected.\n\n\
          Power/thrust fractions on climb, cruise, loiter, and reserve constrain the \
          mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows \
          the aerodynamic power required and is not scaled directly by throttle.\n\n\
@@ -158,11 +160,11 @@ fn segment_markdown(segment: &MissionSegmentCapability) -> String {
         .fields
         .iter()
         .map(|field| {
-            format!(
-                "`{}` ({})",
-                field.name,
-                field_requirement(field.requirement)
-            )
+            let requirement = field_requirement(field.requirement);
+            match field.alternative_group {
+                Some(group) => format!("`{}` ({requirement}: {group})", field.name),
+                None => format!("`{}` ({requirement})", field.name),
+            }
         })
         .collect::<Vec<_>>()
         .join(", ");
@@ -191,6 +193,7 @@ const fn field_requirement(requirement: SegmentFieldRequirement) -> &'static str
         SegmentFieldRequirement::Required => "required",
         SegmentFieldRequirement::Optional => "optional",
         SegmentFieldRequirement::ExactlyOne => "exactly_one",
+        SegmentFieldRequirement::AtMostOne => "at_most_one",
     }
 }
 

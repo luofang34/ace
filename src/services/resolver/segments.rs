@@ -68,6 +68,10 @@ fn validate_required_fields(
         .filter_map(|field| field.alternative_group)
         .collect::<BTreeSet<_>>();
     for group in groups {
+        let requires_one = capability.fields.iter().any(|field| {
+            field.alternative_group == Some(group)
+                && field.requirement == SegmentFieldRequirement::ExactlyOne
+        });
         let present = capability
             .fields
             .iter()
@@ -75,11 +79,16 @@ fn validate_required_fields(
                 field.alternative_group == Some(group) && field_is_present(raw, field.name)
             })
             .count();
-        if present == 0 {
+        if present == 0 && requires_one {
             return Err(missing_alternative(capability.segment_type, group, path));
         }
         if present > 1 {
-            return Err(duplicate_alternative(capability.segment_type, group, path));
+            return Err(duplicate_alternative(
+                capability.segment_type,
+                group,
+                requires_one,
+                path,
+            ));
         }
     }
     Ok(())
@@ -178,11 +187,21 @@ fn missing_alternative(segment_type: &str, group: &str, path: &str) -> AexError 
     }
 }
 
-fn duplicate_alternative(segment_type: &str, group: &str, path: &str) -> AexError {
+fn duplicate_alternative(
+    segment_type: &str,
+    group: &str,
+    requires_one: bool,
+    path: &str,
+) -> AexError {
+    let rule = if requires_one {
+        "requires exactly one field from"
+    } else {
+        "accepts at most one field from"
+    };
     AexError::validation(
         "SEGMENT_FIELD_EXCLUSIVITY",
         path,
-        format!("{segment_type} requires exactly one field from alternative group {group}"),
+        format!("{segment_type} {rule} alternative group {group}"),
     )
 }
 

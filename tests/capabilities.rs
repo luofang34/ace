@@ -72,6 +72,7 @@ async fn cli_and_mcp_manifest_match_and_advertised_vocabulary_validates()
     validate_document_types(&client, &mcp).await?;
     validate_profile_types(&client, &mcp).await?;
     validate_segment_types(&client, &mcp).await?;
+    validate_exclusive_segment_fields(&client).await?;
     validate_unadvertised_segment_fields(&client).await?;
     validate_requirement_metrics(&client, &mcp).await?;
     validate_requirement_qualifiers(&client, &mcp).await?;
@@ -105,6 +106,49 @@ async fn validate_document_types(
         };
         let result = validate_document(client, kind, yaml_document(&path)?).await?;
         assert_eq!(result["valid"], true, "{kind}: {result}");
+    }
+    Ok(())
+}
+
+async fn validate_exclusive_segment_fields(
+    client: &rmcp::service::RunningService<rmcp::RoleClient, ()>,
+) -> Result<(), Box<dyn Error>> {
+    for (fields, group) in [
+        (
+            json!({"indicated_airspeed": "100 kt", "mach": 0.5}),
+            "speed",
+        ),
+        (
+            json!({"power_fraction": 0.5, "thrust_fraction": 0.5}),
+            "throttle",
+        ),
+    ] {
+        let mut segment = serde_json::Map::from_iter([
+            ("id".to_owned(), json!("segment")),
+            ("type".to_owned(), json!("fixed_time")),
+            ("duration".to_owned(), json!("1 min")),
+        ]);
+        segment.extend(
+            fields
+                .as_object()
+                .ok_or_else(|| io::Error::other("exclusive fields must be an object"))?
+                .clone(),
+        );
+        let document = json!({
+            "schema_version": 1,
+            "mission": {
+                "id": "exclusive_field_test",
+                "name": "Exclusive field test",
+                "payload": { "mass": "10 kg" },
+                "segments": [Value::Object(segment)]
+            }
+        });
+        let result = validate_document(client, "mission", document).await?;
+        assert_eq!(result["valid"], false, "{result}");
+        let serialized = result.to_string();
+        assert!(serialized.contains("SEGMENT_FIELD_EXCLUSIVITY"));
+        assert!(serialized.contains("mission.segments.0"));
+        assert!(serialized.contains(group));
     }
     Ok(())
 }

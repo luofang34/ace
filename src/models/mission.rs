@@ -161,13 +161,14 @@ impl MissionSimulator {
             .power_fraction
             .or(segment.thrust_fraction)
             .unwrap_or(0.1);
-        let speed = representative_speed(segment, &self.scenario, state.altitude_m)?;
+        let altitude = segment_operating_altitude(segment, state.altitude_m);
+        let speed = representative_speed(segment, &self.scenario, altitude)?;
         let mode = if segment.kind == SegmentKind::Takeoff {
             OperatingMode::Takeoff
         } else {
             OperatingMode::Economy
         };
-        let fuel_flow = fuel::available(self, state.altitude_m, speed, throttle, mode)?;
+        let fuel_flow = fuel::available(self, altitude, speed, throttle, mode)?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel_flow.flow_kg_s * duration,
             payload_removed_kg: 0.0,
@@ -177,7 +178,7 @@ impl MissionSimulator {
                 0.0
             },
             duration_s: duration,
-            end_altitude_m: state.altitude_m,
+            end_altitude_m: segment_end_altitude(segment, state.altitude_m),
             warnings: fuel_flow.warnings,
         })
     }

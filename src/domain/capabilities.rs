@@ -1,7 +1,12 @@
 use serde::Serialize;
 
 use crate::domain::quantity::Dimension;
-use crate::domain::schema::SegmentKind;
+
+mod mission;
+
+pub(crate) use mission::{
+    MissionSegmentCapability, SegmentFieldRequirement, mission_segment, mission_segments,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum DocumentKind {
@@ -45,30 +50,6 @@ pub(crate) struct AeroConfigurationCapability {
     pub(crate) id: &'static str,
     #[serde(skip)]
     pub(crate) kind: AeroConfigurationKind,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub(crate) enum SegmentFieldRequirement {
-    Required,
-    Optional,
-    ExactlyOne,
-}
-
-#[derive(Debug, Clone, Copy, Serialize)]
-pub(crate) struct SegmentFieldCapability {
-    pub(crate) name: &'static str,
-    pub(crate) requirement: SegmentFieldRequirement,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) alternative_group: Option<&'static str>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize)]
-pub(crate) struct MissionSegmentCapability {
-    pub(crate) segment_type: &'static str,
-    pub(crate) fields: &'static [SegmentFieldCapability],
-    #[serde(skip)]
-    pub(crate) kind: SegmentKind,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -159,87 +140,6 @@ const AERO_CONFIGURATIONS: [AeroConfigurationCapability; 3] = [
     configuration("clean", AeroConfigurationKind::Clean),
     configuration("takeoff", AeroConfigurationKind::Takeoff),
     configuration("landing", AeroConfigurationKind::Landing),
-];
-
-const TIMED_FIELDS: &[SegmentFieldCapability] = &[
-    required("duration"),
-    optional("indicated_airspeed"),
-    optional("true_airspeed"),
-    optional("mach"),
-    optional("power_fraction"),
-    optional("thrust_fraction"),
-];
-
-const LANDING_FIELDS: &[SegmentFieldCapability] = &[
-    optional("duration"),
-    optional("indicated_airspeed"),
-    optional("true_airspeed"),
-    optional("mach"),
-    optional("power_fraction"),
-    optional("thrust_fraction"),
-];
-
-const FIXED_FUEL_FIELDS: &[SegmentFieldCapability] = &[
-    exactly_one("fuel_fraction", "fuel"),
-    exactly_one("fuel_mass", "fuel"),
-];
-
-const PAYLOAD_DROP_FIELDS: &[SegmentFieldCapability] = &[required("payload_mass")];
-
-const CLIMB_FIELDS: &[SegmentFieldCapability] = &[
-    required("target_altitude"),
-    optional("indicated_airspeed"),
-    optional("true_airspeed"),
-    optional("mach"),
-    optional("power_fraction"),
-    optional("thrust_fraction"),
-];
-
-const CRUISE_FIELDS: &[SegmentFieldCapability] = &[
-    required("distance"),
-    optional("altitude"),
-    optional("indicated_airspeed"),
-    optional("true_airspeed"),
-    optional("mach"),
-    optional("power_fraction"),
-    optional("thrust_fraction"),
-];
-
-const LOITER_FIELDS: &[SegmentFieldCapability] = &[
-    required("duration"),
-    optional("altitude"),
-    optional("indicated_airspeed"),
-    optional("true_airspeed"),
-    optional("mach"),
-    optional("power_fraction"),
-    optional("thrust_fraction"),
-];
-
-const DESCENT_FIELDS: &[SegmentFieldCapability] = &[
-    optional("target_altitude"),
-    optional("indicated_airspeed"),
-    optional("true_airspeed"),
-    optional("mach"),
-    optional("power_fraction"),
-    optional("thrust_fraction"),
-];
-
-const MISSION_SEGMENTS: [MissionSegmentCapability; 11] = [
-    segment("start_and_taxi", SegmentKind::StartAndTaxi, TIMED_FIELDS),
-    segment("fixed_time", SegmentKind::FixedTime, TIMED_FIELDS),
-    segment("fixed_fuel", SegmentKind::FixedFuel, FIXED_FUEL_FIELDS),
-    segment(
-        "payload_drop",
-        SegmentKind::PayloadDrop,
-        PAYLOAD_DROP_FIELDS,
-    ),
-    segment("takeoff", SegmentKind::Takeoff, TIMED_FIELDS),
-    segment("climb", SegmentKind::Climb, CLIMB_FIELDS),
-    segment("cruise", SegmentKind::Cruise, CRUISE_FIELDS),
-    segment("loiter", SegmentKind::Loiter, LOITER_FIELDS),
-    segment("descent", SegmentKind::Descent, DESCENT_FIELDS),
-    segment("landing", SegmentKind::Landing, LANDING_FIELDS),
-    segment("reserve", SegmentKind::Reserve, LOITER_FIELDS),
 ];
 
 const REQUIREMENT_METRICS: [RequirementMetricCapability; 13] = [
@@ -379,17 +279,6 @@ pub(crate) fn aero_configuration(id: &str) -> Option<AeroConfigurationCapability
         .find(|item| item.id == id)
 }
 
-pub(crate) const fn mission_segments() -> &'static [MissionSegmentCapability] {
-    &MISSION_SEGMENTS
-}
-
-pub(crate) fn mission_segment(id: &str) -> Option<MissionSegmentCapability> {
-    MISSION_SEGMENTS
-        .iter()
-        .copied()
-        .find(|item| item.segment_type == id)
-}
-
 pub(crate) const fn requirement_metrics() -> &'static [RequirementMetricCapability] {
     &REQUIREMENT_METRICS
 }
@@ -414,42 +303,6 @@ const fn configuration(
     kind: AeroConfigurationKind,
 ) -> AeroConfigurationCapability {
     AeroConfigurationCapability { id, kind }
-}
-
-const fn required(name: &'static str) -> SegmentFieldCapability {
-    SegmentFieldCapability {
-        name,
-        requirement: SegmentFieldRequirement::Required,
-        alternative_group: None,
-    }
-}
-
-const fn optional(name: &'static str) -> SegmentFieldCapability {
-    SegmentFieldCapability {
-        name,
-        requirement: SegmentFieldRequirement::Optional,
-        alternative_group: None,
-    }
-}
-
-const fn exactly_one(name: &'static str, group: &'static str) -> SegmentFieldCapability {
-    SegmentFieldCapability {
-        name,
-        requirement: SegmentFieldRequirement::ExactlyOne,
-        alternative_group: Some(group),
-    }
-}
-
-const fn segment(
-    segment_type: &'static str,
-    kind: SegmentKind,
-    fields: &'static [SegmentFieldCapability],
-) -> MissionSegmentCapability {
-    MissionSegmentCapability {
-        segment_type,
-        fields,
-        kind,
-    }
 }
 
 const fn metric(
