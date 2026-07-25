@@ -70,6 +70,26 @@ Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
 payload-delivery and empty-return mission.
 
+Missions may declare an additive schema-version-1 `initial_state`:
+
+```yaml
+mission:
+  initial_state:
+    altitude: 45000 ft
+    mach: 0.65
+    fuel_mass: 8500 kg
+```
+
+Altitude is optional. At most one of `indicated_airspeed`, `true_airspeed`, or
+`mach` and at most one of `fuel_mass` or `fuel_fraction` may be present. Fuel
+fraction is a fraction of the usable load after tank capacity and the
+MTOW/OEW/payload limit are applied. Declared fuel, altitude, effective speed,
+Mach, and initial mass are checked against aircraft limits and registered
+model domains before simulation. A declared speed is inherited by later
+segments without their own speed; an explicit segment speed supersedes it.
+When `initial_state` is absent, missions retain the ground, full-usable-fuel,
+engine-class speed defaults.
+
 Mission fields are defined per segment type by the generated
 [`capabilities.md`](capabilities.md) matrix. Unlisted and arbitrary keys return
 `UNSUPPORTED_SEGMENT_FIELD`; fields in the same speed or throttle group are

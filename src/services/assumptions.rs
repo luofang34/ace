@@ -135,6 +135,10 @@ fn is_quantity_path(path: &str) -> bool {
             | "aircraft.limits.maximum_operating_speed"
             | "aircraft.limits.maximum_operating_altitude"
             | "mission.payload.mass"
+            | "mission.initial_state.altitude"
+            | "mission.initial_state.indicated_airspeed"
+            | "mission.initial_state.true_airspeed"
+            | "mission.initial_state.fuel_mass"
     ) || sequence_quantity_path(
         path,
         "mission.segments.",

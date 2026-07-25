@@ -153,6 +153,8 @@ pub(crate) struct MissionSegmentResult {
     pub(crate) duration_s: f64,
     pub(crate) start_altitude_m: f64,
     pub(crate) end_altitude_m: f64,
+    #[serde(skip)]
+    pub(crate) operating_speed_m_s: Option<f64>,
     pub(crate) warnings: Vec<Diagnostic>,
 }
 

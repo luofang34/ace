@@ -22,10 +22,13 @@ use crate::storage::profile_store::ProfileRepository;
 use crate::storage::project_store::read_yaml_value_blocking;
 
 mod embedded;
+mod initial_state;
 mod planform;
 mod segments;
 
 pub(crate) use embedded::resolve_embedded_study;
+pub(crate) use initial_state::usable_initial_fuel_kg;
+use initial_state::{resolve_initial_state, validate_initial_state};
 pub(crate) use planform::complete_planform_overrides;
 use segments::resolve_segment;
 
@@ -72,6 +75,7 @@ impl ScenarioResolver {
         let mission = resolve_mission(mission_document)?;
         let requirements = resolve_requirements(requirements_document)?;
         validate_payload(&aircraft, &mission)?;
+        validate_initial_state(&aircraft, &mission)?;
         let (engine, propeller) = self.resolve_profiles(directory, &aircraft)?;
         let assumptions = collect_all_assumptions(
             &aircraft_value,
@@ -276,6 +280,7 @@ pub(crate) fn resolve_mission(document: MissionDocument) -> AexResult<Mission> {
             Dimension::Mass,
             "mission.payload.mass",
         )?,
+        initial_state: resolve_initial_state(raw.initial_state)?,
         segments,
     })
 }

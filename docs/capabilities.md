@@ -20,6 +20,8 @@ The CLI command `aex capabilities --format json` and MCP tool `get_capabilities`
 
 ## Mission segments
 
+Initial-state fields: `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `fuel_fraction` (at_most_one: fuel), `fuel_mass` (at_most_one: fuel).
+
 | Type | Legal fields |
 | --- | --- |
 | `start_and_taxi` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |

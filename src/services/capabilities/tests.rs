@@ -4,8 +4,8 @@ use sha2::{Digest, Sha256};
 
 use crate::backends::contracts::{BackendDescriptor, BackendTopologyCapabilities};
 use crate::domain::capabilities::{
-    SegmentFieldRequirement, aero_configurations, document_types, mission_segments, profile_types,
-    requirement_metrics,
+    SegmentFieldCapability, SegmentFieldRequirement, aero_configurations, document_types,
+    mission_initial_state_fields, mission_segments, profile_types, requirement_metrics,
 };
 
 use super::{manifest, reference_markdown};
@@ -51,6 +51,7 @@ fn registries_are_unique_and_lookup_complete() {
     assert_unique(profile_types().iter().map(|item| item.id));
     assert_unique(aero_configurations().iter().map(|item| item.id));
     assert_unique(mission_segments().iter().map(|item| item.segment_type));
+    assert_field_groups(mission_initial_state_fields());
     assert_segment_field_groups();
     assert_unique(requirement_metrics().iter().map(|item| item.id));
     assert!(
@@ -63,27 +64,30 @@ fn registries_are_unique_and_lookup_complete() {
 
 fn assert_segment_field_groups() {
     for segment in mission_segments() {
-        assert_unique(segment.fields.iter().map(|field| field.name));
-        for field in segment.fields {
-            match field.requirement {
-                SegmentFieldRequirement::Required | SegmentFieldRequirement::Optional => {
-                    assert!(field.alternative_group.is_none());
-                }
-                SegmentFieldRequirement::ExactlyOne | SegmentFieldRequirement::AtMostOne => {
-                    let group = field.alternative_group;
-                    assert!(group.is_some());
-                    assert!(segment.fields.iter().all(|peer| {
-                        peer.alternative_group != group || peer.requirement == field.requirement
-                    }));
-                    assert!(
-                        segment
-                            .fields
-                            .iter()
-                            .filter(|peer| peer.alternative_group == group)
-                            .count()
-                            >= 2
-                    );
-                }
+        assert_field_groups(segment.fields);
+    }
+}
+
+fn assert_field_groups(fields: &[SegmentFieldCapability]) {
+    assert_unique(fields.iter().map(|field| field.name));
+    for field in fields {
+        match field.requirement {
+            SegmentFieldRequirement::Required | SegmentFieldRequirement::Optional => {
+                assert!(field.alternative_group.is_none());
+            }
+            SegmentFieldRequirement::ExactlyOne | SegmentFieldRequirement::AtMostOne => {
+                let group = field.alternative_group;
+                assert!(group.is_some());
+                assert!(fields.iter().all(|peer| {
+                    peer.alternative_group != group || peer.requirement == field.requirement
+                }));
+                assert!(
+                    fields
+                        .iter()
+                        .filter(|peer| peer.alternative_group == group)
+                        .count()
+                        >= 2
+                );
             }
         }
     }

@@ -37,6 +37,10 @@ aircraft:
 mission:
   payload:
     mass: 230 kg
+  initial_state:
+    altitude: 5000 ft
+    true_airspeed: 100 kt
+    fuel_fraction: 0.5
   segments:
     - id: cruise segment
       duration: 45 min
@@ -64,6 +68,7 @@ requirements:
             json!("fuel storage"),
         ),
         ("aircraft.metadata.purpose", json!("10 kt planning note")),
+        ("mission.initial_state.fuel_fraction", json!(0.5)),
         ("mission.segments.0.id", json!("cruise segment")),
         ("requirements.items.0.id", json!("landing stall")),
         (
@@ -80,6 +85,8 @@ requirements:
         ("aircraft.mass.maximum_takeoff_mass", "kg"),
         ("aircraft.geometry.wing.area", "m^2"),
         ("mission.payload.mass", "kg"),
+        ("mission.initial_state.altitude", "ft"),
+        ("mission.initial_state.true_airspeed", "kt"),
         ("mission.segments.0.duration", "min"),
         ("mission.segments.0.altitude", "ft"),
         ("mission.segments.0.true_airspeed", "kt"),

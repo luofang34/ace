@@ -1,7 +1,7 @@
 #![allow(clippy::expect_used, clippy::panic)]
 
 use crate::domain::diagnostic::AexError;
-use crate::domain::schema::EngineProfile;
+use crate::domain::schema::{EngineProfile, MissionInitialState};
 use crate::test_support::example_scenario;
 
 use super::{declarations, preflight_model_domains, preflight_operating_point};
@@ -26,6 +26,186 @@ fn every_aircraft_mass_declaration_is_preflight_input() -> Result<(), Box<dyn st
     ] {
         assert!(declarations.iter().any(|item| item.path == path));
     }
+    Ok(())
+}
+
+#[test]
+fn initial_state_adds_effective_speed_altitude_and_mass_declarations()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.mission.initial_state = Some(MissionInitialState {
+        altitude_m: Some(1_000.0),
+        indicated_airspeed_m_s: Some(50.0),
+        true_airspeed_m_s: None,
+        mach: None,
+        fuel_fraction: Some(0.5),
+        fuel_mass_kg: None,
+    });
+    let values = declarations(&scenario)?;
+
+    assert!(values.iter().any(|item| {
+        item.path == "mission.initial_state.altitude"
+            && item.variable == crate::domain::validity::ValidityVariable::Altitude
+    }));
+    for variable in [
+        crate::domain::validity::ValidityVariable::TrueAirspeed,
+        crate::domain::validity::ValidityVariable::Mach,
+    ] {
+        assert!(values.iter().any(|item| {
+            item.path == "mission.initial_state.indicated_airspeed" && item.variable == variable
+        }));
+    }
+    assert!(values.iter().any(|item| {
+        item.path == "mission.initial_state.mass"
+            && item.variable == crate::domain::validity::ValidityVariable::Mass
+    }));
+    Ok(())
+}
+
+#[test]
+fn zero_initial_fuel_registers_only_the_positive_total_mass()
+-> Result<(), Box<dyn std::error::Error>> {
+    for state in [
+        MissionInitialState {
+            altitude_m: None,
+            indicated_airspeed_m_s: None,
+            true_airspeed_m_s: None,
+            mach: None,
+            fuel_fraction: None,
+            fuel_mass_kg: Some(0.0),
+        },
+        MissionInitialState {
+            altitude_m: None,
+            indicated_airspeed_m_s: None,
+            true_airspeed_m_s: None,
+            mach: None,
+            fuel_fraction: Some(0.0),
+            fuel_mass_kg: None,
+        },
+    ] {
+        let mut scenario = example_scenario("c172")?;
+        scenario.mission.initial_state = Some(state);
+        let values = declarations(&scenario)?;
+        assert!(
+            values
+                .iter()
+                .all(|item| item.path != "mission.initial_state.fuel_mass")
+        );
+        assert!(
+            values
+                .iter()
+                .any(|item| { item.path == "mission.initial_state.mass" && item.value > 0.0 })
+        );
+        preflight_model_domains(&scenario)?;
+    }
+    Ok(())
+}
+
+#[test]
+fn derived_initial_speed_is_checked_against_aircraft_limits()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.mission.initial_state = Some(MissionInitialState {
+        altitude_m: Some(2_000.0),
+        indicated_airspeed_m_s: Some(90.0),
+        true_airspeed_m_s: None,
+        mach: None,
+        fuel_fraction: None,
+        fuel_mass_kg: None,
+    });
+    let error = preflight_model_domains(&scenario)
+        .err()
+        .ok_or("initial IAS unexpectedly passed aircraft limits")?;
+
+    assert_eq!(error.detail().code, "INITIAL_SPEED_LIMIT_EXCEEDED");
+    assert_eq!(
+        error.detail().path.as_deref(),
+        Some("mission.initial_state.indicated_airspeed")
+    );
+    Ok(())
+}
+
+#[test]
+fn initial_speed_outside_model_domain_uses_its_declared_path()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.limits.maximum_operating_speed_m_s = None;
+    scenario.mission.initial_state = Some(MissionInitialState {
+        altitude_m: Some(0.0),
+        indicated_airspeed_m_s: None,
+        true_airspeed_m_s: Some(400.0),
+        mach: None,
+        fuel_fraction: None,
+        fuel_mass_kg: None,
+    });
+    let error = preflight_model_domains(&scenario)
+        .err()
+        .ok_or("initial speed unexpectedly passed model domains")?;
+    let AexError::ModelDomainUnsupported { violations, .. } = error else {
+        panic!("expected model-domain error");
+    };
+
+    assert!(violations.iter().any(|item| {
+        item.path == "mission.initial_state.true_airspeed"
+            && item.variable == crate::domain::validity::ValidityVariable::Mach
+    }));
+    Ok(())
+}
+
+#[test]
+fn initial_altitude_outside_model_domain_is_rejected_before_simulation()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.mission.initial_state = Some(MissionInitialState {
+        altitude_m: Some(21_000.0),
+        indicated_airspeed_m_s: None,
+        true_airspeed_m_s: None,
+        mach: None,
+        fuel_fraction: None,
+        fuel_mass_kg: None,
+    });
+    let error = preflight_model_domains(&scenario)
+        .err()
+        .ok_or("initial altitude unexpectedly passed model domains")?;
+    let AexError::ModelDomainUnsupported { violations, .. } = error else {
+        panic!("expected model-domain error");
+    };
+
+    assert!(violations.iter().any(|item| {
+        item.path == "mission.initial_state.altitude" && item.model_id == "atmosphere.isa1976"
+    }));
+    Ok(())
+}
+
+#[test]
+fn inherited_speed_is_recomputed_at_each_segment_altitude() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut scenario = example_scenario("b777")?;
+    scenario.mission.initial_state = Some(MissionInitialState {
+        altitude_m: Some(0.0),
+        indicated_airspeed_m_s: None,
+        true_airspeed_m_s: Some(295.0),
+        mach: None,
+        fuel_fraction: None,
+        fuel_mass_kg: None,
+    });
+    for segment in &mut scenario.mission.segments {
+        segment.indicated_airspeed_m_s = None;
+        segment.true_airspeed_m_s = None;
+        segment.mach = None;
+    }
+    let error = preflight_model_domains(&scenario)
+        .err()
+        .ok_or("inherited cruise speed unexpectedly passed model domains")?;
+    let AexError::ModelDomainUnsupported { violations, .. } = error else {
+        panic!("expected model-domain error");
+    };
+
+    assert!(violations.iter().any(|item| {
+        item.path == "mission.segments.cruise_1.inherited_speed"
+            && item.variable == crate::domain::validity::ValidityVariable::Mach
+            && item.maximum == Some(0.9)
+    }));
     Ok(())
 }
 

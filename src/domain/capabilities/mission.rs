@@ -29,6 +29,15 @@ pub(crate) struct MissionSegmentCapability {
     pub(crate) kind: SegmentKind,
 }
 
+const MISSION_INITIAL_STATE_FIELDS: &[SegmentFieldCapability] = &[
+    optional("altitude"),
+    at_most_one("indicated_airspeed", "speed"),
+    at_most_one("true_airspeed", "speed"),
+    at_most_one("mach", "speed"),
+    at_most_one("fuel_fraction", "fuel"),
+    at_most_one("fuel_mass", "fuel"),
+];
+
 const TIMED_FIELDS: &[SegmentFieldCapability] = &[
     required("duration"),
     optional("altitude"),
@@ -113,6 +122,10 @@ const MISSION_SEGMENTS: [MissionSegmentCapability; 11] = [
 
 pub(crate) const fn mission_segments() -> &'static [MissionSegmentCapability] {
     &MISSION_SEGMENTS
+}
+
+pub(crate) const fn mission_initial_state_fields() -> &'static [SegmentFieldCapability] {
+    MISSION_INITIAL_STATE_FIELDS
 }
 
 pub(crate) fn mission_segment(id: &str) -> Option<MissionSegmentCapability> {

@@ -7,6 +7,15 @@ pub(crate) fn representative_speed(
     scenario: &ResolvedScenario,
     altitude_m: f64,
 ) -> AexResult<f64> {
+    representative_speed_with_fallback(segment, scenario, altitude_m, None)
+}
+
+pub(super) fn representative_speed_with_fallback(
+    segment: &MissionSegment,
+    scenario: &ResolvedScenario,
+    altitude_m: f64,
+    fallback_speed_m_s: Option<f64>,
+) -> AexResult<f64> {
     if let Some(speed) = segment.true_airspeed_m_s {
         return Ok(speed);
     }
@@ -16,6 +25,9 @@ pub(crate) fn representative_speed(
     }
     if let Some(indicated) = segment.indicated_airspeed_m_s {
         return Ok(indicated * (1.225 / atmosphere.density_kg_m3).sqrt());
+    }
+    if let Some(speed) = fallback_speed_m_s {
+        return Ok(speed);
     }
     match scenario.engine {
         EngineProfile::Piston(_) => Ok(45.0),
