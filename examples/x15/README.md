@@ -11,6 +11,9 @@ wrong in labeled ways:
   and fuel flow while captive-carry, glide, and landing kinematics continue.
 - The explicit initial state starts the captive carry and later drop at
   45,000 ft with 8,500 kg of usable fuel.
+- The powered boost uses an ordered energy-climb schedule; the following
+  speed run is an engine-off coast. The low-fidelity fixture boost remains in
+  the guarded 80–120 second band.
 - The real flight profile (ballistic arc past 80 km, Mach 6.7) is outside the
   quasi-steady solver and the atmosphere domain entirely.
 

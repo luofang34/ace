@@ -92,7 +92,7 @@ fn required_reserve_power_w(scenario: &ResolvedScenario, speed_m_s: f64) -> f64 
 
 fn operating_mode(kind: SegmentKind) -> Option<OperatingMode> {
     match kind {
-        SegmentKind::Climb => Some(OperatingMode::Climb),
+        SegmentKind::Climb | SegmentKind::EnergyClimb => Some(OperatingMode::Climb),
         SegmentKind::Cruise => Some(OperatingMode::Cruise),
         SegmentKind::Loiter | SegmentKind::Reserve => Some(OperatingMode::Economy),
         _ => None,
@@ -103,7 +103,7 @@ fn segment_altitude(
     kind: SegmentKind,
     result: &crate::domain::result::MissionSegmentResult,
 ) -> f64 {
-    if kind == SegmentKind::Climb {
+    if matches!(kind, SegmentKind::Climb | SegmentKind::EnergyClimb) {
         0.5 * (result.start_altitude_m + result.end_altitude_m)
     } else {
         result.end_altitude_m

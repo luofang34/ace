@@ -378,6 +378,19 @@ impl PointAnalyzer {
             .value_w)
     }
 
+    pub(crate) fn excess_power_with_diagnostics(
+        &self,
+        altitude_m: f64,
+        speed_m_s: f64,
+        mass_kg: f64,
+        mode: OperatingMode,
+        throttle: f64,
+    ) -> AexResult<(f64, Vec<Diagnostic>)> {
+        let evaluation =
+            self.excess_power_evaluation(altitude_m, speed_m_s, mass_kg, mode, throttle)?;
+        Ok((evaluation.value_w, evaluation.warnings))
+    }
+
     fn excess_power_evaluation(
         &self,
         altitude_m: f64,

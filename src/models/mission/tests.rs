@@ -100,7 +100,13 @@ fn x15_engine_off_segments_burn_no_fuel_and_keep_kinematics()
     assert!(mission.completed);
     assert!(!mission.fuel_exhausted);
 
-    for id in ["captive_carry", "glide_descent", "pattern_glide", "landing"] {
+    for id in [
+        "captive_carry",
+        "speed_run",
+        "glide_descent",
+        "pattern_glide",
+        "landing",
+    ] {
         let segment = mission
             .segments
             .iter()
@@ -118,7 +124,7 @@ fn x15_engine_off_segments_burn_no_fuel_and_keep_kinematics()
         assert!(segment.distance_m > 0.0);
         assert!(segment.end_altitude_m < segment.start_altitude_m);
     }
-    for id in ["drop_and_light", "boost_climb", "speed_run"] {
+    for id in ["drop_and_light", "boost_climb"] {
         let segment = mission
             .segments
             .iter()
@@ -126,6 +132,54 @@ fn x15_engine_off_segments_burn_no_fuel_and_keep_kinematics()
             .ok_or_else(|| io::Error::other(format!("missing powered segment {id}")))?;
         assert!(segment.fuel_burn_kg > 0.0);
     }
+    Ok(())
+}
+
+#[test]
+fn b777_energy_climb_is_in_calibration_band() -> Result<(), Box<dyn std::error::Error>> {
+    let mission = MissionSimulator::new(example_scenario("b777")?).simulate()?;
+    let climb = mission
+        .segments
+        .iter()
+        .find(|segment| segment.segment_id == "climb_to_cruise")
+        .ok_or_else(|| io::Error::other("B777 energy climb result is missing"))?;
+
+    assert!(
+        (900.0..=1_800.0).contains(&climb.duration_s),
+        "B777 climb duration was {} s",
+        climb.duration_s
+    );
+    assert!(
+        (5_000.0..=10_000.0).contains(&climb.fuel_burn_kg),
+        "B777 climb fuel was {} kg",
+        climb.fuel_burn_kg
+    );
+    Ok(())
+}
+
+#[test]
+fn x15_energy_boost_is_in_calibration_band() -> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("x15")?;
+    let first = MissionSimulator::new(scenario.clone()).simulate()?;
+    let second = MissionSimulator::new(scenario).simulate()?;
+    let first_boost = first
+        .segments
+        .iter()
+        .find(|segment| segment.segment_id == "boost_climb")
+        .ok_or_else(|| io::Error::other("X-15 energy boost result is missing"))?;
+    let second_boost = second
+        .segments
+        .iter()
+        .find(|segment| segment.segment_id == "boost_climb")
+        .ok_or_else(|| io::Error::other("repeat X-15 energy boost result is missing"))?;
+
+    assert!(
+        (80.0..=120.0).contains(&first_boost.duration_s),
+        "X-15 boost duration was {} s",
+        first_boost.duration_s
+    );
+    assert_eq!(first_boost.duration_s, second_boost.duration_s);
+    assert_eq!(first_boost.fuel_burn_kg, second_boost.fuel_burn_kg);
     Ok(())
 }
 
@@ -161,8 +215,8 @@ fn engine_off_climb_to_higher_altitude_is_rejected() -> Result<(), Box<dyn std::
         .mission
         .segments
         .iter_mut()
-        .find(|segment| segment.kind == SegmentKind::Climb)
-        .ok_or_else(|| io::Error::other("X-15 fixture has no climb segment"))?;
+        .find(|segment| segment.kind == SegmentKind::EnergyClimb)
+        .ok_or_else(|| io::Error::other("X-15 fixture has no energy-climb segment"))?;
     let climb_id = climb.id.clone();
     climb.thrust_fraction = Some(0.0);
     climb.power_fraction = None;
@@ -174,6 +228,41 @@ fn engine_off_climb_to_higher_altitude_is_rejected() -> Result<(), Box<dyn std::
 
     assert_eq!(error.detail().code, "ENGINE_OFF_CLIMB_UNSUPPORTED");
     assert_eq!(error.detail().path.as_deref(), Some(expected_path.as_str()));
+    Ok(())
+}
+
+#[test]
+fn legacy_climb_rate_is_capped_and_disclosed() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("x15")?;
+    let mut climb = scenario
+        .mission
+        .segments
+        .iter()
+        .find(|segment| segment.kind == SegmentKind::EnergyClimb)
+        .cloned()
+        .ok_or_else(|| io::Error::other("X-15 fixture has no energy climb"))?;
+    let target = climb
+        .energy_schedule
+        .as_deref()
+        .and_then(|schedule| schedule.last())
+        .map(|point| point.altitude_m)
+        .ok_or_else(|| io::Error::other("X-15 energy schedule is empty"))?;
+    climb.kind = SegmentKind::Climb;
+    climb.target_altitude_m = Some(target);
+    climb.mach = Some(5.0);
+    climb.thrust_fraction = Some(0.5);
+    climb.energy_schedule = None;
+    scenario.mission.segments = vec![climb];
+    let mission = MissionSimulator::new(scenario).simulate()?;
+    let result = mission
+        .segments
+        .first()
+        .ok_or_else(|| io::Error::other("legacy climb did not complete"))?;
+
+    assert!((result.duration_s - (target - 13_716.0) / 50.0).abs() < 1.0e-8);
+    assert!(result.warnings.iter().any(|warning| {
+        warning.code == "LOW_FIDELITY_MODEL" && warning.message.contains("capped at 50 m/s")
+    }));
     Ok(())
 }
 
@@ -197,6 +286,7 @@ fn payload_drop_reduces_mass_without_burning_fuel() {
             fuel_fraction: None,
             fuel_mass_kg: None,
             payload_mass_kg: Some(100.0),
+            energy_schedule: None,
         };
         resolved.mission.segments.insert(1, payload_drop);
         let expected_payload = resolved.mission.payload_mass_kg - 100.0;

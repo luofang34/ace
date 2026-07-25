@@ -6,7 +6,7 @@ mod mission;
 
 pub(crate) use mission::{
     MissionSegmentCapability, SegmentFieldCapability, SegmentFieldRequirement,
-    mission_initial_state_fields, mission_segment, mission_segments,
+    energy_schedule_fields, mission_initial_state_fields, mission_segment, mission_segments,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

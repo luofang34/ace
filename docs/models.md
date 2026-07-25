@@ -70,12 +70,16 @@ are rejected with `DECLARED_METRIC_NOT_BINDABLE` and their achieved replacement.
 ## Mission
 
 Quasi-steady segments integrate fuel and enforce mass continuity. Cruise and
-loiter use required drag/power at decreasing mass. Climb and descent use
-explicitly simplified rates and carry low-fidelity warnings.
+loiter use required drag/power at decreasing mass. `energy_climb` integrates
+`m[g Δh + Δ(V²)/2] / Pexcess` through fixed midpoint steps, updating current
+mass and installed fuel flow at every step. It rejects nonpositive excess
+power and nonmonotonic schedules. Legacy `climb` uses an explicitly
+low-fidelity constant rate capped at 50 m/s; descent retains a simplified
+rate.
 
-Feasibility separately checks climb, cruise, loiter, and reserve operating
-points at their declared power or thrust fractions. Each point must retain a
-3% installed-reference-power reserve.
+Feasibility separately checks legacy climb, energy climb, cruise, loiter, and
+reserve operating points at their declared power or thrust fractions. Each
+point must retain a 3% installed-reference-power reserve.
 
 ## Conceptual structural screening
 

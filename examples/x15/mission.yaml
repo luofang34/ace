@@ -17,16 +17,21 @@ mission:
       duration: 5 s
       thrust_fraction: 1.0
     - id: boost_climb
-      type: climb
-      target_altitude: 65000 ft
-      mach: 5.0
-      thrust_fraction: 1.0
+      type: energy_climb
+      thrust_fraction: 0.95
+      schedule:
+        - altitude: 45000 ft
+          mach: 0.5
+        - altitude: 55000 ft
+          mach: 2.0
+        - altitude: 65000 ft
+          mach: 5.0
     - id: speed_run
       type: cruise
       distance: 60 nmi
       altitude: 65000 ft
       mach: 5.0
-      thrust_fraction: 1.0
+      thrust_fraction: 0
     - id: glide_descent
       type: descent
       target_altitude: 20000 ft

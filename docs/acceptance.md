@@ -97,6 +97,8 @@ Current deterministic reference behavior is checked against:
   11,000–16,000 ft, best glide ratio 7–12, payload-range near 500–800 nmi.
 - B777 achieved cruise Mach 0.82–0.85, service ceiling 39,000–45,000 ft, maximum
   payload 60–75 tonnes, long-range mission 6,500–8,000 nmi, takeoff T/W
-  0.25–0.35, cruise L/D 16–22.
+  0.25–0.35, cruise L/D 16–22. Its energy climb completes in 15–30 minutes
+  while consuming 5–10 tonnes of fuel.
+- X-15 energy-climb boost duration is 80–120 seconds.
 
 These are software-validation bands, not claims about certified aircraft.

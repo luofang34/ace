@@ -31,6 +31,10 @@ pub(super) fn mission_declarations(
     let mut state = push_initial_state_declarations(scenario, values)?;
     for segment in &scenario.mission.segments {
         let root = format!("mission.segments.{}", segment.id);
+        if segment.kind == SegmentKind::EnergyClimb {
+            state = push_energy_schedule(values, &root, segment)?;
+            continue;
+        }
         push_segment_altitude(values, &root, "altitude", segment.altitude_m);
         push_segment_altitude(values, &root, "target_altitude", segment.target_altitude_m);
         state.speed_m_s = push_mission_segment_speed(values, &root, segment, scenario, state)?;
@@ -39,6 +43,40 @@ pub(super) fn mission_declarations(
         state.altitude_m = segment_end_altitude(segment, state.altitude_m);
     }
     Ok(())
+}
+
+fn push_energy_schedule(
+    values: &mut Vec<Declaration>,
+    root: &str,
+    segment: &MissionSegment,
+) -> AexResult<MissionTraversalState> {
+    let schedule = segment.energy_schedule.as_deref().ok_or_else(|| {
+        AexError::validation(
+            "MISSING_ENERGY_SCHEDULE",
+            format!("{root}.schedule"),
+            "energy_climb requires schedule",
+        )
+    })?;
+    let mut altitude_m = 0.0;
+    let mut speed_m_s = None;
+    for (index, point) in schedule.iter().enumerate() {
+        let point_root = format!("{root}.schedule.{index}");
+        push_segment_altitude(values, &point_root, "altitude", Some(point.altitude_m));
+        let speed = effective_speed(
+            point.altitude_m,
+            point.true_airspeed_m_s,
+            point.mach,
+            point.indicated_airspeed_m_s,
+        )?;
+        push_effective_speed(values, &point_root, speed);
+        altitude_m = point.altitude_m;
+        speed_m_s = speed.and_then(|value| value.true_airspeed_m_s);
+    }
+    Ok(MissionTraversalState {
+        altitude_m,
+        speed_m_s,
+        tracks_speed: true,
+    })
 }
 
 fn push_initial_state_declarations(
@@ -210,3 +248,6 @@ fn push_segment_value(
         push_scopes(values, scopes, variable, &format!("{root}.{field}"), value);
     }
 }
+
+#[cfg(test)]
+mod tests;

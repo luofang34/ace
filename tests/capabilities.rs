@@ -2,6 +2,7 @@
 
 #![allow(clippy::expect_used, clippy::panic)]
 
+use std::collections::BTreeSet;
 use std::error::Error;
 use std::fs;
 use std::io;
@@ -12,6 +13,8 @@ use rmcp::model::CallToolRequestParams;
 use rmcp::transport::TokioChildProcess;
 use serde_json::{Value, json};
 
+#[path = "capabilities/energy_climb.rs"]
+mod energy_climb;
 #[path = "capabilities/initial_state.rs"]
 mod initial_state;
 
@@ -41,6 +44,10 @@ fn segment_field_value(name: &str) -> Option<Value> {
         "indicated_airspeed" | "true_airspeed" => Some(json!("100 kt")),
         "mach" | "power_fraction" | "thrust_fraction" | "fuel_fraction" => Some(json!(0.5)),
         "fuel_mass" | "payload_mass" => Some(json!("1 kg")),
+        "schedule" => Some(json!([
+            {"altitude": "0 ft", "true_airspeed": "100 kt"},
+            {"altitude": "1000 ft", "true_airspeed": "110 kt"}
+        ])),
         _ => None,
     }
 }
@@ -76,6 +83,7 @@ async fn cli_and_mcp_manifest_match_and_advertised_vocabulary_validates()
     validate_profile_types(&client, &mcp).await?;
     validate_segment_types(&client, &mcp).await?;
     initial_state::validate(&client, &mcp).await?;
+    energy_climb::validate(&client, &mcp).await?;
     validate_exclusive_segment_fields(&client).await?;
     validate_engine_off_fractions(&client).await?;
     validate_unadvertised_segment_fields(&client).await?;
@@ -269,10 +277,13 @@ fn segment_document(
         ("id".to_owned(), json!("segment")),
         ("type".to_owned(), json!(segment_type)),
     ]);
+    let mut populated_groups = BTreeSet::new();
     for field in fields {
         if field["requirement"] == "required"
             || field["requirement"] == "exactly_one"
-                && !segment.values().any(|value| value == &json!("1 kg"))
+                && field["alternative_group"]
+                    .as_str()
+                    .is_some_and(|group| populated_groups.insert(group))
         {
             insert_segment_field(&mut segment, field)?;
         }

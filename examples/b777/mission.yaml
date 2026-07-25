@@ -13,16 +13,16 @@ mission:
       type: takeoff
       duration: 2 min
       thrust_fraction: 1.0
-    - id: initial_climb
-      type: climb
-      target_altitude: 10000 ft
-      indicated_airspeed: 250 kt
-      thrust_fraction: 0.90
     - id: climb_to_cruise
-      type: climb
-      target_altitude: 33000 ft
-      mach: 0.78
-      thrust_fraction: 0.86
+      type: energy_climb
+      thrust_fraction: 0.82
+      schedule:
+        - altitude: 0 ft
+          indicated_airspeed: 160 kt
+        - altitude: 10000 ft
+          indicated_airspeed: 250 kt
+        - altitude: 33000 ft
+          mach: 0.78
     - id: cruise_1
       type: cruise
       distance: 3000 nmi
@@ -52,4 +52,3 @@ mission:
       duration: 30 min
       altitude: 1500 ft
       true_airspeed: 220 kt
-

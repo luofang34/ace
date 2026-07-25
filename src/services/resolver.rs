@@ -22,11 +22,13 @@ use crate::storage::profile_store::ProfileRepository;
 use crate::storage::project_store::read_yaml_value_blocking;
 
 mod embedded;
+mod energy_climb;
 mod initial_state;
 mod planform;
 mod segments;
 
 pub(crate) use embedded::resolve_embedded_study;
+use energy_climb::{validate_energy_schedule_limits, validate_energy_schedule_transitions};
 pub(crate) use initial_state::usable_initial_fuel_kg;
 use initial_state::{resolve_initial_state, validate_initial_state};
 pub(crate) use planform::complete_planform_overrides;
@@ -76,6 +78,7 @@ impl ScenarioResolver {
         let requirements = resolve_requirements(requirements_document)?;
         validate_payload(&aircraft, &mission)?;
         validate_initial_state(&aircraft, &mission)?;
+        validate_energy_schedule_limits(&aircraft, &mission)?;
         let (engine, propeller) = self.resolve_profiles(directory, &aircraft)?;
         let assumptions = collect_all_assumptions(
             &aircraft_value,
@@ -272,7 +275,7 @@ pub(crate) fn resolve_mission(document: MissionDocument) -> AexResult<Mission> {
         .enumerate()
         .map(|(index, segment)| resolve_segment(segment, index))
         .collect::<AexResult<Vec<_>>>()?;
-    Ok(Mission {
+    let mission = Mission {
         id: raw.id,
         name: raw.name,
         payload_mass_kg: positive_quantity(
@@ -282,7 +285,9 @@ pub(crate) fn resolve_mission(document: MissionDocument) -> AexResult<Mission> {
         )?,
         initial_state: resolve_initial_state(raw.initial_state)?,
         segments,
-    })
+    };
+    validate_energy_schedule_transitions(&mission)?;
+    Ok(mission)
 }
 
 fn validate_payload(aircraft: &Aircraft, mission: &Mission) -> AexResult<()> {

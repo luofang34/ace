@@ -7,6 +7,7 @@ use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
 use crate::models::propulsion::OperatingMode;
 
+mod energy_climb;
 mod fuel;
 mod initial_state;
 mod operating_condition;
@@ -17,7 +18,7 @@ use initial_state::initial_fuel_load;
 use initial_state::{InitialMissionState, MissionState, initial_mission_state};
 use operating_condition::representative_speed_with_fallback;
 pub(crate) use operating_condition::{
-    representative_speed, segment_end_altitude, segment_operating_altitude,
+    energy_schedule_speed, representative_speed, segment_end_altitude, segment_operating_altitude,
 };
 use record::{extend_unique_diagnostics, mission_model, scoped_segment_warnings, segment_result};
 
@@ -123,6 +124,7 @@ impl MissionSimulator {
             SegmentKind::FixedFuel => self.fixed_fuel_segment(segment, state),
             SegmentKind::PayloadDrop => self.payload_drop_segment(segment, state),
             SegmentKind::Climb => self.climb_segment(segment, state),
+            SegmentKind::EnergyClimb => energy_climb::compute(self, segment, state),
             SegmentKind::Cruise => self.cruise_segment(segment, state),
             SegmentKind::Descent => self.descent_segment(segment, state),
             SegmentKind::Loiter | SegmentKind::Reserve => self.loiter_segment(segment, state),
@@ -261,10 +263,16 @@ impl MissionSimulator {
             .power_fraction
             .or(segment.thrust_fraction)
             .unwrap_or(0.9);
-        let rate = (climb.maximum_rate_m_s * throttle).max(0.5);
+        let uncapped_rate = climb.maximum_rate_m_s * throttle;
+        let rate = uncapped_rate.clamp(0.5, 50.0);
         let duration = (target - state.altitude_m).max(0.0) / rate;
         let fuel_flow = fuel::available(self, midpoint, speed, throttle, OperatingMode::Climb)?;
         let mut warnings = climb.warnings;
+        if uncapped_rate > 50.0 {
+            warnings.push(Diagnostic::limitation(
+                "Legacy climb rate is capped at 50 m/s; use energy_climb for acceleration.",
+            ));
+        }
         extend_unique_diagnostics(&mut warnings, fuel_flow.warnings);
         Ok(SegmentComputation {
             fuel_burn_kg: fuel_flow.flow_kg_s * duration,
