@@ -7,11 +7,12 @@ use rayon::prelude::*;
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{GRAVITY_M_S2, parse_quantity};
 use crate::domain::result::{ResultProvenance, SweepResult, SweepRow};
-use crate::domain::schema::EngineProfile;
+use crate::domain::schema::{EngineProfile, Wing};
 use crate::models::breguet;
 use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::evaluate_requirements;
+use crate::services::resolver::complete_planform_overrides;
 
 #[derive(Debug, Clone)]
 pub(crate) struct SweepVariable {
@@ -72,16 +73,24 @@ impl ApplicationService {
                 "one or two sweep variables are required",
             ));
         }
+        let scenario = self.resolve_blocking(scenario_path, &BTreeMap::new())?;
         let combinations = combinations(variables);
         let cache: Arc<Mutex<BTreeMap<String, BTreeMap<String, f64>>>> =
             Arc::new(Mutex::new(BTreeMap::new()));
         let rows = combinations
             .par_iter()
-            .map(|overrides| self.sweep_row(scenario_path, overrides, metrics, &cache))
+            .map(|overrides| {
+                self.sweep_row(
+                    scenario_path,
+                    overrides,
+                    metrics,
+                    &scenario.aircraft.wing,
+                    &cache,
+                )
+            })
             .collect::<Vec<_>>()
             .into_iter()
             .collect::<AexResult<Vec<_>>>()?;
-        let scenario = self.resolve_blocking(scenario_path, &BTreeMap::new())?;
         Ok(SweepResult {
             scenario_id: scenario.id,
             rows,
@@ -96,9 +105,12 @@ impl ApplicationService {
         scenario_path: &Path,
         overrides: &BTreeMap<String, String>,
         metrics: &[String],
+        baseline_wing: &Wing,
         cache: &Arc<Mutex<BTreeMap<String, BTreeMap<String, f64>>>>,
     ) -> AexResult<SweepRow> {
-        let key = serde_json::to_string(overrides).map_err(|source| AexError::Json { source })?;
+        let evaluation_overrides = complete_planform_overrides(overrides, baseline_wing)?;
+        let key = serde_json::to_string(&evaluation_overrides)
+            .map_err(|source| AexError::Json { source })?;
         if let Some(cached) = cache
             .lock()
             .map_err(|source| AexError::analysis("SWEEP_CACHE_POISONED", source.to_string()))?
@@ -107,9 +119,10 @@ impl ApplicationService {
         {
             return Ok(row(overrides, cached));
         }
-        let (_, performance) = self.performance_blocking(scenario_path, overrides)?;
-        let (scenario, mission) = self.mission_blocking(scenario_path, overrides)?;
-        let (_, payload_range) = self.payload_range_blocking(scenario_path, overrides)?;
+        let (_, performance) = self.performance_blocking(scenario_path, &evaluation_overrides)?;
+        let (scenario, mission) = self.mission_blocking(scenario_path, &evaluation_overrides)?;
+        let (_, payload_range) =
+            self.payload_range_blocking(scenario_path, &evaluation_overrides)?;
         let resolved = metric_values(&scenario, &performance, &mission, &payload_range, metrics)?;
         cache
             .lock()
@@ -145,6 +158,7 @@ fn metric_values(
                 "aerodynamics.maximum_lift_to_drag_ratio" => performance.maximum_lift_to_drag_ratio,
                 "geometry.aspect_ratio" => scenario.aircraft.wing.aspect_ratio,
                 "geometry.wing_area" => scenario.aircraft.wing.area_m2,
+                "geometry.wing_span" => scenario.aircraft.wing.span_m,
                 "performance.wing_loading" => {
                     scenario.aircraft.mass.maximum_takeoff_mass_kg * GRAVITY_M_S2
                         / scenario.aircraft.wing.area_m2

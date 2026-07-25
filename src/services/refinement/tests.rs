@@ -55,7 +55,10 @@ fn c172_refinement_returns_a_screened_design() -> Result<(), Box<dyn std::error:
         artifact_path: None,
         max_iterations: 12,
     })?;
+    let resolved = service.resolve_blocking(&result.design.scenario_path, &BTreeMap::new())?;
+    let wing = &resolved.aircraft.wing;
     let completed = result.evaluation.completed()?;
+    assert!((wing.span_m.powi(2) / wing.area_m2 - wing.aspect_ratio).abs() < 1.0e-12);
     assert!(result.converged);
     assert!(completed.failed_constraints.is_empty());
     assert!(result.backend_verification_passed);

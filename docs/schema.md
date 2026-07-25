@@ -35,6 +35,7 @@ scenario:
   overrides:
     aircraft.geometry.wing.area: 18.0 m^2
     aircraft.geometry.wing.aspect_ratio: "8.4"
+    aircraft.geometry.wing.span: 12.296341 m
     aircraft.propulsion.sizing_factor: "1.10"
 ```
 
@@ -47,6 +48,14 @@ scenario:
   overrides:
     mission.segments.outbound_cruise.mach: "0.58"
 ```
+
+Wing `area`, `span`, and `aspect_ratio` are individually optional, but every
+aircraft supplies at least two. The resolver derives the missing value from
+`aspect_ratio = span² / area`. A fully declared rounded triple may differ by
+at most 0.5%; the resolved aspect ratio is normalized from area and span.
+Larger discrepancies return `INCONSISTENT_WING_PLANFORM`. A sweep of one or
+two planform fields completes the dependent values before resolution while
+keeping the requested sweep variables unchanged in its result rows.
 
 Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit

@@ -11,7 +11,7 @@ use crate::domain::schema::{
     AeroConfiguration, Aerodynamics, Aircraft, AircraftDocument, AircraftLimits, ConceptMetadata,
     EngineProfile, MassProperties, Mission, MissionDocument, MissionSegment, PropellerProfile,
     Propulsion, RawAeroConfiguration, RawMissionSegment, RequirementsDocument, ResolvedScenario,
-    ScenarioDocument, SegmentKind, Wing,
+    ScenarioDocument, SegmentKind,
 };
 use crate::domain::topology::AircraftTopology;
 use crate::services::assumptions::collect_all_assumptions;
@@ -22,8 +22,10 @@ use crate::storage::profile_store::ProfileRepository;
 use crate::storage::project_store::read_yaml_value_blocking;
 
 mod embedded;
+mod planform;
 
 pub(crate) use embedded::resolve_embedded_study;
+pub(crate) use planform::complete_planform_overrides;
 
 #[derive(Clone)]
 pub(crate) struct ScenarioResolver {
@@ -148,30 +150,7 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
         raw.propulsion.engine_count,
         raw.propulsion.propeller_profile.is_some(),
     )?;
-    let wing = Wing {
-        area_m2: positive_quantity(
-            &raw.geometry.wing.area,
-            Dimension::Area,
-            "aircraft.geometry.wing.area",
-        )?,
-        span_m: positive_quantity(
-            &raw.geometry.wing.span,
-            Dimension::Length,
-            "aircraft.geometry.wing.span",
-        )?,
-        aspect_ratio: positive(
-            raw.geometry.wing.aspect_ratio,
-            "aircraft.geometry.wing.aspect_ratio",
-        )?,
-        sweep_quarter_chord_rad: parse_quantity(
-            &raw.geometry.wing.sweep_quarter_chord,
-            Dimension::Angle,
-        )?,
-        center_body_edge_sweep_rad: optional_quantity(
-            raw.geometry.wing.center_body_edge_sweep.as_deref(),
-            Dimension::Angle,
-        )?,
-    };
+    let wing = planform::resolve_wing(&raw.geometry.wing)?;
     let aerodynamics = Aerodynamics {
         model: raw.aerodynamics.model,
         clean: resolve_aero(raw.aerodynamics.clean, "clean")?,

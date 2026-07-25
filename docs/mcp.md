@@ -75,6 +75,7 @@ Use `baseline: "c172"` or `baseline: "transport"`, or provide
 {
   "aircraft.geometry.wing.area": "18.0 m^2",
   "aircraft.geometry.wing.aspect_ratio": "8.4",
+  "aircraft.geometry.wing.span": "12.296341 m",
   "aircraft.mass.maximum_fuel_mass": "165 kg",
   "mission.payload.mass": "240 kg"
 }
@@ -134,6 +135,11 @@ screen to pass. Mission points retain a 3% installed-reference-power reserve.
 When `backend: "openvsp"` is selected, OpenVSP runs once on the chosen design;
 static pitch stability becomes a final verification gate, and any adapter
 failure is returned without fallback.
+
+Direct design updates obey the same planform identity as file and scenario
+resolution. Provide any two of wing area, span, and aspect ratio to a document;
+when updating a baseline that declares all three, update enough values to keep
+the triple within the 0.5% rounding tolerance.
 
 Geometry dispatch uses the resolved component graph. Legacy configuration
 names still infer the same conventional or lifting-body graph. A lifting-body

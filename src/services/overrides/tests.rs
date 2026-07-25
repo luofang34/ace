@@ -49,6 +49,24 @@ fn override_can_set_an_optional_scalar() -> Result<(), Box<dyn std::error::Error
 }
 
 #[test]
+fn override_can_add_an_omitted_planform_field() -> Result<(), Box<dyn std::error::Error>> {
+    let mut document: Value =
+        serde_yaml::from_str("aircraft:\n  geometry:\n    wing:\n      area: 16 m^2\n")?;
+    set_path(
+        &mut document,
+        &["aircraft", "geometry", "wing", "aspect_ratio"],
+        "7.5",
+        "aircraft.geometry.wing.aspect_ratio",
+    )?;
+
+    assert_eq!(
+        document["aircraft"]["geometry"]["wing"]["aspect_ratio"].as_f64(),
+        Some(7.5)
+    );
+    Ok(())
+}
+
+#[test]
 fn override_addresses_sequence_items_by_stable_id() -> Result<(), Box<dyn std::error::Error>> {
     let mut document: Value = serde_yaml::from_str(
         "mission:\n  segments:\n    - id: outbound_cruise\n      mach: 0.62\n",

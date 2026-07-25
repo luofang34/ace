@@ -51,9 +51,12 @@ pub(crate) struct RawGeometry {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct RawWing {
-    pub(crate) area: String,
-    pub(crate) span: String,
-    pub(crate) aspect_ratio: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) area: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) span: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) aspect_ratio: Option<f64>,
     pub(crate) sweep_quarter_chord: String,
     #[serde(default)]
     pub(crate) center_body_edge_sweep: Option<String>,

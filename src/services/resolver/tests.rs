@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -8,6 +9,7 @@ use crate::domain::schema::{
     AircraftDocument, MissionDocument, ProfileDocument, RequirementsDocument, ScenarioDocument,
 };
 use crate::domain::study::EmbeddedStudyBaseline;
+use crate::services::analysis::ApplicationService;
 
 use super::{resolve_aircraft, resolve_embedded_study};
 
@@ -35,6 +37,26 @@ fn embedded_c172() -> Result<EmbeddedStudyBaseline, Box<dyn std::error::Error>> 
             read_c172_document::<ProfileDocument>("profiles/propeller.yaml")?,
         ],
     })
+}
+
+fn assert_closed_planform(scenario: &crate::domain::schema::ResolvedScenario) {
+    let wing = &scenario.aircraft.wing;
+    assert!((wing.span_m.powi(2) / wing.area_m2 - wing.aspect_ratio).abs() < 1.0e-12);
+}
+
+fn collect_scenario_paths(
+    directory: &std::path::Path,
+    paths: &mut Vec<PathBuf>,
+) -> std::io::Result<()> {
+    for entry in fs::read_dir(directory)? {
+        let entry = entry?;
+        if entry.file_type()?.is_dir() {
+            collect_scenario_paths(&entry.path(), paths)?;
+        } else if entry.file_name() == "scenario.yaml" {
+            paths.push(entry.path());
+        }
+    }
+    Ok(())
 }
 
 #[test]
@@ -89,5 +111,59 @@ fn embedded_study_requires_referenced_profiles() -> Result<(), Box<dyn std::erro
         resolve_embedded_study(&embedded),
         Err(AexError::ProfileNotFound { profile_id, .. }) if profile_id == "engine.missing"
     ));
+    Ok(())
+}
+
+#[test]
+fn inconsistent_override_is_rejected_and_paired_override_closes()
+-> Result<(), Box<dyn std::error::Error>> {
+    let temporary = tempfile::tempdir()?;
+    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let scenario = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/scenario.yaml");
+
+    assert!(matches!(
+        service.resolve_blocking(
+            &scenario,
+            &BTreeMap::from([(
+                "aircraft.geometry.wing.aspect_ratio".to_owned(),
+                "20".to_owned()
+            )])
+        ),
+        Err(AexError::Validation {
+            code: "INCONSISTENT_WING_PLANFORM",
+            ..
+        })
+    ));
+    let paired = service.resolve_blocking(
+        &scenario,
+        &BTreeMap::from([
+            (
+                "aircraft.geometry.wing.aspect_ratio".to_owned(),
+                "8".to_owned(),
+            ),
+            (
+                "aircraft.geometry.wing.span".to_owned(),
+                format!("{} m", (16.17_f64 * 8.0).sqrt()),
+            ),
+        ]),
+    )?;
+    assert_closed_planform(&paired);
+    Ok(())
+}
+
+#[test]
+fn every_shipped_example_resolves_a_closed_planform() -> Result<(), Box<dyn std::error::Error>> {
+    let temporary = tempfile::tempdir()?;
+    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let examples = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");
+    let mut paths = Vec::new();
+    collect_scenario_paths(&examples, &mut paths)?;
+    paths.sort();
+    assert!(!paths.is_empty());
+
+    for path in paths {
+        let scenario = service.resolve_blocking(&path, &BTreeMap::new())?;
+        assert_closed_planform(&scenario);
+    }
     Ok(())
 }
