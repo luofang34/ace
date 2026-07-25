@@ -5,7 +5,8 @@ use sha2::{Digest, Sha256};
 use crate::backends::contracts::{BackendDescriptor, BackendTopologyCapabilities};
 use crate::domain::capabilities::{
     SegmentFieldCapability, SegmentFieldRequirement, aero_configurations, document_types,
-    mission_initial_state_fields, mission_segments, profile_types, requirement_metrics,
+    energy_schedule_fields, mission_initial_state_fields, mission_segments, profile_types,
+    requirement_metrics,
 };
 
 use super::{manifest, reference_markdown};
@@ -52,6 +53,7 @@ fn registries_are_unique_and_lookup_complete() {
     assert_unique(aero_configurations().iter().map(|item| item.id));
     assert_unique(mission_segments().iter().map(|item| item.segment_type));
     assert_field_groups(mission_initial_state_fields());
+    assert_field_groups(energy_schedule_fields());
     assert_segment_field_groups();
     assert_unique(requirement_metrics().iter().map(|item| item.id));
     assert!(

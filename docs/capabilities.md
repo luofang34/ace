@@ -22,6 +22,8 @@ The CLI command `aex capabilities --format json` and MCP tool `get_capabilities`
 
 Initial-state fields: `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `fuel_fraction` (at_most_one: fuel), `fuel_mass` (at_most_one: fuel).
 
+Energy-schedule point fields: `altitude` (required), `indicated_airspeed` (exactly_one: speed), `true_airspeed` (exactly_one: speed), `mach` (exactly_one: speed).
+
 | Type | Legal fields |
 | --- | --- |
 | `start_and_taxi` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
@@ -30,6 +32,7 @@ Initial-state fields: `altitude` (optional), `indicated_airspeed` (at_most_one: 
 | `payload_drop` | `payload_mass` (required) |
 | `takeoff` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
 | `climb` | `target_altitude` (required), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `energy_climb` | `schedule` (required), `power_fraction` (exactly_one: throttle), `thrust_fraction` (exactly_one: throttle) |
 | `cruise` | `distance` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
 | `loiter` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
 | `descent` | `target_altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
@@ -40,7 +43,11 @@ Fields in the same `at_most_one` group are mutually exclusive. Fields in an `exa
 
 A declared power or thrust fraction of zero means engine off and produces zero modeled propulsion output and fuel flow.
 
-Power/thrust fractions on climb, cruise, loiter, and reserve constrain the mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows the aerodynamic power required and is not scaled directly by throttle.
+Energy-climb schedules use at least two strictly increasing altitude points, one speed representation per point, and exactly one segment throttle setting. The solver uses fixed midpoint steps and rejects nonpositive excess power rather than clamping it.
+
+Legacy `climb` remains a low-fidelity constant-rate model capped at 50 m/s.
+
+Power/thrust fractions on climb, energy_climb, cruise, loiter, and reserve constrain the mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows the aerodynamic power required and is not scaled directly by throttle.
 
 ## Requirement metrics
 

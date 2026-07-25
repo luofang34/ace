@@ -152,7 +152,25 @@ fn is_quantity_path(path: &str) -> bool {
             "fuel_mass",
             "payload_mass",
         ],
-    ) || sequence_quantity_path(path, "requirements.items.", &["value"])
+    ) || energy_schedule_quantity_path(path)
+        || sequence_quantity_path(path, "requirements.items.", &["value"])
+}
+
+fn energy_schedule_quantity_path(path: &str) -> bool {
+    let Some(remainder) = path.strip_prefix("mission.segments.") else {
+        return false;
+    };
+    let Some((segment_index, schedule_path)) = remainder.split_once(".schedule.") else {
+        return false;
+    };
+    let Some((point_index, field)) = schedule_path.split_once('.') else {
+        return false;
+    };
+    segment_index.bytes().all(|byte| byte.is_ascii_digit())
+        && !segment_index.is_empty()
+        && point_index.bytes().all(|byte| byte.is_ascii_digit())
+        && !point_index.is_empty()
+        && matches!(field, "altitude" | "indicated_airspeed" | "true_airspeed")
 }
 
 fn sequence_quantity_path(path: &str, prefix: &str, fields: &[&str]) -> bool {

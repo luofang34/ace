@@ -152,6 +152,10 @@ fn altitude_limit_does_not_turn_a_power_shortfall_into_a_requirement_pass()
     let mut scenario = example_scenario("b777")?;
     scenario.aircraft.limits.maximum_operating_altitude_m = Some(10_000.0 * 0.3048);
     scenario.aircraft.propulsion.sizing_factor = 0.5;
+    scenario
+        .mission
+        .segments
+        .retain(|segment| segment.kind != SegmentKind::EnergyClimb);
     let requirement = scenario
         .requirements
         .items

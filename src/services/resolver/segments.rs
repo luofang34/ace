@@ -7,6 +7,7 @@ use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::Dimension;
 use crate::domain::schema::{MissionSegment, RawMissionSegment};
 
+use super::energy_climb::resolve_energy_schedule;
 use super::{
     optional_fraction, optional_positive_quantity, optional_quantity, optional_throttle_fraction,
 };
@@ -50,6 +51,7 @@ pub(super) fn resolve_segment(raw: RawMissionSegment, index: usize) -> AexResult
             Dimension::Mass,
             &format!("{path}.payload_mass"),
         )?,
+        energy_schedule: resolve_energy_schedule(raw.schedule, &path)?,
     })
 }
 
@@ -125,7 +127,7 @@ fn unsupported_field(segment_type: &str, field: &str, path: &str) -> AexError {
     )
 }
 
-const RAW_SEGMENT_FIELDS: [&str; 12] = [
+const RAW_SEGMENT_FIELDS: [&str; 13] = [
     "duration",
     "distance",
     "target_altitude",
@@ -138,6 +140,7 @@ const RAW_SEGMENT_FIELDS: [&str; 12] = [
     "fuel_fraction",
     "fuel_mass",
     "payload_mass",
+    "schedule",
 ];
 
 fn field_is_present(raw: &RawMissionSegment, field: &str) -> bool {
@@ -154,6 +157,7 @@ fn field_is_present(raw: &RawMissionSegment, field: &str) -> bool {
         "fuel_fraction" => raw.fuel_fraction.is_some(),
         "fuel_mass" => raw.fuel_mass.is_some(),
         "payload_mass" => raw.payload_mass.is_some(),
+        "schedule" => raw.schedule.is_some(),
         _ => false,
     }
 }
@@ -166,6 +170,9 @@ fn missing_field(segment_type: &str, field: &str, path: &str) -> AexError {
         }
         ("climb", "target_altitude") => {
             ("MISSING_CLIMB_ALTITUDE", "climb requires target_altitude")
+        }
+        ("energy_climb", "schedule") => {
+            ("MISSING_ENERGY_SCHEDULE", "energy_climb requires schedule")
         }
         (_, "duration") => ("MISSING_SEGMENT_DURATION", "segment requires duration"),
         _ => (

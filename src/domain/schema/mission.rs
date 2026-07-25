@@ -55,6 +55,22 @@ pub(crate) struct RawMissionSegment {
     pub(crate) fuel_fraction: Option<f64>,
     pub(crate) fuel_mass: Option<String>,
     pub(crate) payload_mass: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) schedule: Option<Vec<RawEnergySchedulePoint>>,
+    #[serde(flatten, default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) additional_fields: BTreeMap<String, Value>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub(crate) struct RawEnergySchedulePoint {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) altitude: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) indicated_airspeed: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) true_airspeed: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) mach: Option<f64>,
     #[serde(flatten, default, skip_serializing_if = "BTreeMap::is_empty")]
     pub(crate) additional_fields: BTreeMap<String, Value>,
 }
@@ -101,6 +117,19 @@ pub(crate) struct MissionSegment {
     pub(crate) fuel_fraction: Option<f64>,
     pub(crate) fuel_mass_kg: Option<f64>,
     pub(crate) payload_mass_kg: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) energy_schedule: Option<Vec<EnergySchedulePoint>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct EnergySchedulePoint {
+    pub(crate) altitude_m: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) indicated_airspeed_m_s: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) true_airspeed_m_s: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) mach: Option<f64>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -112,6 +141,7 @@ pub(crate) enum SegmentKind {
     PayloadDrop,
     Takeoff,
     Climb,
+    EnergyClimb,
     Cruise,
     Loiter,
     Descent,

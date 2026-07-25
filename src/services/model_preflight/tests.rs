@@ -189,6 +189,10 @@ fn inherited_speed_is_recomputed_at_each_segment_altitude() -> Result<(), Box<dy
         fuel_fraction: None,
         fuel_mass_kg: None,
     });
+    scenario
+        .mission
+        .segments
+        .retain(|segment| segment.id == "cruise_1");
     for segment in &mut scenario.mission.segments {
         segment.indicated_airspeed_m_s = None;
         segment.true_airspeed_m_s = None;

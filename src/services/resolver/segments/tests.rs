@@ -20,6 +20,7 @@ fn raw_segment(kind: &str) -> RawMissionSegment {
         fuel_fraction: None,
         fuel_mass: None,
         payload_mass: None,
+        schedule: None,
         additional_fields: Default::default(),
     }
 }

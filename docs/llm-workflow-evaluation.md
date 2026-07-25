@@ -48,7 +48,9 @@ preflight with `MODEL_DOMAIN_UNSUPPORTED` and all known violating declaration
 paths. A direct X-15 simulator regression separately exercises the
 low-fidelity mission vocabulary: engine-off captive carry, glide, and landing
 burn exactly zero fuel, retain their kinematics, inherit the explicit 45,000
-ft initial state, and do not report `FUEL_EXHAUSTED`.
+ft initial state, and do not report `FUEL_EXHAUSTED`. Its energy-method boost
+uses an ordered altitude/speed schedule and remains within 80–120 seconds; the
+B777 climb remains within 15–30 minutes and 5–10 tonnes of fuel.
 
 ## Original flaws, ranked by how badly they misled an LLM
 

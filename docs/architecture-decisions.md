@@ -67,9 +67,12 @@ always recomputed from resolved area and span.
 
 ## ADR-009 — Segment-based mission
 
-The quasi-steady solver supports taxi/fixed-time, takeoff, climb, cruise,
-loiter/reserve, descent, landing, and fixed-fuel segments. Each segment records
-start/end mass, fuel, distance, duration, altitude, and warnings.
+The quasi-steady solver supports taxi/fixed-time, takeoff, legacy climb,
+energy climb/acceleration, cruise, loiter/reserve, descent, landing, and
+fixed-fuel segments. Energy climb integrates specific-energy changes along an
+ordered altitude/speed schedule with deterministic midpoint steps and current
+mass. Each segment records start/end mass, fuel, distance, duration, altitude,
+and warnings.
 
 ## ADR-010 — Parabolic baseline aerodynamics
 

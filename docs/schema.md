@@ -102,6 +102,16 @@ propulsion output and fuel flow are exactly zero, and the point is not subject
 to a powered mission-reserve check. Engine-off climb to a higher altitude is
 rejected with `ENGINE_OFF_CLIMB_UNSUPPORTED`.
 
+`energy_climb` represents coupled climb and acceleration with an ordered
+`schedule`. Each of its two or more points declares `altitude` and exactly one
+of `indicated_airspeed`, `true_airspeed`, or `mach`; the segment declares
+exactly one power or thrust fraction. Altitude must increase strictly, true
+airspeed must not decrease, and the first altitude must match the propagated
+mission state. The deterministic solver integrates
+`g Δh + Δ(V²)/2` with fixed midpoint steps at current mass. Nonpositive excess
+power returns `NONPOSITIVE_EXCESS_POWER`; schedules are never clamped.
+Legacy `climb` retains its conceptual constant-rate method with a 50 m/s cap.
+
 Aerodynamic and propulsion diagnostics produced while evaluating a mission
 segment appear both on that segment and in the mission warning channel.
 Diagnostic paths use the stable segment ID, for example

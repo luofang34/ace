@@ -14,6 +14,7 @@ use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_
 use crate::services::profile_sanity::profile_warnings;
 use crate::services::requirement_resolution::resolve_requirements;
 
+use super::energy_climb::validate_energy_schedule_limits;
 use super::initial_state::validate_initial_state;
 use super::{
     deserialize_value, require_schema_version, resolve_aircraft, resolve_mission, validate_payload,
@@ -41,6 +42,7 @@ pub(crate) fn resolve_embedded_study(
     )?)?;
     validate_payload(&aircraft, &mission)?;
     validate_initial_state(&aircraft, &mission)?;
+    validate_energy_schedule_limits(&aircraft, &mission)?;
     let (engine, propeller) = resolve_embedded_profiles(&embedded.profiles, &aircraft)?;
     let assumptions = collect_all_assumptions(
         &aircraft_value,

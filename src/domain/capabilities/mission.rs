@@ -38,6 +38,13 @@ const MISSION_INITIAL_STATE_FIELDS: &[SegmentFieldCapability] = &[
     at_most_one("fuel_mass", "fuel"),
 ];
 
+const ENERGY_SCHEDULE_FIELDS: &[SegmentFieldCapability] = &[
+    required("altitude"),
+    exactly_one("indicated_airspeed", "speed"),
+    exactly_one("true_airspeed", "speed"),
+    exactly_one("mach", "speed"),
+];
+
 const TIMED_FIELDS: &[SegmentFieldCapability] = &[
     required("duration"),
     optional("altitude"),
@@ -73,6 +80,12 @@ const CLIMB_FIELDS: &[SegmentFieldCapability] = &[
     at_most_one("thrust_fraction", "throttle"),
 ];
 
+const ENERGY_CLIMB_FIELDS: &[SegmentFieldCapability] = &[
+    required("schedule"),
+    exactly_one("power_fraction", "throttle"),
+    exactly_one("thrust_fraction", "throttle"),
+];
+
 const CRUISE_FIELDS: &[SegmentFieldCapability] = &[
     required("distance"),
     optional("altitude"),
@@ -102,7 +115,7 @@ const DESCENT_FIELDS: &[SegmentFieldCapability] = &[
     at_most_one("thrust_fraction", "throttle"),
 ];
 
-const MISSION_SEGMENTS: [MissionSegmentCapability; 11] = [
+const MISSION_SEGMENTS: [MissionSegmentCapability; 12] = [
     segment("start_and_taxi", SegmentKind::StartAndTaxi, TIMED_FIELDS),
     segment("fixed_time", SegmentKind::FixedTime, TIMED_FIELDS),
     segment("fixed_fuel", SegmentKind::FixedFuel, FIXED_FUEL_FIELDS),
@@ -113,6 +126,11 @@ const MISSION_SEGMENTS: [MissionSegmentCapability; 11] = [
     ),
     segment("takeoff", SegmentKind::Takeoff, TIMED_FIELDS),
     segment("climb", SegmentKind::Climb, CLIMB_FIELDS),
+    segment(
+        "energy_climb",
+        SegmentKind::EnergyClimb,
+        ENERGY_CLIMB_FIELDS,
+    ),
     segment("cruise", SegmentKind::Cruise, CRUISE_FIELDS),
     segment("loiter", SegmentKind::Loiter, LOITER_FIELDS),
     segment("descent", SegmentKind::Descent, DESCENT_FIELDS),
@@ -126,6 +144,10 @@ pub(crate) const fn mission_segments() -> &'static [MissionSegmentCapability] {
 
 pub(crate) const fn mission_initial_state_fields() -> &'static [SegmentFieldCapability] {
     MISSION_INITIAL_STATE_FIELDS
+}
+
+pub(crate) const fn energy_schedule_fields() -> &'static [SegmentFieldCapability] {
+    ENERGY_SCHEDULE_FIELDS
 }
 
 pub(crate) fn mission_segment(id: &str) -> Option<MissionSegmentCapability> {

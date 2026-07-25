@@ -5,7 +5,8 @@ use crate::domain::capabilities::{
     AeroConfigurationCapability, DocumentTypeCapability, MissionSegmentCapability,
     ProfileTypeCapability, REQUIREMENT_OPERATORS, REQUIREMENT_SEVERITIES,
     RequirementMetricCapability, SegmentFieldCapability, aero_configurations, document_types,
-    mission_initial_state_fields, mission_segments, profile_types, requirement_metrics,
+    energy_schedule_fields, mission_initial_state_fields, mission_segments, profile_types,
+    requirement_metrics,
 };
 #[cfg(test)]
 use crate::domain::capabilities::{MetricSource, ProfileRole, SegmentFieldRequirement};
@@ -29,6 +30,7 @@ pub(crate) struct CapabilitiesManifest {
     pub(crate) profile_types: &'static [ProfileTypeCapability],
     pub(crate) configurations: &'static [AeroConfigurationCapability],
     pub(crate) mission_initial_state_fields: &'static [SegmentFieldCapability],
+    pub(crate) energy_schedule_fields: &'static [SegmentFieldCapability],
     pub(crate) mission_segments: &'static [MissionSegmentCapability],
     pub(crate) requirement_metrics: &'static [RequirementMetricCapability],
     pub(crate) requirement_operators: &'static [&'static str],
@@ -59,6 +61,7 @@ fn manifest(backends: Vec<BackendDescriptor>) -> AexResult<CapabilitiesManifest>
         profile_types: profile_types(),
         configurations: aero_configurations(),
         mission_initial_state_fields: mission_initial_state_fields(),
+        energy_schedule_fields: energy_schedule_fields(),
         mission_segments: mission_segments(),
         requirement_metrics: requirement_metrics(),
         requirement_operators: &REQUIREMENT_OPERATORS,
@@ -94,6 +97,7 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
         .map(segment_markdown)
         .collect::<String>();
     let initial_state_fields = initial_state_markdown(manifest.mission_initial_state_fields);
+    let energy_schedule_fields = initial_state_markdown(manifest.energy_schedule_fields);
     let metrics = manifest
         .requirement_metrics
         .iter()
@@ -121,8 +125,8 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
         .iter()
         .map(|backend| format!("- `{}`\n", backend.id))
         .collect::<String>();
-    let operators = code_list(manifest.requirement_operators);
-    let severities = code_list(manifest.requirement_severities);
+    let (operators, severities) = requirement_lists(manifest);
+    let mission_notes = mission_notes();
     format!(
         "# Capability manifest\n\n\
          The CLI command `aex capabilities --format json` and MCP tool \
@@ -133,14 +137,13 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          ## Aerodynamic configurations\n\n{configurations}\n\n\
          ## Mission segments\n\n\
          Initial-state fields: {initial_state_fields}.\n\n\
+         Energy-schedule point fields: {energy_schedule_fields}.\n\n\
          | Type | Legal fields |\n| --- | --- |\n{segments}\n\
          Fields in the same `at_most_one` group are mutually exclusive. Fields in an \
          `exactly_one` group require one and only one representation. Unlisted fields are rejected.\n\n\
          A declared power or thrust fraction of zero means engine off and produces zero \
          modeled propulsion output and fuel flow.\n\n\
-         Power/thrust fractions on climb, cruise, loiter, and reserve constrain the \
-         mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows \
-         the aerodynamic power required and is not scaled directly by throttle.\n\n\
+         {mission_notes}\n\n\
          ## Requirement metrics\n\n\
          | Metric | Source | Bindable | Unit | Replacement |\n\
          | --- | --- | --- | --- | --- |\n{metrics}\n\
@@ -149,6 +152,25 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          ## Registered model domains\n\n{domains}\n\
          Strict-warning decisions are listed in [the generated warning policy](strict-warning-policy.md).\n"
     )
+}
+
+#[cfg(test)]
+fn requirement_lists(manifest: &CapabilitiesManifest) -> (String, String) {
+    (
+        code_list(manifest.requirement_operators),
+        code_list(manifest.requirement_severities),
+    )
+}
+
+#[cfg(test)]
+fn mission_notes() -> &'static str {
+    "Energy-climb schedules use at least two strictly increasing altitude points, one speed \
+     representation per point, and exactly one segment throttle setting. The solver uses fixed \
+     midpoint steps and rejects nonpositive excess power rather than clamping it.\n\n\
+     Legacy `climb` remains a low-fidelity constant-rate model capped at 50 m/s.\n\n\
+     Power/thrust fractions on climb, energy_climb, cruise, loiter, and reserve constrain the \
+     mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows the \
+     aerodynamic power required and is not scaled directly by throttle."
 }
 
 #[cfg(test)]

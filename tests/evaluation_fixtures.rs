@@ -109,7 +109,7 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
     let temporary = TempDir::new()?;
     for (name, expected_count, required_path) in [
         ("sr71", 7, "mission.segments.supersonic_cruise.altitude"),
-        ("x15", 5, "mission.segments.speed_run.mach"),
+        ("x15", 6, "mission.segments.boost_climb.schedule.2.mach"),
     ] {
         let scenario = fixture_path(name, "scenario.yaml");
         let validation = failed_json(

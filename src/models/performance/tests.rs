@@ -134,6 +134,10 @@ fn altitude_limit_does_not_mask_a_cruise_power_shortfall() -> Result<(), Box<dyn
     let mut scenario = example_scenario("b777")?;
     scenario.aircraft.limits.maximum_operating_altitude_m = Some(10_000.0 * 0.3048);
     scenario.aircraft.propulsion.sizing_factor = 0.5;
+    scenario
+        .mission
+        .segments
+        .retain(|segment| segment.kind != crate::domain::schema::SegmentKind::EnergyClimb);
     let result = summary(scenario)?;
 
     assert_eq!(result.cruise_feasible, Some(false));
