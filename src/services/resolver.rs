@@ -17,6 +17,7 @@ use crate::domain::topology::AircraftTopology;
 use crate::services::assumptions::collect_all_assumptions;
 use crate::services::overrides::apply_overrides;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
+use crate::services::profile_sanity::profile_warnings;
 use crate::services::requirement_resolution::resolve_requirements;
 use crate::storage::profile_store::ProfileRepository;
 use crate::storage::project_store::read_yaml_value_blocking;
@@ -78,6 +79,10 @@ impl ScenarioResolver {
             &engine,
             propeller.as_ref(),
         );
+        let mut warnings = vec![Diagnostic::limitation(
+            "Results use conceptual fidelity-level 0 or 1 equations.",
+        )];
+        warnings.extend(profile_warnings(&engine, propeller.as_ref()));
         Ok(ResolvedScenario {
             id: raw.id.clone(),
             name: raw.name.clone(),
@@ -87,9 +92,7 @@ impl ScenarioResolver {
             engine,
             propeller,
             assumptions,
-            warnings: vec![Diagnostic::limitation(
-                "Results use conceptual fidelity-level 0 or 1 equations.",
-            )],
+            warnings,
             source_path: scenario_path.to_path_buf(),
         })
     }

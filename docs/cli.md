@@ -33,4 +33,5 @@ both the study contract and the resolved referenced scenario.
 Analysis common flags include `--format table|json|yaml|csv`, `--output`,
 `--strict`, `--explain`, `--no-cache`, `--seed`, and repeated
 `--set PATH=VALUE`. Plot `--output` names the SVG and `--spec-output` writes the
-structured chart response separately.
+structured chart response separately. Strict mode promotes model extrapolation,
+agent-assumption, and profile `PARAMETER_OUTSIDE_TYPICAL` warnings.

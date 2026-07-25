@@ -381,6 +381,6 @@ pub(crate) fn requirement_margins(
                 label: item.id.clone(),
             })
             .collect(),
-        warnings: Vec::new(),
+        warnings: scenario.warnings.clone(),
     }
 }

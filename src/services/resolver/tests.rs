@@ -115,6 +115,33 @@ fn embedded_study_requires_referenced_profiles() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
+fn embedded_study_retains_profile_sanity_warnings() -> Result<(), Box<dyn std::error::Error>> {
+    let mut embedded = embedded_c172()?;
+    let engine = embedded
+        .profiles
+        .iter_mut()
+        .find(|profile| profile.profile.kind == "piston_engine")
+        .ok_or_else(|| std::io::Error::other("missing embedded piston profile"))?;
+    let parameters = engine
+        .profile
+        .parameters
+        .as_mapping_mut()
+        .ok_or_else(|| std::io::Error::other("profile parameters are not a mapping"))?;
+    parameters.insert(
+        serde_yaml::Value::String("rated_altitude".to_owned()),
+        serde_yaml::Value::String("-1000 m".to_owned()),
+    );
+
+    let scenario = resolve_embedded_study(&embedded)?;
+
+    assert!(scenario.warnings.iter().any(|warning| {
+        warning.code == "PARAMETER_OUTSIDE_TYPICAL"
+            && warning.path.as_deref() == Some("profile.parameters.rated_altitude")
+    }));
+    Ok(())
+}
+
+#[test]
 fn inconsistent_override_is_rejected_and_paired_override_closes()
 -> Result<(), Box<dyn std::error::Error>> {
     let temporary = tempfile::tempdir()?;

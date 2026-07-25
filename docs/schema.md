@@ -75,6 +75,13 @@ Turbofan profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
 retains conservative defaults when they are absent.
 
+Resolved piston, turbofan, and propeller parameters are checked against
+registered advisory typical ranges. Every violation emits
+`PARAMETER_OUTSIDE_TYPICAL` with structured value, inclusive bounds, and unit
+context. Non-strict resolution remains available for explicit surrogate
+profiles; `--strict` promotes the warning to failure. Typical ranges identify a
+model-fit concern and are not a substitute for a model validity envelope.
+
 ## Aircraft topology
 
 `aircraft.topology` is an optional, backend-neutral component graph. Components

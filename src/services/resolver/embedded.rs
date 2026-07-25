@@ -11,6 +11,7 @@ use crate::domain::study::EmbeddedStudyBaseline;
 use crate::services::assumptions::collect_all_assumptions;
 use crate::services::overrides::apply_overrides;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
+use crate::services::profile_sanity::profile_warnings;
 use crate::services::requirement_resolution::resolve_requirements;
 
 use super::{
@@ -46,6 +47,10 @@ pub(crate) fn resolve_embedded_study(
         &engine,
         propeller.as_ref(),
     );
+    let mut warnings = vec![Diagnostic::limitation(
+        "Results use conceptual fidelity-level 0 or 1 equations.",
+    )];
+    warnings.extend(profile_warnings(&engine, propeller.as_ref()));
     Ok(ResolvedScenario {
         id: raw.id.clone(),
         name: raw.name.clone(),
@@ -55,9 +60,7 @@ pub(crate) fn resolve_embedded_study(
         engine,
         propeller,
         assumptions,
-        warnings: vec![Diagnostic::limitation(
-            "Results use conceptual fidelity-level 0 or 1 equations.",
-        )],
+        warnings,
         source_path: PathBuf::from(format!("<embedded:{}>", raw.id)),
     })
 }
