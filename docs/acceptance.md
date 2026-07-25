@@ -8,8 +8,9 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
    calibration integration tests.
 3. **C172 uses piston/propeller physics.** Typed profile resolution and
    propulsion lapse unit test.
-4. **B777 uses turbofan thrust/TSFC physics.** Typed profile resolution and
-   propulsion lapse unit test.
+4. **B777 uses tabulated turbofan thrust/TSFC physics.** Typed profile
+   resolution, bilinear interpolation, legacy calibration, and extrapolation
+   diagnostic tests.
 5. **Both examples produce reports, ledgers, warnings, curves, payload-range,
    and constraints.** CLI plot flows, immutable run layout, and sample
    artifacts.

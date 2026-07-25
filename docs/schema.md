@@ -134,6 +134,15 @@ Turbofan profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
 retains conservative defaults when they are absent.
 
+Turbofan profiles select either the legacy simple-deck parameters or a
+`table_deck`. A table declares `axes.mach`, quantity-valued `axes.altitude`,
+and all four `modes`: `takeoff`, `climb`, `cruise`, and `economy`. Each mode
+contains a `thrust` matrix in `N` and exactly one fuel matrix: `tsfc` in
+`kg/N/hr` or `specific_impulse` in `s`. Every matrix uses altitude rows and
+Mach columns, matching the strictly increasing axes, and every cell must be
+finite and positive. Table profiles do not require simple-deck lapse, TSFC, or
+author-declared limit fields.
+
 Resolved piston, turbofan, and propeller parameters are checked against
 registered advisory typical ranges. Every violation emits
 `PARAMETER_OUTSIDE_TYPICAL` with structured value, inclusive bounds, and unit
@@ -213,10 +222,11 @@ directories are not part of the storage contract.
 Result and evidence provenance may include `validity_domains`, a
 machine-readable list keyed by `model_id`. Each bound names a typed variable,
 canonical SI unit, optional minimum and maximum with explicit inclusivity, and
-a basis such as `published_specification`, `model_form`, `resolved_profile`, or
-`screening_assumption`. The prose `validity_range` remains available for human
-readers. Omitted typed domains default to an empty list and empty lists are not
-serialized, preserving schema-version-1 stored-record identities.
+a basis such as `published_specification`, `model_form`, `resolved_profile`,
+`tabulated_data`, or `screening_assumption`. The prose `validity_range` remains
+available for human readers. Omitted typed domains default to an empty list and
+empty lists are not serialized, preserving schema-version-1 stored-record
+identities.
 
 Scenario resolution preflights declared altitudes, speeds, Mach numbers,
 masses, and applicable aircraft limits against every model that consumes

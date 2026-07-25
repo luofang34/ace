@@ -230,10 +230,10 @@ fn installed_loading(scenario: &crate::domain::schema::ResolvedScenario) -> f64 
                 / mass
         }
         EngineProfile::Turbofan(profile) => {
-            profile.sea_level_static_thrust_n
-                * f64::from(scenario.aircraft.propulsion.engine_count)
-                * scenario.aircraft.propulsion.sizing_factor
-                / (mass * GRAVITY_M_S2)
+            profile.installed_reference_thrust_n(
+                scenario.aircraft.propulsion.engine_count,
+                scenario.aircraft.propulsion.sizing_factor,
+            ) / (mass * GRAVITY_M_S2)
         }
     }
 }

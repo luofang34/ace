@@ -1,29 +1,78 @@
 schema_version: 1
 profile:
   id: engine.ge90_115b_class
-  version: 1
+  version: 2
   type: turbofan_engine
-  model: propulsion.turbofan_simple_deck
+  model: propulsion.table_deck
   metadata:
     display_name: GE90-115B-Class Turbofan
     source: representative conceptual profile
     confidence: medium
   parameters:
-    sea_level_static_thrust: 513 kN
     dry_mass: 8760 kg
     bypass_ratio: 9.0
-    thrust_lapse:
-      altitude_exponent: 0.72
-      mach_linear_coefficient: 0.30
-      minimum_fraction: 0.12
-    tsfc:
-      sea_level_takeoff: 0.0108 kg/N/hr
-      cruise_reference: 0.0372 kg/N/hr
-      cruise_reference_altitude: 35000 ft
-      cruise_reference_mach: 0.84
     installation:
       thrust_loss_fraction: 0.03
       nacelle_drag_area: 2.4 m^2
-    limits:
-      maximum_mach: 0.90
-      maximum_altitude: 45000 ft
+    table_deck:
+      axes:
+        mach: [0.0, 0.9]
+        altitude:
+          [0 ft, 5000 ft, 10000 ft, 15000 ft, 21500 ft, 33000 ft, 35000 ft, 37000 ft, 45000 ft]
+      modes:
+        takeoff:
+          thrust: &thrust_table
+            unit: N
+            values:
+              - [513000.000000, 374490.000000]
+              - [460865.704221, 336431.964081]
+              - [412446.827140, 301086.183812]
+              - [367598.625862, 268346.996879]
+              - [314397.391193, 229510.095571]
+              - [233492.008232, 170449.166010]
+              - [221043.635605, 161361.853992]
+              - [207911.641199, 151775.498075]
+              - [157803.870809, 115196.825690]
+          tsfc:
+            unit: kg/N/hr
+            values:
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+              - [0.0108, 0.0108]
+        climb:
+          thrust: *thrust_table
+          tsfc:
+            unit: kg/N/hr
+            values:
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+              - [0.03721, 0.03721]
+        cruise:
+          thrust: *thrust_table
+          tsfc: &cruise_tsfc_table
+            unit: kg/N/hr
+            values:
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+              - [0.0372, 0.0372]
+        economy:
+          thrust: *thrust_table
+          tsfc: *cruise_tsfc_table

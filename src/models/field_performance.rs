@@ -11,8 +11,10 @@ pub(crate) fn estimate_takeoff_distance_m(scenario: &ResolvedScenario) -> f64 {
     let thrust_to_weight = match &scenario.engine {
         EngineProfile::Piston(profile) => profile.rated_power_w / (mass * GRAVITY_M_S2 * lift_off),
         EngineProfile::Turbofan(profile) => {
-            profile.sea_level_static_thrust_n * f64::from(scenario.aircraft.propulsion.engine_count)
-                / (mass * GRAVITY_M_S2)
+            profile.installed_reference_thrust_n(
+                scenario.aircraft.propulsion.engine_count,
+                scenario.aircraft.propulsion.sizing_factor,
+            ) / (mass * GRAVITY_M_S2)
         }
     };
     lift_off.powi(2) / (2.0 * GRAVITY_M_S2 * (thrust_to_weight - 0.04).max(0.03))
@@ -30,3 +32,6 @@ pub(crate) fn estimate_landing_distance_m(scenario: &ResolvedScenario) -> AexRes
     let obstacle_allowance = 15.24 / 3.0_f64.to_radians().tan();
     Ok(1.35 * (ground_roll + obstacle_allowance))
 }
+
+#[cfg(test)]
+mod tests;

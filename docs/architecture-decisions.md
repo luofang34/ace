@@ -55,7 +55,8 @@ simulation, so validation and analysis share one rejection boundary.
 
 Aircraft select known deterministic model IDs. Engine and propeller profiles
 are YAML data loaded through an injected repository; profiles cannot execute
-code.
+code. Tabulated propulsion profiles derive their validity bounds from their
+data axes; an author-supplied prose or limit field cannot widen that support.
 
 ## ADR-008 — Separate aircraft, mission, requirements, and scenario
 

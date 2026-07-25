@@ -70,6 +70,8 @@ fn generic_turbofan_domain_declares_profile_resolved_mach() -> Result<(), Box<dy
         .find(|bound| bound.variable == ValidityVariable::Mach)
         .ok_or("resolved turbofan Mach bound is missing")?;
     assert_eq!(resolved_mach.maximum, Some(0.9));
+    assert_eq!(resolved_mach.minimum, Some(0.0));
+    assert_eq!(resolved_mach.basis, ValidityBasis::TabulatedData);
     Ok(())
 }
 

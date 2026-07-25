@@ -8,6 +8,13 @@ use crate::models::atmosphere::Isa1976;
 use crate::models::mission::{
     representative_speed, segment_end_altitude, segment_operating_altitude,
 };
+use crate::models::propulsion::{OperatingMode, fuel_flow_for_required_thrust};
+
+#[derive(Debug)]
+struct EvaluatedRangePoint {
+    point: PayloadRangePoint,
+    warnings: Vec<Diagnostic>,
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct PayloadRangeAnalyzer {
@@ -49,19 +56,28 @@ impl PayloadRangeAnalyzer {
             ("maximum_range", reduced_payload, maximum_fuel),
             ("zero_payload_ferry", 0.0, maximum_fuel),
         ];
-        let points = definitions
+        let evaluated = definitions
             .into_iter()
             .map(|(id, payload, fuel)| self.range_point(id, payload, fuel))
             .collect::<AexResult<Vec<_>>>()?;
+        let points = evaluated.iter().map(|item| item.point.clone()).collect();
+        let mut warnings = vec![Diagnostic::warning(
+            WarningCode::SimplifiedPayloadRange,
+            "Payload-range values use a representative cruise condition, not a full mission.",
+            "analysis.payload_range",
+        )];
+        for item in evaluated {
+            for warning in item.warnings {
+                if !warnings.contains(&warning) {
+                    warnings.push(warning);
+                }
+            }
+        }
         Ok(PayloadRangeResult {
             scenario_id: self.scenario.id.clone(),
             points,
             simplified_cruise_assumption: true,
-            warnings: vec![Diagnostic::warning(
-                WarningCode::SimplifiedPayloadRange,
-                "Payload-range values use a representative cruise condition, not a full mission.",
-                "analysis.payload_range",
-            )],
+            warnings,
             model: ModelMetadata {
                 model_id: "performance.payload_range_simple".to_owned(),
                 model_version: "1.0.0".to_owned(),
@@ -71,14 +87,19 @@ impl PayloadRangeAnalyzer {
         })
     }
 
-    fn range_point(&self, id: &str, payload_kg: f64, fuel_kg: f64) -> AexResult<PayloadRangePoint> {
+    fn range_point(
+        &self,
+        id: &str,
+        payload_kg: f64,
+        fuel_kg: f64,
+    ) -> AexResult<EvaluatedRangePoint> {
         let empty = self.scenario.aircraft.mass.operating_empty_mass_kg;
         let start_mass = empty + payload_kg + fuel_kg;
         let reserve_fraction = 0.08;
         let usable_fuel = fuel_kg * (1.0 - reserve_fraction);
         let representative_mass = start_mass - 0.5 * usable_fuel;
         let (altitude, speed) = cruise_condition(&self.scenario)?;
-        let fuel_flow =
+        let (fuel_flow, warnings) =
             representative_cruise_fuel_flow(&self.scenario, altitude, speed, representative_mass)?;
         if fuel_flow <= 0.0 {
             return Err(AexError::analysis(
@@ -87,11 +108,14 @@ impl PayloadRangeAnalyzer {
             ));
         }
         let range_m = usable_fuel / fuel_flow * speed;
-        Ok(PayloadRangePoint {
-            id: id.to_owned(),
-            range: QuantityOutput::range(range_m),
-            payload_kg,
-            fuel_kg,
+        Ok(EvaluatedRangePoint {
+            point: PayloadRangePoint {
+                id: id.to_owned(),
+                range: QuantityOutput::range(range_m),
+                payload_kg,
+                fuel_kg,
+            },
+            warnings,
         })
     }
 }
@@ -117,7 +141,7 @@ fn representative_cruise_fuel_flow(
     altitude_m: f64,
     speed_m_s: f64,
     mass_kg: f64,
-) -> AexResult<f64> {
+) -> AexResult<(f64, Vec<Diagnostic>)> {
     let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
     let aero = evaluate_aerodynamics(
         &scenario.aircraft,
@@ -136,9 +160,21 @@ fn representative_cruise_fuel_flow(
                 .as_ref()
                 .map_or(0.75, |item| item.cruise_efficiency);
             let shaft_power_kw = aero.power_required_w / efficiency / 1000.0;
-            Ok(profile.bsfc_cruise_kg_kwh * shaft_power_kw / 3600.0)
+            Ok((
+                profile.bsfc_cruise_kg_kwh * shaft_power_kw / 3600.0,
+                Vec::new(),
+            ))
         }
-        EngineProfile::Turbofan(profile) => Ok(profile.tsfc_cruise_kg_n_hr * aero.drag_n / 3600.0),
+        EngineProfile::Turbofan(profile) => {
+            let result = fuel_flow_for_required_thrust(
+                profile,
+                altitude_m,
+                speed_m_s / atmosphere.speed_of_sound_m_s,
+                OperatingMode::Cruise,
+                aero.drag_n,
+            )?;
+            Ok((result.flow_kg_s, result.warnings))
+        }
     }
 }
 

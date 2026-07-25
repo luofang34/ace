@@ -25,7 +25,7 @@ fn native_analysis_publishes_validated_scenario_domains() -> Result<(), Box<dyn 
         "atmosphere.isa1976",
         "aero.parabolic_polar",
         "aero.wave_drag_power_law",
-        "propulsion.turbofan_simple_deck",
+        "propulsion.table_deck",
         "performance.field_length_simple",
         "structures.conventional_conceptual_screen",
     ] {

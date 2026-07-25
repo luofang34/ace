@@ -1,17 +1,14 @@
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
+pub(crate) use crate::domain::propulsion::PropulsionMode as OperatingMode;
+use crate::domain::propulsion::{TableFuelValue, TablePropulsionDeck};
 use crate::domain::result::{AtmosphereState, ModelMetadata, PropulsionState};
 use crate::domain::schema::{
-    EngineProfile, PistonProfile, PropellerProfile, ResolvedScenario, TurbofanProfile,
+    EngineProfile, PistonProfile, PropellerProfile, ResolvedScenario, SimpleTurbofanDeck,
+    TurbofanProfile,
 };
 use crate::domain::warning::WarningCode;
 
-#[derive(Debug, Clone, Copy)]
-pub(crate) enum OperatingMode {
-    Takeoff,
-    Climb,
-    Cruise,
-    Economy,
-}
+mod table_deck;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct PropulsionQuery {
@@ -127,25 +124,52 @@ fn evaluate_turbofan(
     atmosphere: &AtmosphereState,
     query: PropulsionQuery,
 ) -> AexResult<PropulsionState> {
+    if let Some(deck) = &profile.table_deck {
+        return evaluate_table_turbofan(profile, deck, engine_count, sizing_factor, query);
+    }
+    let deck = profile.simple_deck.as_ref().ok_or_else(|| {
+        AexError::validation(
+            "MISSING_PROPULSION_DECK",
+            "aircraft.propulsion.profile",
+            "turbofan profile requires one resolved propulsion deck",
+        )
+    })?;
+    evaluate_simple_turbofan(
+        profile,
+        deck,
+        engine_count,
+        sizing_factor,
+        atmosphere,
+        query,
+    )
+}
+
+fn evaluate_simple_turbofan(
+    profile: &TurbofanProfile,
+    deck: &SimpleTurbofanDeck,
+    engine_count: u32,
+    sizing_factor: f64,
+    atmosphere: &AtmosphereState,
+    query: PropulsionQuery,
+) -> AexResult<PropulsionState> {
     let density_ratio = (atmosphere.density_kg_m3 / 1.225).max(0.0);
-    let altitude_lapse = density_ratio.powf(profile.altitude_exponent);
-    let mach_lapse = (1.0 - profile.mach_linear_coefficient * query.mach).max(0.0);
-    let lapse = (altitude_lapse * mach_lapse).max(profile.minimum_thrust_fraction);
+    let altitude_lapse = density_ratio.powf(deck.altitude_exponent);
+    let mach_lapse = (1.0 - deck.mach_linear_coefficient * query.mach).max(0.0);
+    let lapse = (altitude_lapse * mach_lapse).max(deck.minimum_thrust_fraction);
     let installation_factor = 1.0 - profile.thrust_loss_fraction;
-    let thrust = profile.sea_level_static_thrust_n
+    let thrust = deck.sea_level_static_thrust_n
         * f64::from(engine_count)
         * sizing_factor
         * lapse
         * query.throttle
         * installation_factor;
     let tsfc = match query.mode {
-        OperatingMode::Takeoff => profile.tsfc_takeoff_kg_n_hr,
-        _ => profile.tsfc_cruise_kg_n_hr,
+        OperatingMode::Takeoff => deck.tsfc_takeoff_kg_n_hr,
+        _ => deck.tsfc_cruise_kg_n_hr,
     };
     let fuel_flow = tsfc * thrust / 3600.0;
     let mut warnings = Vec::new();
-    let extrapolated =
-        query.mach > profile.maximum_mach || query.altitude_m > profile.maximum_altitude_m;
+    let extrapolated = query.mach > deck.maximum_mach || query.altitude_m > deck.maximum_altitude_m;
     if extrapolated {
         warnings.push(Diagnostic::warning(
             WarningCode::ModelExtrapolation,
@@ -171,6 +195,87 @@ fn evaluate_turbofan(
             },
         ),
         warnings,
+    })
+}
+
+fn evaluate_table_turbofan(
+    profile: &TurbofanProfile,
+    deck: &TablePropulsionDeck,
+    engine_count: u32,
+    sizing_factor: f64,
+    query: PropulsionQuery,
+) -> AexResult<PropulsionState> {
+    let point = table_deck::evaluate(deck, query.mode, query.altitude_m, query.mach)?;
+    let thrust = point.thrust_per_engine_n
+        * f64::from(engine_count)
+        * sizing_factor
+        * query.throttle
+        * (1.0 - profile.thrust_loss_fraction);
+    let fuel_flow = point.fuel.flow_for_thrust(thrust);
+    Ok(PropulsionState {
+        thrust_available_n: Some(thrust),
+        shaft_power_available_w: None,
+        propulsive_power_available_w: Some(thrust * query.true_airspeed_m_s),
+        fuel_flow_kg_s: fuel_flow,
+        model: metadata(
+            &profile.model,
+            profile.version,
+            if point.extrapolated {
+                "extrapolated"
+            } else {
+                "valid"
+            },
+        ),
+        warnings: point.warnings,
+    })
+}
+
+#[derive(Debug)]
+pub(crate) struct RequiredThrustFuelFlow {
+    pub(crate) flow_kg_s: f64,
+    pub(crate) basis: ThrustFuelBasis,
+    pub(crate) warnings: Vec<Diagnostic>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ThrustFuelBasis {
+    Tsfc,
+    SpecificImpulse,
+}
+
+pub(crate) fn fuel_flow_for_required_thrust(
+    profile: &TurbofanProfile,
+    altitude_m: f64,
+    mach: f64,
+    mode: OperatingMode,
+    thrust_n: f64,
+) -> AexResult<RequiredThrustFuelFlow> {
+    if let Some(deck) = &profile.table_deck {
+        let point = table_deck::evaluate(deck, mode, altitude_m, mach)?;
+        return Ok(RequiredThrustFuelFlow {
+            flow_kg_s: point.fuel.flow_for_thrust(thrust_n),
+            basis: match point.fuel {
+                TableFuelValue::TsfcKgNHr(_) => ThrustFuelBasis::Tsfc,
+                TableFuelValue::SpecificImpulseS(_) => ThrustFuelBasis::SpecificImpulse,
+            },
+            warnings: point.warnings,
+        });
+    }
+    let deck = profile.simple_deck.as_ref().ok_or_else(|| {
+        AexError::validation(
+            "MISSING_PROPULSION_DECK",
+            "aircraft.propulsion.profile",
+            "turbofan profile requires one resolved propulsion deck",
+        )
+    })?;
+    let tsfc = match mode {
+        OperatingMode::Takeoff => deck.tsfc_takeoff_kg_n_hr,
+        _ => deck.tsfc_cruise_kg_n_hr,
+    };
+    Ok(RequiredThrustFuelFlow {
+        flow_kg_s: tsfc * thrust_n / 3600.0,
+        basis: ThrustFuelBasis::Tsfc,
+        warnings: Vec::new(),
     })
 }
 
