@@ -10,15 +10,28 @@ void PrintErrors()
 void main()
 {
     ReadVSPFile( "__ARTIFACT__" );
-    array<string> fuselages = FindGeomsWithName( "ACE_Fuselage" );
-    DeleteGeomVec( fuselages );
-    array<string> engine_envelopes = FindGeomsWithName( "ACE_Engine_Envelope" );
-    DeleteGeomVec( engine_envelopes );
-    array<string> propellers = FindGeomsWithName( "ACE_Propeller" );
-    DeleteGeomVec( propellers );
-    Update();
+    int lifting_set = GetSetIndex( "ACE_VSPAERO_LIFTING" );
+    if ( lifting_set < SET_FIRST_USER )
+    {
+        Print( "ACE_ERROR=missing ACE_VSPAERO_LIFTING geometry set" );
+        return;
+    }
 
     SetAnalysisInputDefaults( "VSPAEROComputeGeometry" );
+    array<int> thick_geometry_set;
+    thick_geometry_set.push_back( SET_NONE );
+    SetIntAnalysisInput(
+        "VSPAEROComputeGeometry",
+        "GeomSet",
+        thick_geometry_set
+    );
+    array<int> thin_geometry_set;
+    thin_geometry_set.push_back( lifting_set );
+    SetIntAnalysisInput(
+        "VSPAEROComputeGeometry",
+        "ThinGeomSet",
+        thin_geometry_set
+    );
     string geometry_id = ExecAnalysis( "VSPAEROComputeGeometry" );
     Print( "ACE_VSPAERO_GEOMETRY_ID=" + geometry_id );
 

@@ -116,6 +116,12 @@ separate baseline in the response. Requesting OpenVSP is explicit, and any
 launch, analysis, protocol, or parsing failure fails the request rather than
 silently returning a native substitute.
 
+The `.vsp3` model retains the complete generated airframe and propulsion
+envelopes. CompGeom evaluates that full model, while VSPAERO consumes a named
+set containing only lifting surfaces. Profile dimensions take precedence for
+engine envelopes; otherwise dry-mass cube-root correlations provide
+adapter-internal visual dimensions.
+
 ## ADR-019 — Editable designs use validated scenario overlays
 
 An editable design is a normal scenario directory plus a persisted

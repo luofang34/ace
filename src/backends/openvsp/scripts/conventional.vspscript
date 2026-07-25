@@ -24,6 +24,7 @@ void AddEngineEnvelope( double y_location )
     SetParmVal( engine, "X_Rel_Location", "XForm", __ENGINE_X__ );
     SetParmVal( engine, "Y_Rel_Location", "XForm", y_location );
     SetParmVal( engine, "Z_Rel_Location", "XForm", __ENGINE_Z__ );
+    SetSetFlag( engine, SET_FIRST_USER, false );
 }
 
 void AddPropeller()
@@ -35,14 +36,17 @@ void AddPropeller()
     SetParmVal( propeller, "NumBlade", "Design", __PROPELLER_BLADE_COUNT__ );
     SetParmVal( propeller, "X_Rel_Location", "XForm", __PROPELLER_X__ );
     SetParmVal( propeller, "Z_Rel_Location", "XForm", __PROPELLER_Z__ );
+    SetSetFlag( propeller, SET_FIRST_USER, false );
 }
 
 void main()
 {
     ClearVSPModel();
+    SetSetName( SET_FIRST_USER, "ACE_VSPAERO_LIFTING" );
 
     string fuselage = AddGeom( "FUSELAGE", "" );
     SetGeomName( fuselage, "ACE_Fuselage" );
+    SetSetFlag( fuselage, SET_FIRST_USER, false );
     SetParmVal( fuselage, "Length", "Design", __FUSELAGE_LENGTH__ );
     string fuselage_surface = GetXSecSurf( fuselage, 0 );
     SetEllipse( fuselage_surface, 1, __NOSE_WIDTH__, __NOSE_HEIGHT__ );
@@ -51,6 +55,7 @@ void main()
 
     string wing = AddGeom( "WING", "" );
     SetGeomName( wing, "ACE_Main_Wing" );
+    SetSetFlag( wing, SET_FIRST_USER, true );
     SetParmVal( wing, "TotalArea", "WingGeom", __WING_AREA__ );
     SetParmVal( wing, "TotalAR", "WingGeom", __ASPECT_RATIO__ );
     SetParmVal( wing, "Taper", "XSec_1", __TAPER_RATIO__ );
@@ -69,6 +74,7 @@ void main()
 
     string horizontal_tail = AddGeom( "WING", "" );
     SetGeomName( horizontal_tail, "ACE_Horizontal_Tail" );
+    SetSetFlag( horizontal_tail, SET_FIRST_USER, true );
     SetParmVal( horizontal_tail, "TotalArea", "WingGeom", __HORIZONTAL_TAIL_AREA__ );
     SetParmVal( horizontal_tail, "TotalAR", "WingGeom", 4.0 );
     SetParmVal( horizontal_tail, "Taper", "XSec_1", 0.55 );
@@ -78,6 +84,7 @@ void main()
 
     string vertical_tail = AddGeom( "WING", "" );
     SetGeomName( vertical_tail, "ACE_Vertical_Tail" );
+    SetSetFlag( vertical_tail, SET_FIRST_USER, true );
     SetParmVal( vertical_tail, "TotalArea", "WingGeom", __VERTICAL_TAIL_AREA__ );
     SetParmVal( vertical_tail, "TotalAR", "WingGeom", 1.8 );
     SetParmVal( vertical_tail, "Taper", "XSec_1", 0.45 );
@@ -103,8 +110,8 @@ void main()
     Update();
     WriteVSPFile( "__ARTIFACT__", SET_ALL );
 
-    SetAnalysisInputDefaults( "CompGeom" );
-    string result_id = ExecAnalysis( "CompGeom" );
+    ComputeCompGeom( SET_ALL, false, 0 );
+    string result_id = FindLatestResultsID( "Comp_Geom" );
     array<double> wet_areas = GetDoubleResults( result_id, "Wet_Area" );
     double wetted_area = 0.0;
     for ( uint i = 0; i < wet_areas.size(); i++ )

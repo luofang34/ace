@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360">
+  <title>b777-long-range OpenVSP conventional layout</title>
+  <g fill="none" stroke="#172554" stroke-width="2">
+    <rect id="fuselage" data-length-m="74.520" data-width-m="4.180" x="50.00" y="170.97" width="700.00" height="18.06" rx="3"/>
+    <polygon id="wing" data-area-m2="436.800" points="344.00,180.00 549.04,40.00 576.75,40.00 442.94,180.00 576.75,320.00 549.04,320.00"/>
+    <rect id="horizontal-tail" data-length-m="5.119" data-width-m="20.477" x="638.00" y="135.76" width="48.09" height="88.48" rx="3"/>
+    <line id="vertical-tail" data-area-m2="52.416" x1="638.00" y1="180.00" x2="750.00" y2="180.00"/>
+    <rect id="engine-1" data-length-m="7.009" data-width-m="3.504" x="363.79" y="234.03" width="65.84" height="15.14" rx="3"/>
+    <rect id="engine-2" data-length-m="7.009" data-width-m="3.504" x="363.79" y="110.83" width="65.84" height="15.14" rx="3"/>
+  </g>
+</svg>

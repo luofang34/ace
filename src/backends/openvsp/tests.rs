@@ -1,6 +1,7 @@
-use super::parsing::{polar_points, stability_summary};
+use super::parsing::{polar_points, positive_marker_number, stability_summary};
 use crate::backends::contracts::{GeometryBackend, GeometryRequest};
 use crate::backends::native::NativeBackend;
+use crate::domain::schema::EngineProfile;
 use crate::test_support::{example_scenario, set_inferred_configuration};
 
 #[test]
@@ -15,6 +16,14 @@ fn parses_structured_polar_markers() -> Result<(), Box<dyn std::error::Error>> {
     let stability = stability_summary(&points);
     assert_eq!(stability.statically_stable, Some(true));
     Ok(())
+}
+
+#[test]
+fn rejects_nonpositive_or_nonfinite_compgeom_area() {
+    for value in ["0", "-1", "NaN", "inf"] {
+        let output = format!("ACE_WETTED_AREA_M2={value}");
+        assert!(positive_marker_number(&output, "ACE_WETTED_AREA_M2=").is_err());
+    }
 }
 
 #[test]
@@ -34,6 +43,14 @@ fn c172_script_places_and_sizes_the_concept() -> Result<(), Box<dyn std::error::
     assert!(script.contains("AddEngineEnvelope( 0.0 )"));
     assert!(script.contains("engine, \"X_Rel_Location\", \"XForm\", 0.000000000000"));
     assert!(script.contains("propeller, \"X_Rel_Location\", \"XForm\", -0.030000000000"));
+    let engine_length = match &scenario.engine {
+        EngineProfile::Piston(profile) => 0.30 * profile.dry_mass_kg.cbrt(),
+        EngineProfile::Turbofan(_) => 0.0,
+    };
+    assert!(script.contains(&format!("\"Length\", \"Design\", {engine_length:.12}")));
+    assert!(script.contains("SetSetFlag( propeller, SET_FIRST_USER, false )"));
+    assert!(script.contains("ComputeCompGeom( SET_ALL, false, 0 )"));
+    assert_conventional_vspaero_membership(&script);
     Ok(())
 }
 
@@ -51,6 +68,37 @@ fn transport_script_places_two_engine_envelopes() -> Result<(), Box<dyn std::err
     assert!(script.contains("if ( 2 == 1 )"));
     assert!(script.contains(&format!("AddEngineEnvelope( -{engine_y:.12} )")));
     assert!(script.contains(&format!("AddEngineEnvelope( {engine_y:.12} )")));
+    let (engine_length, engine_diameter) = match &scenario.engine {
+        EngineProfile::Turbofan(profile) => (
+            0.34 * profile.dry_mass_kg.cbrt(),
+            0.17 * profile.dry_mass_kg.cbrt(),
+        ),
+        EngineProfile::Piston(_) => (0.0, 1.0),
+    };
+    assert!(script.contains(&format!("\"Length\", \"Design\", {engine_length:.12}")));
+    assert!(script.contains(&format!(
+        "\"FineRatio\", \"Design\", {:.12}",
+        engine_length / engine_diameter
+    )));
+    assert_conventional_vspaero_membership(&script);
+    Ok(())
+}
+
+#[test]
+fn profile_dimensions_override_turbofan_mass_scaling() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("b777")?;
+    if let EngineProfile::Turbofan(profile) = &mut scenario.engine {
+        profile.overall_length_m = Some(8.25);
+        profile.maximum_diameter_m = Some(3.75);
+    }
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("b777.vsp3"))?;
+    assert!(script.contains("\"Length\", \"Design\", 8.250000000000"));
+    assert!(script.contains("\"FineRatio\", \"Design\", 2.200000000000"));
     Ok(())
 }
 
@@ -70,6 +118,10 @@ fn blended_wing_script_is_tailless_and_reflexed() -> Result<(), Box<dyn std::err
     assert!(script.contains("XS_FIVE_DIGIT_MOD"));
     assert!(script.contains("TE_Flap_Deflection"));
     assert!(script.contains("ACE_Engine_Envelope"));
+    assert!(script.contains("SetSetName( SET_FIRST_USER, \"ACE_VSPAERO_LIFTING\" )"));
+    assert!(script.contains("SetSetFlag( wing, SET_FIRST_USER, true )"));
+    assert!(script.contains("SetSetFlag( engine, SET_FIRST_USER, false )"));
+    assert!(!script.contains("SetSetFlag( engine, SET_FIRST_USER, true )"));
     Ok(())
 }
 
@@ -142,13 +194,45 @@ fn blended_wing_center_accepts_explicit_opposite_edge_sweeps()
 }
 
 #[test]
-fn vspaero_excludes_the_non_lifting_engine_envelope() -> Result<(), Box<dyn std::error::Error>> {
+fn vspaero_uses_only_the_named_lifting_set() -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
     set_inferred_configuration(&mut scenario, "tailless_blended_wing_body")?;
     let script = super::analysis_script(&scenario, std::path::Path::new("bwb.vsp3"))?;
-    assert!(script.contains("FindGeomsWithName( \"ACE_Engine_Envelope\" )"));
-    assert!(script.contains("DeleteGeomVec( engine_envelopes )"));
-    assert!(script.contains("FindGeomsWithName( \"ACE_Propeller\" )"));
-    assert!(script.contains("DeleteGeomVec( propellers )"));
+    assert!(script.contains("GetSetIndex( \"ACE_VSPAERO_LIFTING\" )"));
+    assert!(script.contains("\"GeomSet\",\n        thick_geometry_set"));
+    assert!(script.contains("\"ThinGeomSet\",\n        thin_geometry_set"));
+    assert!(!script.contains("DeleteGeomVec"));
     Ok(())
+}
+
+#[test]
+fn conventional_visual_snapshots_are_stable() -> Result<(), Box<dyn std::error::Error>> {
+    let c172 = super::geometry::visual_snapshot(&example_scenario("c172")?);
+    let b777 = super::geometry::visual_snapshot(&example_scenario("b777")?);
+    assert_eq!(c172, include_str!("../../../tests/golden/openvsp/c172.svg"));
+    assert_eq!(b777, include_str!("../../../tests/golden/openvsp/b777.svg"));
+    Ok(())
+}
+
+fn assert_conventional_vspaero_membership(script: &str) {
+    for expected in [
+        "SetSetFlag( fuselage, SET_FIRST_USER, false )",
+        "SetSetFlag( wing, SET_FIRST_USER, true )",
+        "SetSetFlag( horizontal_tail, SET_FIRST_USER, true )",
+        "SetSetFlag( vertical_tail, SET_FIRST_USER, true )",
+        "SetSetFlag( engine, SET_FIRST_USER, false )",
+        "SetSetFlag( propeller, SET_FIRST_USER, false )",
+    ] {
+        assert!(script.contains(expected), "missing {expected}");
+    }
+    for forbidden in [
+        "SetSetFlag( fuselage, SET_FIRST_USER, true )",
+        "SetSetFlag( engine, SET_FIRST_USER, true )",
+        "SetSetFlag( propeller, SET_FIRST_USER, true )",
+        "SetSetFlag( wing, SET_FIRST_USER, false )",
+        "SetSetFlag( horizontal_tail, SET_FIRST_USER, false )",
+        "SetSetFlag( vertical_tail, SET_FIRST_USER, false )",
+    ] {
+        assert!(!script.contains(forbidden), "found {forbidden}");
+    }
 }
