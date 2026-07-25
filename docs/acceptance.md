@@ -44,8 +44,10 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     test requires all implemented requirements, structural screens, and
     mission operating-point power reserve to pass.
 18. **Generated OpenVSP geometry has bounded proportions.** Script regression
-    checks pin wing placement, fuselage sizing, and single vertical-tail
-    symmetry; the installed-backend test bounds C172-class wetted area.
+    checks pin wing placement, fuselage sizing, mass-scaled engine envelopes,
+    resolved propeller geometry, full-model CompGeom, and named VSPAERO lifting
+    sets. Committed C172 and B777 top-view SVGs detect visual-layout drift; the
+    installed-backend test bounds C172- and B777-class wetted areas.
 19. **Topology intent is explicit and capability checked.** C172 and B777
     graphs resolve and analyze natively, absent graphs preserve legacy native
     geometry, backend descriptors declare their supported vocabulary, and a

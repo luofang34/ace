@@ -22,7 +22,9 @@ mod geometry;
 mod parsing;
 
 use geometry::{blended_wing_center_of_gravity_x, geometry_script};
-use parsing::{marker_number, maximum_lift_to_drag_ratio, polar_points, stability_summary};
+use parsing::{
+    maximum_lift_to_drag_ratio, polar_points, positive_marker_number, stability_summary,
+};
 
 const ANALYSIS_TEMPLATE: &str = include_str!("openvsp/scripts/analysis.vspscript");
 
@@ -76,7 +78,7 @@ impl GeometryBackend for OpenVspBackend {
             "geometry generation",
             "ACE_WETTED_AREA_M2=",
         )?;
-        let wetted_area = marker_number(&output, "ACE_WETTED_AREA_M2=")?;
+        let wetted_area = positive_marker_number(&output, "ACE_WETTED_AREA_M2=")?;
         let mut metrics = native.metrics;
         metrics.wetted_area = QuantityOutput::si(wetted_area, "m^2");
         if is_blended_wing_body(request.scenario) {
@@ -318,6 +320,8 @@ fn openvsp_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance 
         backend: "openvsp".to_owned(),
         assumptions: vec![
             "fuselage length and tail areas use native conceptual sizing inputs".to_owned(),
+            engine_envelope_assumption(scenario),
+            "CompGeom wetted area includes the full airframe and propulsion envelope".to_owned(),
             "OpenVSP component parameters remain adapter-internal".to_owned(),
         ],
         validity_range: vec!["conventional fixed-wing planforms".to_owned()],
@@ -346,6 +350,8 @@ fn blended_wing_body_geometry_provenance(scenario: &ResolvedScenario) -> ResultP
                 scenario.aircraft.propulsion.engine_count,
                 scenario.engine.profile_id()
             ),
+            engine_envelope_assumption(scenario),
+            "CompGeom wetted area includes the full lifting body and propulsion envelope".to_owned(),
             "OpenVSP component parameters remain adapter-internal".to_owned(),
         ],
         validity_range: vec!["visual and low-order tailless BWB concepts".to_owned()],
@@ -361,9 +367,9 @@ fn blended_wing_body_geometry_provenance(scenario: &ResolvedScenario) -> ResultP
 
 fn openvsp_analysis_provenance(scenario: &ResolvedScenario) -> ResultProvenance {
     let excluded_geometry = if is_blended_wing_body(scenario) {
-        "the engine envelope is non-lifting in the vortex-lattice interpretation"
+        "the named lifting set excludes engine envelopes from the vortex-lattice interpretation"
     } else {
-        "fuselage excluded from the lifting-surface solve"
+        "the named lifting set excludes the fuselage, engine envelopes, and propeller from the lifting-surface solve"
     };
     ResultProvenance {
         method: "VSPAERO vortex-lattice alpha sweep".to_owned(),
@@ -386,6 +392,22 @@ fn openvsp_analysis_provenance(scenario: &ResolvedScenario) -> ResultProvenance 
         warnings: vec![Diagnostic::limitation(
             "VSPAERO output is low-order and is not a certification or CFD result.",
         )],
+    }
+}
+
+fn engine_envelope_assumption(scenario: &ResolvedScenario) -> String {
+    match &scenario.engine {
+        crate::domain::schema::EngineProfile::Turbofan(profile)
+            if profile.overall_length_m.is_some() && profile.maximum_diameter_m.is_some() =>
+        {
+            "engine envelope dimensions come from the resolved propulsion profile".to_owned()
+        }
+        crate::domain::schema::EngineProfile::Turbofan(_) => {
+            "missing engine envelope dimensions use dry-mass cube-root correlations".to_owned()
+        }
+        crate::domain::schema::EngineProfile::Piston(_) => {
+            "piston engine envelope dimensions use dry-mass cube-root correlations".to_owned()
+        }
     }
 }
 

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360">
+  <title>c172-normal-mission OpenVSP conventional layout</title>
+  <g fill="none" stroke="#172554" stroke-width="2">
+    <rect id="fuselage" data-length-m="8.250" data-width-m="1.340" x="50.00" y="162.94" width="700.00" height="34.12" rx="3"/>
+    <polygon id="wing" data-area-m2="16.170" points="288.00,180.00 308.79,40.00 391.94,40.00 454.30,180.00 391.94,320.00 308.79,320.00"/>
+    <rect id="horizontal-tail" data-length-m="0.899" data-width-m="3.597" x="638.00" y="134.22" width="76.29" height="91.55" rx="3"/>
+    <line id="vertical-tail" data-area-m2="1.617" x1="638.00" y1="180.00" x2="750.00" y2="180.00"/>
+    <rect id="engine-1" data-length-m="1.539" data-width-m="0.872" x="50.00" y="168.90" width="130.58" height="22.20" rx="3"/>
+    <line id="propeller" data-blades="2" data-diameter-m="1.930" x1="47.45" y1="155.44" x2="47.45" y2="204.56" stroke="#b91c1c"/>
+  </g>
+</svg>

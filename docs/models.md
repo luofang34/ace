@@ -26,6 +26,21 @@ The canonical propulsion `sizing_factor` scales installed power or thrust.
 Automatic refinement also charges 1.15 times the corresponding engine
 dry-mass change to operating empty mass.
 
+## OpenVSP geometry refinement
+
+Conventional OpenVSP geometry includes fuselage, wing, horizontal and vertical
+tails, engine envelopes, and a resolved propeller when present. Explicit
+turbofan length and diameter values take precedence; missing turbofan
+dimensions and piston envelopes use engine dry-mass cube-root correlations.
+These dimensions are visualization and low-order wetted-area inputs, not
+packaging substantiation.
+
+CompGeom evaluates the complete generated model for wetted area. VSPAERO uses
+the named `ACE_VSPAERO_LIFTING` set, which contains only the modeled lifting
+surfaces; fuselage and propulsion geometry remain in the `.vsp3` artifact but
+do not enter the vortex-lattice solve. OpenVSP results remain an explicit
+refinement alongside the mandatory native baseline.
+
 ## Point and envelope performance
 
 The service computes stall, drag, required and available thrust/power, excess

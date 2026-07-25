@@ -176,7 +176,7 @@ fn assert_unsupported_feature(
 }
 
 #[test]
-fn installed_openvsp_refines_represented_reference_topology()
+fn installed_openvsp_refines_represented_reference_topologies()
 -> Result<(), Box<dyn std::error::Error>> {
     let temporary = tempfile::tempdir()?;
     let service = ApplicationService::filesystem(temporary.path().join("runs"));
@@ -188,9 +188,22 @@ fn installed_openvsp_refines_represented_reference_topology()
     if !openvsp_available {
         return Ok(());
     }
-    let scenario =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/scenario.yaml");
-    let artifact = temporary.path().join("c172.vsp3");
+    assert_installed_openvsp_reference(&service, temporary.path(), "c172", 30.0, 80.0)?;
+    assert_installed_openvsp_reference(&service, temporary.path(), "b777", 1_500.0, 2_500.0)
+}
+
+fn assert_installed_openvsp_reference(
+    service: &ApplicationService,
+    directory: &Path,
+    example: &str,
+    minimum_wetted_area_m2: f64,
+    maximum_wetted_area_m2: f64,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scenario = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join(example)
+        .join("scenario.yaml");
+    let artifact = directory.join(format!("{example}.vsp3"));
     let result = service.evaluate_feasibility_blocking(&scenario, "openvsp", Some(&artifact))?;
     let completed = result.completed()?;
     let refinement = completed
@@ -200,8 +213,15 @@ fn installed_openvsp_refines_represented_reference_topology()
     assert_eq!(completed.baseline.analysis.provenance.backend, "native");
     assert_eq!(refinement.analysis.provenance.backend, "openvsp");
     assert!(!refinement.analysis.polar.is_empty());
-    assert!(refinement.geometry.metrics.wetted_area.value > 30.0);
-    assert!(refinement.geometry.metrics.wetted_area.value < 80.0);
+    let wetted_area_m2 = refinement.geometry.metrics.wetted_area.value;
+    assert!(
+        wetted_area_m2 > minimum_wetted_area_m2,
+        "{example} wetted area {wetted_area_m2} is below {minimum_wetted_area_m2}"
+    );
+    assert!(
+        wetted_area_m2 < maximum_wetted_area_m2,
+        "{example} wetted area {wetted_area_m2} exceeds {maximum_wetted_area_m2}"
+    );
     assert!(artifact.is_file());
     Ok(())
 }

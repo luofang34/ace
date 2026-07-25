@@ -2,11 +2,17 @@ use std::path::Path;
 
 use crate::backends::contracts::GeometryOutput;
 use crate::domain::diagnostic::AexResult;
-use crate::domain::schema::{EngineProfile, ResolvedScenario};
+use crate::domain::schema::ResolvedScenario;
 use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::concept_geometry::ConceptGeometry;
 
 use super::script_string;
+
+mod layout;
+#[cfg(test)]
+mod preview;
+
+use layout::{conventional_propulsion_layout, engine_envelope};
 
 const BLENDED_WING_BODY_TEMPLATE: &str = include_str!("scripts/blended_wing_body.vspscript");
 const CONVENTIONAL_TEMPLATE: &str = include_str!("scripts/conventional.vspscript");
@@ -29,7 +35,7 @@ pub(super) fn blended_wing_center_of_gravity_x(scenario: &ResolvedScenario) -> A
 fn blended_wing_body_script(scenario: &ResolvedScenario, artifact: &Path) -> AexResult<String> {
     let wing = &scenario.aircraft.wing;
     let planform = BlendedWingPlanform::from_wing(wing)?;
-    let (engine_length, engine_diameter) = turbofan_envelope(scenario);
+    let engine = engine_envelope(scenario);
     let values = [
         ("__INNER_SPAN__", decimal(planform.inner_span_m)),
         ("__OUTER_SPAN__", decimal(planform.outer_span_m)),
@@ -44,7 +50,7 @@ fn blended_wing_body_script(scenario: &ResolvedScenario, artifact: &Path) -> Aex
             "__SWEEP_DEG__",
             decimal(wing.sweep_quarter_chord_rad.to_degrees()),
         ),
-        ("__ENGINE_LENGTH__", decimal(engine_length)),
+        ("__ENGINE_LENGTH__", decimal(engine.length_m)),
         (
             "__ENGINE_COUNT__",
             scenario.aircraft.propulsion.engine_count.to_string(),
@@ -52,22 +58,12 @@ fn blended_wing_body_script(scenario: &ResolvedScenario, artifact: &Path) -> Aex
         ("__ENGINE_Y__", decimal(wing.span_m * 0.12)),
         (
             "__ENGINE_FINE_RATIO__",
-            decimal(engine_length / engine_diameter),
+            decimal(engine.length_m / engine.diameter_m),
         ),
         ("__ENGINE_X__", decimal(planform.root_chord_m * 0.58)),
         ("__ARTIFACT__", script_string(artifact)?),
     ];
     Ok(render_template(BLENDED_WING_BODY_TEMPLATE, &values))
-}
-
-fn turbofan_envelope(scenario: &ResolvedScenario) -> (f64, f64) {
-    match &scenario.engine {
-        EngineProfile::Turbofan(profile) => (
-            profile.overall_length_m.unwrap_or(1.888),
-            profile.maximum_diameter_m.unwrap_or(1.888 / 3.0),
-        ),
-        EngineProfile::Piston(_) => (1.888, 1.888 / 3.0),
-    }
 }
 
 fn conventional_geometry_script(
@@ -135,42 +131,46 @@ fn conventional_propulsion_values(
     scenario: &ResolvedScenario,
     concept: ConceptGeometry,
 ) -> Vec<(&'static str, String)> {
-    let wing = &scenario.aircraft.wing;
-    let (engine_length, engine_diameter) = turbofan_envelope(scenario);
-    let propeller = scenario.propeller.as_ref();
-    let root_chord = 2.0 * wing.area_m2 / (wing.span_m * (1.0 + concept.taper_ratio));
-    let engine_x = propeller.map_or(concept.wing_x_m + 0.20 * root_chord, |_| 0.0);
-    let engine_z = propeller.map_or(concept.wing_z_m - 0.65 * engine_diameter, |_| 0.0);
+    let layout = conventional_propulsion_layout(scenario, concept);
+    let propeller = layout.propeller;
     vec![
-        ("__ENGINE_LENGTH__", decimal(engine_length)),
+        ("__ENGINE_LENGTH__", decimal(layout.engine.length_m)),
         (
             "__ENGINE_FINE_RATIO__",
-            decimal(engine_length / engine_diameter),
+            decimal(layout.engine.length_m / layout.engine.diameter_m),
         ),
-        (
-            "__ENGINE_COUNT__",
-            scenario.aircraft.propulsion.engine_count.to_string(),
-        ),
-        ("__ENGINE_Y__", decimal(wing.span_m * 0.22)),
-        ("__ENGINE_X__", decimal(engine_x)),
-        ("__ENGINE_Z__", decimal(engine_z)),
+        ("__ENGINE_COUNT__", layout.engine_count.to_string()),
+        ("__ENGINE_Y__", decimal(layout.engine_y_m)),
+        ("__ENGINE_X__", decimal(layout.engine_x_m)),
+        ("__ENGINE_Z__", decimal(layout.engine_z_m)),
         (
             "__HAS_PROPELLER__",
             u8::from(propeller.is_some()).to_string(),
         ),
         (
             "__PROPELLER_DIAMETER__",
-            decimal(propeller.map_or(1.9, |profile| profile.diameter_m)),
+            decimal(propeller.map_or(1.9, |placement| placement.diameter_m)),
         ),
         (
             "__PROPELLER_BLADE_COUNT__",
             propeller
-                .map_or(2, |profile| profile.blade_count)
+                .map_or(2, |placement| placement.blade_count)
                 .to_string(),
         ),
-        ("__PROPELLER_X__", decimal(engine_x - 0.03)),
-        ("__PROPELLER_Z__", decimal(engine_z)),
+        (
+            "__PROPELLER_X__",
+            decimal(propeller.map_or(layout.engine_x_m, |placement| placement.x_m)),
+        ),
+        (
+            "__PROPELLER_Z__",
+            decimal(propeller.map_or(layout.engine_z_m, |placement| placement.z_m)),
+        ),
     ]
+}
+
+#[cfg(test)]
+pub(super) fn visual_snapshot(scenario: &ResolvedScenario) -> String {
+    preview::visual_snapshot(scenario)
 }
 
 fn decimal(value: f64) -> String {

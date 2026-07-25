@@ -28,14 +28,17 @@ void AddEngineEnvelope( double y_location )
     SetParmVal( engine, "X_Rel_Location", "XForm", __ENGINE_X__ );
     SetParmVal( engine, "Y_Rel_Location", "XForm", y_location );
     SetParmVal( engine, "Z_Rel_Location", "XForm", 0.25 );
+    SetSetFlag( engine, SET_FIRST_USER, false );
 }
 
 void main()
 {
     ClearVSPModel();
+    SetSetName( SET_FIRST_USER, "ACE_VSPAERO_LIFTING" );
 
     string wing = AddGeom( "WING", "" );
     SetGeomName( wing, "ACE_Main_Wing" );
+    SetSetFlag( wing, SET_FIRST_USER, true );
     InsertXSec( wing, 1, XS_FIVE_DIGIT_MOD );
     SetDriverGroup( wing, 1, SPAN_WSECT_DRIVER, ROOTC_WSECT_DRIVER, TIPC_WSECT_DRIVER );
     SetParmVal( wing, "Span", "XSec_1", __INNER_SPAN__ );
@@ -70,8 +73,8 @@ void main()
 
     Update();
     WriteVSPFile( "__ARTIFACT__", SET_ALL );
-    SetAnalysisInputDefaults( "CompGeom" );
-    string result_id = ExecAnalysis( "CompGeom" );
+    ComputeCompGeom( SET_ALL, false, 0 );
+    string result_id = FindLatestResultsID( "Comp_Geom" );
     array<double> wet_areas = GetDoubleResults( result_id, "Wet_Area" );
     double wetted_area = 0.0;
     for ( uint i = 0; i < wet_areas.size(); i++ )
