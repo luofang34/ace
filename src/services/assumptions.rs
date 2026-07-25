@@ -51,7 +51,9 @@ fn collect_assumptions(
         scalar => entries.push(AssumptionEntry {
             parameter_path: path.to_owned(),
             resolved_value: yaml_to_json(scalar),
-            unit: scalar.as_str().and_then(quantity_unit),
+            unit: scalar
+                .as_str()
+                .and_then(|value| declared_quantity_unit(path, value)),
             provenance_kind: if inherited { "reference" } else { "user" }.to_owned(),
             source: if inherited {
                 "selected profile"
@@ -106,9 +108,61 @@ fn yaml_to_json(value: &Value) -> serde_json::Value {
     }
 }
 
-fn quantity_unit(value: &str) -> Option<String> {
-    value
-        .find(char::is_whitespace)
-        .map(|index| value[index..].trim().to_owned())
+fn declared_quantity_unit(path: &str, value: &str) -> Option<String> {
+    if !is_quantity_path(path) {
+        return None;
+    }
+    let mut parts = value.trim().splitn(2, char::is_whitespace);
+    parts.next()?.parse::<f64>().ok()?;
+    parts
+        .next()
+        .map(str::trim)
         .filter(|unit| !unit.is_empty())
+        .map(str::to_owned)
 }
+
+fn is_quantity_path(path: &str) -> bool {
+    matches!(
+        path,
+        "aircraft.mass.maximum_takeoff_mass"
+            | "aircraft.mass.operating_empty_mass"
+            | "aircraft.mass.maximum_payload_mass"
+            | "aircraft.mass.maximum_fuel_mass"
+            | "aircraft.geometry.wing.area"
+            | "aircraft.geometry.wing.span"
+            | "aircraft.geometry.wing.sweep_quarter_chord"
+            | "aircraft.geometry.wing.center_body_edge_sweep"
+            | "aircraft.limits.maximum_operating_speed"
+            | "aircraft.limits.maximum_operating_altitude"
+            | "mission.payload.mass"
+    ) || sequence_quantity_path(
+        path,
+        "mission.segments.",
+        &[
+            "duration",
+            "distance",
+            "target_altitude",
+            "altitude",
+            "indicated_airspeed",
+            "true_airspeed",
+            "fuel_mass",
+            "payload_mass",
+        ],
+    ) || sequence_quantity_path(path, "requirements.items.", &["value"])
+}
+
+fn sequence_quantity_path(path: &str, prefix: &str, fields: &[&str]) -> bool {
+    let Some(remainder) = path.strip_prefix(prefix) else {
+        return false;
+    };
+    let Some((index, field)) = remainder.split_once('.') else {
+        return false;
+    };
+    index.bytes().all(|byte| byte.is_ascii_digit())
+        && !index.is_empty()
+        && !field.contains('.')
+        && fields.contains(&field)
+}
+
+#[cfg(test)]
+mod tests;
