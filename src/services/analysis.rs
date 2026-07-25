@@ -113,7 +113,15 @@ impl ApplicationService {
         overrides: &BTreeMap<String, String>,
     ) -> AexResult<(ResolvedScenario, PerformanceSummary)> {
         let scenario = self.resolve_blocking(path, overrides)?;
-        let mut result = PointAnalyzer::new(scenario.clone()).summary()?;
+        let mission = match MissionSimulator::new(scenario.clone()).simulate() {
+            Ok(mission) => Some(mission),
+            Err(AexError::Analysis {
+                code: "ATMOSPHERE_OUTSIDE_VALIDITY",
+                ..
+            }) => None,
+            Err(error) => return Err(error),
+        };
+        let mut result = PointAnalyzer::new(scenario.clone()).summary(mission.as_ref())?;
         prepend_scenario_warnings(&scenario, &mut result.warnings);
         Ok((scenario, result))
     }

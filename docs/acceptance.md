@@ -83,6 +83,11 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     search-cap saturation is `boundary_limited`. Requirements bound to those
     values are indeterminate with nullable legacy `passed`; hard indeterminate
     constraints are infeasible and carry nonzero study violation.
+24. **Cruise requirements use installed capability.** Declared cruise inputs
+    remain reportable but cannot satisfy requirements. Achieved Mach/TAS and
+    minimum excess power evaluate every cruise condition, aggregate at the
+    weakest power condition, and make native feasibility false when any
+    condition cannot close.
 
 ## Calibration bands
 
@@ -90,7 +95,7 @@ Current deterministic reference behavior is checked against:
 
 - C172 clean stall 45–60 kt, maximum level speed 120–150 kt, service ceiling
   11,000–16,000 ft, best glide ratio 7–12, payload-range near 500–800 nmi.
-- B777 cruise Mach 0.82–0.85, service ceiling 39,000–45,000 ft, maximum
+- B777 achieved cruise Mach 0.82–0.85, service ceiling 39,000–45,000 ft, maximum
   payload 60–75 tonnes, long-range mission 6,500–8,000 nmi, takeoff T/W
   0.25–0.35, cruise L/D 16–22.
 

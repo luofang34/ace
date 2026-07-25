@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 
 use crate::services::analysis::ApplicationService;
 
+use super::concept_decision;
+
 fn unsupported_report_fixture(destination: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172");
     fs::create_dir_all(destination.join("profiles"))?;
@@ -37,39 +39,6 @@ fn fuel_exhaustion_report_fixture(
         fs::copy(source.join(path), destination.join(path))?;
     }
     retain_single_vertical_tail(&destination.join("aircraft.yaml"))?;
-    Ok(destination.join("scenario.yaml"))
-}
-
-fn unevaluable_requirement_fixture(
-    destination: &Path,
-) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172");
-    fs::create_dir_all(destination.join("profiles"))?;
-    for path in [
-        "aircraft.yaml",
-        "mission.yaml",
-        "requirements.yaml",
-        "scenario.yaml",
-        "profiles/engine.yaml",
-        "profiles/propeller.yaml",
-    ] {
-        fs::copy(source.join(path), destination.join(path))?;
-    }
-    let path = destination.join("requirements.yaml");
-    let mut document: serde_yaml::Value = serde_yaml::from_str(&fs::read_to_string(&path)?)?;
-    let items = document["requirements"]["items"]
-        .as_sequence_mut()
-        .ok_or_else(|| io::Error::other("missing requirement items"))?;
-    items.push(serde_yaml::from_str(
-        r#"
-id: cruise_mach
-metric: performance.cruise_mach
-operator: ge
-value: 0.1
-severity: hard
-"#,
-    )?);
-    fs::write(path, serde_yaml::to_string(&document)?)?;
     Ok(destination.join("scenario.yaml"))
 }
 
@@ -174,20 +143,22 @@ fn report_preserves_fuel_exhaustion_as_a_distinct_constraint()
 fn report_counts_and_fails_unevaluable_hard_requirements() -> Result<(), Box<dyn std::error::Error>>
 {
     let temporary = tempfile::tempdir()?;
-    let scenario = unevaluable_requirement_fixture(&temporary.path().join("source"))?;
+    let scenario_path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/scenario.yaml");
     let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let scenario = service.resolve_blocking(&scenario_path, &Default::default())?;
+    let feasibility = service.evaluate_feasibility_blocking(&scenario_path, "native", None)?;
+    let mut completed = feasibility.completed()?.clone();
+    completed
+        .baseline
+        .analysis
+        .requirements
+        .retain(|requirement| requirement.id != "cruise_speed");
+    let (_, mission) = service.mission_blocking(&scenario_path, &Default::default())?;
+    let decision = concept_decision(&completed, &mission, &scenario);
 
-    let report = service.concept_report_blocking(&scenario, "native")?;
-
-    assert!(!report.decision.feasible);
-    assert_eq!(report.decision.hard_requirements_passed, 4);
-    assert_eq!(report.decision.hard_requirements_total, 5);
-    assert!(
-        report
-            .decision
-            .failed_constraints
-            .iter()
-            .any(|constraint| constraint == "cruise_mach")
-    );
+    assert!(!decision.feasible);
+    assert_eq!(decision.hard_requirements_passed, 3);
+    assert_eq!(decision.hard_requirements_total, 4);
     Ok(())
 }

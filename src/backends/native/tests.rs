@@ -38,10 +38,72 @@ fn native_analysis_publishes_validated_scenario_domains() -> Result<(), Box<dyn 
         "performance.maximum_level_speed",
         "performance.service_ceiling",
         "performance.absolute_ceiling",
+        "performance.achieved_cruise_mach",
+        "performance.achieved_cruise_true_airspeed",
+        "performance.minimum_cruise_excess_power",
+        "performance.cruise_feasible",
     ] {
         assert!(analysis.metrics.contains_key(metric));
         assert!(analysis.metric_validity.contains_key(metric));
     }
+    Ok(())
+}
+
+#[test]
+fn cruise_capability_shortfall_is_a_native_feasibility_failure()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.propulsion.sizing_factor = 0.5;
+    let backend = NativeBackend;
+    let geometry = backend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let analysis = backend.analyze_blocking(AnalysisRequest {
+        scenario: &scenario,
+        geometry: &geometry,
+    })?;
+
+    assert_eq!(analysis.feasible, Some(false));
+    assert!(
+        analysis
+            .failed_constraints
+            .iter()
+            .any(|constraint| constraint == "cruise_capability")
+    );
+    assert_eq!(
+        analysis
+            .metrics
+            .get("performance.cruise_feasible")
+            .map(|value| value.value),
+        Some(0.0)
+    );
+    Ok(())
+}
+
+#[test]
+fn cruise_altitude_limit_breach_is_a_native_feasibility_failure()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("b777")?;
+    scenario.aircraft.limits.maximum_operating_altitude_m = Some(10_000.0 * 0.3048);
+    let backend = NativeBackend;
+    let geometry = backend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let analysis = backend.analyze_blocking(AnalysisRequest {
+        scenario: &scenario,
+        geometry: &geometry,
+    })?;
+
+    assert_eq!(analysis.feasible, Some(false));
+    assert!(
+        analysis
+            .failed_constraints
+            .iter()
+            .any(|constraint| constraint == "cruise_capability")
+    );
+    assert_eq!(analysis.metrics["performance.cruise_feasible"].value, 0.0);
     Ok(())
 }
 

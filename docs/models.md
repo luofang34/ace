@@ -57,6 +57,16 @@ Explicit aircraft operating limits are treated as valid declared limits rather
 than artificial solver caps. A boundary-limited value is not evidence that the
 physical threshold occurs at that value.
 
+Declared cruise Mach and true airspeed remain inputs for reporting. Achieved
+cruise Mach and true airspeed evaluate installed capability at every cruise
+segment using its altitude and mission mass. The aggregate comes from the
+condition with minimum excess power, and `cruise_feasible` is true only when
+every declared cruise condition closes with nonnegative excess power and stays
+within declared aircraft speed, Mach, and altitude limits. Unsupported or
+out-of-limit conditions remain explicit diagnostics and make cruise feasibility
+false. Requirements bind to the achieved metrics; declared cruise metric names
+are rejected with `DECLARED_METRIC_NOT_BINDABLE` and their achieved replacement.
+
 ## Mission
 
 Quasi-steady segments integrate fuel and enforce mass continuity. Cruise and

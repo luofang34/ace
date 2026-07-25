@@ -128,6 +128,24 @@ fn comparison_metric(
             },
         )),
         "performance.service_ceiling" => Ok(QuantityOutput::si(performance.service_ceiling_m, "m")),
+        "performance.achieved_cruise_mach" => {
+            optional_performance_metric(metric, performance.achieved_cruise_mach, "1")
+        }
+        "performance.achieved_cruise_true_airspeed" => optional_performance_metric(
+            metric,
+            performance.achieved_cruise_true_airspeed_m_s,
+            "m/s",
+        ),
+        "performance.minimum_cruise_excess_power" => {
+            optional_performance_metric(metric, performance.minimum_cruise_excess_power_w, "W")
+        }
+        "performance.cruise_feasible" => optional_performance_metric(
+            metric,
+            performance
+                .cruise_feasible
+                .map(|feasible| f64::from(u8::from(feasible))),
+            "bool",
+        ),
         "aerodynamics.maximum_lift_to_drag_ratio" => Ok(QuantityOutput::si(
             performance.maximum_lift_to_drag_ratio,
             "1",
@@ -156,6 +174,21 @@ fn comparison_metric(
             "metric is not implemented",
         )),
     }
+}
+
+fn optional_performance_metric(
+    metric: &str,
+    value: Option<f64>,
+    unit: &str,
+) -> AexResult<QuantityOutput> {
+    value
+        .map(|value| QuantityOutput::si(value, unit))
+        .ok_or_else(|| {
+            AexError::analysis(
+                "CRUISE_PERFORMANCE_UNAVAILABLE",
+                format!("{metric} requires at least one cruise segment"),
+            )
+        })
 }
 
 fn payload_range_value(

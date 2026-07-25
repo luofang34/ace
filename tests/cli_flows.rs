@@ -95,6 +95,20 @@ fn mission_outputs_use_nautical_mile_display() -> Result<(), Box<dyn Error>> {
                 .as_array()
                 .is_some_and(|items| !items.is_empty())
         );
+        assert!(
+            result["requirements"]
+                .as_array()
+                .is_some_and(|items| items.iter().any(|item| {
+                    item["metric"]
+                        .as_str()
+                        .is_some_and(|metric| metric.starts_with("performance.achieved_cruise_"))
+                }))
+        );
+        assert!(
+            result["report_markdown"]
+                .as_str()
+                .is_some_and(|report| report.contains("Achieved cruise"))
+        );
     }
     Ok(())
 }
@@ -120,8 +134,13 @@ fn calibration_bands_cover_both_aircraft_classes() -> Result<(), Box<dyn Error>>
     let ceiling_m = c172_result["result"]["service_ceiling_m"]["value"]
         .as_f64()
         .ok_or("missing C172 ceiling")?;
+    let achieved_cruise_m_s = c172_result["result"]["achieved_cruise_true_airspeed_m_s"]["value"]
+        .as_f64()
+        .ok_or("missing C172 achieved cruise speed")?;
     assert!((45.0..=60.0).contains(&(stall_m_s / 0.514_444)));
     assert!((11_000.0..=16_000.0).contains(&(ceiling_m / 0.3048)));
+    assert!((110.0..=120.0).contains(&(achieved_cruise_m_s / 0.514_444)));
+    assert_eq!(c172_result["result"]["cruise_feasible"], true);
 
     let b777_path = scenario("b777");
     let b777 = command(temporary.path())
@@ -141,8 +160,13 @@ fn calibration_bands_cover_both_aircraft_classes() -> Result<(), Box<dyn Error>>
     let lift_drag = b777_result["result"]["maximum_lift_to_drag_ratio"]
         .as_f64()
         .ok_or("missing B777 lift-to-drag ratio")?;
+    let achieved_cruise_mach = b777_result["result"]["achieved_cruise_mach"]
+        .as_f64()
+        .ok_or("missing B777 achieved cruise Mach")?;
     assert!((39_000.0..=45_000.0).contains(&(ceiling_m / 0.3048)));
     assert!((16.0..=22.0).contains(&lift_drag));
+    assert!((0.82..=0.85).contains(&achieved_cruise_mach));
+    assert_eq!(b777_result["result"]["cruise_feasible"], true);
     Ok(())
 }
 
@@ -182,6 +206,8 @@ fn plots_and_two_dimensional_sweep_execute() -> Result<(), Box<dyn Error>> {
             "geometry.wing_span",
             "--metric",
             "geometry.aspect_ratio",
+            "--metric",
+            "performance.achieved_cruise_true_airspeed",
             "--format",
             "json",
         ])
@@ -203,6 +229,15 @@ fn plots_and_two_dimensional_sweep_execute() -> Result<(), Box<dyn Error>> {
         let aspect_ratio = metrics["geometry.aspect_ratio"]
             .as_f64()
             .ok_or("missing sweep aspect ratio")?;
+        assert!(
+            metrics["performance.achieved_cruise_true_airspeed"]["value"]
+                .as_f64()
+                .is_some_and(|speed| speed > 0.0)
+        );
+        assert_eq!(
+            row["metric_validity"]["performance.achieved_cruise_true_airspeed"]["status"],
+            "valid"
+        );
         assert!((span.powi(2) / area - aspect_ratio).abs() < 1.0e-9);
     }
     Ok(())

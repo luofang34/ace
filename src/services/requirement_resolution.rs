@@ -35,6 +35,16 @@ fn ensure_unique_requirement_ids(items: &[RawRequirement]) -> AexResult<()> {
 }
 
 fn resolve_requirement(raw: RawRequirement) -> AexResult<Requirement> {
+    if let Some(replacement) = declared_metric_replacement(&raw.metric) {
+        return Err(AexError::validation(
+            "DECLARED_METRIC_NOT_BINDABLE",
+            format!("requirements.items.{}.metric", raw.id),
+            format!(
+                "{} is a declared input; bind the requirement to {replacement}",
+                raw.metric
+            ),
+        ));
+    }
     let (required, unit) = requirement_value(&raw.metric, &raw.value)?;
     if !matches!(raw.operator.as_str(), "ge" | "le" | "eq") {
         return Err(AexError::validation(
@@ -64,16 +74,17 @@ fn resolve_requirement(raw: RawRequirement) -> AexResult<Requirement> {
 fn requirement_value(metric: &str, value: &Value) -> AexResult<(f64, String)> {
     let dimension = match metric {
         "mission.payload_mass" => Some((Dimension::Mass, "kg")),
-        "performance.cruise_true_airspeed" | "performance.stall_speed_landing" => {
+        "performance.achieved_cruise_true_airspeed" | "performance.stall_speed_landing" => {
             Some((Dimension::Speed, "m/s"))
         }
+        "performance.minimum_cruise_excess_power" => Some((Dimension::Power, "W")),
         "mission.completed_distance"
         | "performance.full_payload_range"
         | "performance.zero_payload_ferry_range" => Some((Dimension::Length, "m")),
         "performance.service_ceiling" | "performance.takeoff_field_length" => {
             Some((Dimension::Length, "m"))
         }
-        "performance.cruise_mach" => None,
+        "performance.achieved_cruise_mach" | "performance.cruise_feasible" => None,
         _ => {
             return Err(AexError::validation(
                 "UNSUPPORTED_REQUIREMENT_METRIC",
@@ -99,6 +110,14 @@ fn requirement_value(metric: &str, value: &Value) -> AexResult<(f64, String)> {
             .ok_or_else(|| {
                 AexError::validation("INVALID_REQUIREMENT_VALUE", metric, "expected number")
             }),
+    }
+}
+
+fn declared_metric_replacement(metric: &str) -> Option<&'static str> {
+    match metric {
+        "performance.cruise_mach" => Some("performance.achieved_cruise_mach"),
+        "performance.cruise_true_airspeed" => Some("performance.achieved_cruise_true_airspeed"),
+        _ => None,
     }
 }
 

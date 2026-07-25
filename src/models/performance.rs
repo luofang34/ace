@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{FOOT_M, GRAVITY_M_S2};
-use crate::domain::result::{PerformanceSummary, PointPerformanceResult};
+use crate::domain::result::{MissionResult, PerformanceSummary, PointPerformanceResult};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::validity::MetricValidity;
 use crate::models::aerodynamics::{
@@ -12,9 +12,11 @@ use crate::models::aerodynamics::{
 use crate::models::atmosphere::Isa1976;
 use crate::models::propulsion::{OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion};
 
+mod cruise;
 mod solver;
 mod validity;
 
+use cruise::CruisePerformance;
 use solver::{bounded_root, bracket_roots};
 use validity::{
     aggregate as aggregate_validity, altitude_upper_bound, from_warnings as validity_from_warnings,
@@ -24,6 +26,10 @@ use validity::{
 const MAXIMUM_SPEED_METRIC: &str = "performance.maximum_level_speed";
 const SERVICE_CEILING_METRIC: &str = "performance.service_ceiling";
 const ABSOLUTE_CEILING_METRIC: &str = "performance.absolute_ceiling";
+const ACHIEVED_CRUISE_MACH_METRIC: &str = "performance.achieved_cruise_mach";
+const ACHIEVED_CRUISE_TAS_METRIC: &str = "performance.achieved_cruise_true_airspeed";
+const MINIMUM_CRUISE_EXCESS_POWER_METRIC: &str = "performance.minimum_cruise_excess_power";
+const CRUISE_FEASIBLE_METRIC: &str = "performance.cruise_feasible";
 
 #[derive(Debug, Clone)]
 pub(crate) struct PointAnalyzer {
@@ -142,7 +148,7 @@ impl PointAnalyzer {
         })
     }
 
-    pub(crate) fn summary(&self) -> AexResult<PerformanceSummary> {
+    pub(crate) fn summary(&self, mission: Option<&MissionResult>) -> AexResult<PerformanceSummary> {
         let mass = self.scenario.aircraft.mass.maximum_takeoff_mass_kg;
         let sea_level = self.atmosphere.evaluate(0.0)?;
         let stall_clean = stall_speed_m_s(
@@ -170,15 +176,14 @@ impl PointAnalyzer {
         };
         let service_ceiling = self.ceiling_solution(mass, threshold)?;
         let absolute_ceiling = self.ceiling_solution(mass, 0.0)?;
-        let metric_validity = BTreeMap::from([
-            (MAXIMUM_SPEED_METRIC.to_owned(), maximum_speed.validity),
-            (SERVICE_CEILING_METRIC.to_owned(), service_ceiling.validity),
-            (
-                ABSOLUTE_CEILING_METRIC.to_owned(),
-                absolute_ceiling.validity,
-            ),
-        ]);
+        let cruise = self.cruise_performance(mission)?;
+        let metric_validity =
+            summary_metric_validity(&maximum_speed, &service_ceiling, &absolute_ceiling, &cruise);
         let overall_validity = aggregate_validity(metric_validity.values());
+        let mut warnings = cruise.warnings;
+        warnings.push(Diagnostic::limitation(
+            "Ceilings use quasi-steady maximum excess-power sampling.",
+        ));
         Ok(PerformanceSummary {
             stall_speed_clean_m_s: stall_clean,
             stall_speed_landing_m_s: stall_landing,
@@ -196,7 +201,14 @@ impl PointAnalyzer {
             maximum_level_speed_m_s: maximum_speed.value,
             service_ceiling_m: service_ceiling.value,
             absolute_ceiling_m: absolute_ceiling.value,
-            cruise_mach: mission_cruise_mach(&self.scenario),
+            cruise_mach: cruise.declared_mach,
+            declared_cruise_mach: cruise.declared_mach,
+            declared_cruise_true_airspeed_m_s: cruise.declared_true_airspeed_m_s,
+            achieved_cruise_mach: cruise.achieved_mach,
+            achieved_cruise_true_airspeed_m_s: cruise.achieved_true_airspeed_m_s,
+            minimum_cruise_excess_power_w: cruise.minimum_excess_power_w,
+            cruise_feasible: cruise.feasible,
+            cruise_conditions: cruise.conditions,
             metric_validity,
             model: crate::domain::result::ModelMetadata {
                 model_id: "performance.point_envelope".to_owned(),
@@ -204,9 +216,7 @@ impl PointAnalyzer {
                 fidelity_level: 1,
                 validity_status: overall_validity.wire_name().to_owned(),
             },
-            warnings: vec![Diagnostic::limitation(
-                "Ceilings use quasi-steady maximum excess-power sampling.",
-            )],
+            warnings,
         })
     }
 
@@ -418,6 +428,45 @@ impl PointAnalyzer {
     }
 }
 
+fn summary_metric_validity(
+    maximum_speed: &SolvedMetric,
+    service_ceiling: &SolvedMetric,
+    absolute_ceiling: &SolvedMetric,
+    cruise: &CruisePerformance,
+) -> BTreeMap<String, MetricValidity> {
+    let mut validity = BTreeMap::from([
+        (
+            MAXIMUM_SPEED_METRIC.to_owned(),
+            maximum_speed.validity.clone(),
+        ),
+        (
+            SERVICE_CEILING_METRIC.to_owned(),
+            service_ceiling.validity.clone(),
+        ),
+        (
+            ABSOLUTE_CEILING_METRIC.to_owned(),
+            absolute_ceiling.validity.clone(),
+        ),
+    ]);
+    for (present, metric) in [
+        (cruise.achieved_mach.is_some(), ACHIEVED_CRUISE_MACH_METRIC),
+        (
+            cruise.achieved_true_airspeed_m_s.is_some(),
+            ACHIEVED_CRUISE_TAS_METRIC,
+        ),
+        (
+            cruise.minimum_excess_power_w.is_some(),
+            MINIMUM_CRUISE_EXCESS_POWER_METRIC,
+        ),
+        (cruise.feasible.is_some(), CRUISE_FEASIBLE_METRIC),
+    ] {
+        if present {
+            validity.insert(metric.to_owned(), cruise.validity.clone());
+        }
+    }
+    validity
+}
+
 fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diagnostic>) {
     for diagnostic in diagnostics {
         if !target
@@ -427,15 +476,6 @@ fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diag
             target.push(diagnostic);
         }
     }
-}
-
-fn mission_cruise_mach(scenario: &ResolvedScenario) -> Option<f64> {
-    scenario
-        .mission
-        .segments
-        .iter()
-        .find(|segment| segment.kind == crate::domain::schema::SegmentKind::Cruise)
-        .and_then(|segment| segment.mach)
 }
 
 #[cfg(test)]

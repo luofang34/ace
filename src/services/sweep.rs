@@ -174,6 +174,22 @@ fn metric_values(
                 "performance.stall_speed_landing" => performance.stall_speed_landing_m_s,
                 "performance.service_ceiling" => performance.service_ceiling_m,
                 "performance.maximum_level_speed" => performance.maximum_level_speed_m_s,
+                "performance.achieved_cruise_mach" => {
+                    optional_performance_metric(metric, performance.achieved_cruise_mach)?
+                }
+                "performance.achieved_cruise_true_airspeed" => optional_performance_metric(
+                    metric,
+                    performance.achieved_cruise_true_airspeed_m_s,
+                )?,
+                "performance.minimum_cruise_excess_power" => {
+                    optional_performance_metric(metric, performance.minimum_cruise_excess_power_w)?
+                }
+                "performance.cruise_feasible" => optional_performance_metric(
+                    metric,
+                    performance
+                        .cruise_feasible
+                        .map(|feasible| f64::from(u8::from(feasible))),
+                )?,
                 "performance.takeoff_field_length" => estimate_takeoff_distance_m(scenario),
                 "performance.landing_field_length" => estimate_landing_distance_m(scenario)?,
                 "aerodynamics.maximum_lift_to_drag_ratio" => performance.maximum_lift_to_drag_ratio,
@@ -215,6 +231,15 @@ fn metric_values(
             Ok((metric.clone(), value))
         })
         .collect()
+}
+
+fn optional_performance_metric(metric: &str, value: Option<f64>) -> AexResult<f64> {
+    value.ok_or_else(|| {
+        AexError::analysis(
+            "CRUISE_PERFORMANCE_UNAVAILABLE",
+            format!("{metric} requires at least one cruise segment"),
+        )
+    })
 }
 
 fn payload_range_metric(

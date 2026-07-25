@@ -46,3 +46,26 @@ fn comparison_headline_metric_is_completion_gated() -> Result<(), Box<dyn std::e
     );
     Ok(())
 }
+
+#[test]
+fn comparison_propagates_achieved_cruise_metrics_and_validity()
+-> Result<(), Box<dyn std::error::Error>> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/scenario.yaml");
+    let temporary = tempfile::tempdir()?;
+    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let metrics = [
+        "performance.achieved_cruise_true_airspeed".to_owned(),
+        "performance.minimum_cruise_excess_power".to_owned(),
+        "performance.cruise_feasible".to_owned(),
+    ];
+    let comparison = service.compare_blocking(&[path], &metrics)?;
+    let row = &comparison.scenarios[0];
+
+    assert!(row.metrics[&metrics[0]].value > 0.0);
+    assert!(row.metrics[&metrics[1]].value > 0.0);
+    assert_eq!(row.metrics[&metrics[2]].value, 1.0);
+    for metric in metrics {
+        assert!(row.metric_validity.contains_key(&metric));
+    }
+    Ok(())
+}

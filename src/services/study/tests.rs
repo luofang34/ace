@@ -69,6 +69,15 @@ fn assert_study_result_planforms(
         let span = metric("geometry.wing_span")?;
         let aspect_ratio = metric("geometry.aspect_ratio")?;
         assert!((span.powi(2) / area - aspect_ratio).abs() < 1.0e-12);
+        for id in [
+            "performance.achieved_cruise_mach",
+            "performance.achieved_cruise_true_airspeed",
+            "performance.minimum_cruise_excess_power",
+            "performance.cruise_feasible",
+        ] {
+            assert!(evidence.results.metrics.contains_key(id));
+            assert!(evidence.results.metric_validity.contains_key(id));
+        }
     }
     Ok(())
 }
