@@ -6,6 +6,7 @@ use crate::domain::result::{ResultProvenance, StructuralScreen};
 use crate::domain::schema::ResolvedScenario;
 use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::concept_geometry::ConceptGeometry;
+use crate::models::validity::structural_domain;
 
 const ALLOWABLE_CAP_STRESS_PA: f64 = 240.0e6;
 const MAXIMUM_CAP_PACKAGING_RATIO: f64 = 0.65;
@@ -132,6 +133,7 @@ fn conventional_provenance() -> ResultProvenance {
             "conventional cantilever fixed-wing layouts".to_owned(),
             "conceptual structural packaging only".to_owned(),
         ],
+        validity_domains: vec![structural_domain(false)],
         units: BTreeMap::from([
             ("bending_moment".to_owned(), "N*m".to_owned()),
             ("area".to_owned(), "m^2".to_owned()),
@@ -158,6 +160,7 @@ fn blended_wing_provenance() -> ResultProvenance {
             "tailless blended-wing conceptual layouts".to_owned(),
             "conceptual load-path and volume packaging only".to_owned(),
         ],
+        validity_domains: vec![structural_domain(true)],
         units: BTreeMap::from([
             ("bending_moment".to_owned(), "N*m".to_owned()),
             ("area".to_owned(), "m^2".to_owned()),

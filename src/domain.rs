@@ -14,3 +14,4 @@ pub(crate) mod schema;
 )]
 pub(crate) mod study;
 pub(crate) mod topology;
+pub(crate) mod validity;

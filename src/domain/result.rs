@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::AssumptionEntry;
+use crate::domain::validity::ModelValidityDomain;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct ResultProvenance {
@@ -12,6 +13,8 @@ pub(crate) struct ResultProvenance {
     pub(crate) backend: String,
     pub(crate) assumptions: Vec<String>,
     pub(crate) validity_range: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) validity_domains: Vec<ModelValidityDomain>,
     pub(crate) units: BTreeMap<String, String>,
     pub(crate) warnings: Vec<Diagnostic>,
 }

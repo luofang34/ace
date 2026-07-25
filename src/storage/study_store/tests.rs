@@ -50,6 +50,7 @@ fn records() -> Result<(EvidenceEnvelope, StudyArchive), Box<dyn std::error::Err
         provenance: EvidenceProvenance {
             assumptions: Vec::new(),
             validity_range: Vec::new(),
+            validity_domains: Vec::new(),
             confidence: None,
             dependencies: Vec::new(),
             artifacts: Vec::new(),

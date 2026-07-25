@@ -365,6 +365,7 @@ fn sweep_provenance() -> ResultProvenance {
             "rows are independent and retain stable input ordering".to_owned(),
         ],
         validity_range: vec!["one or two canonical design parameters".to_owned()],
+        validity_domains: Vec::new(),
         units: BTreeMap::from([
             ("physical_metrics".to_owned(), "SI".to_owned()),
             ("feasibility_flags".to_owned(), "1".to_owned()),

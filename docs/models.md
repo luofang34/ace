@@ -70,6 +70,15 @@ Passing this screen means the concept is suitable for further study. Detailed
 loads, joints, buckling, fatigue, flutter, aeroelasticity, and certification
 substantiation remain outside the model.
 
+## Machine-readable validity
+
+Native analysis provenance publishes typed validity domains for the atmosphere,
+polar and optional wave-drag increment, resolved propulsion profile,
+sea-level field-performance screen, and selected structural screen. Bounds use
+canonical SI units and identify whether they come from a published
+specification, the model form, resolved profile data, or a screening
+assumption. Human-readable `validity_range` text remains part of provenance.
+
 ## Constraints and payload-range
 
 Constraint diagrams sample P/W vs W/S or T/W vs W/S for stall, cruise, climb,

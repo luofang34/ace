@@ -11,4 +11,5 @@ pub(crate) mod payload_range;
 pub(crate) mod performance;
 pub(crate) mod propulsion;
 pub(crate) mod structural_screen;
+pub(crate) mod validity;
 pub(crate) mod weight;

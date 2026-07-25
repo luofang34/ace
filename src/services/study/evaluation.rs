@@ -14,6 +14,7 @@ use crate::domain::evidence::{
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::study::StudyDefinition;
+use crate::domain::validity::ModelValidityDomain;
 use crate::services::analysis::ApplicationService;
 use crate::services::study::loading::PreparedStudy;
 
@@ -72,7 +73,7 @@ pub(super) fn evaluate_candidate_blocking(
 }
 
 pub(super) fn evaluator_signature() -> String {
-    format!("native-study-evidence-v6:{}", env!("CARGO_PKG_VERSION"))
+    format!("native-study-evidence-v7:{}", env!("CARGO_PKG_VERSION"))
 }
 
 fn evaluate_native_blocking(
@@ -146,6 +147,10 @@ fn evaluate_native_blocking(
             validity_range: combined(
                 &geometry.provenance.validity_range,
                 &analysis.provenance.validity_range,
+            ),
+            validity_domains: combined_domains(
+                &geometry.provenance.validity_domains,
+                &analysis.provenance.validity_domains,
             ),
             confidence: None,
             dependencies: Vec::new(),
@@ -456,6 +461,7 @@ fn failed_evaluation(
         provenance: EvidenceProvenance {
             assumptions: Vec::new(),
             validity_range: Vec::new(),
+            validity_domains: Vec::new(),
             confidence: None,
             dependencies: Vec::new(),
             artifacts: Vec::new(),
@@ -473,6 +479,22 @@ fn failed_evaluation(
         candidate,
         evidence,
     })
+}
+
+fn combined_domains(
+    first: &[ModelValidityDomain],
+    second: &[ModelValidityDomain],
+) -> Vec<ModelValidityDomain> {
+    let mut domains = Vec::new();
+    for domain in first.iter().chain(second) {
+        if !domains
+            .iter()
+            .any(|existing: &ModelValidityDomain| existing.model_id == domain.model_id)
+        {
+            domains.push(domain.clone());
+        }
+    }
+    domains
 }
 #[cfg(test)]
 mod tests;

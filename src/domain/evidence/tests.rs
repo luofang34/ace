@@ -2,6 +2,8 @@ use std::collections::BTreeMap;
 
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::quantity::QuantityOutput;
+use crate::domain::validity::{ModelValidityDomain, ValidityDomainProvider};
+use crate::models::atmosphere::Isa1976;
 
 use super::archive::StudyArchiveDraft;
 use super::{
@@ -25,6 +27,14 @@ fn candidate(area: &str) -> Result<CandidateDescriptor, Box<dyn std::error::Erro
 fn evidence(
     candidate_id: String,
     metric_value: f64,
+) -> Result<EvidenceEnvelope, Box<dyn std::error::Error>> {
+    evidence_with_domains(candidate_id, metric_value, Vec::new())
+}
+
+fn evidence_with_domains(
+    candidate_id: String,
+    metric_value: f64,
+    validity_domains: Vec<ModelValidityDomain>,
 ) -> Result<EvidenceEnvelope, Box<dyn std::error::Error>> {
     let draft = EvidenceDraft {
         study_id: "wing-trade".to_owned(),
@@ -64,6 +74,7 @@ fn evidence(
         provenance: EvidenceProvenance {
             assumptions: vec!["standard atmosphere".to_owned()],
             validity_range: vec!["altitude <= 3000 m".to_owned()],
+            validity_domains,
             confidence: Some(0.8),
             dependencies: Vec::new(),
             artifacts: Vec::new(),
@@ -127,9 +138,31 @@ fn evidence_id_is_reproducible_and_round_trips() -> Result<(), Box<dyn std::erro
 
     assert_eq!(first.evaluation_id, equivalent.evaluation_id);
     assert_ne!(first.evaluation_id, changed.evaluation_id);
-    let round_trip: EvidenceEnvelope = serde_json::from_slice(&serde_json::to_vec(&first)?)?;
+    let stored = serde_json::to_value(&first)?;
+    assert!(stored["provenance"].get("validity_domains").is_none());
+    let round_trip: EvidenceEnvelope = serde_json::from_value(stored)?;
     round_trip.validate()?;
     assert_eq!(first, round_trip);
+    Ok(())
+}
+
+#[test]
+fn evidence_typed_validity_round_trips_and_affects_identity()
+-> Result<(), Box<dyn std::error::Error>> {
+    let candidate = candidate("16 m^2")?;
+    let legacy = evidence(candidate.candidate_id.clone(), 120.0)?;
+    let typed = evidence_with_domains(
+        candidate.candidate_id,
+        120.0,
+        vec![Isa1976::new(0.0).validity_domain()],
+    )?;
+
+    assert_ne!(legacy.evaluation_id, typed.evaluation_id);
+    let stored = serde_json::to_value(&typed)?;
+    assert!(stored["provenance"]["validity_domains"].is_array());
+    let round_trip: EvidenceEnvelope = serde_json::from_value(stored)?;
+    round_trip.validate()?;
+    assert_eq!(typed, round_trip);
     Ok(())
 }
 
