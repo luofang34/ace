@@ -2,6 +2,7 @@ use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::result::{CruiseConditionPerformance, MissionResult};
 use crate::domain::schema::{MissionSegment, SegmentKind};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
+use crate::domain::warning::WarningCode;
 use crate::models::mission::representative_speed;
 
 use super::validity::SearchBoundary;
@@ -50,7 +51,7 @@ impl PointAnalyzer {
                     warnings.extend(condition_warnings);
                 }
                 Err(error) => warnings.push(Diagnostic::warning(
-                    "CRUISE_CONDITION_UNSUPPORTED",
+                    WarningCode::CruiseConditionUnsupported,
                     error.to_string(),
                     format!("mission.segments.{}", segment.id),
                 )),
@@ -153,7 +154,7 @@ impl PointAnalyzer {
         condition_warnings.extend(capability_warning);
         if !altitude_supported {
             condition_warnings.push(Diagnostic::warning(
-                "CRUISE_ALTITUDE_LIMIT_EXCEEDED",
+                WarningCode::CruiseAltitudeLimitExceeded,
                 format!(
                     "Cruise altitude {altitude_m} m exceeds the declared maximum operating altitude."
                 ),
@@ -223,7 +224,7 @@ fn unavailable_capability(
         None,
         validity,
         Some(Diagnostic::warning(
-            "CRUISE_CAPABILITY_UNAVAILABLE",
+            WarningCode::CruiseCapabilityUnavailable,
             message,
             "performance.achieved_cruise_true_airspeed",
         )),

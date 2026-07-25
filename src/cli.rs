@@ -10,7 +10,6 @@ pub(crate) mod commands;
 mod failure;
 mod output;
 mod plots;
-mod strict;
 
 #[derive(Debug, Parser)]
 #[command(name = "aircraft-explorer", version, about)]
@@ -114,6 +113,8 @@ struct CompareArgs {
     scenarios: Vec<PathBuf>,
     #[arg(long = "metric", required = true)]
     metrics: Vec<String>,
+    #[arg(long)]
+    strict: bool,
     #[command(flatten)]
     output: OutputArgs,
 }

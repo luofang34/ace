@@ -2,6 +2,7 @@ use crate::domain::diagnostic::Diagnostic;
 use crate::domain::result::AtmosphereState;
 use crate::domain::schema::ResolvedScenario;
 use crate::domain::validity::{MetricValidity, ValidityStatus};
+use crate::domain::warning::WarningCode;
 
 #[derive(Debug, Clone, Copy)]
 pub(super) struct SearchBoundary {
@@ -62,7 +63,7 @@ pub(super) fn altitude_upper_bound(scenario: &ResolvedScenario) -> SearchBoundar
 pub(super) fn from_warnings(warnings: &[Diagnostic]) -> MetricValidity {
     if warnings
         .iter()
-        .any(|diagnostic| diagnostic.code == "MODEL_EXTRAPOLATION")
+        .any(|diagnostic| diagnostic.code == WarningCode::ModelExtrapolation.as_str())
     {
         MetricValidity::extrapolated()
     } else {

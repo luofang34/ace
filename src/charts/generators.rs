@@ -6,6 +6,7 @@ use crate::domain::result::{
     SweepResult,
 };
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
+use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::stall_speed_m_s;
 use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
@@ -357,7 +358,7 @@ pub(crate) fn requirement_margins(
         .any(|item| item.resolved_status() == RequirementStatus::Indeterminate)
     {
         warnings.push(Diagnostic::warning(
-            "INDETERMINATE_REQUIREMENT",
+            WarningCode::IndeterminateRequirement,
             "Boundary-limited requirement margins are omitted from the chart.",
             "requirements",
         ));

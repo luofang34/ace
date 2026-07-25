@@ -77,6 +77,10 @@ Diagnostic paths use the stable segment ID, for example
 steps deduplicate the same model code and source path within one segment;
 matching warnings from different segment IDs remain distinct. Strict mission
 analysis therefore applies the same model-warning policy as point analysis.
+Production warning codes are registered enum variants but retain their
+schema-version-1 uppercase strings. Unknown codes in stored diagnostics remain
+readable and advisory. The complete generated table is in
+[`strict-warning-policy.md`](strict-warning-policy.md).
 
 `aircraft.geometry.wing.center_body_edge_sweep` is an optional angle for
 tailless blended-wing-body geometry. It denotes the positive magnitude of

@@ -1,7 +1,8 @@
 use serde_json::json;
 
-use crate::domain::diagnostic::{Diagnostic, Severity};
+use crate::domain::diagnostic::Diagnostic;
 use crate::domain::schema::{EngineProfile, PistonProfile, PropellerProfile, TurbofanProfile};
+use crate::domain::warning::WarningCode;
 
 #[derive(Debug, Clone, Copy)]
 struct TypicalRange {
@@ -106,15 +107,14 @@ fn warnings_for(
 }
 
 fn outside_typical(profile_id: &str, range: TypicalRange, value: f64) -> Diagnostic {
-    Diagnostic {
-        code: "PARAMETER_OUTSIDE_TYPICAL".to_owned(),
-        severity: Severity::Warning,
-        message: format!(
+    Diagnostic::warning_with_context(
+        WarningCode::ParameterOutsideTypical,
+        format!(
             "{} is {value} {}, outside the inclusive typical range [{}, {}] {}",
             range.path, range.unit, range.lower, range.upper, range.unit
         ),
-        path: Some(format!("profile.parameters.{}", range.path)),
-        context: json!({
+        format!("profile.parameters.{}", range.path),
+        json!({
             "profile_id": profile_id,
             "value": value,
             "range": {
@@ -124,7 +124,7 @@ fn outside_typical(profile_id: &str, range: TypicalRange, value: f64) -> Diagnos
             },
             "unit": range.unit,
         }),
-    }
+    )
 }
 
 fn piston_value(profile: &PistonProfile, path: &str) -> Option<f64> {

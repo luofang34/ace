@@ -1,6 +1,7 @@
 use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec};
-use crate::domain::diagnostic::{Diagnostic, Severity};
+use crate::domain::diagnostic::Diagnostic;
 use crate::domain::evidence::StudyRunResult;
+use crate::domain::warning::WarningCode;
 
 #[derive(Debug, Clone)]
 struct TradePoint {
@@ -95,16 +96,15 @@ fn projection_warnings(
         .filter(|id| id.as_str() != x_id && id.as_str() != y_id)
         .cloned()
         .collect::<Vec<_>>();
-    vec![Diagnostic {
-        code: "STUDY_CHART_PROJECTED".to_owned(),
-        severity: Severity::Warning,
-        message: "trade-space chart projects a higher-dimensional objective set".to_owned(),
-        path: Some("study.objectives".to_owned()),
-        context: serde_json::json!({
+    vec![Diagnostic::warning_with_context(
+        WarningCode::StudyChartProjected,
+        "trade-space chart projects a higher-dimensional objective set",
+        "study.objectives",
+        serde_json::json!({
             "shown": [x_id, y_id],
             "omitted": omitted,
         }),
-    }]
+    )]
 }
 
 fn coalesce_points(points: Vec<TradePoint>) -> Vec<TradePoint> {

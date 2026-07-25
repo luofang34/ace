@@ -5,6 +5,7 @@ use crate::domain::quantity::QuantityOutput;
 use crate::domain::validity::{
     MetricValidity, ModelValidityDomain, ValidityDomainProvider, ValidityStatus,
 };
+use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
 
 use super::archive::StudyArchiveDraft;
@@ -83,7 +84,7 @@ fn evidence_with_metadata(
                 normalized_violation: 0.0,
             }],
             diagnostics: vec![Diagnostic::warning(
-                "TEST_WARNING",
+                WarningCode::LowFidelityModel,
                 "fixture diagnostic",
                 "mission",
             )],

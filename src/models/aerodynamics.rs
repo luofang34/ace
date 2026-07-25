@@ -4,6 +4,7 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::GRAVITY_M_S2;
 use crate::domain::result::{AerodynamicState, ModelMetadata};
 use crate::domain::schema::{AeroConfiguration, Aircraft};
+use crate::domain::warning::WarningCode;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct FlightCondition {
@@ -143,7 +144,7 @@ fn wave_drag(configuration: &AeroConfiguration, mach: f64) -> (f64, Vec<Diagnost
     let drag = match (&configuration.wave_drag, configuration.mach_critical) {
         (Some(model), Some(critical)) if mach > critical => {
             warnings.push(Diagnostic::warning(
-                "TRANSONIC_DRAG_APPROXIMATION",
+                WarningCode::TransonicDragApproximation,
                 "Wave drag uses a simple power-law correction.",
                 "aircraft.aerodynamics.clean.wave_drag",
             ));
@@ -153,7 +154,7 @@ fn wave_drag(configuration: &AeroConfiguration, mach: f64) -> (f64, Vec<Diagnost
     };
     if mach > 0.90 {
         warnings.push(Diagnostic::warning(
-            "MODEL_EXTRAPOLATION",
+            WarningCode::ModelExtrapolation,
             format!("Parabolic polar evaluated at Mach {mach:.3}."),
             "condition.mach",
         ));

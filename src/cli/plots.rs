@@ -12,11 +12,11 @@ use crate::charts::spec::ChartSpec;
 use crate::cli::{PlotArgs, PlotKind};
 use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::{Dimension, parse_quantity};
+use crate::domain::warning::enforce_strict;
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::evaluate_requirements;
 
 use super::output::emit_scenario_blocking;
-use super::strict::enforce as enforce_strict;
 
 #[derive(Debug, Serialize)]
 struct PlotOutput {

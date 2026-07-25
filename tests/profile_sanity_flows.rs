@@ -169,3 +169,26 @@ fn study_validation_and_comparison_retain_profile_warnings() -> Result<(), Box<d
     assert_eq!(warning["context"]["scenario_id"], "c172-atypical-profile");
     Ok(())
 }
+
+#[test]
+fn comparison_strict_mode_uses_the_shared_policy() -> Result<(), Box<dyn Error>> {
+    let temporary = TempDir::new()?;
+    let project = create_atypical_c172(temporary.path())?;
+    let scenario = project.join("scenario.yaml");
+    let strict = command(temporary.path())
+        .args([
+            "compare",
+            &scenario.to_string_lossy(),
+            &scenario.to_string_lossy(),
+            "--metric",
+            "performance.wing_loading",
+            "--strict",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .failure();
+    let error: Value = serde_json::from_slice(&strict.get_output().stdout)?;
+    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
+    Ok(())
+}

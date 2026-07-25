@@ -4,6 +4,7 @@ use rmcp::ErrorData;
 use rmcp::handler::server::wrapper::Json;
 use serde_json::Value;
 
+use crate::domain::warning::enforce_strict;
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 
@@ -18,6 +19,7 @@ pub(super) fn simulate(
     let (scenario, mission) = service
         .mission_blocking(path, &request.overrides)
         .map_err(mcp_error)?;
+    enforce_strict(request.strict, &mission.warnings).map_err(mcp_error)?;
     let (_, performance) = service
         .performance_blocking(path, &request.overrides)
         .map_err(mcp_error)?;

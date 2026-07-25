@@ -8,6 +8,7 @@ use crate::backends::contracts::{
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::ResolvedScenario;
+use crate::domain::warning::WarningCode;
 use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::breguet;
 use crate::models::concept_geometry::ConceptGeometry;
@@ -175,7 +176,7 @@ impl AnalysisBackend for NativeBackend {
         warnings.extend(structural_screen.provenance.warnings.clone());
         warnings.extend(mission_power_screen.provenance.warnings.clone());
         warnings.push(Diagnostic::warning(
-            "NATIVE_STABILITY_NOT_MODELED",
+            WarningCode::NativeStabilityNotModeled,
             "The native backend does not estimate stability derivatives.",
             "analysis.stability",
         ));

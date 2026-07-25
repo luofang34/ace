@@ -37,6 +37,12 @@ field overrides the project. MCP and CLI responses share the same presentation
 serializer: canonical values remain SI, while Aviation-US display metadata uses
 kt, ft, lb, and nmi according to quantity semantics.
 
+Scenario resolution, point, mission, constraint, payload-range, sweep, and
+comparison requests accept optional `strict` (default `false`). The shared
+CLI/MCP [strict warning policy](strict-warning-policy.md) returns
+`STRICT_WARNING_FAILURE` when a registered promotable warning is present;
+advisory warnings remain in successful responses.
+
 Scenario resolution, point performance, and mission simulation preserve typed
 domain failures in JSON-RPC error `data`. The object uses the same `code`,
 `message`, `path`, and `context` fields as CLI JSON errors; for
