@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+
+use crate::services::analysis::ApplicationService;
 use crate::test_support::example_scenario;
 
 use super::installed_loading;
@@ -19,5 +22,27 @@ fn piston_comparison_loading_includes_sizing_factor() -> Result<(), Box<dyn std:
     scenario.aircraft.propulsion.sizing_factor = 1.2;
     let resized = installed_loading(&scenario);
     assert!((resized - 1.2 * baseline).abs() < 1.0e-12);
+    Ok(())
+}
+
+#[test]
+fn comparison_headline_metric_is_completion_gated() -> Result<(), Box<dyn std::error::Error>> {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");
+    let paths = ["c172", "x15"]
+        .map(|name| root.join(name).join("scenario.yaml"))
+        .to_vec();
+    let temporary = tempfile::tempdir()?;
+    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let comparison =
+        service.compare_blocking(&paths, &["feasibility.hard_constraints_passed".to_owned()])?;
+
+    assert_eq!(
+        comparison.scenarios[0].metrics["feasibility.hard_constraints_passed"].value,
+        1.0
+    );
+    assert_eq!(
+        comparison.scenarios[1].metrics["feasibility.hard_constraints_passed"].value,
+        0.0
+    );
     Ok(())
 }

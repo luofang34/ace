@@ -15,7 +15,7 @@ use crate::mcp::serve_stdio;
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::report::LIMITATION;
 use crate::services::report::markdown_report;
-use crate::services::requirements::evaluate_requirements;
+use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::services::sweep::SweepVariable;
 
 use super::output::emit_blocking;
@@ -138,10 +138,11 @@ fn execute_mission(service: &ApplicationService, arguments: ScenarioArgs) -> Aex
         arguments.common.seed,
         &[],
     )?;
-    let hard_requirements_passed = requirements
-        .iter()
-        .filter(|item| item.severity == "hard")
-        .all(|item| item.passed);
+    let headline_passed = hard_requirements_passed(
+        mission.completed,
+        &scenario.requirements.items,
+        &requirements,
+    );
     let report_markdown = markdown_report(
         &scenario,
         &run.run_id,
@@ -159,7 +160,7 @@ fn execute_mission(service: &ApplicationService, arguments: ScenarioArgs) -> Aex
                 "incomplete"
             }
             .to_owned(),
-            hard_requirements_passed,
+            hard_requirements_passed: headline_passed,
             warning_count: mission.warnings.len(),
             mission,
             performance,

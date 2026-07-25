@@ -43,10 +43,8 @@ The regression check consumes the fixtures through the public CLI. Both
 scenarios currently validate and resolve because physical-domain preflight is
 not implemented. The authentic SR-71 mission then fails with
 `ATMOSPHERE_OUTSIDE_VALIDITY`. The X-15 command returns a structured result,
-but the mission is incomplete, reports `hard_requirements_passed: true`, and
-reports `FUEL_EXHAUSTED` at `mission.segments.glide_descent`. The contradictory
-headline verdict remains a captured defect, not a desired success criterion;
-its corresponding truthfulness issue must update this contract when fixed.
+but the mission is incomplete, reports `hard_requirements_passed: false`, and
+reports `FUEL_EXHAUSTED` at `mission.segments.glide_descent`.
 
 ## Flaws, ranked by how badly they mislead an LLM
 
@@ -90,8 +88,7 @@ its corresponding truthfulness issue must update this contract when fixed.
    losing path/context. CLI errors under `--format json` are Rust Debug text
    on stderr. One `simulate_mission` response is ~43 KB (~11k tokens),
    dominated by the inline assumptions ledger — which also parses free-text
-   name fields as quantity+unit. `hard_requirements_passed: true` prints
-   alongside `completed: false`; a mission "completed" with 7 kg of fuel;
+   name fields as quantity+unit. A mission "completed" with 7 kg of fuel;
    display units ignore the project unit system.
 
 ## Rework direction

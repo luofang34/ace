@@ -114,3 +114,6 @@ fn compare_progress(left: &StudyArchive, right: &StudyArchive) -> Ordering {
         })
         .then_with(|| left.archive_id.cmp(&right.archive_id))
 }
+
+#[cfg(test)]
+mod tests;

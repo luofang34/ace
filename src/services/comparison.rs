@@ -8,6 +8,7 @@ use crate::domain::quantity::{GRAVITY_M_S2, QuantityOutput};
 use crate::domain::result::ResultProvenance;
 use crate::domain::schema::EngineProfile;
 use crate::services::analysis::ApplicationService;
+use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ScenarioComparison {
@@ -93,6 +94,16 @@ fn comparison_metric(
         )),
         "mission.total_fuel" => Ok(QuantityOutput::si(mission.total_fuel_burn_kg, "kg")),
         "mission.completed_distance" => Ok(QuantityOutput::range(mission.total_distance.value)),
+        "feasibility.hard_constraints_passed" => {
+            let requirements =
+                evaluate_requirements(scenario, mission, performance, Some(payload_range));
+            let passed = hard_requirements_passed(
+                mission.completed,
+                &scenario.requirements.items,
+                &requirements,
+            );
+            Ok(QuantityOutput::si(f64::from(u8::from(passed)), "bool"))
+        }
         "performance.full_payload_range" => {
             payload_range_value(payload_range, "full_payload_mission")
         }
