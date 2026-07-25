@@ -9,7 +9,6 @@ use std::path::{Path, PathBuf};
 
 use rmcp::ServiceExt;
 use rmcp::model::CallToolRequestParams;
-use rmcp::service::ServiceError;
 use rmcp::transport::TokioChildProcess;
 use serde_json::{Value, json};
 
@@ -74,13 +73,11 @@ async fn call_tool_error(
         arguments: Some(arguments(value)?),
         task: None,
     };
-    match client.call_tool(request).await {
-        Err(ServiceError::McpError(error)) => error
-            .data
-            .ok_or_else(|| io::Error::other("strict failure omitted structured data").into()),
-        Err(error) => Err(io::Error::other(format!("unexpected MCP failure: {error}")).into()),
-        Ok(_) => Err(io::Error::other("strict request unexpectedly succeeded").into()),
-    }
+    let result = client.call_tool(request).await?;
+    assert_eq!(result.is_error, Some(true));
+    result
+        .structured_content
+        .ok_or_else(|| io::Error::other("strict failure omitted structured content").into())
 }
 
 #[tokio::test]

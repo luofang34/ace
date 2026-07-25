@@ -1,4 +1,4 @@
-//! MCP model-domain failures retain the public structured error detail.
+//! MCP model-domain failures are structured tool results, not protocol errors.
 
 #![allow(clippy::expect_used, clippy::panic)]
 
@@ -37,13 +37,11 @@ async fn domain_error(
         arguments: Some(arguments(value)?),
         task: None,
     };
-    match client.call_tool(request).await {
-        Err(ServiceError::McpError(error)) => error
-            .data
-            .ok_or_else(|| io::Error::other("MCP error omitted structured data").into()),
-        Err(error) => Err(io::Error::other(format!("unexpected MCP failure: {error}")).into()),
-        Ok(_) => Err(io::Error::other("tool unexpectedly succeeded").into()),
-    }
+    let result = client.call_tool(request).await?;
+    assert_eq!(result.is_error, Some(true));
+    result
+        .structured_content
+        .ok_or_else(|| io::Error::other("tool error omitted structured content").into())
 }
 
 #[tokio::test]
@@ -79,20 +77,31 @@ async fn resolve_point_and_mission_preserve_model_domain_violations() -> Result<
 
     for (name, request) in requests {
         let detail = domain_error(&client, name, request).await?;
+        assert_eq!(detail["status"], "error");
         assert_eq!(detail["code"], "MODEL_DOMAIN_UNSUPPORTED");
-        assert!(detail["path"].is_string());
-        assert!(
-            detail["context"]["violations"]
-                .as_array()
-                .is_some_and(|violations| violations.iter().all(|violation| {
-                    violation["model_id"].is_string()
-                        && violation["minimum"].is_number()
-                        && violation["maximum"].is_number()
-                        && violation["bound_unit"].is_string()
-                        && violation["basis"].is_string()
-                }))
-        );
+        assert!(detail["violating_path"].is_string());
+        assert!(detail["valid_range"].is_object());
+        assert!(detail["diagnostics"].as_array().is_some_and(|diagnostics| {
+            diagnostics.iter().all(|diagnostic| {
+                diagnostic["violating_path"].is_string()
+                    && diagnostic["valid_range"]["model_id"].is_string()
+                    && diagnostic["valid_range"]["minimum"].is_number()
+                    && diagnostic["valid_range"]["maximum"].is_number()
+                    && diagnostic["valid_range"]["unit"].is_string()
+                    && diagnostic["valid_range"]["basis"].is_string()
+            })
+        }));
     }
+
+    let malformed = client
+        .call_tool(CallToolRequestParams {
+            meta: None,
+            name: "calculate_point_performance".into(),
+            arguments: Some(arguments(json!({"scenario_path": scenario_path}))?),
+            task: None,
+        })
+        .await;
+    assert!(matches!(malformed, Err(ServiceError::McpError(_))));
     client.cancel().await?;
     Ok(())
 }

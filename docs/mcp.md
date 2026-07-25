@@ -51,11 +51,15 @@ CLI/MCP [strict warning policy](strict-warning-policy.md) returns
 `STRICT_WARNING_FAILURE` when a registered promotable warning is present;
 advisory warnings remain in successful responses.
 
-Scenario resolution, point performance, and mission simulation preserve typed
-domain failures in JSON-RPC error `data`. The object uses the same `code`,
-`message`, `path`, and `context` fields as CLI JSON errors; for
-`MODEL_DOMAIN_UNSUPPORTED`, `context.violations` includes every ordered bound,
-unit, inclusivity rule, and basis.
+Tool execution failures return a normal MCP `CallToolResult` with
+`isError: true`. Its structured content contains `status`, `code`, `message`,
+`violating_path`, `valid_range`, `suggested_override`, and `diagnostics`, plus
+the CLI-compatible `path` and `context`. Model-domain failures retain every
+ordered bound, unit, inclusivity rule, and basis. A suggested override is
+included only when the violating request path can be moved directly to an
+inclusive model bound; it is a hint and the tool never mutates or reruns the
+request. Malformed tool arguments and transport failures remain JSON-RPC
+protocol errors.
 
 `simulate_mission` preserves the mission result fields at the response root and
 adds `hard_requirements_passed`. That headline is true only when the mission
