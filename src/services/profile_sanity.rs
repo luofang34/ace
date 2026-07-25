@@ -148,7 +148,7 @@ fn turbofan_value(profile: &TurbofanProfile, path: &str) -> Option<f64> {
     match path {
         "sea_level_static_thrust" => simple.map(|deck| deck.sea_level_static_thrust_n),
         "dry_mass" => Some(profile.dry_mass_kg),
-        "bypass_ratio" => Some(profile.bypass_ratio),
+        "bypass_ratio" => profile.bypass_ratio,
         "thrust_lapse.altitude_exponent" => simple.map(|deck| deck.altitude_exponent),
         "thrust_lapse.mach_linear_coefficient" => simple.map(|deck| deck.mach_linear_coefficient),
         "thrust_lapse.minimum_fraction" => simple.map(|deck| deck.minimum_thrust_fraction),

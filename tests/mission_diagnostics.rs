@@ -37,15 +37,11 @@ fn create_sr71_probe(directory: &Path) -> Result<PathBuf, Box<dyn Error>> {
         );
     fs::write(target.join("aircraft.yaml"), aircraft)?;
     let profile = fs::read_to_string(source.join("profiles/j58.yaml"))?
-        .replace("bypass_ratio: 0.0", "bypass_ratio: 0.2")
         .replace(
-            "mach_linear_coefficient: -0.35",
-            "mach_linear_coefficient: 0.05",
+            "mach: [0.0, 0.85, 1.15, 2.0, 3.2, 3.3]",
+            "mach: [0.0, 0.4, 0.6, 0.8, 1.0, 1.2]",
         )
-        .replace("cruise_reference_mach: 3.2", "cruise_reference_mach: 1.0")
-        .replace("nacelle_drag_area: 0.0 m^2", "nacelle_drag_area: 0.05 m^2")
-        .replace("maximum_mach: 3.3", "maximum_mach: 1.2")
-        .replace("maximum_altitude: 85000 ft", "maximum_altitude: 20000 m");
+        .replace("nacelle_drag_area: 0.0 m^2", "nacelle_drag_area: 0.05 m^2");
     fs::write(target.join("profiles/j58.yaml"), profile)?;
     fs::write(
         target.join("mission.yaml"),

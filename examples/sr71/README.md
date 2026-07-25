@@ -4,10 +4,11 @@ This example is an evaluation fixture, not a reference design. It encodes
 known gaps documented in `docs/llm-workflow-evaluation.md` and labels every
 remaining surrogate:
 
-- The J58 afterburning turbojet is forced into the simple turbofan deck with a
-  negative Mach-lapse coefficient (ram-thrust surrogate) fitted to one design
-  point (Mach 3.2 / 19.8 km). Off-design thrust and all TSFC values are not
-  physically meaningful.
+- The J58 uses the explicit `turbojet_engine` profile type and a versioned
+  installed thrust/TSFC table. NASA YF-12 material anchors the engine type and
+  32,500 lbf static rating; intermediate off-design cells remain disclosed
+  conceptual data. The subsonic required-thrust check is 3–5 t/hr and the
+  Mach 3.2 / 78,000 ft point is inside table support.
 - The authentic mission cruises at 78,000 ft, above the atmosphere model's
   20 km domain, and must fail statically at validate/resolve rather than at
   runtime.

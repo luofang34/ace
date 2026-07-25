@@ -374,7 +374,8 @@ pub(crate) struct TurbofanProfile {
     pub(crate) source: String,
     pub(crate) confidence: String,
     pub(crate) dry_mass_kg: f64,
-    pub(crate) bypass_ratio: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) bypass_ratio: Option<f64>,
     pub(crate) thrust_loss_fraction: f64,
     pub(crate) nacelle_drag_area_m2: f64,
     pub(crate) overall_length_m: Option<f64>,

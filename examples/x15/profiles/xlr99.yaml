@@ -1,33 +1,45 @@
 schema_version: 1
 profile:
   id: engine.xlr99_class
-  version: 1
-  type: turbofan_engine
-  model: propulsion.turbofan_simple_deck
+  version: 2
+  type: rocket_engine
+  model: propulsion.table_deck
   metadata:
-    display_name: Reaction Motors XLR99 (rocket forced into the turbofan deck)
+    display_name: Reaction Motors XLR99
     source: >-
-      Public X-15 figures. No rocket model exists, so the XLR99 is expressed as
-      a constant-thrust "turbofan": altitude exponent 0 and Mach coefficient 0
-      remove air-breathing lapse, and TSFC 1.316 kg/N/hr encodes Isp 279 s.
-      Thrust is anchored to the ~250 kN mid-boost value.
-    confidence: low
+      NASA X-15 program histories report 57,000 lbf maximum thrust and more
+      than 13,000 lb/min propellant flow for the throttleable XLR99. The
+      constant 263 s table value reproduces those public full-power anchors
+      through T/(Isp*g0); the deck does not model mixture ratio or nozzle
+      performance variation.
+    confidence: medium
   parameters:
-    sea_level_static_thrust: 250 kN
     dry_mass: 413 kg
-    bypass_ratio: 0.0
-    thrust_lapse:
-      altitude_exponent: 0.0
-      mach_linear_coefficient: 0.0
-      minimum_fraction: 1.0
-    tsfc:
-      sea_level_takeoff: 1.316 kg/N/hr
-      cruise_reference: 1.316 kg/N/hr
-      cruise_reference_altitude: 60000 ft
-      cruise_reference_mach: 4.0
     installation:
       thrust_loss_fraction: 0.0
       nacelle_drag_area: 0.0 m^2
-    limits:
-      maximum_mach: 6.7
-      maximum_altitude: 354000 ft
+    table_deck:
+      axes:
+        mach: [0.0, 6.7]
+        altitude: [0 ft, 354000 ft]
+      modes:
+        takeoff:
+          thrust: &rocket_thrust
+            unit: N
+            values:
+              - [253549, 253549]
+              - [253549, 253549]
+          specific_impulse: &rocket_isp
+            unit: s
+            values:
+              - [263, 263]
+              - [263, 263]
+        climb:
+          thrust: *rocket_thrust
+          specific_impulse: *rocket_isp
+        cruise:
+          thrust: *rocket_thrust
+          specific_impulse: *rocket_isp
+        economy:
+          thrust: *rocket_thrust
+          specific_impulse: *rocket_isp

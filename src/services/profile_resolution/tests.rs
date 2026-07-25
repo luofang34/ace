@@ -29,6 +29,60 @@ fn b777_table_deck_parses_all_modes_and_axes() -> Result<(), Box<dyn std::error:
 }
 
 #[test]
+fn specialized_table_profiles_preserve_identity_and_fuel_basis()
+-> Result<(), Box<dyn std::error::Error>> {
+    for (relative, expected_type, expected_id, specific_impulse) in [
+        (
+            "examples/sr71/profiles/j58.yaml",
+            "turbojet_engine",
+            "engine.pw_j58_class",
+            false,
+        ),
+        (
+            "examples/x15/profiles/xlr99.yaml",
+            "rocket_engine",
+            "engine.xlr99_class",
+            true,
+        ),
+    ] {
+        let document = profile_document(relative)?;
+        assert_eq!(document.profile.kind, expected_type);
+        let profile = parse_engine_profile(document.profile)?;
+        let crate::domain::schema::EngineProfile::Turbofan(profile) = profile else {
+            return Err(format!("{expected_type} requires a thrust profile").into());
+        };
+        assert_eq!(profile.id, expected_id);
+        assert_eq!(profile.version, 2);
+        assert_eq!(profile.model, "propulsion.table_deck");
+        assert!(profile.bypass_ratio.is_none());
+        assert!(profile.simple_deck.is_none());
+        let deck = profile.table_deck.ok_or("missing table deck")?;
+        assert!(deck.modes.iter().all(|mode| {
+            matches!(
+                mode.fuel,
+                crate::domain::propulsion::TableFuelSchedule::SpecificImpulseS(_)
+            ) == specific_impulse
+        }));
+    }
+    Ok(())
+}
+
+#[test]
+fn specialized_thrust_types_require_the_table_model() -> Result<(), Box<dyn std::error::Error>> {
+    for relative in [
+        "examples/sr71/profiles/j58.yaml",
+        "examples/x15/profiles/xlr99.yaml",
+    ] {
+        let source = fs::read_to_string(repository_path(relative))?.replace(
+            "model: propulsion.table_deck",
+            "model: propulsion.turbofan_simple_deck",
+        );
+        assert_validation_code(&source, "INCOMPATIBLE_PROPULSION_MODEL")?;
+    }
+    Ok(())
+}
+
+#[test]
 fn table_deck_rejects_unsorted_axes_bad_shapes_units_and_cells()
 -> Result<(), Box<dyn std::error::Error>> {
     let original = b777_source()?;
@@ -166,7 +220,18 @@ fn b777_document() -> Result<ProfileDocument, Box<dyn std::error::Error>> {
     Ok(serde_yaml::from_str(&b777_source()?)?)
 }
 
+fn profile_document(relative: &str) -> Result<ProfileDocument, Box<dyn std::error::Error>> {
+    Ok(serde_yaml::from_str(&fs::read_to_string(
+        repository_path(relative),
+    )?)?)
+}
+
 fn b777_source() -> Result<String, Box<dyn std::error::Error>> {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/b777/profiles/engine.yaml");
-    Ok(fs::read_to_string(path)?)
+    Ok(fs::read_to_string(repository_path(
+        "examples/b777/profiles/engine.yaml",
+    ))?)
+}
+
+fn repository_path(relative: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(relative)
 }

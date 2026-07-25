@@ -1,34 +1,52 @@
 schema_version: 1
 profile:
   id: engine.pw_j58_class
-  version: 1
-  type: turbofan_engine
-  model: propulsion.turbofan_simple_deck
+  version: 2
+  type: turbojet_engine
+  model: propulsion.table_deck
   metadata:
-    display_name: P&W J58-Class Afterburning Turbojet (deck approximation)
+    display_name: P&W J58-Class Afterburning Turbojet
     source: >-
-      Public J58/SR-71 figures; the simple turbofan deck cannot represent an
-      afterburning turbojet with ram recovery, so the Mach coefficient is
-      negative and the altitude exponent is fitted to the Mach 3.2 / 19.8 km
-      design point only. Off-design thrust and all TSFC values are not
-      physically meaningful.
+      NASA YF-12 propulsion research reports identify the J58 afterburning
+      turbojet and its installed inlet/nozzle system; NASA's YF-12 engine
+      research history gives 32,500 lbf as the static thrust anchor. The
+      remaining installed net-thrust and TSFC cells are a conceptual
+      interpolation deck calibrated to the SR-71 fixture's subsonic and Mach
+      3.2 fuel-flow guardrails, not released manufacturer performance data.
     confidence: low
   parameters:
-    sea_level_static_thrust: 151.2 kN
     dry_mass: 2700 kg
-    bypass_ratio: 0.0
-    thrust_lapse:
-      altitude_exponent: 0.55
-      mach_linear_coefficient: -0.35
-      minimum_fraction: 0.10
-    tsfc:
-      sea_level_takeoff: 0.180 kg/N/hr
-      cruise_reference: 0.194 kg/N/hr
-      cruise_reference_altitude: 65000 ft
-      cruise_reference_mach: 3.2
     installation:
-      thrust_loss_fraction: 0.03
+      thrust_loss_fraction: 0.0
       nacelle_drag_area: 0.0 m^2
-    limits:
-      maximum_mach: 3.3
-      maximum_altitude: 85000 ft
+    table_deck:
+      axes:
+        mach: [0.0, 0.85, 1.15, 2.0, 3.2, 3.3]
+        altitude: [0 ft, 25000 ft, 50000 ft, 78000 ft, 85000 ft]
+      modes:
+        takeoff:
+          thrust: &installed_thrust
+            unit: N
+            values:
+              - [144600, 132000, 122000, 152000, 202000, 205000]
+              - [108000, 101000, 98000, 128000, 175000, 178000]
+              - [65000, 69000, 74000, 98000, 142000, 145000]
+              - [22000, 30000, 44000, 70000, 110000, 112000]
+              - [18000, 25000, 38000, 63000, 101000, 103000]
+          tsfc: &installed_tsfc
+            unit: kg/N/hr
+            values:
+              - [0.105, 0.095, 0.105, 0.125, 0.175, 0.180]
+              - [0.080, 0.050, 0.075, 0.110, 0.170, 0.175]
+              - [0.075, 0.065, 0.080, 0.105, 0.180, 0.185]
+              - [0.080, 0.070, 0.090, 0.110, 0.194, 0.200]
+              - [0.085, 0.075, 0.095, 0.115, 0.200, 0.205]
+        climb:
+          thrust: *installed_thrust
+          tsfc: *installed_tsfc
+        cruise:
+          thrust: *installed_thrust
+          tsfc: *installed_tsfc
+        economy:
+          thrust: *installed_thrust
+          tsfc: *installed_tsfc

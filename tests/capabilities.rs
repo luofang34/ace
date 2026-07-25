@@ -230,6 +230,14 @@ async fn validate_profile_types(
             root().join("examples/b777/profiles/engine.yaml"),
         ),
         (
+            "turbojet_engine",
+            root().join("examples/sr71/profiles/j58.yaml"),
+        ),
+        (
+            "rocket_engine",
+            root().join("examples/x15/profiles/xlr99.yaml"),
+        ),
+        (
             "propeller",
             root().join("examples/c172/profiles/propeller.yaml"),
         ),

@@ -12,6 +12,8 @@ The CLI command `aex capabilities --format json` and MCP tool `get_capabilities`
 | --- | --- |
 | `piston_engine` | `engine` |
 | `turbofan_engine` | `engine` |
+| `turbojet_engine` | `engine` |
+| `rocket_engine` | `engine` |
 | `propeller` | `propeller` |
 
 ## Aerodynamic configurations

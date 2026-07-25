@@ -19,6 +19,10 @@ pub(crate) fn parse_engine_profile(raw: RawProfile) -> AexResult<EngineProfile> 
         Some(("turbofan_engine", ProfileRole::Engine)) => {
             Ok(EngineProfile::Turbofan(parse_turbofan_profile(raw)?))
         }
+        Some(("turbojet_engine" | "rocket_engine", ProfileRole::Engine)) => {
+            require_table_thrust_profile(&raw)?;
+            Ok(EngineProfile::Turbofan(parse_turbofan_profile(raw)?))
+        }
         _ => Err(AexError::validation(
             "UNSUPPORTED_PROPULSION_PROFILE",
             "profile.type",
@@ -101,7 +105,11 @@ fn parse_turbofan_profile(raw: RawProfile) -> AexResult<TurbofanProfile> {
         source: source.0,
         confidence: source.1,
         dry_mass_kg: profile_quantity(&raw.parameters, "dry_mass", Dimension::Mass)?,
-        bypass_ratio: profile_number(&raw.parameters, "bypass_ratio")?,
+        bypass_ratio: if table_deck.is_some() {
+            profile_optional_number(&raw.parameters, "bypass_ratio")?
+        } else {
+            Some(profile_number(&raw.parameters, "bypass_ratio")?)
+        },
         thrust_loss_fraction: profile_number(&raw.parameters, "installation.thrust_loss_fraction")?,
         nacelle_drag_area_m2: profile_quantity(
             &raw.parameters,
@@ -151,6 +159,18 @@ fn reference_turbofan_thrust(
                 "turbofan profile requires one propulsion deck",
             )
         })
+}
+
+fn require_table_thrust_profile(raw: &RawProfile) -> AexResult<()> {
+    if raw.model == TABLE_PROPULSION_MODEL_ID {
+        Ok(())
+    } else {
+        Err(AexError::validation(
+            "INCOMPATIBLE_PROPULSION_MODEL",
+            "profile.model",
+            format!("{} profiles require propulsion.table_deck", raw.kind),
+        ))
+    }
 }
 
 fn validate_turbofan_deck_selection(raw: &RawProfile, has_table: bool) -> AexResult<()> {
@@ -237,6 +257,19 @@ fn profile_number(parameters: &Value, path: &str) -> AexResult<f64> {
     profile_value(parameters, path)?
         .as_f64()
         .ok_or_else(|| AexError::validation("INVALID_PROFILE_PARAMETER", path, "expected number"))
+}
+
+fn profile_optional_number(parameters: &Value, path: &str) -> AexResult<Option<f64>> {
+    match profile_value(parameters, path) {
+        Ok(value) => value.as_f64().map(Some).ok_or_else(|| {
+            AexError::validation("INVALID_PROFILE_PARAMETER", path, "expected number")
+        }),
+        Err(AexError::Validation {
+            code: "MISSING_PROFILE_PARAMETER",
+            ..
+        }) => Ok(None),
+        Err(error) => Err(error),
+    }
 }
 
 fn profile_u32(parameters: &Value, path: &str) -> AexResult<u32> {

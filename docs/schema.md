@@ -160,20 +160,22 @@ opposed center-body leading- and trailing-edge sweeps. OpenVSP translates it
 to the backend's quarter-chord representation without exposing backend
 parameter identifiers.
 
-Turbofan profiles may provide `dimensions.overall_length` and
+Thrust-engine profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
 retains conservative defaults when they are absent.
 
-Turbofan profiles select either the legacy simple-deck parameters or a
-`table_deck`. A table declares `axes.mach`, quantity-valued `axes.altitude`,
-and all four `modes`: `takeoff`, `climb`, `cruise`, and `economy`. Each mode
-contains a `thrust` matrix in `N` and exactly one fuel matrix: `tsfc` in
-`kg/N/hr` or `specific_impulse` in `s`. Every matrix uses altitude rows and
-Mach columns, matching the strictly increasing axes, and every cell must be
-finite and positive. Table profiles do not require simple-deck lapse, TSFC, or
-author-declared limit fields.
+Thrust profiles use `turbofan_engine`, `turbojet_engine`, or `rocket_engine`.
+Turbofans select either the legacy simple-deck parameters or a `table_deck`;
+turbojets and rockets require a table. A table declares `axes.mach`,
+quantity-valued `axes.altitude`, and all four `modes`: `takeoff`, `climb`,
+`cruise`, and `economy`. Each mode contains a `thrust` matrix in `N` and
+exactly one fuel matrix: `tsfc` in `kg/N/hr` or `specific_impulse` in `s`.
+Every matrix uses altitude rows and Mach columns, matching the strictly
+increasing axes, and every cell must be finite and positive. Table profiles do
+not require bypass ratio, simple-deck lapse, TSFC, or author-declared limit
+fields.
 
-Resolved piston, turbofan, and propeller parameters are checked against
+Resolved piston, thrust-engine, and propeller parameters are checked against
 registered advisory typical ranges. Every violation emits
 `PARAMETER_OUTSIDE_TYPICAL` with structured value, inclusive bounds, and unit
 context. Non-strict resolution remains available for explicit surrogate
