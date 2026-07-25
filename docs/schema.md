@@ -146,3 +146,13 @@ contain feasible candidates only; hard-infeasible candidates cannot outrank a
 feasible candidate. Study-specific constraints with the same ID as a baseline
 requirement replace that requirement in the study evidence, allowing a study
 to strengthen severity without creating duplicate constraint identities.
+Conditional grid combinations that resolve to the same descriptor are
+deduplicated before they count toward the maximum evaluation limit.
+The `preserve_baseline_mass_closure` derivation applies propulsion dry-mass
+growth to both operating empty mass and maximum takeoff mass, while fuel
+capacity changes adjust maximum takeoff mass by the same amount.
+
+Archive consumers cross-check every outcome against the referenced candidate
+and immutable evidence record, including study ID and recorded feasibility.
+Queries do not infer a revision when multiple study, baseline, or evaluator
+signatures share one study ID; callers select the returned archive ID.

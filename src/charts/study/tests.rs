@@ -67,3 +67,33 @@ fn infeasible_selection_chart_does_not_claim_a_pareto_set() {
     assert!(chart.title.contains("selected trade space"));
     assert_eq!(chart.series[0].id, "selected_candidates");
 }
+
+#[test]
+fn higher_dimensional_chart_declares_its_projection() {
+    let mut projected = candidate("candidate_one");
+    projected.objective_values.insert("range".to_owned(), 30.0);
+    let result = StudyRunResult {
+        study_id: "trade".to_owned(),
+        study_digest: "a".repeat(64),
+        archive_id: "archive_test".to_owned(),
+        evaluated_candidates: 1,
+        feasible_candidates: 1,
+        reused_evaluations: 0,
+        pareto_candidates: vec![projected],
+        selected_candidates: Vec::new(),
+        archive_path: "archive.json".to_owned(),
+        complete: true,
+    };
+
+    let chart = trade_space(&result).expect("three objectives produce a projected chart");
+
+    assert_eq!(chart.warnings[0].code, "STUDY_CHART_PROJECTED");
+    assert_eq!(
+        chart.warnings[0].context["shown"],
+        serde_json::json!(["fuel", "mass"])
+    );
+    assert_eq!(
+        chart.warnings[0].context["omitted"],
+        serde_json::json!(["range"])
+    );
+}

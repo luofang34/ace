@@ -5,7 +5,9 @@ use rmcp::handler::server::wrapper::Json;
 use serde_json::json;
 
 use crate::charts::renderer::render_svg_blocking;
+use crate::charts::spec::ChartSpec;
 use crate::charts::study::trade_space;
+use crate::domain::diagnostic::{AexError, AexResult};
 use crate::mcp::schema::{
     LoadStudyRequest, PromoteStudyCandidateRequest, QueryStudyRequest, RunStudyRequest,
 };
@@ -30,14 +32,24 @@ pub(super) fn run(
         .run_study_blocking(Path::new(&request.study_path))
         .map_err(mcp_error)?;
     let chart = trade_space(&result);
-    if let (Some(path), Some(spec)) = (&request.artifact_path, &chart) {
-        render_svg_blocking(spec, Path::new(path)).map_err(mcp_error)?;
-    }
+    persist_chart_blocking(chart.as_ref(), request.artifact_path.as_deref()).map_err(mcp_error)?;
     json_output(json!({
         "result": result,
         "chart_spec": chart,
         "artifact_path": request.artifact_path,
     }))
+}
+
+fn persist_chart_blocking(chart: Option<&ChartSpec>, artifact_path: Option<&str>) -> AexResult<()> {
+    match (chart, artifact_path) {
+        (Some(spec), Some(path)) => render_svg_blocking(spec, Path::new(path)),
+        (None, Some(_)) => Err(AexError::validation(
+            "STUDY_CHART_UNAVAILABLE",
+            "artifact_path",
+            "trade-space charts require at least two reported objectives",
+        )),
+        _ => Ok(()),
+    }
 }
 
 pub(super) fn query(
@@ -46,12 +58,20 @@ pub(super) fn query(
 ) -> Result<Json<ObjectOutput>, ErrorData> {
     if let Some(candidate_id) = request.candidate_id {
         return service
-            .get_study_evidence_blocking(&request.study_id, &candidate_id)
+            .get_study_evidence_blocking(
+                &request.study_id,
+                request.archive_id.as_deref(),
+                &candidate_id,
+            )
             .map_err(mcp_error)
             .and_then(json_output);
     }
     let result = service
-        .query_study_blocking(&request.study_id, request.limit.unwrap_or(10))
+        .query_study_blocking(
+            &request.study_id,
+            request.archive_id.as_deref(),
+            request.limit.unwrap_or(10),
+        )
         .map_err(mcp_error)?;
     let chart = trade_space(&result);
     json_output(json!({
@@ -85,3 +105,6 @@ pub(super) fn promote(
         "next_actions": ["evaluate_feasibility", "generate_report"],
     }))
 }
+
+#[cfg(test)]
+mod tests;

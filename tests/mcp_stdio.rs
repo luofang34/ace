@@ -289,7 +289,11 @@ async fn query_and_promote_study(
     let queried = call_tool(
         client,
         "query_design_study",
-        json!({ "study_id": "c172-local-design-space", "limit": 3 }),
+        json!({
+            "study_id": "c172-local-design-space",
+            "archive_id": executed.archive_id,
+            "limit": 3
+        }),
     )
     .await?;
     assert_eq!(queried["result"]["archive_id"], executed.archive_id);
@@ -299,6 +303,7 @@ async fn query_and_promote_study(
         "query_design_study",
         json!({
             "study_id": "c172-local-design-space",
+            "archive_id": executed.archive_id,
             "candidate_id": &executed.candidate_id
         }),
     )

@@ -1,4 +1,5 @@
 use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec};
+use crate::domain::diagnostic::{Diagnostic, Severity};
 use crate::domain::evidence::StudyRunResult;
 
 #[derive(Debug, Clone)]
@@ -40,6 +41,7 @@ pub(crate) fn trade_space(result: &StudyRunResult) -> Option<ChartSpec> {
     } else {
         "selected"
     };
+    let warnings = projection_warnings(first, x_id, y_id);
     Some(ChartSpec {
         chart_type: "scatter".to_owned(),
         title: format!("{}: {selection_label} trade space", result.study_id),
@@ -75,8 +77,34 @@ pub(crate) fn trade_space(result: &StudyRunResult) -> Option<ChartSpec> {
                 },
             })
             .collect(),
-        warnings: Vec::new(),
+        warnings,
     })
+}
+
+fn projection_warnings(
+    first: &crate::domain::evidence::CandidateSummary,
+    x_id: &str,
+    y_id: &str,
+) -> Vec<Diagnostic> {
+    if first.objective_values.len() <= 2 {
+        return Vec::new();
+    }
+    let omitted = first
+        .objective_values
+        .keys()
+        .filter(|id| id.as_str() != x_id && id.as_str() != y_id)
+        .cloned()
+        .collect::<Vec<_>>();
+    vec![Diagnostic {
+        code: "STUDY_CHART_PROJECTED".to_owned(),
+        severity: Severity::Warning,
+        message: "trade-space chart projects a higher-dimensional objective set".to_owned(),
+        path: Some("study.objectives".to_owned()),
+        context: serde_json::json!({
+            "shown": [x_id, y_id],
+            "omitted": omitted,
+        }),
+    }]
 }
 
 fn coalesce_points(points: Vec<TradePoint>) -> Vec<TradePoint> {

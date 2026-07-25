@@ -8,6 +8,7 @@ use crate::domain::evidence::{
 };
 use crate::domain::study::{ObjectiveDirection, StudyDefinition};
 use crate::services::analysis::ApplicationService;
+use crate::services::study::evidence_links;
 
 pub(super) fn rank(
     study: &StudyDefinition,
@@ -138,7 +139,7 @@ pub(super) fn run_result(
         .iter()
         .map(|candidate| (candidate.candidate_id.as_str(), candidate))
         .collect::<BTreeMap<_, _>>();
-    let evidence = load_evidence(service, archive)?;
+    let evidence = evidence_links::load_all_blocking(service, archive)?;
     let path = service.studies.archive_path(&archive.archive_id)?;
     Ok(StudyRunResult {
         study_id: archive.study_id.clone(),
@@ -169,22 +170,6 @@ pub(super) fn run_result(
         archive_path: path.display().to_string(),
         complete: archive.complete,
     })
-}
-
-fn load_evidence(
-    service: &ApplicationService,
-    archive: &StudyArchive,
-) -> AexResult<BTreeMap<String, EvidenceEnvelope>> {
-    archive
-        .evaluation_ids
-        .iter()
-        .map(|id| {
-            service
-                .studies
-                .load_evaluation_blocking(id)
-                .map(|evidence| (id.clone(), evidence))
-        })
-        .collect()
 }
 
 fn collect_by_ids(

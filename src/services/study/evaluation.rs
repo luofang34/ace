@@ -303,7 +303,11 @@ fn apply_derivations(
             "derive_from_area_and_aspect_ratio" | "wing_span_from_area_and_aspect_ratio" => {
                 derive_wing_span(prepared, parameters)?
             }
-            "preserve_baseline_mass_closure" | "operating_empty_mass_from_propulsion_sizing" => {
+            "preserve_baseline_mass_closure" => {
+                apply_mass_closure(prepared, parameters)?;
+                continue;
+            }
+            "operating_empty_mass_from_propulsion_sizing" => {
                 derive_mass_closure(prepared, parameters, &derived.target)?
             }
             _ => {
@@ -336,25 +340,40 @@ fn derive_wing_span(
     Ok(format!("{} m", (area * aspect_ratio).sqrt()))
 }
 
+fn apply_mass_closure(
+    prepared: &PreparedStudy,
+    parameters: &mut BTreeMap<String, String>,
+) -> AexResult<()> {
+    let sizing = propulsion_sizing(prepared, parameters)?;
+    let propulsion_delta = propulsion_mass_delta(prepared, sizing);
+    let mass = &prepared.scenario.aircraft.mass;
+    let fuel = parameters
+        .get("aircraft.mass.maximum_fuel_mass")
+        .map(|value| parse_quantity(value, Dimension::Mass))
+        .transpose()?
+        .unwrap_or(mass.maximum_fuel_mass_kg);
+    parameters.insert(
+        "aircraft.mass.operating_empty_mass".to_owned(),
+        format!("{} kg", mass.operating_empty_mass_kg + propulsion_delta),
+    );
+    parameters.insert(
+        "aircraft.mass.maximum_takeoff_mass".to_owned(),
+        format!(
+            "{} kg",
+            mass.maximum_takeoff_mass_kg + propulsion_delta + fuel - mass.maximum_fuel_mass_kg
+        ),
+    );
+    Ok(())
+}
+
 fn derive_mass_closure(
     prepared: &PreparedStudy,
     parameters: &BTreeMap<String, String>,
     target: &str,
 ) -> AexResult<String> {
-    let sizing = parameter_number(
-        parameters,
-        "aircraft.propulsion.sizing_factor",
-        prepared.scenario.aircraft.propulsion.sizing_factor,
-    )?;
+    let sizing = propulsion_sizing(prepared, parameters)?;
     let mass = &prepared.scenario.aircraft.mass;
-    let dry_mass = match &prepared.scenario.engine {
-        EngineProfile::Piston(profile) => profile.dry_mass_kg,
-        EngineProfile::Turbofan(profile) => profile.dry_mass_kg,
-    };
-    let propulsion_delta = 1.15
-        * dry_mass
-        * f64::from(prepared.scenario.aircraft.propulsion.engine_count)
-        * (sizing - 1.0);
+    let propulsion_delta = propulsion_mass_delta(prepared, sizing);
     let value = if target == "aircraft.mass.operating_empty_mass" {
         mass.operating_empty_mass_kg + propulsion_delta
     } else {
@@ -366,6 +385,25 @@ fn derive_mass_closure(
         mass.maximum_takeoff_mass_kg + propulsion_delta + fuel - mass.maximum_fuel_mass_kg
     };
     Ok(format!("{value} kg"))
+}
+
+fn propulsion_sizing(
+    prepared: &PreparedStudy,
+    parameters: &BTreeMap<String, String>,
+) -> AexResult<f64> {
+    parameter_number(
+        parameters,
+        "aircraft.propulsion.sizing_factor",
+        prepared.scenario.aircraft.propulsion.sizing_factor,
+    )
+}
+
+fn propulsion_mass_delta(prepared: &PreparedStudy, sizing: f64) -> f64 {
+    let dry_mass = match &prepared.scenario.engine {
+        EngineProfile::Piston(profile) => profile.dry_mass_kg,
+        EngineProfile::Turbofan(profile) => profile.dry_mass_kg,
+    };
+    1.15 * dry_mass * f64::from(prepared.scenario.aircraft.propulsion.engine_count) * (sizing - 1.0)
 }
 
 fn parameter_number(

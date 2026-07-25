@@ -166,6 +166,7 @@ pub(super) struct RunStudyRequest {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct QueryStudyRequest {
     pub(super) study_id: String,
+    pub(super) archive_id: Option<String>,
     pub(super) limit: Option<usize>,
     pub(super) candidate_id: Option<String>,
 }

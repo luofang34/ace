@@ -1,3 +1,6 @@
+mod archives;
+mod grid;
+
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -14,6 +17,10 @@ use crate::services::study::evaluation::{
 };
 use crate::services::study::loading::PreparedStudy;
 use crate::services::study::ranking;
+
+use archives::matching_archive;
+pub(super) use archives::{archive_for_prepared, archive_for_query};
+use grid::grid_genes;
 
 struct WorkingStudy {
     study_id: String,
@@ -102,71 +109,19 @@ pub(super) fn run_blocking(
     ranking::run_result(service, &archive, reused, 10)
 }
 
-pub(super) fn latest_archive_for_study(
-    service: &ApplicationService,
-    study_id: &str,
-) -> AexResult<StudyArchive> {
-    service
-        .studies
-        .list_archives_blocking()?
-        .into_iter()
-        .filter(|archive| archive.study_id == study_id)
-        .max_by(compare_progress)
-        .ok_or_else(|| {
-            AexError::validation(
-                "STUDY_ARCHIVE_NOT_FOUND",
-                "study_id",
-                format!("no local archive exists for {study_id}"),
-            )
-        })
-}
-
-fn matching_archive(
-    service: &ApplicationService,
-    prepared: &PreparedStudy,
-) -> AexResult<Option<StudyArchive>> {
-    let signature = evaluator_signature();
-    Ok(service
-        .studies
-        .list_archives_blocking()?
-        .into_iter()
-        .filter(|archive| {
-            archive.study_id == prepared.document.study.id
-                && archive.study_digest == prepared.study_digest
-                && archive.baseline_digest == prepared.baseline_digest
-                && archive.evaluator_signature == signature
-        })
-        .max_by(compare_progress))
-}
-
-fn compare_progress(left: &StudyArchive, right: &StudyArchive) -> Ordering {
-    left.complete
-        .cmp(&right.complete)
-        .then_with(|| {
-            left.workflow
-                .outcomes
-                .len()
-                .cmp(&right.workflow.outcomes.len())
-        })
-        .then_with(|| {
-            left.workflow
-                .checkpoint
-                .generation
-                .cmp(&right.workflow.checkpoint.generation)
-        })
-        .then_with(|| left.archive_id.cmp(&right.archive_id))
-}
-
 fn run_grid_blocking(
     service: &ApplicationService,
     prepared: &PreparedStudy,
     state: &mut WorkingStudy,
 ) -> AexResult<StudyArchive> {
     let maximum = search_limit(prepared.document.study.search.max_evaluations)?;
-    let genes = grid_genes(&prepared.document.study, maximum);
-    for values in genes {
-        evaluate_if_new(service, prepared, state, &values, 0)?;
-        persist_snapshot(service, prepared, state, false)?;
+    for values in grid_genes(&prepared.document.study) {
+        if state.workflow.outcomes.len() >= maximum {
+            break;
+        }
+        if evaluate_if_new(service, prepared, state, &values, 0)? {
+            persist_snapshot(service, prepared, state, false)?;
+        }
     }
     state.workflow.checkpoint.population.clear();
     persist_snapshot(service, prepared, state, true)
@@ -277,35 +232,12 @@ fn persist_snapshot(
     Ok(archive)
 }
 
-fn grid_genes(study: &StudyDefinition, maximum: usize) -> Vec<BTreeMap<String, String>> {
-    let mut rows = vec![BTreeMap::new()];
-    for variable in &study.variables {
-        let mut expanded = Vec::new();
-        for row in &rows {
-            for value in &variable.values {
-                let mut next = row.clone();
-                next.insert(variable.id.clone(), value.clone());
-                expanded.push(next);
-                if expanded.len() >= maximum {
-                    break;
-                }
-            }
-            if expanded.len() >= maximum {
-                break;
-            }
-        }
-        rows = expanded;
-    }
-    rows.truncate(maximum);
-    rows
-}
-
 fn initial_population(
     study: &StudyDefinition,
     size: usize,
     rng: &mut DeterministicRng,
 ) -> Vec<BTreeMap<String, String>> {
-    let mut population = grid_genes(study, size);
+    let mut population = grid_genes(study).take(size).collect::<Vec<_>>();
     while population.len() < size {
         population.push(random_genes(study, rng));
     }

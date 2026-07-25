@@ -3,6 +3,10 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::domain::diagnostic::AexError;
+use crate::domain::evidence::StudyArchive;
+use crate::domain::evidence::archive::StudyArchiveDraft;
+use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::services::analysis::ApplicationService;
 
 use super::{evaluation, loading};
@@ -20,6 +24,10 @@ fn candidate_ids(result: &crate::domain::evidence::StudyRunResult) -> Vec<&str> 
         .iter()
         .map(|candidate| candidate.candidate.candidate_id.as_str())
         .collect()
+}
+
+fn digest(character: char) -> String {
+    character.to_string().repeat(64)
 }
 
 fn assert_no_candidate_directories_blocking(root: &Path) -> io::Result<()> {
@@ -53,6 +61,24 @@ fn assert_reference_candidate_round_trips(
             ("wing_area".to_owned(), "16.17 m^2".to_owned()),
         ]),
     )?;
+    let operating_empty = descriptor
+        .parameters
+        .get("aircraft.mass.operating_empty_mass")
+        .ok_or_else(|| io::Error::other("mass closure omitted operating empty mass"))?;
+    let maximum_takeoff = descriptor
+        .parameters
+        .get("aircraft.mass.maximum_takeoff_mass")
+        .ok_or_else(|| io::Error::other("mass closure omitted maximum takeoff mass"))?;
+    let operating_empty = parse_quantity(operating_empty, Dimension::Mass)?;
+    let maximum_takeoff = parse_quantity(maximum_takeoff, Dimension::Mass)?;
+    let baseline = &prepared.scenario.aircraft.mass;
+    assert!(operating_empty > baseline.operating_empty_mass_kg);
+    assert!(
+        ((maximum_takeoff - baseline.maximum_takeoff_mass_kg)
+            - (operating_empty - baseline.operating_empty_mass_kg))
+            .abs()
+            < 1.0e-9
+    );
     let evaluated = evaluation::evaluate_candidate_blocking(service, &prepared, descriptor, 0)?;
     let decoded = serde_json::from_slice(&serde_json::to_vec(&evaluated.evidence)?)?;
     assert_eq!(evaluated.evidence, decoded);
@@ -89,13 +115,14 @@ fn c172_study_reuses_evidence_and_promotes_one_design() -> Result<(), Box<dyn st
 
     let first = service.run_study_blocking(&study)?;
     let second = service.run_study_blocking(&study)?;
-    let queried = service.query_study_blocking(&first.study_id, 10)?;
+    let queried = service.query_study_blocking(&first.study_id, Some(&first.archive_id), 10)?;
     let diagnostic_candidate = first
         .selected_candidates
         .first()
         .ok_or_else(|| io::Error::other("C172 study selected no candidate"))?;
     let diagnostic_evidence = service.get_study_evidence_blocking(
         &first.study_id,
+        Some(&first.archive_id),
         &diagnostic_candidate.candidate.candidate_id,
     )?;
 
@@ -119,8 +146,11 @@ fn c172_study_reuses_evidence_and_promotes_one_design() -> Result<(), Box<dyn st
         .selected_candidates
         .first()
         .ok_or_else(|| io::Error::other("C172 study selected no candidate"))?;
-    let evidence =
-        service.get_study_evidence_blocking(&first.study_id, &selected.candidate.candidate_id)?;
+    let evidence = service.get_study_evidence_blocking(
+        &first.study_id,
+        Some(&first.archive_id),
+        &selected.candidate.candidate_id,
+    )?;
     assert_eq!(evidence.evaluation_id, selected.evidence_id);
 
     let designs = temporary.path().join("designs");
@@ -159,5 +189,38 @@ fn b777_evolutionary_study_is_seeded_and_reusable() -> Result<(), Box<dyn std::e
     assert_eq!(candidate_ids(&first), candidate_ids(&second));
     assert_eq!(second.reused_evaluations, first.evaluated_candidates);
     assert_no_candidate_directories_blocking(temporary.path())?;
+    Ok(())
+}
+
+#[test]
+fn reused_study_id_requires_an_archive_discriminator() -> Result<(), Box<dyn std::error::Error>> {
+    let temporary = tempfile::tempdir()?;
+    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let mut archive_ids = Vec::new();
+    for study_digest in [digest('a'), digest('b')] {
+        let archive = StudyArchive::from_draft(StudyArchiveDraft {
+            study_id: "reused-study".to_owned(),
+            study_digest,
+            baseline_digest: digest('c'),
+            evaluator_signature: "native-test".to_owned(),
+            complete: true,
+            candidates: Vec::new(),
+            evaluation_ids: Vec::new(),
+            selected_candidate_ids: Vec::new(),
+            workflow: Default::default(),
+        })?;
+        archive_ids.push(archive.archive_id.clone());
+        service.studies.save_archive_blocking(&archive)?;
+    }
+
+    assert!(matches!(
+        service.query_study_blocking("reused-study", None, 1),
+        Err(AexError::Validation {
+            code: "AMBIGUOUS_STUDY_ARCHIVE",
+            ..
+        })
+    ));
+    let selected = service.query_study_blocking("reused-study", Some(&archive_ids[0]), 1)?;
+    assert_eq!(selected.archive_id, archive_ids[0]);
     Ok(())
 }

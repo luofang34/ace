@@ -68,7 +68,10 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     without duplicate evidence. Completed reruns reuse every evaluation.
     Ranking tests keep hard-infeasible candidates behind feasible candidates,
     and MCP load, run, query, chart, evidence retrieval, and single-design
-    promotion agree on immutable identifiers.
+    promotion agree on immutable identifiers. Conditional-grid duplicates do
+    not consume the unique-candidate cap; reused study IDs require an archive
+    discriminator; evidence links are cross-checked; and projected or
+    unavailable charts are explicit.
 
 ## Calibration bands
 

@@ -1,4 +1,5 @@
 mod evaluation;
+mod evidence_links;
 mod loading;
 mod promotion;
 mod ranking;
@@ -42,18 +43,20 @@ impl ApplicationService {
     pub(crate) fn query_study_blocking(
         &self,
         study_id: &str,
+        archive_id: Option<&str>,
         limit: usize,
     ) -> AexResult<StudyRunResult> {
-        let archive = search::latest_archive_for_study(self, study_id)?;
+        let archive = search::archive_for_query(self, study_id, archive_id)?;
         ranking::run_result(self, &archive, 0, limit)
     }
 
     pub(crate) fn get_study_evidence_blocking(
         &self,
         study_id: &str,
+        archive_id: Option<&str>,
         candidate_id: &str,
     ) -> AexResult<EvidenceEnvelope> {
-        let archive = search::latest_archive_for_study(self, study_id)?;
+        let archive = search::archive_for_query(self, study_id, archive_id)?;
         let outcome = archive
             .workflow
             .outcomes
@@ -66,8 +69,7 @@ impl ApplicationService {
                     format!("candidate {candidate_id} is not present in {study_id}"),
                 )
             })?;
-        self.studies
-            .load_evaluation_blocking(&outcome.evaluation_id)
+        evidence_links::load_for_outcome_blocking(self, &archive, outcome)
     }
 
     pub(crate) fn promote_study_candidate_blocking(

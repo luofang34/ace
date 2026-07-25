@@ -3,8 +3,9 @@ use std::path::Path;
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::services::analysis::ApplicationService;
 use crate::services::study::evaluation::evaluator_signature;
+use crate::services::study::evidence_links;
 use crate::services::study::loading::PreparedStudy;
-use crate::services::study::search::latest_archive_for_study;
+use crate::services::study::search::archive_for_prepared;
 use crate::storage::design_store::DesignRecord;
 
 pub(super) fn promote_blocking(
@@ -15,7 +16,7 @@ pub(super) fn promote_blocking(
     display_name: &str,
     design_root: &Path,
 ) -> AexResult<DesignRecord> {
-    let archive = latest_archive_for_study(service, &prepared.document.study.id)?;
+    let archive = archive_for_prepared(service, prepared)?;
     validate_archive_signature(prepared, &archive)?;
     let outcome = archive
         .workflow
@@ -29,6 +30,7 @@ pub(super) fn promote_blocking(
                 format!("candidate {candidate_id} is not present in the study archive"),
             )
         })?;
+    evidence_links::load_for_outcome_blocking(service, &archive, outcome)?;
     if !outcome.feasible {
         return Err(AexError::validation(
             "CANNOT_PROMOTE_INFEASIBLE_CANDIDATE",

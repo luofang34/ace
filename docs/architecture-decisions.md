@@ -227,4 +227,14 @@ explicit user-selected canonical documents. Grid traversal follows declared
 variable and value order. Evolutionary traversal is seeded, checkpoints its
 random state and population, and resumes from the furthest matching immutable
 archive. Feasible-first ranking prevents a hard-infeasible candidate from
-winning through objective score alone.
+winning through objective score alone. Conditional combinations count toward
+the evaluation limit only after they resolve to a unique descriptor.
+Mass-closure derivations apply propulsion dry-mass changes to operating empty
+mass and maximum takeoff mass together; fuel-capacity changes affect maximum
+takeoff mass without altering operating empty mass.
+
+Study IDs are human-stable names rather than revision identities. Retrieval
+uses an archive ID when more than one study, baseline, or evaluator signature
+shares a study ID. Promotion resolves the exact signature of the supplied
+study document. Archive consumers verify candidate, evaluation, study, and
+feasibility links before returning evidence or creating a design.

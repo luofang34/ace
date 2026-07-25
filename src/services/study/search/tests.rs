@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::domain::study::{
     StudyAnalysisPolicy, StudyBaseline, StudyDefinition, StudySearchPolicy, StudyVariable,
@@ -42,8 +42,8 @@ fn study() -> StudyDefinition {
 
 #[test]
 fn grid_order_and_limit_are_deterministic() {
-    let first = grid_genes(&study(), 3);
-    let second = grid_genes(&study(), 3);
+    let first = grid_genes(&study()).take(3).collect::<Vec<_>>();
+    let second = grid_genes(&study()).take(3).collect::<Vec<_>>();
 
     assert_eq!(first, second);
     assert_eq!(first.len(), 3);
@@ -62,4 +62,41 @@ fn seeded_rng_repeats_and_handles_empty_choice() {
 
     assert_eq!(first_values, second_values);
     assert_eq!(first.index(0), 0);
+}
+
+#[test]
+fn conditional_duplicates_do_not_truncate_later_grid_branches()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut conditional = study();
+    conditional.variables[1].active_when =
+        BTreeMap::from([("area".to_owned(), "20 m^2".to_owned())]);
+    let mut unique = BTreeSet::new();
+    let mut raw_rows = 0_usize;
+
+    for genes in grid_genes(&conditional) {
+        raw_rows = raw_rows.wrapping_add(1);
+        let active = conditional
+            .variables
+            .iter()
+            .filter(|variable| {
+                variable
+                    .active_when
+                    .iter()
+                    .all(|(id, value)| genes.get(id) == Some(value))
+            })
+            .filter_map(|variable| {
+                genes
+                    .get(&variable.id)
+                    .map(|value| (variable.id.clone(), value.clone()))
+            })
+            .collect::<BTreeMap<_, _>>();
+        unique.insert(serde_json::to_string(&active)?);
+        if unique.len() == 3 {
+            break;
+        }
+    }
+
+    assert_eq!(unique.len(), 3);
+    assert_eq!(raw_rows, 4);
+    Ok(())
 }
