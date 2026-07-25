@@ -40,10 +40,50 @@ fn command(directory: &Path) -> assert_cmd::Command {
     command
 }
 
+const SUPPORTED_SR71_OVERRIDES: [&str; 16] = [
+    "--set",
+    "aircraft.geometry.wing.aspect_ratio=5",
+    "--set",
+    "aircraft.geometry.wing.span=29.154759474226502 m",
+    "--set",
+    "aircraft.limits.maximum_operating_altitude=20000 m",
+    "--set",
+    "aircraft.limits.maximum_operating_mach=0.9",
+    "--set",
+    "mission.segments.transonic_accel_climb.target_altitude=19000 m",
+    "--set",
+    "mission.segments.transonic_accel_climb.mach=0.9",
+    "--set",
+    "mission.segments.supersonic_cruise.altitude=19000 m",
+    "--set",
+    "mission.segments.supersonic_cruise.mach=0.9",
+];
+
 fn json_output(arguments: &[&str]) -> Result<Value, Box<dyn Error>> {
     let temporary = TempDir::new()?;
     let output = command(temporary.path()).args(arguments).assert().success();
     Ok(serde_json::from_slice(&output.get_output().stdout)?)
+}
+
+fn assert_strict_typical_failure(
+    directory: &Path,
+    arguments: &[&str],
+) -> Result<(), Box<dyn Error>> {
+    let output = command(directory)
+        .args(arguments)
+        .args(SUPPORTED_SR71_OVERRIDES)
+        .args(["--strict", "--format", "json"])
+        .assert()
+        .failure();
+    assert!(output.get_output().stderr.is_empty());
+    let error: Value = serde_json::from_slice(&output.get_output().stdout)?;
+    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
+    assert!(
+        error["error"]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
+    );
+    Ok(())
 }
 
 #[test]
@@ -310,7 +350,9 @@ fn profile_sanity_warnings_are_advisory_unless_strict() -> Result<(), Box<dyn Er
             .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
     }));
     let resolved = command(temporary.path())
-        .args(["resolve", &path, "--format", "json"])
+        .args(["resolve", &path])
+        .args(SUPPORTED_SR71_OVERRIDES)
+        .args(["--format", "json"])
         .assert()
         .success();
     let document: Value = serde_json::from_slice(&resolved.get_output().stdout)?;
@@ -323,7 +365,9 @@ fn profile_sanity_warnings_are_advisory_unless_strict() -> Result<(), Box<dyn Er
             .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
     );
     let analyzed = command(temporary.path())
-        .args(["analyze", "performance", &path, "--format", "json"])
+        .args(["analyze", "performance", &path])
+        .args(SUPPORTED_SR71_OVERRIDES)
+        .args(["--format", "json"])
         .assert()
         .success();
     let analysis: Value = serde_json::from_slice(&analyzed.get_output().stdout)?;
@@ -335,36 +379,7 @@ fn profile_sanity_warnings_are_advisory_unless_strict() -> Result<(), Box<dyn Er
                 .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL"))
     );
 
-    let strict = command(temporary.path())
-        .args(["resolve", &path, "--strict", "--format", "json"])
-        .assert()
-        .failure();
-    assert!(strict.get_output().stderr.is_empty());
-    let error: Value = serde_json::from_slice(&strict.get_output().stdout)?;
-    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
-    assert!(
-        error["error"]["message"]
-            .as_str()
-            .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
-    );
-    let strict_analysis = command(temporary.path())
-        .args([
-            "analyze",
-            "performance",
-            &path,
-            "--strict",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .failure();
-    assert!(strict_analysis.get_output().stderr.is_empty());
-    let error: Value = serde_json::from_slice(&strict_analysis.get_output().stdout)?;
-    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
-    assert!(
-        error["error"]["message"]
-            .as_str()
-            .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
-    );
+    assert_strict_typical_failure(temporary.path(), &["resolve", &path])?;
+    assert_strict_typical_failure(temporary.path(), &["analyze", "performance", &path])?;
     Ok(())
 }

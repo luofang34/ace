@@ -48,8 +48,102 @@ fn analysis_failure_is_one_structured_json_object() -> Result<(), Box<dyn Error>
         "json",
     ])?;
 
-    assert_eq!(result["error"]["code"], "ATMOSPHERE_OUTSIDE_VALIDITY");
-    assert_eq!(result["error"]["path"], "analysis");
+    assert_eq!(result["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
+    assert!(
+        result["error"]["context"]["violations"]
+            .as_array()
+            .is_some_and(|violations| violations.len() > 1)
+    );
+    Ok(())
+}
+
+#[test]
+fn speed_based_point_preflights_its_effective_mach() -> Result<(), Box<dyn Error>> {
+    let scenario = repository_path("examples/c172/scenario.yaml");
+    let result = failed_json(&[
+        "analyze",
+        "point",
+        &scenario.to_string_lossy(),
+        "--altitude",
+        "0 m",
+        "--speed",
+        "400 m/s",
+        "--format",
+        "json",
+    ])?;
+
+    assert_eq!(result["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
+    assert!(
+        result["error"]["context"]["violations"]
+            .as_array()
+            .is_some_and(|violations| violations.iter().any(|violation| {
+                violation["path"] == "condition.true_airspeed"
+                    && violation["variable"] == "mach"
+                    && violation["declared_value"]
+                        .as_f64()
+                        .is_some_and(|mach| mach > 0.9)
+            }))
+    );
+    Ok(())
+}
+
+#[test]
+fn mission_speed_representations_preflight_effective_mach() -> Result<(), Box<dyn Error>> {
+    let scenario = repository_path("examples/c172/scenario.yaml");
+    for (path, field) in [
+        (
+            "mission.segments.cruise.true_airspeed=400 m/s",
+            "mission.segments.cruise.true_airspeed",
+        ),
+        (
+            "mission.segments.climb.indicated_airspeed=400 m/s",
+            "mission.segments.climb.indicated_airspeed",
+        ),
+    ] {
+        let result = failed_json(&[
+            "resolve",
+            &scenario.to_string_lossy(),
+            "--set",
+            path,
+            "--format",
+            "json",
+        ])?;
+        assert_eq!(result["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
+        assert!(
+            result["error"]["context"]["violations"]
+                .as_array()
+                .is_some_and(|violations| violations.iter().any(|violation| {
+                    violation["path"] == field
+                        && violation["variable"] == "mach"
+                        && violation["declared_value"]
+                            .as_f64()
+                            .is_some_and(|mach| mach > 0.9)
+                }))
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn non_finite_conditions_fail_before_analysis_and_serialize_cleanly() -> Result<(), Box<dyn Error>>
+{
+    let scenario = repository_path("examples/b777/scenario.yaml");
+    for value in [".nan", ".inf", "-.inf"] {
+        let result = failed_json(&[
+            "analyze",
+            "mission",
+            &scenario.to_string_lossy(),
+            "--set",
+            &format!("mission.segments.cruise_1.mach={value}"),
+            "--format",
+            "json",
+        ])?;
+        assert_eq!(result["error"]["code"], "NON_FINITE_VALUE");
+        assert_eq!(result["error"]["path"], "mission.segments.cruise_1.mach");
+        assert!(
+            !String::from_utf8(serde_json::to_vec(&result)?)?.contains("\"declared_value\":null")
+        );
+    }
     Ok(())
 }
 

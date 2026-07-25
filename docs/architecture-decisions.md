@@ -45,6 +45,9 @@ a SHA-256 hash over normalized content.
 Every numerical result identifies model ID, version, fidelity level, and
 validity status. Implemented models are fidelity 0 or 1. Approximations and
 extrapolation remain visible regardless of numeric precision.
+Resolution intersects every model domain with the declarations that model
+consumes. Unsupported conditions are aggregated deterministically before
+simulation, so validation and analysis share one rejection boundary.
 
 ## ADR-007 — Registered code, data-only profiles
 

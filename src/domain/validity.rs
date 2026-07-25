@@ -6,13 +6,21 @@ use crate::domain::diagnostic::{AexError, AexResult};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum ValidityVariable {
+/// Canonical variable constrained by a model validity domain.
+pub enum ValidityVariable {
+    /// Geopotential or geometric altitude in metres.
     Altitude,
+    /// Mach number.
     Mach,
+    /// True airspeed in metres per second.
     TrueAirspeed,
+    /// Mass in kilograms.
     Mass,
+    /// Normalized throttle setting.
     Throttle,
+    /// Wing aspect ratio.
     AspectRatio,
+    /// Normal load factor.
     LoadFactor,
 }
 
@@ -29,10 +37,15 @@ impl ValidityVariable {
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum ValidityBasis {
+/// Source used to establish a model-domain bound.
+pub enum ValidityBasis {
+    /// Bound comes from a published model or data specification.
     PublishedSpecification,
+    /// Bound follows from the mathematical model form.
     ModelForm,
+    /// Bound is resolved from a selected data profile.
     ResolvedProfile,
+    /// Bound is a declared conceptual-screening assumption.
     ScreeningAssumption,
 }
 
@@ -79,6 +92,33 @@ impl ModelValidityDomain {
 
 pub(crate) trait ValidityDomainProvider {
     fn validity_domain(&self) -> ModelValidityDomain;
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+/// One declared scenario value outside a registered model domain.
+pub struct ModelDomainViolation {
+    /// Stable scenario path of the declared value.
+    pub path: String,
+    /// Stable identifier of the rejecting model.
+    pub model_id: String,
+    /// Typed variable compared with the domain.
+    pub variable: ValidityVariable,
+    /// Canonical declared value.
+    pub declared_value: f64,
+    /// Canonical unit of the declared value.
+    pub declared_unit: String,
+    /// Optional lower bound.
+    pub minimum: Option<f64>,
+    /// Optional upper bound.
+    pub maximum: Option<f64>,
+    /// Whether equality satisfies the lower bound.
+    pub minimum_inclusive: bool,
+    /// Whether equality satisfies the upper bound.
+    pub maximum_inclusive: bool,
+    /// Canonical unit of both bounds.
+    pub bound_unit: String,
+    /// Source used to establish the bound.
+    pub basis: ValidityBasis,
 }
 
 #[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]

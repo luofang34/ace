@@ -3,14 +3,18 @@
 #![allow(clippy::expect_used, clippy::panic)]
 
 use std::error::Error;
-use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use rmcp::ServiceExt;
 use rmcp::model::CallToolRequestParams;
 use rmcp::transport::TokioChildProcess;
 use serde_json::json;
+
+#[path = "mcp_stdio/fixtures.rs"]
+mod fixtures;
+
+use fixtures::{fuel_exhaustion_scenario, no_cruise_scenario};
 
 fn scenario(name: &str) -> String {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -19,55 +23,6 @@ fn scenario(name: &str) -> String {
         .join("scenario.yaml")
         .display()
         .to_string()
-}
-
-fn no_cruise_scenario(destination: &Path) -> Result<String, Box<dyn Error>> {
-    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172");
-    fs::create_dir_all(destination.join("profiles"))?;
-    for path in [
-        "aircraft.yaml",
-        "mission.yaml",
-        "requirements.yaml",
-        "scenario.yaml",
-        "profiles/engine.yaml",
-        "profiles/propeller.yaml",
-    ] {
-        fs::copy(source.join(path), destination.join(path))?;
-    }
-    let mission_path = destination.join("mission.yaml");
-    let mut mission: serde_yaml::Value = serde_yaml::from_str(&fs::read_to_string(&mission_path)?)?;
-    let segments = mission["mission"]["segments"]
-        .as_sequence_mut()
-        .ok_or_else(|| io::Error::other("missing mission segments"))?;
-    segments.retain(|segment| segment["type"].as_str() != Some("cruise"));
-    fs::write(mission_path, serde_yaml::to_string(&mission)?)?;
-    let requirements_path = destination.join("requirements.yaml");
-    let mut requirements: serde_yaml::Value =
-        serde_yaml::from_str(&fs::read_to_string(&requirements_path)?)?;
-    let items = requirements["requirements"]["items"]
-        .as_sequence_mut()
-        .ok_or_else(|| io::Error::other("missing requirement items"))?;
-    let range = items
-        .iter_mut()
-        .find(|item| item["id"].as_str() == Some("range"))
-        .ok_or_else(|| io::Error::other("missing range requirement"))?;
-    range["value"] = serde_yaml::Value::String("0 nmi".to_owned());
-    let cruise_speed = items
-        .iter_mut()
-        .find(|item| item["id"].as_str() == Some("cruise_speed"))
-        .ok_or_else(|| io::Error::other("missing cruise speed requirement"))?;
-    cruise_speed["value"] = serde_yaml::Value::String("90 kt".to_owned());
-    items.push(serde_yaml::from_str(
-        r#"
-id: advisory_payload_range
-metric: performance.full_payload_range
-operator: ge
-value: 0 nmi
-severity: soft
-"#,
-    )?);
-    fs::write(requirements_path, serde_yaml::to_string(&requirements)?)?;
-    Ok(destination.join("scenario.yaml").display().to_string())
 }
 
 fn arguments(
@@ -255,12 +210,16 @@ async fn mission_verdict_is_completion_gated_in_mcp() -> Result<(), Box<dyn Erro
     command.args(["mcp", "serve"]);
     let client = ().serve(TokioChildProcess::new(command)?).await?;
 
-    for (fixture, completed, hard_passed) in [("c172", true, true), ("x15", false, false)] {
+    let temporary = tempfile::tempdir()?;
+    let incomplete = fuel_exhaustion_scenario(&temporary.path().join("incomplete"))?;
+    for (fixture, completed, hard_passed) in
+        [(scenario("c172"), true, true), (incomplete, false, false)]
+    {
         let result = call_tool(
             &client,
             "simulate_mission",
             json!({
-                "scenario_path": scenario(fixture),
+                "scenario_path": fixture,
                 "overrides": {}
             }),
         )
@@ -269,7 +228,6 @@ async fn mission_verdict_is_completion_gated_in_mcp() -> Result<(), Box<dyn Erro
         assert_eq!(result["hard_requirements_passed"], hard_passed);
     }
 
-    let temporary = tempfile::tempdir()?;
     let no_cruise = no_cruise_scenario(&temporary.path().join("no-cruise"))?;
     let result = call_tool(
         &client,

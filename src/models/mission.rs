@@ -1,12 +1,17 @@
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{MissionResult, MissionSegmentResult, ModelMetadata};
-use crate::domain::schema::{EngineProfile, MissionSegment, ResolvedScenario, SegmentKind};
+use crate::domain::schema::{MissionSegment, ResolvedScenario, SegmentKind};
 use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
 use crate::models::propulsion::OperatingMode;
 
 mod fuel;
+mod operating_condition;
+
+pub(crate) use operating_condition::{
+    representative_speed, segment_end_altitude, segment_operating_altitude,
+};
 
 #[derive(Debug, Clone)]
 pub(crate) struct MissionSimulator {
@@ -249,7 +254,7 @@ impl MissionSimulator {
                 "climb requires a target altitude",
             )
         })?;
-        let midpoint = 0.5 * (state.altitude_m + target);
+        let midpoint = segment_operating_altitude(segment, state.altitude_m);
         let speed = representative_speed(segment, &self.scenario, midpoint)?;
         let analyzer = PointAnalyzer::new(self.scenario.clone());
         let climb = analyzer.maximum_rate_of_climb_with_diagnostics(midpoint, state.mass_kg)?;
@@ -278,7 +283,7 @@ impl MissionSimulator {
         state: MissionState,
     ) -> AexResult<SegmentComputation> {
         let target = segment.target_altitude_m.unwrap_or(0.0);
-        let midpoint = 0.5 * (state.altitude_m + target);
+        let midpoint = segment_operating_altitude(segment, state.altitude_m);
         let speed = representative_speed(segment, &self.scenario, midpoint)?;
         let duration = (state.altitude_m - target).max(0.0) / 7.5;
         let throttle = segment
@@ -308,7 +313,7 @@ impl MissionSimulator {
                 "cruise requires distance",
             )
         })?;
-        let altitude = segment.altitude_m.unwrap_or(state.altitude_m);
+        let altitude = segment_operating_altitude(segment, state.altitude_m);
         let speed = representative_speed(segment, &self.scenario, altitude)?;
         let duration = distance / speed;
         let fuel = fuel::integrated(
@@ -334,7 +339,7 @@ impl MissionSimulator {
         segment: &MissionSegment,
         state: MissionState,
     ) -> AexResult<SegmentComputation> {
-        let altitude = segment.altitude_m.unwrap_or(state.altitude_m);
+        let altitude = segment_operating_altitude(segment, state.altitude_m);
         let duration = segment.duration_s.ok_or_else(|| {
             AexError::validation(
                 "MISSING_SEGMENT_DURATION",
@@ -368,27 +373,6 @@ fn mission_model(completed: bool) -> ModelMetadata {
         model_version: "1.0.0".to_owned(),
         fidelity_level: 1,
         validity_status: if completed { "valid" } else { "incomplete" }.to_owned(),
-    }
-}
-
-pub(crate) fn representative_speed(
-    segment: &MissionSegment,
-    scenario: &ResolvedScenario,
-    altitude_m: f64,
-) -> AexResult<f64> {
-    if let Some(speed) = segment.true_airspeed_m_s {
-        return Ok(speed);
-    }
-    let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
-    if let Some(mach) = segment.mach {
-        return Ok(mach * atmosphere.speed_of_sound_m_s);
-    }
-    if let Some(indicated) = segment.indicated_airspeed_m_s {
-        return Ok(indicated * (1.225 / atmosphere.density_kg_m3).sqrt());
-    }
-    match scenario.engine {
-        EngineProfile::Piston(_) => Ok(45.0),
-        EngineProfile::Turbofan(_) => Ok(120.0),
     }
 }
 

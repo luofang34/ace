@@ -20,6 +20,22 @@ pub(crate) enum RegisteredModel {
     BlendedWingStructure,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ModelDomainRole {
+    Atmosphere,
+    Aerodynamics,
+    Propulsion,
+    FieldPerformance,
+    Structure,
+    ConditionalAerodynamics,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct ScenarioDomainRegistration {
+    pub(crate) role: ModelDomainRole,
+    pub(crate) domain: ModelValidityDomain,
+}
+
 impl RegisteredModel {
     pub(crate) const ALL: [Self; 8] = [
         Self::Atmosphere,
@@ -100,40 +116,55 @@ impl ValidityDomainProvider for EngineProfile {
     }
 }
 
-pub(crate) fn registered_domains() -> AexResult<Vec<ModelValidityDomain>> {
-    RegisteredModel::ALL
-        .iter()
-        .map(|model| {
-            let domain = model.validity_domain();
-            domain.validate()?;
-            Ok(domain)
-        })
-        .collect()
+pub(crate) fn scenario_domains(scenario: &ResolvedScenario) -> AexResult<Vec<ModelValidityDomain>> {
+    Ok(scenario_domain_registrations(scenario)?
+        .into_iter()
+        .map(|registration| registration.domain)
+        .collect())
 }
 
-pub(crate) fn scenario_domains(scenario: &ResolvedScenario) -> AexResult<Vec<ModelValidityDomain>> {
-    let registered = registered_domains()?;
-    let mut domains = registered
-        .into_iter()
-        .filter(|domain| {
-            matches!(
-                domain.model_id.as_str(),
-                "atmosphere.isa1976" | "aero.parabolic_polar"
-            )
-        })
-        .collect::<Vec<_>>();
+pub(crate) fn scenario_domain_registrations(
+    scenario: &ResolvedScenario,
+) -> AexResult<Vec<ScenarioDomainRegistration>> {
+    validate_registered_domains()?;
+    let mut domains = vec![
+        registration(ModelDomainRole::Atmosphere, atmosphere_domain()),
+        registration(ModelDomainRole::Aerodynamics, polar_domain()),
+    ];
     if let Some(critical) = minimum_wave_drag_mach(scenario) {
-        domains.push(wave_drag_domain(critical));
+        domains.push(registration(
+            ModelDomainRole::ConditionalAerodynamics,
+            wave_drag_domain(critical),
+        ));
     }
     domains.extend([
-        scenario.engine.validity_domain(),
-        field_performance_domain(),
-        structural_domain(is_blended_wing_body(scenario)),
+        registration(
+            ModelDomainRole::Propulsion,
+            scenario.engine.validity_domain(),
+        ),
+        registration(
+            ModelDomainRole::FieldPerformance,
+            field_performance_domain(),
+        ),
+        registration(
+            ModelDomainRole::Structure,
+            structural_domain(is_blended_wing_body(scenario)),
+        ),
     ]);
-    for domain in &domains {
-        domain.validate()?;
+    for registration in &domains {
+        registration.domain.validate()?;
     }
     Ok(domains)
+}
+
+fn validate_registered_domains() -> AexResult<()> {
+    RegisteredModel::ALL
+        .iter()
+        .try_for_each(|model| model.validity_domain().validate())
+}
+
+fn registration(role: ModelDomainRole, domain: ModelValidityDomain) -> ScenarioDomainRegistration {
+    ScenarioDomainRegistration { role, domain }
 }
 
 pub(crate) fn structural_domain(blended: bool) -> ModelValidityDomain {

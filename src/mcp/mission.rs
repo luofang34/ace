@@ -8,7 +8,7 @@ use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 
 use super::schema::ScenarioRequest;
-use super::{ObjectOutput, json_output_for_scenario, mcp_error};
+use super::{ObjectOutput, json_output_for_scenario, mcp_error, mcp_serialization_error};
 
 pub(super) fn simulate(
     service: &ApplicationService,
@@ -38,7 +38,7 @@ pub(super) fn simulate(
         &scenario.requirements.items,
         &requirements,
     );
-    let mut response = serde_json::to_value(mission).map_err(mcp_error)?;
+    let mut response = serde_json::to_value(mission).map_err(mcp_serialization_error)?;
     let fields = response.as_object_mut().ok_or_else(|| {
         ErrorData::internal_error("mission result did not serialize as an object", None)
     })?;

@@ -64,3 +64,12 @@ is always an object. Error objects always use stdout, including requests with
 without combining streams. Human-format failures write a concise tracing
 diagnostic to stderr and no stdout. Help and version requests remain successful
 and keep their normal text output.
+
+Scenario validation and every analysis entry point run the same registered
+model-domain preflight. Unsupported declarations return
+`MODEL_DOMAIN_UNSUPPORTED`; `context.violations` contains every breach in
+deterministic path/model order, including typed bounds, units, inclusivity, and
+domain basis. Point and mission analysis also check effective true airspeed and
+Mach after applying the same speed-representation precedence and atmosphere
+conversion used by the runtime models. Non-finite conditions fail with
+`NON_FINITE_VALUE` before simulation or JSON serialization.

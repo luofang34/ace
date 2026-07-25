@@ -10,7 +10,7 @@ use serde_json::Value;
 use crate::domain::presentation::DisplayUnitSystem;
 use crate::storage::project_store::display_unit_system_blocking;
 
-use super::{mcp_error, serialization};
+use super::{mcp_error, mcp_serialization_error, serialization};
 
 #[derive(Debug, Serialize, schemars::JsonSchema)]
 pub(super) struct ObjectOutput {
@@ -35,7 +35,7 @@ fn json_output_with_system<T: Serialize>(
     value: T,
     system: DisplayUnitSystem,
 ) -> Result<Json<ObjectOutput>, ErrorData> {
-    let serialized = serde_json::to_value(value).map_err(mcp_error)?;
+    let serialized = serde_json::to_value(value).map_err(mcp_serialization_error)?;
     let interface_value = serialization::attach_units_for(serialized, system);
     let fields = match interface_value {
         Value::Object(mapping) => mapping.into_iter().collect(),

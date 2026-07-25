@@ -4,6 +4,9 @@ use crate::domain::result::{ModelMetadata, PayloadRangePoint, PayloadRangeResult
 use crate::domain::schema::{EngineProfile, ResolvedScenario, SegmentKind};
 use crate::models::aerodynamics::{FlightCondition, evaluate as evaluate_aerodynamics};
 use crate::models::atmosphere::Isa1976;
+use crate::models::mission::{
+    representative_speed, segment_end_altitude, segment_operating_altitude,
+};
 
 #[derive(Debug, Clone)]
 pub(crate) struct PayloadRangeAnalyzer {
@@ -93,28 +96,19 @@ impl PayloadRangeAnalyzer {
 }
 
 fn cruise_condition(scenario: &ResolvedScenario) -> AexResult<(f64, f64)> {
-    let segment = scenario
-        .mission
-        .segments
-        .iter()
-        .find(|item| item.kind == SegmentKind::Cruise)
-        .ok_or_else(|| AexError::analysis("NO_CRUISE_SEGMENT", "mission has no cruise segment"))?;
-    let altitude = segment.altitude_m.unwrap_or(0.0);
-    if let Some(speed) = segment.true_airspeed_m_s {
-        return Ok((altitude, speed));
+    let mut current_altitude_m = 0.0;
+    for segment in &scenario.mission.segments {
+        if segment.kind == SegmentKind::Cruise {
+            let altitude_m = segment_operating_altitude(segment, current_altitude_m);
+            let speed_m_s = representative_speed(segment, scenario, altitude_m)?;
+            return Ok((altitude_m, speed_m_s));
+        }
+        current_altitude_m = segment_end_altitude(segment, current_altitude_m);
     }
-    let atmosphere = Isa1976::new(0.0).evaluate(altitude)?;
-    let speed = segment
-        .mach
-        .map(|mach| mach * atmosphere.speed_of_sound_m_s)
-        .or(segment.indicated_airspeed_m_s)
-        .ok_or_else(|| {
-            AexError::analysis(
-                "MISSING_CRUISE_SPEED",
-                "cruise segment needs true airspeed, indicated airspeed, or Mach",
-            )
-        })?;
-    Ok((altitude, speed))
+    Err(AexError::analysis(
+        "NO_CRUISE_SEGMENT",
+        "mission has no cruise segment",
+    ))
 }
 
 fn representative_cruise_fuel_flow(
@@ -146,3 +140,6 @@ fn representative_cruise_fuel_flow(
         EngineProfile::Turbofan(profile) => Ok(profile.tsfc_cruise_kg_n_hr * aero.drag_n / 3600.0),
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -37,6 +37,12 @@ field overrides the project. MCP and CLI responses share the same presentation
 serializer: canonical values remain SI, while Aviation-US display metadata uses
 kt, ft, lb, and nmi according to quantity semantics.
 
+Scenario resolution, point performance, and mission simulation preserve typed
+domain failures in JSON-RPC error `data`. The object uses the same `code`,
+`message`, `path`, and `context` fields as CLI JSON errors; for
+`MODEL_DOMAIN_UNSUPPORTED`, `context.violations` includes every ordered bound,
+unit, inclusivity rule, and basis.
+
 `simulate_mission` preserves the mission result fields at the response root and
 adds `hard_requirements_passed`. That headline is true only when the mission
 completes and every hard requirement passes; incomplete missions report false
