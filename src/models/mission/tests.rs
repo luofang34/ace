@@ -1,7 +1,10 @@
+use std::io;
+
+use crate::domain::result::MissionResult;
 use crate::domain::schema::{MissionSegment, SegmentKind};
 use crate::test_support::example_scenario;
 
-use super::MissionSimulator;
+use super::{MissionSimulator, initial_fuel_load};
 
 #[test]
 fn mission_mass_is_continuous_and_non_increasing() {
@@ -58,4 +61,55 @@ fn payload_drop_reduces_mass_without_burning_fuel() {
             assert!((mission.final_payload_mass_kg - expected_payload).abs() < 1.0e-6);
         }
     }
+}
+
+#[test]
+fn in_flight_depletion_is_reported_as_fuel_exhaustion() -> Result<(), Box<dyn std::error::Error>> {
+    let mission = MissionSimulator::new(example_scenario("x15")?).simulate()?;
+
+    assert!(!mission.completed);
+    assert!(mission.fuel_exhausted);
+    assert!(!mission.fuel_capacity_violation);
+    assert_eq!(mission.failed_segment.as_deref(), Some("glide_descent"));
+    assert!(mission.warnings.iter().any(|warning| {
+        warning.code == "FUEL_EXHAUSTED"
+            && warning.path.as_deref() == Some("mission.segments.glide_descent")
+    }));
+    assert!(
+        !mission
+            .warnings
+            .iter()
+            .any(|warning| warning.code == "FUEL_CAPACITY_EXCEEDED")
+    );
+    Ok(())
+}
+
+#[test]
+fn initial_load_capacity_has_an_independent_diagnostic() {
+    let full_tank = initial_fuel_load(100.0, 100.0);
+    assert!(!full_tank.capacity_exceeded);
+    assert!(full_tank.warning.is_none());
+
+    let overfill = initial_fuel_load(101.0, 100.0);
+    assert!(overfill.capacity_exceeded);
+    assert_eq!(overfill.loaded_kg, 100.0);
+    assert!(overfill.warning.as_ref().is_some_and(|warning| {
+        warning.code == "FUEL_CAPACITY_EXCEEDED" && warning.code != "FUEL_EXHAUSTED"
+    }));
+}
+
+#[test]
+fn stored_mission_without_exhaustion_flag_defaults_to_false()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mission = MissionSimulator::new(example_scenario("c172")?).simulate()?;
+    let mut stored = serde_json::to_value(mission)?;
+    let object = stored
+        .as_object_mut()
+        .ok_or_else(|| io::Error::other("mission did not serialize as an object"))?;
+    assert!(object.remove("fuel_exhausted").is_some());
+
+    let decoded: MissionResult = serde_json::from_value(stored)?;
+
+    assert!(!decoded.fuel_exhausted);
+    Ok(())
 }
