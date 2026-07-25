@@ -8,7 +8,7 @@ requirements:
       value: 200 kg
       severity: hard
     - id: cruise_speed
-      metric: performance.cruise_true_airspeed
+      metric: performance.achieved_cruise_true_airspeed
       operator: ge
       value: 110 kt
       severity: hard
@@ -28,4 +28,3 @@ requirements:
       operator: le
       value: 50 kt
       severity: hard
-

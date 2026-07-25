@@ -3,7 +3,7 @@ requirements:
   id: sr71_reference_requirements
   items:
     - id: cruise_mach
-      metric: performance.cruise_mach
+      metric: performance.achieved_cruise_mach
       operator: ge
       value: 3.0
       severity: hard

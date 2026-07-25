@@ -127,8 +127,8 @@ impl GeometryBackend for NativeBackend {
 impl AnalysisBackend for NativeBackend {
     fn analyze_blocking(&self, request: AnalysisRequest<'_>) -> AexResult<AnalysisOutput> {
         let scenario = request.scenario;
-        let performance = PointAnalyzer::new(scenario.clone()).summary()?;
         let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+        let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
         let payload_range = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
         let structural_screen = structural_screen::evaluate(scenario)?;
         let mission_power_screen = mission_power::evaluate(scenario, &mission)?;
@@ -158,12 +158,16 @@ impl AnalysisBackend for NativeBackend {
         ) && !mission.fuel_exhausted
             && !mission.fuel_capacity_violation
             && !mission.takeoff_mass_violation
+            && performance.cruise_feasible.unwrap_or(true)
             && structural_screen.passed
             && mission_power_screen.passed;
         let mut failed_constraints =
             failed_constraints(&scenario.requirements.items, &requirements, &mission);
         failed_constraints.extend(structural_screen.failed_constraints.clone());
         failed_constraints.extend(mission_power_screen.failed_constraints.clone());
+        if performance.cruise_feasible == Some(false) {
+            failed_constraints.push("cruise_capability".to_owned());
+        }
         let mut warnings = performance.warnings.clone();
         warnings.extend(mission.warnings.clone());
         warnings.extend(payload_range.warnings.clone());

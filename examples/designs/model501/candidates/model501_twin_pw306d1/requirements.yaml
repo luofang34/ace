@@ -23,7 +23,7 @@ requirements:
       value: 7000 nmi
       severity: hard
     - id: cruise_mach
-      metric: performance.cruise_mach
+      metric: performance.achieved_cruise_mach
       operator: ge
       value: 0.60
       severity: soft

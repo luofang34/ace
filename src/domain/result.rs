@@ -87,6 +87,22 @@ pub(crate) struct PointPerformanceResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct CruiseConditionPerformance {
+    pub(crate) segment_id: String,
+    pub(crate) altitude_m: f64,
+    pub(crate) mass_kg: f64,
+    pub(crate) declared_true_airspeed_m_s: f64,
+    pub(crate) declared_mach: f64,
+    #[serde(default)]
+    pub(crate) achieved_true_airspeed_m_s: Option<f64>,
+    #[serde(default)]
+    pub(crate) achieved_mach: Option<f64>,
+    pub(crate) excess_power_w: f64,
+    pub(crate) feasible: bool,
+    pub(crate) validity: MetricValidity,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct PerformanceSummary {
     pub(crate) stall_speed_clean_m_s: f64,
     pub(crate) stall_speed_landing_m_s: f64,
@@ -97,6 +113,20 @@ pub(crate) struct PerformanceSummary {
     pub(crate) service_ceiling_m: f64,
     pub(crate) absolute_ceiling_m: f64,
     pub(crate) cruise_mach: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) declared_cruise_mach: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) declared_cruise_true_airspeed_m_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) achieved_cruise_mach: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) achieved_cruise_true_airspeed_m_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) minimum_cruise_excess_power_w: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) cruise_feasible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) cruise_conditions: Vec<CruiseConditionPerformance>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     pub(crate) model: ModelMetadata,

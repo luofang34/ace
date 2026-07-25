@@ -3,7 +3,7 @@ requirements:
   id: x15_reference_requirements
   items:
     - id: maximum_mach
-      metric: performance.cruise_mach
+      metric: performance.achieved_cruise_mach
       operator: ge
       value: 5.0
       severity: hard

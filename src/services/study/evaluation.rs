@@ -74,7 +74,7 @@ pub(super) fn evaluate_candidate_blocking(
 }
 
 pub(super) fn evaluator_signature() -> String {
-    format!("native-study-evidence-v8:{}", env!("CARGO_PKG_VERSION"))
+    format!("native-study-evidence-v9:{}", env!("CARGO_PKG_VERSION"))
 }
 
 fn evaluate_native_blocking(

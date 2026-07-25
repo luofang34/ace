@@ -177,6 +177,19 @@ to valid, and stored boolean-only requirement results remain readable.
 Indeterminate hard constraints are infeasible and retain positive normalized
 violation in study evidence.
 
+Performance summaries preserve the compatibility `cruise_mach` declaration
+and add explicit declared Mach/TAS, achieved cruise Mach/TAS, minimum cruise
+excess power, all-condition cruise feasibility, and per-segment conditions.
+Per-segment achieved Mach/TAS are nullable when installed capability has no
+level-flight solution. Any missing or unavailable declared condition makes
+aggregate achieved metrics and minimum excess power unavailable, rather than
+selecting a stronger partial subset. Omitted additive fields default to `null`
+or an empty list for stored schema-version-1 results. Requirement documents
+must use
+`performance.achieved_cruise_mach` or
+`performance.achieved_cruise_true_airspeed`; the legacy declared names are
+reporting inputs and are not bindable.
+
 Archive workflow data is additive and defaults to empty, so schema-version-1
 archives without it remain valid. A checkpoint records the completed
 generation, deterministic random-number state after population construction,

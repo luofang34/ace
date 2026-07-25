@@ -352,6 +352,7 @@ pub(crate) fn markdown_report(
         performance.service_ceiling_m
     )
     .map_err(format_error)?;
+    write_cruise_performance(&mut output, performance)?;
     writeln!(output, "\n## Requirements").map_err(format_error)?;
     for item in requirements {
         let label = match item.resolved_status() {
@@ -378,6 +379,23 @@ pub(crate) fn markdown_report(
     )
     .map_err(format_error)?;
     Ok(output)
+}
+
+fn write_cruise_performance(
+    output: &mut String,
+    performance: &PerformanceSummary,
+) -> AexResult<()> {
+    if let Some(mach) = performance.achieved_cruise_mach {
+        writeln!(output, "- Achieved cruise Mach: {mach:.3}").map_err(format_error)?;
+    }
+    if let Some(excess_power) = performance.minimum_cruise_excess_power_w {
+        writeln!(output, "- Minimum cruise excess power: {excess_power:.0} W")
+            .map_err(format_error)?;
+    }
+    if let Some(feasible) = performance.cruise_feasible {
+        writeln!(output, "- All cruise conditions feasible: {feasible}").map_err(format_error)?;
+    }
+    Ok(())
 }
 
 fn format_error(source: std::fmt::Error) -> AexError {

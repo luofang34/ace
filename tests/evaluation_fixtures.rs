@@ -147,6 +147,15 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
         performance["result"]["model"]["validity_status"],
         "boundary_limited"
     );
+    assert_eq!(performance["result"]["cruise_feasible"], false);
+    assert!(
+        performance["result"]["warnings"]
+            .as_array()
+            .is_some_and(|warnings| warnings.iter().any(|warning| {
+                warning["code"] == "CRUISE_CONDITION_UNSUPPORTED"
+                    && warning["path"] == "mission.segments.supersonic_cruise"
+            }))
+    );
     let output = command(temporary.path())
         .args([
             "analyze",
@@ -175,6 +184,11 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
     assert_eq!(result["mission"]["fuel_exhausted"], true);
     assert_eq!(result["mission"]["fuel_capacity_violation"], false);
     assert_eq!(result["hard_requirements_passed"], false);
+    assert_eq!(
+        result["requirements"][0]["metric"],
+        "performance.achieved_cruise_mach"
+    );
+    assert_eq!(result["performance"]["cruise_feasible"], true);
     assert!(
         result["report_markdown"]
             .as_str()

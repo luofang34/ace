@@ -256,3 +256,23 @@ numeric margin. Hard indeterminate requirements and study constraints cannot
 satisfy feasibility or enter a feasible Pareto set; evidence assigns them a
 positive normalized violation. Extrapolated interior values remain distinct
 from boundary-limited values so policy can treat them separately.
+
+## ADR-027 — Declared cruise inputs do not prove achieved performance
+
+Cruise declarations describe requested mission operating points. Each cruise
+segment is evaluated at installed full capability, declared altitude and speed,
+and simulated start mass when available. The segment with minimum excess power
+defines aggregate achieved Mach and true airspeed. If that condition has no
+level-flight solution, or if any declared condition cannot be evaluated,
+aggregate achieved Mach, true airspeed, and minimum excess power are
+unavailable rather than copied from another segment. Every supported declared
+condition remains in the result, and all segments must close for cruise
+feasibility. Aircraft operating altitude, Mach, and speed limits remain hard
+condition gates. Unsupported or out-of-limit operating points remain explicit
+and cannot produce a feasible native verdict.
+
+Requirements bind only to achieved cruise metrics. The declared compatibility
+field remains available for reporting, while legacy declared requirement paths
+return `DECLARED_METRIC_NOT_BINDABLE` with the achieved replacement. This keeps
+schema version 1 readable without allowing an input to prove its own
+requirement.

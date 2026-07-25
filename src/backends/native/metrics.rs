@@ -183,6 +183,7 @@ fn insert_performance(
         performance.absolute_ceiling_m,
         "m",
     );
+    insert_cruise_metrics(metrics, performance);
     insert(
         metrics,
         "performance.takeoff_field_length",
@@ -198,6 +199,61 @@ fn insert_performance(
     Ok(())
 }
 
+fn insert_cruise_metrics(
+    metrics: &mut BTreeMap<String, QuantityOutput>,
+    performance: &PerformanceSummary,
+) {
+    insert_optional(
+        metrics,
+        "performance.declared_cruise_mach",
+        performance.declared_cruise_mach.or(performance.cruise_mach),
+        "1",
+    );
+    insert_optional(
+        metrics,
+        "performance.declared_cruise_true_airspeed",
+        performance.declared_cruise_true_airspeed_m_s,
+        "m/s",
+    );
+    insert_optional(
+        metrics,
+        "performance.achieved_cruise_mach",
+        performance.achieved_cruise_mach,
+        "1",
+    );
+    insert_optional(
+        metrics,
+        "performance.achieved_cruise_true_airspeed",
+        performance.achieved_cruise_true_airspeed_m_s,
+        "m/s",
+    );
+    insert_optional(
+        metrics,
+        "performance.minimum_cruise_excess_power",
+        performance.minimum_cruise_excess_power_w,
+        "W",
+    );
+    insert_optional(
+        metrics,
+        "performance.cruise_feasible",
+        performance
+            .cruise_feasible
+            .map(|feasible| f64::from(u8::from(feasible))),
+        "bool",
+    );
+}
+
 fn insert(metrics: &mut BTreeMap<String, QuantityOutput>, name: &str, value: f64, unit: &str) {
     metrics.insert(name.to_owned(), QuantityOutput::si(value, unit));
+}
+
+fn insert_optional(
+    metrics: &mut BTreeMap<String, QuantityOutput>,
+    name: &str,
+    value: Option<f64>,
+    unit: &str,
+) {
+    if let Some(value) = value {
+        insert(metrics, name, value, unit);
+    }
 }

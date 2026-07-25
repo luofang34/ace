@@ -2,12 +2,13 @@ use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{RequirementEvaluation, RequirementStatus};
 use crate::domain::schema::Requirement;
 use crate::domain::validity::{MetricValidity, ValidityStatus};
+use crate::models::mission::MissionSimulator;
 use crate::models::performance::PointAnalyzer;
 use crate::test_support::example_scenario;
 
 use super::{
-    MetricInput, evaluate_one, failed_hard_requirement_ids, hard_requirement_counts,
-    hard_requirements_passed,
+    MetricInput, evaluate_one, evaluate_requirements, failed_hard_requirement_ids,
+    hard_requirement_counts, hard_requirements_passed,
 };
 
 fn declared(id: &str, severity: &str) -> Requirement {
@@ -67,7 +68,7 @@ fn headline_verdict_requires_completion_and_every_hard_requirement() {
 fn sr71_boundary_ceiling_requirement_is_indeterminate_and_nullable()
 -> Result<(), Box<dyn std::error::Error>> {
     let scenario = example_scenario("sr71")?;
-    let performance = PointAnalyzer::new(scenario.clone()).summary()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(None)?;
     let requirement = scenario
         .requirements
         .items
@@ -112,5 +113,72 @@ fn legacy_boolean_requirement_result_remains_readable() -> Result<(), Box<dyn st
     assert_eq!(restored.passed, Some(true));
     assert_eq!(restored.resolved_status(), RequirementStatus::Pass);
     assert_eq!(restored.validity, MetricValidity::default());
+    Ok(())
+}
+
+#[test]
+fn achieved_cruise_requirement_fails_when_installed_power_cannot_close()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.propulsion.sizing_factor = 0.5;
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    let cruise = evaluations
+        .iter()
+        .find(|evaluation| evaluation.id == "cruise_speed")
+        .ok_or("missing achieved cruise-speed requirement")?;
+
+    assert_eq!(cruise.metric, "performance.achieved_cruise_true_airspeed");
+    assert_eq!(cruise.resolved_status(), RequirementStatus::Fail);
+    assert_eq!(performance.cruise_feasible, Some(false));
+    assert!(
+        performance
+            .achieved_cruise_true_airspeed_m_s
+            .zip(performance.declared_cruise_true_airspeed_m_s)
+            .is_some_and(|(achieved, declared)| achieved < declared)
+    );
+    assert!(!hard_requirements_passed(
+        mission.completed,
+        &scenario.requirements.items,
+        &evaluations
+    ));
+    Ok(())
+}
+
+#[test]
+fn altitude_limit_does_not_turn_a_power_shortfall_into_a_requirement_pass()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("b777")?;
+    scenario.aircraft.limits.maximum_operating_altitude_m = Some(10_000.0 * 0.3048);
+    scenario.aircraft.propulsion.sizing_factor = 0.5;
+    let requirement = scenario
+        .requirements
+        .items
+        .iter_mut()
+        .find(|item| item.id == "cruise_mach")
+        .ok_or("missing declared cruise-Mach requirement")?;
+    requirement.required = 0.84;
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    assert!(
+        evaluations
+            .iter()
+            .all(|evaluation| evaluation.id != "cruise_mach")
+    );
+    assert!(!hard_requirements_passed(
+        mission.completed,
+        &scenario.requirements.items,
+        &evaluations
+    ));
+    assert!(
+        performance
+            .minimum_cruise_excess_power_w
+            .is_some_and(|power| power < -6_000_000.0)
+    );
+    assert_eq!(performance.achieved_cruise_mach, None);
+    assert_eq!(performance.cruise_conditions.len(), 4);
+    assert_eq!(performance.cruise_feasible, Some(false));
     Ok(())
 }
