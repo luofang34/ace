@@ -1,0 +1,7 @@
+schema_version: 1
+scenario:
+  id: sr71-operational-sortie
+  name: SR-71-Class Operational Sortie
+  aircraft: aircraft.yaml
+  mission: mission.yaml
+  requirements: requirements.yaml

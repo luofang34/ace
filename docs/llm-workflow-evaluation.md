@@ -1,0 +1,119 @@
+# LLM-Workflow Evaluation: Four Aircraft, One Verdict
+
+Evaluated 2026-07-24 by driving the CLI and MCP server end-to-end on four
+airframes: the two shipped calibration examples (C172-class, B777-300ER-class)
+and two deliberately out-of-envelope stress cases authored for this evaluation
+(`examples/sr71/`, `examples/x15/`). All numbers below come from recorded runs.
+
+**Verdict:** the tool produces genuinely sensible designs inside its envelope
+(C172 pass, 777 pass with ~15–20% fuel optimism), can fake one design point
+outside it (SR-71 cruise closes only after lying to the schema in four
+labeled places), and cannot represent the X-15 at all — but never says
+"unsupported"; it either hard-crashes or silently produces garbage that passes
+every gate. The ADRs (004/006/025) promise exactly the right things — explicit
+validity, evidence envelopes, no silent substitution — and the implementation
+fails to enforce them at the seams. The rework needed is not "add supersonic
+models"; it is: make the envelope a first-class, queryable, statically-checked
+object, and fix warning/metric plumbing so an eager LLM cannot be lied to.
+
+## What each aircraft produced
+
+| Aircraft | Outcome | Reality check |
+|---|---|---|
+| C172 | All hard requirements pass; soft ceiling requirement honestly fails by 3.7% | 86 kg fuel / 383 nmi ≈ 9.4 gph at 65% — right. Stall 45 kt, L/D 11.9 — right. |
+| 777-300ER | All requirements pass, 7,490 nmi | Trip fuel 104.7 t is ~15–20% low; climb to FL350 takes 10 min / 2.8 t (real: ~22 min / ~8 t). The simplified climb model is the main error source. |
+| SR-71 | Authentic mission (78 kft): hard crash. Clamped to 64 kft: "completed", all hard requirements pass | Cruise point right by construction (24 t/hr at M3.2 — matches). Everything off-design is garbage: subsonic leg burns 11.6 t/hr (~3× real), landed with 7 kg of fuel, no warning about either. The fixture also raises fuel capacity from NASA's 80,280 lb (36,414 kg) figure to 46,180 kg because the model cannot represent operational post-takeoff refueling. |
+| X-15 | Not representable. Best attempt fails mid-"glide" | Rocket profile type rejected; air launch silently ignored (started at 0 m); forced idle burned 3.3 t of propellant during engine-off captive carry; boost climb did 0→65,000 ft in 17 s; the unpowered glider "ran out of fuel". |
+
+## What works well for an LLM
+
+- Determinism + content-addressed runs: same input, same hash, replayable.
+- Stable-ID overrides (`mission.segments.<id>.<field>`) rather than array
+  positions — robust to LLM file edits.
+- Typed errors with stable codes; explicit units on every physical value; the
+  assumptions-ledger concept.
+- The atmosphere hard-refusal above 20 km — the one envelope boundary that
+  enforces itself.
+- The candidate-descriptor study model (no directory explosion, evidence by
+  ID) is the right token-economics shape for agents.
+
+## Deterministic fixture contract
+
+The regression check consumes the fixtures through the public CLI. Both
+scenarios currently validate and resolve because physical-domain preflight is
+not implemented. The authentic SR-71 mission then fails with
+`ATMOSPHERE_OUTSIDE_VALIDITY`. The X-15 command returns a structured result,
+but the mission is incomplete, reports `hard_requirements_passed: true`, and
+mislabels in-flight exhaustion as `FUEL_CAPACITY_EXCEEDED` at
+`mission.segments.glide_descent`. These are captured defects, not desired
+success criteria; the corresponding truthfulness issues must update this
+contract when they fix each behavior.
+
+## Flaws, ranked by how badly they mislead an LLM
+
+1. **Strict mode is path-dependent.** `analyze point --strict` at M3.2 fails
+   with `STRICT_WARNING_FAILURE` (polar extrapolation); the same aircraft at
+   the same condition under `analyze mission --strict` returns
+   `completed: true, hard_requirements_passed: true`. The mission integrator
+   swallows segment-level model diagnostics before strict mode can see them.
+2. **Requirement metrics are partly circular.** `performance.cruise_mach` is
+   the declared mission Mach, not an achieved one — the X-15's "Mach ≥ 5.0"
+   requirement passed with margin exactly 0.0% because 5.0 was copied from its
+   own mission YAML. A requirement that can only fail if the mission crashes
+   is a rubber stamp.
+3. **Model boundaries are reported as physics.** SR-71 and X-15 both got
+   `service_ceiling = 19,900 m` — the 20 km atmosphere cap minus solver
+   margin, presented as `validity_status: valid` with no flag. The SR-71's
+   80,000 ft ceiling requirement is unsatisfiable by construction and reads
+   as an 18.4% design shortfall.
+4. **Validation is structural, not physical.** A scenario cruising at
+   78,000 ft against a 20 km atmosphere validates with zero warnings, then
+   hard-fails at analysis. Everything needed to predict that failure is
+   statically known at validate time.
+5. **Wing geometry is over-determined and unreconciled.** `area`, `span`, and
+   `aspect_ratio` are independent inputs; AR=20 with span/area implying 7.48
+   is silently accepted and L/D jumps from 11.9 to 19.5. `auto_refine_design`
+   enforces the planform identity; the general override path — and therefore
+   studies, sweeps, and any LLM edit — does not.
+6. **The propulsion vocabulary cannot say what it doesn't know.** Two profile
+   types exist (piston, turbofan). Expressing the J58 required a negative
+   Mach-lapse coefficient the schema accepted without comment; TSFC is one
+   constant per mode, so off-design fuel flow is fiction with no diagnostic.
+   "Validity" is the profile author's self-declared Mach/altitude box, not
+   the calibration domain.
+7. **The mission schema rejects real physics and silently drops fields.**
+   `thrust_fraction` must be in (0, 1.2] — engine-off is inexpressible, and
+   the forced 0.01 workaround burned 39% of the X-15's propellant. `altitude`
+   on a `fixed_time` segment parses fine and is ignored. No initial state /
+   air launch, no acceleration segment, and climb rate is unclamped.
+8. **Error and response ergonomics fight the agent.** MCP domain failures
+   surface as JSON-RPC -32603 protocol errors, not `isError` tool results,
+   losing path/context. CLI errors under `--format json` are Rust Debug text
+   on stderr. One `simulate_mission` response is ~43 KB (~11k tokens),
+   dominated by the inline assumptions ledger — which also parses free-text
+   name fields as quantity+unit. `FUEL_CAPACITY_EXCEEDED` is reused to mean
+   fuel exhaustion; `hard_requirements_passed: true` prints alongside
+   `completed: false`; a mission "completed" with 7 kg of fuel; display units
+   ignore the project unit system.
+
+## Rework direction
+
+1. Envelope as data, checked at resolve time → `unsupported`, not crash or
+   extrapolated numbers.
+2. One diagnostics channel; strict mode must be path-independent (invariant:
+   strict point failure ⇒ strict mission failure at the same condition).
+3. Split declared vs. achieved metrics; requirements bind to achieved only.
+4. Boundary-saturation flags (`boundary_limited`, requirement `indeterminate`).
+5. Reconcile geometry at the resolver, every path.
+6. Tabular propulsion (and Mach-dependent polar) decks: the data domain is
+   the validity domain, so extrapolation is detectable rather than
+   self-certified.
+7. Mission vocabulary: engine-off, initial state, honored-or-rejected fields,
+   energy-method climb/acceleration.
+8. Agent-grade responses: compact by default, evidence by reference, `isError`
+   tool results with actionable hints, a capability manifest so the valid
+   vocabulary is discoverable without reading source.
+
+**Acceptance metric for the whole effort:** the tool must never again say
+"valid" about something it does not actually model — a hard `unsupported` is
+cheap; a plausible wrong answer is poison.

@@ -1,0 +1,25 @@
+schema_version: 1
+requirements:
+  id: sr71_reference_requirements
+  items:
+    - id: cruise_mach
+      metric: performance.cruise_mach
+      operator: ge
+      value: 3.0
+      severity: hard
+    - id: mission_radius
+      metric: mission.completed_distance
+      operator: ge
+      value: 2000 nmi
+      severity: hard
+    - id: payload
+      metric: mission.payload_mass
+      operator: ge
+      value: 1000 kg
+      severity: hard
+    - id: service_ceiling
+      metric: performance.service_ceiling
+      operator: ge
+      value: 80000 ft
+      severity: soft
+      weight: 0.5

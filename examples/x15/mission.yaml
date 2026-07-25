@@ -1,0 +1,42 @@
+schema_version: 1
+mission:
+  id: x15_speed_mission
+  name: X-15 Air-Launched Speed Mission (envelope-clamped)
+  payload:
+    mass: 250 kg
+  segments:
+    - id: captive_carry
+      type: fixed_time
+      duration: 60 min
+      altitude: 45000 ft
+      thrust_fraction: 0.01
+    - id: drop_and_light
+      type: fixed_time
+      duration: 5 s
+      altitude: 45000 ft
+      thrust_fraction: 1.0
+    - id: boost_climb
+      type: climb
+      target_altitude: 65000 ft
+      mach: 5.0
+      thrust_fraction: 1.0
+    - id: speed_run
+      type: cruise
+      distance: 60 nmi
+      altitude: 65000 ft
+      mach: 5.0
+      thrust_fraction: 1.0
+    - id: glide_descent
+      type: descent
+      target_altitude: 20000 ft
+      mach: 0.8
+      thrust_fraction: 0.01
+    - id: pattern_glide
+      type: descent
+      target_altitude: 3000 ft
+      indicated_airspeed: 250 kt
+      thrust_fraction: 0.01
+    - id: landing
+      type: landing
+      duration: 2 min
+      thrust_fraction: 0.01

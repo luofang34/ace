@@ -1,0 +1,20 @@
+schema_version: 1
+requirements:
+  id: x15_reference_requirements
+  items:
+    - id: maximum_mach
+      metric: performance.cruise_mach
+      operator: ge
+      value: 5.0
+      severity: hard
+    - id: peak_altitude
+      metric: performance.service_ceiling
+      operator: ge
+      value: 250000 ft
+      severity: soft
+      weight: 0.5
+    - id: pilot_payload
+      metric: mission.payload_mass
+      operator: ge
+      value: 200 kg
+      severity: hard

@@ -1,0 +1,48 @@
+schema_version: 1
+mission:
+  id: sr71_operational_sortie
+  name: SR-71 Operational Reconnaissance Sortie
+  payload:
+    mass: 1200 kg
+  segments:
+    - id: taxi_out
+      type: fixed_time
+      duration: 10 min
+      thrust_fraction: 0.05
+    - id: takeoff
+      type: takeoff
+      duration: 1 min
+      thrust_fraction: 1.0
+    - id: subsonic_climb
+      type: climb
+      target_altitude: 24000 ft
+      indicated_airspeed: 400 kt
+      thrust_fraction: 0.90
+    - id: transonic_accel_climb
+      type: climb
+      target_altitude: 78000 ft
+      mach: 3.0
+      thrust_fraction: 1.0
+    - id: supersonic_cruise
+      type: cruise
+      distance: 2000 nmi
+      altitude: 78000 ft
+      mach: 3.2
+    - id: decel_descent
+      type: descent
+      target_altitude: 25000 ft
+      mach: 0.9
+    - id: subsonic_recovery
+      type: cruise
+      distance: 300 nmi
+      altitude: 25000 ft
+      mach: 0.85
+    - id: descent_to_pattern
+      type: descent
+      target_altitude: 3000 ft
+      indicated_airspeed: 300 kt
+    - id: reserve
+      type: loiter
+      duration: 20 min
+      altitude: 10000 ft
+      true_airspeed: 300 kt

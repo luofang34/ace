@@ -1,0 +1,77 @@
+schema_version: 1
+aircraft:
+  id: x15_class_reference
+  name: X-15-Class Reference Aircraft
+  category: experimental_hypersonic_research
+  configuration: mid_wing_cruciform_tail
+  propulsion_architecture: single_liquid_rocket
+  topology:
+    version: 1
+    components:
+      - id: fuselage
+        kind: fuselage
+        roles: [payload_volume, fuel_storage, primary_structure]
+      - id: wing
+        kind: wing
+        roles: [lift]
+      - id: horizontal_tail
+        kind: horizontal_tail
+        roles: [pitch_control, roll_control]
+      - id: upper_vertical_tail
+        kind: vertical_tail
+        roles: [directional_control]
+      - id: lower_vertical_tail
+        kind: vertical_tail
+        roles: [directional_control]
+      - id: powerplant
+        kind: engine
+        definition: engine.xlr99_class
+    relationships:
+      - { kind: attached_to, source: wing, target: fuselage }
+      - { kind: attached_to, source: horizontal_tail, target: fuselage }
+      - { kind: attached_to, source: upper_vertical_tail, target: fuselage }
+      - { kind: attached_to, source: lower_vertical_tail, target: fuselage }
+      - { kind: attached_to, source: powerplant, target: fuselage }
+      - { kind: carries_load_to, source: wing, target: fuselage }
+  metadata:
+    purpose: model-envelope evaluation exercise; air-launched rocket research aircraft
+    certification_use: prohibited
+  mass:
+    maximum_takeoff_mass: 15420 kg
+    operating_empty_mass: 6620 kg
+    maximum_payload_mass: 300 kg
+    maximum_fuel_mass: 8500 kg
+  geometry:
+    wing:
+      area: 18.58 m^2
+      span: 6.82 m
+      aspect_ratio: 2.50
+      sweep_quarter_chord: 23 deg
+      center_body_edge_sweep: null
+  aerodynamics:
+    model: aero.parabolic_polar
+    clean:
+      cd0: 0.021
+      oswald_efficiency: 0.75
+      cl_max: 1.10
+      mach_critical: 0.95
+      wave_drag:
+        coefficient: 0.010
+        exponent: 0.35
+    takeoff:
+      cd0: 0.030
+      oswald_efficiency: 0.70
+      cl_max: 1.20
+    landing:
+      cd0: 0.055
+      oswald_efficiency: 0.65
+      cl_max: 1.25
+  propulsion:
+    profile: engine.xlr99_class
+    engine_count: 1
+    sizing_factor: 1.0
+  limits:
+    maximum_operating_mach: 6.7
+    maximum_operating_altitude: 354000 ft
+    maximum_load_factor: 7.33
+    minimum_load_factor: -3.0

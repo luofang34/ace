@@ -1,0 +1,73 @@
+schema_version: 1
+aircraft:
+  id: sr71a_class_reference
+  name: SR-71A-Class Reference Aircraft
+  category: strategic_reconnaissance
+  configuration: tailless_delta
+  propulsion_architecture: twin_afterburning_turbojet
+  topology:
+    version: 1
+    components:
+      - id: chined_fuselage
+        kind: fuselage
+        roles: [payload_volume, fuel_storage, primary_structure, lift]
+      - id: wing
+        kind: wing
+        roles: [lift, fuel_storage]
+      - id: vertical_tails
+        kind: vertical_tail
+        count: 2
+        roles: [directional_control]
+      - id: powerplants
+        kind: engine
+        definition: engine.pw_j58_class
+        count: 2
+    relationships:
+      - { kind: attached_to, source: wing, target: chined_fuselage }
+      - { kind: attached_to, source: powerplants, target: wing }
+      - { kind: attached_to, source: vertical_tails, target: powerplants }
+      - { kind: symmetric_about, source: powerplants, target: chined_fuselage }
+      - { kind: symmetric_about, source: vertical_tails, target: chined_fuselage }
+      - { kind: carries_load_to, source: wing, target: chined_fuselage }
+  metadata:
+    purpose: model-envelope evaluation exercise; single-point calibration at Mach 3.2 cruise
+    certification_use: prohibited
+  mass:
+    maximum_takeoff_mass: 78020 kg
+    operating_empty_mass: 30617 kg
+    maximum_payload_mass: 1600 kg
+    maximum_fuel_mass: 46180 kg
+  geometry:
+    wing:
+      area: 170.0 m^2
+      span: 16.94 m
+      aspect_ratio: 1.69
+      sweep_quarter_chord: 45 deg
+      center_body_edge_sweep: null
+  aerodynamics:
+    model: aero.parabolic_polar
+    clean:
+      cd0: 0.010
+      oswald_efficiency: 0.34
+      cl_max: 1.05
+      mach_critical: 0.90
+      wave_drag:
+        coefficient: 0.0028
+        exponent: 0.3
+    takeoff:
+      cd0: 0.016
+      oswald_efficiency: 0.40
+      cl_max: 1.20
+    landing:
+      cd0: 0.030
+      oswald_efficiency: 0.40
+      cl_max: 1.25
+  propulsion:
+    profile: engine.pw_j58_class
+    engine_count: 2
+    sizing_factor: 1.0
+  limits:
+    maximum_operating_mach: 3.3
+    maximum_operating_altitude: 85000 ft
+    maximum_load_factor: 3.0
+    minimum_load_factor: -1.0
