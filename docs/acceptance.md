@@ -55,6 +55,13 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     modeled tails, propulsion-count mismatches, rewired relationships, and
     unrepresented or unavailable OpenVSP features are rejected before backend
     execution or design creation.
+20. **Study definitions and evidence are portable and immutable.** C172 and
+    B777 study YAML validates with its referenced scenario; default policies
+    round-trip deterministically; equivalent candidate, evaluation, and
+    archive content has the same identity while any material change has a new
+    identity. Stored records are create-only, detect malformed JSON and
+    content-ID corruption with path context, and never create candidate
+    directories.
 
 ## Calibration bands
 

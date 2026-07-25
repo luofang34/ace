@@ -1,7 +1,7 @@
 # Schema and units
 
 Documents are YAML or JSON mappings with `schema_version: 1` and one envelope:
-`aircraft`, `mission`, `requirements`, `profile`, or `scenario`.
+`aircraft`, `mission`, `requirements`, `profile`, `scenario`, or `study`.
 
 Physical values must include a unit:
 
@@ -85,3 +85,47 @@ remains a validation error. Component definitions and roles are descriptive;
 backend-relevant counts, parameters, and relationships must be consumed or
 rejected before analysis. A refinement descriptor may delegate a relationship
 outside its disciplines only when the mandatory native baseline consumes it.
+
+## Study and evidence documents
+
+A study is portable when its baseline is either a relative `scenario_path` or
+an embedded schema-version-1 document set. Exactly one baseline form is
+required. Variables identify canonical dotted paths, value sets, and a
+continuous, integer, or categorical kind. Objectives and constraints use
+stable IDs and metric names. Analysis and search policies are data:
+
+```yaml
+schema_version: 1
+study:
+  id: local-wing-trade
+  name: Local wing trade
+  baseline: { scenario_path: scenario.yaml }
+  variables:
+    - id: wing_area
+      path: aircraft.geometry.wing.area
+      kind: continuous
+      values: ["15 m^2", "17 m^2"]
+  objectives:
+    - id: minimize_fuel
+      metric: mission.total_fuel
+      direction: minimize
+```
+
+Omitted policy fields select native screening, grid search, three refinement
+candidates, 256 evaluations, population 24, 12 generations, mutation rate
+0.15, and seed zero. C172 and B777 reference studies pin explicit policies in
+their example directories.
+
+Candidate, evaluation, and archive IDs are SHA-256 content identities with
+`candidate_`, `eval_`, and `archive_` prefixes. Candidate identity covers the
+baseline digest and normalized parameter map; accepted unit aliases and
+equivalent SI quantities canonicalize before hashing. Evaluation identity
+covers its candidate, inputs, status, analysis method, results, diagnostics,
+and provenance. Archive identity covers the study, evaluator signature,
+completion state, candidate descriptors, evaluation references, and selection.
+
+Evidence records separate analysis identity, metrics and constraint results,
+and provenance. File storage shards immutable evaluation and archive JSON by
+digest prefix under `evaluations/` and `archives/`. An identical write is
+idempotent; changed content cannot replace an existing identity. Candidate
+directories are not part of the storage contract.
