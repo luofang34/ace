@@ -166,7 +166,9 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
         ])
         .output()?;
     assert!(!output.status.success());
-    assert!(String::from_utf8(output.stderr)?.contains("ATMOSPHERE_OUTSIDE_VALIDITY"));
+    assert!(output.stderr.is_empty());
+    let error: JsonValue = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(error["error"]["code"], "ATMOSPHERE_OUTSIDE_VALIDITY");
 
     let x15 = fixture_path("x15", "scenario.yaml");
     let result = successful_json(

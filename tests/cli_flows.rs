@@ -339,9 +339,14 @@ fn profile_sanity_warnings_are_advisory_unless_strict() -> Result<(), Box<dyn Er
         .args(["resolve", &path, "--strict", "--format", "json"])
         .assert()
         .failure();
-    let stderr = String::from_utf8_lossy(&strict.get_output().stderr);
-    assert!(stderr.contains("STRICT_WARNING_FAILURE"));
-    assert!(stderr.contains("PARAMETER_OUTSIDE_TYPICAL"));
+    assert!(strict.get_output().stderr.is_empty());
+    let error: Value = serde_json::from_slice(&strict.get_output().stdout)?;
+    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
+    assert!(
+        error["error"]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
+    );
     let strict_analysis = command(temporary.path())
         .args([
             "analyze",
@@ -353,7 +358,13 @@ fn profile_sanity_warnings_are_advisory_unless_strict() -> Result<(), Box<dyn Er
         ])
         .assert()
         .failure();
-    let stderr = String::from_utf8_lossy(&strict_analysis.get_output().stderr);
-    assert!(stderr.contains("PARAMETER_OUTSIDE_TYPICAL"));
+    assert!(strict_analysis.get_output().stderr.is_empty());
+    let error: Value = serde_json::from_slice(&strict_analysis.get_output().stdout)?;
+    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
+    assert!(
+        error["error"]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
+    );
     Ok(())
 }

@@ -43,7 +43,6 @@ pub(super) fn execute_plot(service: &ApplicationService, arguments: PlotArgs) ->
         arguments.seed,
         std::slice::from_ref(&artifact),
     )?;
-    tracing::info!(run_id = %run.run_id, artifact = %artifact, "plot completed");
     emit_scenario_blocking(
         &PlotOutput {
             artifact_path: output,
@@ -51,7 +50,9 @@ pub(super) fn execute_plot(service: &ApplicationService, arguments: PlotArgs) ->
         },
         &arguments.output_args(),
         &arguments.scenario,
-    )
+    )?;
+    tracing::info!(run_id = %run.run_id, artifact = %artifact, "plot completed");
+    Ok(())
 }
 
 fn generate_chart(
