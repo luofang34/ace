@@ -56,3 +56,27 @@ fn study_constraint_replaces_matching_baseline_requirement()
     );
     Ok(())
 }
+
+#[test]
+fn unitless_constraint_accepts_exactly_one() -> Result<(), Box<dyn std::error::Error>> {
+    let study = StudyConstraint {
+        id: "load_factor".to_owned(),
+        metric: "performance.load_factor".to_owned(),
+        operator: "ge".to_owned(),
+        value: "1".to_owned(),
+        severity: "hard".to_owned(),
+        weight: 1.0,
+    };
+    let metrics = BTreeMap::from([(
+        "performance.load_factor".to_owned(),
+        QuantityOutput::si(1.0, "1"),
+    )]);
+
+    let constraints = collect(&[], &[], &[study], &metrics)?;
+
+    assert_eq!(
+        constraints[0].status,
+        crate::domain::evidence::ConstraintStatus::Pass
+    );
+    Ok(())
+}

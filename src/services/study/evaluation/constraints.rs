@@ -177,16 +177,18 @@ fn parse_required(raw: &str, unit: &str) -> AexResult<f64> {
             )),
         };
     }
-    raw.trim_end_matches(unit)
-        .trim()
-        .parse::<f64>()
-        .map_err(|source| {
-            AexError::validation(
-                "INVALID_STUDY_CONSTRAINT_VALUE",
-                "study.constraints.value",
-                source.to_string(),
-            )
-        })
+    let number = if unit == "1" {
+        raw.trim()
+    } else {
+        raw.strip_suffix(unit).unwrap_or(raw).trim()
+    };
+    number.parse::<f64>().map_err(|source| {
+        AexError::validation(
+            "INVALID_STUDY_CONSTRAINT_VALUE",
+            "study.constraints.value",
+            source.to_string(),
+        )
+    })
 }
 
 fn constraint_passed(actual: f64, required: f64, operator: &str, margin: f64) -> bool {
