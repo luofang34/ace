@@ -37,12 +37,22 @@ fn every_pair_derives_a_closed_planform() -> Result<(), Box<dyn std::error::Erro
 #[test]
 fn rounded_triple_tolerance_is_inclusive_and_normalized() -> Result<(), Box<dyn std::error::Error>>
 {
-    let boundary = resolve_wing(&raw_wing(Some(100.0), Some(10.0), Some(1.005)))?;
+    let upper_boundary = resolve_wing(&raw_wing(Some(100.0), Some(10.0), Some(1.005)))?;
+    let lower_boundary = resolve_wing(&raw_wing(Some(100.0), Some(10.0), Some(0.995)))?;
 
-    assert_closed(&boundary);
-    assert!((boundary.aspect_ratio - 1.0).abs() < 1.0e-12);
+    assert_closed(&upper_boundary);
+    assert_closed(&lower_boundary);
+    assert!((upper_boundary.aspect_ratio - 1.0).abs() < 1.0e-12);
+    assert!((lower_boundary.aspect_ratio - 1.0).abs() < 1.0e-12);
     assert!(matches!(
         resolve_wing(&raw_wing(Some(100.0), Some(10.0), Some(1.005_001))),
+        Err(AexError::Validation {
+            code: "INCONSISTENT_WING_PLANFORM",
+            ..
+        })
+    ));
+    assert!(matches!(
+        resolve_wing(&raw_wing(Some(100.0), Some(10.0), Some(0.994_999))),
         Err(AexError::Validation {
             code: "INCONSISTENT_WING_PLANFORM",
             ..

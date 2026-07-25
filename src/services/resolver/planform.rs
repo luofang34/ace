@@ -118,10 +118,13 @@ fn resolve_planform(
 }
 
 fn validate_declared_ratio(declared: f64, resolved: f64) -> AexResult<()> {
-    let relative_error = (declared - resolved).abs() / resolved;
-    if relative_error <= RELATIVE_TOLERANCE {
+    let absolute_error = (declared - resolved).abs();
+    let allowed_error = resolved * RELATIVE_TOLERANCE;
+    let rounding_allowance = f64::EPSILON * declared.abs().max(resolved.abs()).max(1.0) * 4.0;
+    if absolute_error <= allowed_error + rounding_allowance {
         Ok(())
     } else {
+        let relative_error = absolute_error / resolved;
         Err(AexError::validation(
             "INCONSISTENT_WING_PLANFORM",
             "aircraft.geometry.wing.aspect_ratio",
