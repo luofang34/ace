@@ -35,8 +35,8 @@ impl SweepVariable {
                 "sweep count must be at least two",
             ));
         }
-        let (start_value, start_unit) = split_value_unit(start)?;
-        let (stop_value, stop_unit) = split_value_unit(stop)?;
+        let (start_value, start_unit) = split_value_unit(start, &path)?;
+        let (stop_value, stop_unit) = split_value_unit(stop, &path)?;
         if start_unit != stop_unit {
             return Err(AexError::validation(
                 "INCOMPATIBLE_UNITS",
@@ -52,7 +52,7 @@ impl SweepVariable {
                 } else {
                     start_value + fraction * (stop_value - start_value)
                 };
-                format!("{value:.12} {start_unit}")
+                format_sweep_value(value, &start_unit, &path)
             })
             .collect();
         Ok(Self { path, values })
@@ -262,25 +262,59 @@ fn row(overrides: &BTreeMap<String, String>, metrics: BTreeMap<String, f64>) -> 
     }
 }
 
-fn split_value_unit(raw: &str) -> AexResult<(f64, String)> {
-    let index = raw.find(char::is_whitespace).ok_or_else(|| {
-        AexError::validation(
+fn split_value_unit(raw: &str, path: &str) -> AexResult<(f64, String)> {
+    let Some(index) = raw.find(char::is_whitespace) else {
+        if dimensionless_sweep_path(path) {
+            return raw
+                .parse::<f64>()
+                .map(|value| (value, String::new()))
+                .map_err(|source| {
+                    AexError::validation("INVALID_SWEEP_VALUE", "sweep", source.to_string())
+                });
+        }
+        return Err(AexError::validation(
             "AMBIGUOUS_UNITLESS_VALUE",
             "sweep",
-            "sweep bounds require explicit units",
-        )
-    })?;
+            "physical sweep bounds require explicit units",
+        ));
+    };
     let value = raw[..index].parse::<f64>().map_err(|source| {
         AexError::validation("INVALID_SWEEP_VALUE", "sweep", source.to_string())
     })?;
     let unit = raw[index..].trim();
+    if dimensionless_sweep_path(path) && unit != "1" {
+        return Err(AexError::validation(
+            "INCOMPATIBLE_UNITS",
+            path,
+            "aspect-ratio sweep bounds must be bare numbers or use unit 1",
+        ));
+    }
     let _validated = match unit {
         "kg" => parse_quantity(raw, crate::domain::quantity::Dimension::Mass)?,
         "m^2" | "ft^2" => parse_quantity(raw, crate::domain::quantity::Dimension::Area)?,
         "m" | "ft" | "nmi" => parse_quantity(raw, crate::domain::quantity::Dimension::Length)?,
         _ => value,
     };
-    Ok((value, unit.to_owned()))
+    Ok((
+        value,
+        if dimensionless_sweep_path(path) {
+            String::new()
+        } else {
+            unit.to_owned()
+        },
+    ))
+}
+
+fn format_sweep_value(value: f64, unit: &str, path: &str) -> String {
+    if dimensionless_sweep_path(path) {
+        format!("{value:.12}")
+    } else {
+        format!("{value:.12} {unit}")
+    }
+}
+
+fn dimensionless_sweep_path(path: &str) -> bool {
+    path == "aircraft.geometry.wing.aspect_ratio"
 }
 
 fn sweep_provenance() -> ResultProvenance {
@@ -301,3 +335,6 @@ fn sweep_provenance() -> ResultProvenance {
         )],
     }
 }
+
+#[cfg(test)]
+mod tests;

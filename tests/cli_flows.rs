@@ -172,7 +172,7 @@ fn plots_and_two_dimensional_sweep_execute() -> Result<(), Box<dyn Error>> {
             "--var",
             "aircraft.geometry.wing.area=14 m^2:18 m^2:3",
             "--var",
-            "mission.payload.mass=180 kg:220 kg:3",
+            "aircraft.geometry.wing.aspect_ratio=7:8:3",
             "--metric",
             "performance.stall_speed_landing",
             "--metric",

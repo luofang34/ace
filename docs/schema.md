@@ -56,6 +56,8 @@ at most 0.5%; the resolved aspect ratio is normalized from area and span.
 Larger discrepancies return `INCONSISTENT_WING_PLANFORM`. A sweep of one or
 two planform fields completes the dependent values before resolution while
 keeping the requested sweep variables unchanged in its result rows.
+Aspect-ratio linear sweep bounds are dimensionless bare numbers; `1` is also
+accepted as an explicit unit.
 
 Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
