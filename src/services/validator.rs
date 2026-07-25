@@ -10,7 +10,8 @@ use crate::domain::schema::{
 };
 use crate::domain::study::{StudyDocument, validate_study_document};
 use crate::services::analysis::ApplicationService;
-use crate::services::profile_resolution::parse_engine_profile;
+use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
+use crate::services::profile_sanity::{engine_profile_warnings, propeller_profile_warnings};
 use crate::services::requirement_resolution::resolve_requirements;
 use crate::services::resolver::{resolve_aircraft, resolve_embedded_study, resolve_mission};
 use crate::storage::project_store::read_yaml_value_blocking;
@@ -27,19 +28,22 @@ impl ApplicationService {
     pub(crate) fn validate_path_blocking(&self, path: &Path) -> AexResult<ValidationResult> {
         let document = read_yaml_value_blocking(path)?;
         if document.get("scenario").is_some() {
-            self.resolve_blocking(path, &BTreeMap::new())?;
-            return Ok(valid_result("scenario"));
+            let resolved = self.resolve_blocking(path, &BTreeMap::new())?;
+            return Ok(result_with_warnings("scenario", resolved.warnings));
         }
         if document.get("study").is_some() {
             let typed: StudyDocument = from_value(document, "study")?;
             validate_study_document(&typed)?;
-            if let Some(relative) = &typed.study.baseline.scenario_path {
+            let warnings = if let Some(relative) = &typed.study.baseline.scenario_path {
                 let directory = path.parent().unwrap_or_else(|| Path::new("."));
-                self.resolve_blocking(&directory.join(relative), &BTreeMap::new())?;
+                self.resolve_blocking(&directory.join(relative), &BTreeMap::new())?
+                    .warnings
             } else if let Some(embedded) = &typed.study.baseline.embedded {
-                resolve_embedded_study(embedded)?;
-            }
-            return Ok(valid_result("study"));
+                resolve_embedded_study(embedded)?.warnings
+            } else {
+                Vec::new()
+            };
+            return Ok(result_with_warnings("study", warnings));
         }
         validate_document_value(&document, None)
     }
@@ -86,15 +90,19 @@ pub(crate) fn validate_document_value(
         }
         "profile" => {
             let typed: ProfileDocument = from_value(document.clone(), "profile")?;
-            if typed.profile.kind != "propeller" {
-                parse_engine_profile(typed.profile)?;
-            }
+            let warnings = if typed.profile.kind == "propeller" {
+                propeller_profile_warnings(&parse_propeller_profile(typed.profile)?)
+            } else {
+                engine_profile_warnings(&parse_engine_profile(typed.profile)?)
+            };
+            return Ok(result_with_warnings(&document_type, warnings));
         }
         "study" => {
             let typed: StudyDocument = from_value(document.clone(), "study")?;
             validate_study_document(&typed)?;
             if let Some(embedded) = &typed.study.baseline.embedded {
-                resolve_embedded_study(embedded)?;
+                let warnings = resolve_embedded_study(embedded)?.warnings;
+                return Ok(result_with_warnings(&document_type, warnings));
             }
         }
         _ => {
@@ -138,10 +146,14 @@ fn detect_type(document: &Value) -> Option<String> {
 }
 
 fn valid_result(document_type: &str) -> ValidationResult {
+    result_with_warnings(document_type, Vec::new())
+}
+
+fn result_with_warnings(document_type: &str, warnings: Vec<Diagnostic>) -> ValidationResult {
     ValidationResult {
         valid: true,
         document_type: document_type.to_owned(),
         errors: Vec::new(),
-        warnings: Vec::new(),
+        warnings,
     }
 }

@@ -8,7 +8,7 @@ use crate::cli::{
     AnalyzeCommand, Command, CompareArgs, ConstraintArgs, McpCommand, PointArgs, ProfileCommand,
     ReportArgs, ScenarioArgs, SweepArgs,
 };
-use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
+use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::result::{MissionResult, PerformanceSummary, RequirementEvaluation};
 use crate::mcp::serve_stdio;
@@ -20,6 +20,7 @@ use crate::services::sweep::SweepVariable;
 
 use super::output::emit_blocking;
 use super::plots::execute_plot;
+use super::strict::enforce as enforce_strict;
 
 #[derive(Debug, Serialize)]
 struct AnalysisEnvelope<T: Serialize> {
@@ -347,22 +348,6 @@ fn service_blocking() -> AexResult<ApplicationService> {
         source,
     })?;
     Ok(ApplicationService::filesystem(current.join("runs")))
-}
-
-fn enforce_strict(strict: bool, warnings: &[Diagnostic]) -> AexResult<()> {
-    let strict_warning = warnings.iter().find(|warning| {
-        matches!(
-            warning.code.as_str(),
-            "MODEL_EXTRAPOLATION" | "AGENT_ASSUMPTION"
-        )
-    });
-    if strict && let Some(warning) = strict_warning {
-        return Err(AexError::analysis(
-            "STRICT_WARNING_FAILURE",
-            format!("{}: {}", warning.code, warning.message),
-        ));
-    }
-    Ok(())
 }
 
 fn parse_sweep_variable(raw: &str, logarithmic: bool) -> AexResult<SweepVariable> {

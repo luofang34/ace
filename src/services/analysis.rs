@@ -101,7 +101,9 @@ impl ApplicationService {
             .mass_kg
             .unwrap_or(scenario.aircraft.mass.maximum_takeoff_mass_kg);
         let analyzer = PointAnalyzer::new(scenario.clone());
-        let result = analyzer.point(condition.altitude_m, speed, mass, &condition.configuration)?;
+        let mut result =
+            analyzer.point(condition.altitude_m, speed, mass, &condition.configuration)?;
+        prepend_scenario_warnings(&scenario, &mut result.warnings);
         Ok((scenario, result))
     }
 
@@ -111,7 +113,8 @@ impl ApplicationService {
         overrides: &BTreeMap<String, String>,
     ) -> AexResult<(ResolvedScenario, PerformanceSummary)> {
         let scenario = self.resolve_blocking(path, overrides)?;
-        let result = PointAnalyzer::new(scenario.clone()).summary()?;
+        let mut result = PointAnalyzer::new(scenario.clone()).summary()?;
+        prepend_scenario_warnings(&scenario, &mut result.warnings);
         Ok((scenario, result))
     }
 
@@ -134,8 +137,9 @@ impl ApplicationService {
         count: u32,
     ) -> AexResult<(ResolvedScenario, ConstraintResult)> {
         let scenario = self.resolve_blocking(path, overrides)?;
-        let result =
+        let mut result =
             ConstraintAnalyzer::new(scenario.clone()).analyze(start_n_m2, stop_n_m2, count)?;
+        prepend_scenario_warnings(&scenario, &mut result.warnings);
         Ok((scenario, result))
     }
 
@@ -145,7 +149,8 @@ impl ApplicationService {
         overrides: &BTreeMap<String, String>,
     ) -> AexResult<(ResolvedScenario, PayloadRangeResult)> {
         let scenario = self.resolve_blocking(path, overrides)?;
-        let result = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
+        let mut result = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
+        prepend_scenario_warnings(&scenario, &mut result.warnings);
         Ok((scenario, result))
     }
 
@@ -210,4 +215,8 @@ impl ApplicationService {
             serde_json::to_value(manifest).map_err(|source| AexError::Json { source })?;
         Ok((manifest_value, result))
     }
+}
+
+fn prepend_scenario_warnings(scenario: &ResolvedScenario, warnings: &mut Vec<Diagnostic>) {
+    warnings.splice(0..0, scenario.warnings.iter().cloned());
 }

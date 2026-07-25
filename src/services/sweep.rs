@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use rayon::prelude::*;
 
-use crate::domain::diagnostic::{AexError, AexResult};
+use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{GRAVITY_M_S2, parse_quantity};
 use crate::domain::result::{ResultProvenance, SweepResult, SweepRow};
 use crate::domain::schema::{EngineProfile, Wing};
@@ -18,6 +18,12 @@ use crate::services::resolver::complete_planform_overrides;
 pub(crate) struct SweepVariable {
     pub(crate) path: String,
     pub(crate) values: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct SweepEvaluation {
+    metrics: BTreeMap<String, f64>,
+    warnings: Vec<Diagnostic>,
 }
 
 impl SweepVariable {
@@ -75,7 +81,7 @@ impl ApplicationService {
         }
         let scenario = self.resolve_blocking(scenario_path, &BTreeMap::new())?;
         let combinations = combinations(variables);
-        let cache: Arc<Mutex<BTreeMap<String, BTreeMap<String, f64>>>> =
+        let cache: Arc<Mutex<BTreeMap<String, SweepEvaluation>>> =
             Arc::new(Mutex::new(BTreeMap::new()));
         let rows = combinations
             .par_iter()
@@ -91,11 +97,12 @@ impl ApplicationService {
             .collect::<Vec<_>>()
             .into_iter()
             .collect::<AexResult<Vec<_>>>()?;
+        let warnings = unique_row_warnings(&rows);
         Ok(SweepResult {
             scenario_id: scenario.id,
             rows,
             deterministic_ordering: true,
-            warnings: Vec::new(),
+            warnings,
             provenance: sweep_provenance(),
         })
     }
@@ -106,7 +113,7 @@ impl ApplicationService {
         overrides: &BTreeMap<String, String>,
         metrics: &[String],
         baseline_wing: &Wing,
-        cache: &Arc<Mutex<BTreeMap<String, BTreeMap<String, f64>>>>,
+        cache: &Arc<Mutex<BTreeMap<String, SweepEvaluation>>>,
     ) -> AexResult<SweepRow> {
         let evaluation_overrides = complete_planform_overrides(overrides, baseline_wing)?;
         let key = serde_json::to_string(&evaluation_overrides)
@@ -123,12 +130,15 @@ impl ApplicationService {
         let (scenario, mission) = self.mission_blocking(scenario_path, &evaluation_overrides)?;
         let (_, payload_range) =
             self.payload_range_blocking(scenario_path, &evaluation_overrides)?;
-        let resolved = metric_values(&scenario, &performance, &mission, &payload_range, metrics)?;
+        let evaluation = SweepEvaluation {
+            metrics: metric_values(&scenario, &performance, &mission, &payload_range, metrics)?,
+            warnings: analysis_warnings(&performance, &mission, &payload_range),
+        };
         cache
             .lock()
             .map_err(|source| AexError::analysis("SWEEP_CACHE_POISONED", source.to_string()))?
-            .insert(key, resolved.clone());
-        Ok(row(overrides, resolved))
+            .insert(key, evaluation.clone());
+        Ok(row(overrides, evaluation))
     }
 }
 
@@ -251,15 +261,44 @@ fn combinations(variables: &[SweepVariable]) -> Vec<BTreeMap<String, String>> {
     results
 }
 
-fn row(overrides: &BTreeMap<String, String>, metrics: BTreeMap<String, f64>) -> SweepRow {
+fn row(overrides: &BTreeMap<String, String>, evaluation: SweepEvaluation) -> SweepRow {
     SweepRow {
         variables: overrides
             .iter()
             .map(|(path, value)| (path.clone(), serde_json::Value::String(value.clone())))
             .collect(),
-        metrics,
-        warnings: Vec::new(),
+        metrics: evaluation.metrics,
+        warnings: evaluation.warnings,
     }
+}
+
+fn analysis_warnings(
+    performance: &crate::domain::result::PerformanceSummary,
+    mission: &crate::domain::result::MissionResult,
+    payload_range: &crate::domain::result::PayloadRangeResult,
+) -> Vec<Diagnostic> {
+    let mut warnings = Vec::new();
+    for warning in performance
+        .warnings
+        .iter()
+        .chain(&mission.warnings)
+        .chain(&payload_range.warnings)
+    {
+        if !warnings.contains(warning) {
+            warnings.push(warning.clone());
+        }
+    }
+    warnings
+}
+
+fn unique_row_warnings(rows: &[SweepRow]) -> Vec<Diagnostic> {
+    let mut warnings = Vec::new();
+    for warning in rows.iter().flat_map(|row| &row.warnings) {
+        if !warnings.contains(warning) {
+            warnings.push(warning.clone());
+        }
+    }
+    warnings
 }
 
 fn split_value_unit(raw: &str, path: &str) -> AexResult<(f64, String)> {

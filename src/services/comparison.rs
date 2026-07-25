@@ -31,10 +31,20 @@ impl ApplicationService {
     ) -> AexResult<ScenarioComparison> {
         let mut rows = Vec::new();
         let mut propulsion_kinds = Vec::new();
+        let mut warnings = Vec::new();
         for path in paths {
             let (scenario, performance) = self.performance_blocking(path, &BTreeMap::new())?;
             let (_, mission) = self.mission_blocking(path, &BTreeMap::new())?;
             let (_, payload_range) = self.payload_range_blocking(path, &BTreeMap::new())?;
+            append_scenario_warnings(
+                &mut warnings,
+                &scenario.id,
+                performance
+                    .warnings
+                    .iter()
+                    .chain(&mission.warnings)
+                    .chain(&payload_range.warnings),
+            );
             propulsion_kinds.push(match scenario.engine {
                 EngineProfile::Piston(_) => "power",
                 EngineProfile::Turbofan(_) => "thrust",
@@ -51,7 +61,6 @@ impl ApplicationService {
                 metrics: values,
             });
         }
-        let mut warnings = Vec::new();
         if propulsion_kinds.windows(2).any(|pair| pair[0] != pair[1]) {
             warnings.push(Diagnostic::warning(
                 "CROSS_CLASS_COMPARISON",
@@ -64,6 +73,25 @@ impl ApplicationService {
             warnings,
             provenance: comparison_provenance(),
         })
+    }
+}
+
+fn append_scenario_warnings<'a>(
+    target: &mut Vec<Diagnostic>,
+    scenario_id: &str,
+    warnings: impl Iterator<Item = &'a Diagnostic>,
+) {
+    for warning in warnings {
+        let mut contextualized = warning.clone();
+        if let Some(context) = contextualized.context.as_object_mut() {
+            context.insert(
+                "scenario_id".to_owned(),
+                serde_json::Value::String(scenario_id.to_owned()),
+            );
+        }
+        if !target.contains(&contextualized) {
+            target.push(contextualized);
+        }
     }
 }
 

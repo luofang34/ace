@@ -207,3 +207,77 @@ fn plots_and_two_dimensional_sweep_execute() -> Result<(), Box<dyn Error>> {
     }
     Ok(())
 }
+
+#[test]
+fn profile_sanity_warnings_are_advisory_unless_strict() -> Result<(), Box<dyn Error>> {
+    let temporary = TempDir::new()?;
+    let sr71_path = scenario("sr71");
+    let path = sr71_path.to_string_lossy();
+    let profile_path = sr71_path
+        .parent()
+        .ok_or("missing SR-71 example directory")?
+        .join("profiles/j58.yaml");
+    let validated = command(temporary.path())
+        .args([
+            "profile",
+            "validate",
+            &profile_path.to_string_lossy(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success();
+    let validation: Value = serde_json::from_slice(&validated.get_output().stdout)?;
+    assert!(validation["warnings"].as_array().is_some_and(|warnings| {
+        warnings
+            .iter()
+            .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
+    }));
+    let resolved = command(temporary.path())
+        .args(["resolve", &path, "--format", "json"])
+        .assert()
+        .success();
+    let document: Value = serde_json::from_slice(&resolved.get_output().stdout)?;
+    let warnings = document["warnings"]
+        .as_array()
+        .ok_or("missing resolved warnings")?;
+    assert!(
+        warnings
+            .iter()
+            .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
+    );
+    let analyzed = command(temporary.path())
+        .args(["analyze", "performance", &path, "--format", "json"])
+        .assert()
+        .success();
+    let analysis: Value = serde_json::from_slice(&analyzed.get_output().stdout)?;
+    assert!(
+        analysis["result"]["warnings"]
+            .as_array()
+            .is_some_and(|warnings| warnings
+                .iter()
+                .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL"))
+    );
+
+    let strict = command(temporary.path())
+        .args(["resolve", &path, "--strict", "--format", "json"])
+        .assert()
+        .failure();
+    let stderr = String::from_utf8_lossy(&strict.get_output().stderr);
+    assert!(stderr.contains("STRICT_WARNING_FAILURE"));
+    assert!(stderr.contains("PARAMETER_OUTSIDE_TYPICAL"));
+    let strict_analysis = command(temporary.path())
+        .args([
+            "analyze",
+            "performance",
+            &path,
+            "--strict",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .failure();
+    let stderr = String::from_utf8_lossy(&strict_analysis.get_output().stderr);
+    assert!(stderr.contains("PARAMETER_OUTSIDE_TYPICAL"));
+    Ok(())
+}

@@ -10,12 +10,13 @@ use crate::charts::generators::{
 use crate::charts::renderer::render_svg_blocking;
 use crate::charts::spec::ChartSpec;
 use crate::cli::{PlotArgs, PlotKind};
-use crate::domain::diagnostic::{AexError, AexResult};
+use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::evaluate_requirements;
 
 use super::output::emit_blocking;
+use super::strict::enforce as enforce_strict;
 
 #[derive(Debug, Serialize)]
 struct PlotOutput {
@@ -27,17 +28,7 @@ pub(super) fn execute_plot(service: &ApplicationService, arguments: PlotArgs) ->
     let overrides = arguments.override_map();
     let scenario = service.resolve_blocking(&arguments.scenario, &overrides)?;
     let chart = generate_chart(service, &arguments, &overrides, &scenario)?;
-    if arguments.strict
-        && chart
-            .warnings
-            .iter()
-            .any(|warning| warning.code == "MODEL_EXTRAPOLATION")
-    {
-        return Err(AexError::analysis(
-            "STRICT_WARNING_FAILURE",
-            "chart data include a model extrapolation",
-        ));
-    }
+    enforce_strict(arguments.strict, &chart.warnings)?;
     let output = arguments
         .artifact
         .clone()

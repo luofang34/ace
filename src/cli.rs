@@ -8,6 +8,7 @@ use crate::domain::diagnostic::AexResult;
 pub(crate) mod commands;
 mod output;
 mod plots;
+mod strict;
 
 #[derive(Debug, Parser)]
 #[command(name = "aircraft-explorer", version, about)]
