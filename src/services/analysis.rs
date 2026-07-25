@@ -90,6 +90,7 @@ impl ApplicationService {
             .unwrap_or(scenario.aircraft.mass.maximum_takeoff_mass_kg);
         preflight_operating_point(
             &scenario,
+            &condition.configuration,
             condition.altitude_m,
             condition.speed_m_s,
             condition.mach,

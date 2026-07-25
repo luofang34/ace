@@ -62,7 +62,7 @@ fn generate_chart(
     scenario: &crate::domain::schema::ResolvedScenario,
 ) -> AexResult<ChartSpec> {
     match arguments.kind {
-        PlotKind::DragPolar => Ok(drag_polar(scenario)),
+        PlotKind::DragPolar => drag_polar(scenario),
         PlotKind::PowerCurves | PlotKind::ThrustCurves => {
             let altitude = parse_quantity(&arguments.altitude, Dimension::Length)?;
             performance_curves(scenario, altitude)
@@ -91,7 +91,7 @@ fn generate_chart(
                 &mission,
                 &performance,
                 Some(&payload_range_result),
-            );
+            )?;
             Ok(requirement_margins(scenario, &evaluations))
         }
     }

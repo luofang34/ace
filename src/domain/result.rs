@@ -83,6 +83,8 @@ pub(crate) struct PointPerformanceResult {
     pub(crate) climb_gradient: f64,
     pub(crate) best_glide_speed_m_s: f64,
     pub(crate) maximum_lift_to_drag_ratio: f64,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     pub(crate) warnings: Vec<Diagnostic>,
 }
 

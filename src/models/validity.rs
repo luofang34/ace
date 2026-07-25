@@ -1,4 +1,5 @@
-use crate::domain::diagnostic::AexResult;
+use crate::domain::aerodynamics::{PolarTable, TABLE_POLAR_MODEL_ID};
+use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::propulsion::TABLE_PROPULSION_MODEL_ID;
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::validity::{
@@ -13,6 +14,7 @@ pub(crate) use crate::domain::validity::ValidityDomainProvider;
 pub(crate) enum RegisteredModel {
     Atmosphere,
     ParabolicPolar,
+    TablePolar,
     WaveDrag,
     PistonPropulsion,
     TurbofanPropulsion,
@@ -39,9 +41,10 @@ pub(crate) struct ScenarioDomainRegistration {
 }
 
 impl RegisteredModel {
-    pub(crate) const ALL: [Self; 9] = [
+    pub(crate) const ALL: [Self; 10] = [
         Self::Atmosphere,
         Self::ParabolicPolar,
+        Self::TablePolar,
         Self::WaveDrag,
         Self::PistonPropulsion,
         Self::TurbofanPropulsion,
@@ -55,6 +58,7 @@ impl RegisteredModel {
         match self {
             Self::Atmosphere => "atmosphere.isa1976",
             Self::ParabolicPolar => "aero.parabolic_polar",
+            Self::TablePolar => TABLE_POLAR_MODEL_ID,
             Self::WaveDrag => "aero.wave_drag_power_law",
             Self::PistonPropulsion => "propulsion.piston_prop_simple",
             Self::TurbofanPropulsion => "propulsion.turbofan_simple_deck",
@@ -71,6 +75,7 @@ impl ValidityDomainProvider for RegisteredModel {
         match self {
             Self::Atmosphere => atmosphere_domain(),
             Self::ParabolicPolar => polar_domain(),
+            Self::TablePolar => generic_table_polar_domain(),
             Self::WaveDrag => wave_drag_domain(0.0),
             Self::PistonPropulsion => generic_propulsion_domain(self.model_id(), None),
             Self::TurbofanPropulsion => generic_turbofan_domain(self.model_id(), None, None),
@@ -133,10 +138,24 @@ pub(crate) fn scenario_domain_registrations(
     scenario: &ResolvedScenario,
 ) -> AexResult<Vec<ScenarioDomainRegistration>> {
     validate_registered_domains()?;
+    let aerodynamic_domain = aerodynamic_configuration_domain(scenario, "clean")?;
     let mut domains = vec![
         registration(ModelDomainRole::Atmosphere, atmosphere_domain()),
-        registration(ModelDomainRole::Aerodynamics, polar_domain()),
+        registration(ModelDomainRole::Aerodynamics, aerodynamic_domain),
     ];
+    for name in ["takeoff", "landing"] {
+        let configuration = scenario
+            .aircraft
+            .aerodynamics
+            .configuration(name)
+            .ok_or_else(|| unsupported_configuration(name))?;
+        if configuration.polar_table.is_some() {
+            domains.push(registration(
+                ModelDomainRole::ConditionalAerodynamics,
+                aerodynamic_configuration_domain(scenario, name)?,
+            ));
+        }
+    }
     if let Some(critical) = minimum_wave_drag_mach(scenario) {
         domains.push(registration(
             ModelDomainRole::ConditionalAerodynamics,
@@ -163,6 +182,31 @@ pub(crate) fn scenario_domain_registrations(
     Ok(domains)
 }
 
+pub(crate) fn aerodynamic_configuration_domain(
+    scenario: &ResolvedScenario,
+    configuration: &str,
+) -> AexResult<ModelValidityDomain> {
+    let coefficients = scenario
+        .aircraft
+        .aerodynamics
+        .configuration(configuration)
+        .ok_or_else(|| unsupported_configuration(configuration))?;
+    Ok(coefficients
+        .polar_table
+        .as_ref()
+        .map_or_else(polar_domain, |table| {
+            table_polar_domain(table, configuration)
+        }))
+}
+
+fn unsupported_configuration(configuration: &str) -> AexError {
+    AexError::validation(
+        "UNSUPPORTED_CONFIGURATION",
+        "condition.configuration",
+        configuration,
+    )
+}
+
 fn validate_registered_domains() -> AexResult<()> {
     RegisteredModel::ALL
         .iter()
@@ -181,6 +225,7 @@ pub(crate) fn structural_domain(blended: bool) -> ModelValidityDomain {
             RegisteredModel::ConventionalStructure.model_id()
         }
         .to_owned(),
+        applicability_path: None,
         bounds: vec![
             lower_exclusive_bound(ValidityVariable::Mass, 0.0, ValidityBasis::ModelForm),
             inclusive_bound(
@@ -197,6 +242,7 @@ pub(crate) fn structural_domain(blended: bool) -> ModelValidityDomain {
 fn atmosphere_domain() -> ModelValidityDomain {
     ModelValidityDomain {
         model_id: RegisteredModel::Atmosphere.model_id().to_owned(),
+        applicability_path: None,
         bounds: vec![inclusive_bound(
             ValidityVariable::Altitude,
             Some(-2_000.0),
@@ -209,6 +255,7 @@ fn atmosphere_domain() -> ModelValidityDomain {
 fn polar_domain() -> ModelValidityDomain {
     ModelValidityDomain {
         model_id: RegisteredModel::ParabolicPolar.model_id().to_owned(),
+        applicability_path: None,
         bounds: vec![
             inclusive_bound(
                 ValidityVariable::Mach,
@@ -226,9 +273,52 @@ fn polar_domain() -> ModelValidityDomain {
     }
 }
 
+fn generic_table_polar_domain() -> ModelValidityDomain {
+    ModelValidityDomain {
+        model_id: TABLE_POLAR_MODEL_ID.to_owned(),
+        applicability_path: None,
+        bounds: vec![
+            inclusive_bound(
+                ValidityVariable::Mach,
+                Some(0.0),
+                None,
+                ValidityBasis::ResolvedProfile,
+            ),
+            lower_exclusive_bound(
+                ValidityVariable::TrueAirspeed,
+                0.0,
+                ValidityBasis::ModelForm,
+            ),
+            lower_exclusive_bound(ValidityVariable::Mass, 0.0, ValidityBasis::ModelForm),
+        ],
+    }
+}
+
+fn table_polar_domain(table: &PolarTable, configuration: &str) -> ModelValidityDomain {
+    ModelValidityDomain {
+        model_id: TABLE_POLAR_MODEL_ID.to_owned(),
+        applicability_path: Some(format!("aircraft.aerodynamics.{configuration}")),
+        bounds: vec![
+            inclusive_bound(
+                ValidityVariable::Mach,
+                table.mach.first().copied(),
+                table.mach.last().copied(),
+                ValidityBasis::TabulatedData,
+            ),
+            lower_exclusive_bound(
+                ValidityVariable::TrueAirspeed,
+                0.0,
+                ValidityBasis::ModelForm,
+            ),
+            lower_exclusive_bound(ValidityVariable::Mass, 0.0, ValidityBasis::ModelForm),
+        ],
+    }
+}
+
 fn wave_drag_domain(minimum_mach: f64) -> ModelValidityDomain {
     ModelValidityDomain {
         model_id: RegisteredModel::WaveDrag.model_id().to_owned(),
+        applicability_path: None,
         bounds: vec![inclusive_bound(
             ValidityVariable::Mach,
             Some(minimum_mach),
@@ -244,6 +334,7 @@ fn generic_propulsion_domain(
 ) -> ModelValidityDomain {
     ModelValidityDomain {
         model_id: model_id.to_owned(),
+        applicability_path: None,
         bounds: vec![
             inclusive_bound(
                 ValidityVariable::Altitude,
@@ -285,6 +376,7 @@ fn table_propulsion_domain(
 ) -> ModelValidityDomain {
     ModelValidityDomain {
         model_id: model_id.to_owned(),
+        applicability_path: None,
         bounds: vec![
             inclusive_bound(
                 ValidityVariable::Altitude,
@@ -311,6 +403,7 @@ fn table_propulsion_domain(
 fn field_performance_domain() -> ModelValidityDomain {
     ModelValidityDomain {
         model_id: RegisteredModel::FieldPerformance.model_id().to_owned(),
+        applicability_path: None,
         bounds: vec![
             inclusive_bound(
                 ValidityVariable::Altitude,

@@ -7,22 +7,25 @@ use crate::domain::result::{
 };
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::warning::WarningCode;
+use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 use crate::models::aerodynamics::stall_speed_m_s;
 use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
 
-pub(crate) fn drag_polar(scenario: &ResolvedScenario) -> ChartSpec {
+pub(crate) fn drag_polar(scenario: &ResolvedScenario) -> AexResult<ChartSpec> {
     let config = &scenario.aircraft.aerodynamics.clean;
-    let induced = 1.0
-        / (std::f64::consts::PI * config.oswald_efficiency * scenario.aircraft.wing.aspect_ratio);
+    let evaluation = coefficient_evaluation_at_mach(&scenario.aircraft, "clean", 0.0)?;
+    let polar = evaluation.coefficients;
     let lift_coefficients: Vec<f64> = (0..80)
-        .map(|index| config.cl_max * f64::from(index) / 79.0)
+        .map(|index| polar.cl_max * f64::from(index) / 79.0)
         .collect();
     let drag_coefficients = lift_coefficients
         .iter()
-        .map(|lift| config.cd0 + config.additional_cd + induced * lift.powi(2))
+        .map(|lift| polar.cd0 + config.additional_cd + polar.induced_drag_factor * lift.powi(2))
         .collect();
-    ChartSpec {
+    let mut warnings = scenario.warnings.clone();
+    warnings.extend(evaluation.warnings);
+    Ok(ChartSpec {
         chart_type: "line".to_owned(),
         title: format!("{}: drag polar", scenario.name),
         x: AxisSpec {
@@ -42,8 +45,8 @@ pub(crate) fn drag_polar(scenario: &ResolvedScenario) -> ChartSpec {
             values: drag_coefficients,
         }],
         annotations: Vec::new(),
-        warnings: scenario.warnings.clone(),
-    }
+        warnings,
+    })
 }
 
 pub(crate) fn performance_curves(
@@ -53,6 +56,7 @@ pub(crate) fn performance_curves(
     let analyzer = PointAnalyzer::new(scenario.clone());
     let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
     let mass = scenario.aircraft.mass.maximum_takeoff_mass_kg;
+    let reference = coefficient_evaluation_at_mach(&scenario.aircraft, "clean", 0.0)?;
     let stall = stall_speed_m_s(&scenario.aircraft, "clean", mass, atmosphere.density_kg_m3)?;
     let upper = scenario
         .aircraft
@@ -69,8 +73,10 @@ pub(crate) fn performance_curves(
     let speeds: Vec<f64> = (0..80)
         .map(|index| stall * 1.05 + f64::from(index) * (upper - stall * 1.05) / 79.0)
         .collect();
-    let (required, available, y_label, y_unit) =
-        curve_values(scenario, &analyzer, altitude_m, mass, &speeds)?;
+    let curve = curve_values(scenario, &analyzer, altitude_m, mass, &speeds)?;
+    let mut warnings = scenario.warnings.clone();
+    extend_unique_diagnostics(&mut warnings, reference.warnings);
+    extend_unique_diagnostics(&mut warnings, curve.warnings);
     Ok(ChartSpec {
         chart_type: "line".to_owned(),
         title: format!("{}: required and available", scenario.name),
@@ -80,30 +86,36 @@ pub(crate) fn performance_curves(
             values: speeds.iter().map(|speed| speed / KNOT_M_S).collect(),
         },
         y: AxisSpec {
-            label: y_label.to_owned(),
-            unit: y_unit.to_owned(),
+            label: curve.y_label.to_owned(),
+            unit: curve.y_unit.to_owned(),
             values: Vec::new(),
         },
         series: vec![
             SeriesSpec {
                 id: "required".to_owned(),
-                label: format!("{y_label} required"),
-                unit: y_unit.to_owned(),
-                values: required,
+                label: format!("{} required", curve.y_label),
+                unit: curve.y_unit.to_owned(),
+                values: curve.required,
             },
             SeriesSpec {
                 id: "available".to_owned(),
-                label: format!("{y_label} available"),
-                unit: y_unit.to_owned(),
-                values: available,
+                label: format!("{} available", curve.y_label),
+                unit: curve.y_unit.to_owned(),
+                values: curve.available,
             },
         ],
         annotations: Vec::new(),
-        warnings: scenario.warnings.clone(),
+        warnings,
     })
 }
 
-type CurveValues = (Vec<f64>, Vec<f64>, &'static str, &'static str);
+struct CurveValues {
+    required: Vec<f64>,
+    available: Vec<f64>,
+    y_label: &'static str,
+    y_unit: &'static str,
+    warnings: Vec<Diagnostic>,
+}
 
 fn curve_values(
     scenario: &ResolvedScenario,
@@ -116,7 +128,11 @@ fn curve_values(
         .iter()
         .map(|speed| analyzer.point(altitude_m, *speed, mass_kg, "clean"))
         .collect::<AexResult<Vec<_>>>()?;
-    Ok(match scenario.engine {
+    let mut warnings = Vec::new();
+    for point in &points {
+        extend_unique_diagnostics(&mut warnings, point.warnings.clone());
+    }
+    let (required, available, y_label, y_unit) = match scenario.engine {
         EngineProfile::Piston(_) => (
             points.iter().map(|point| point.power_required_w).collect(),
             points
@@ -135,12 +151,20 @@ fn curve_values(
             "Thrust",
             "N",
         ),
+    };
+    Ok(CurveValues {
+        required,
+        available,
+        y_label,
+        y_unit,
+        warnings,
     })
 }
 
 pub(crate) fn climb_envelope(scenario: &ResolvedScenario) -> AexResult<ChartSpec> {
     let analyzer = PointAnalyzer::new(scenario.clone());
     let mass = scenario.aircraft.mass.maximum_takeoff_mass_kg;
+    let reference = coefficient_evaluation_at_mach(&scenario.aircraft, "clean", 0.0)?;
     let maximum_altitude = scenario
         .aircraft
         .limits
@@ -150,14 +174,19 @@ pub(crate) fn climb_envelope(scenario: &ResolvedScenario) -> AexResult<ChartSpec
     let altitudes: Vec<f64> = (0..60)
         .map(|index| f64::from(index) * maximum_altitude / 59.0)
         .collect();
-    let rates = altitudes
+    let evaluations = altitudes
         .iter()
-        .map(|altitude| {
-            analyzer
-                .maximum_rate_of_climb(*altitude, mass)
-                .map(|(_, rate)| rate.max(0.0))
-        })
+        .map(|altitude| analyzer.maximum_rate_of_climb_with_diagnostics(*altitude, mass))
         .collect::<AexResult<Vec<_>>>()?;
+    let rates = evaluations
+        .iter()
+        .map(|evaluation| evaluation.maximum_rate_m_s.max(0.0))
+        .collect();
+    let mut warnings = scenario.warnings.clone();
+    extend_unique_diagnostics(&mut warnings, reference.warnings);
+    for evaluation in evaluations {
+        extend_unique_diagnostics(&mut warnings, evaluation.warnings);
+    }
     Ok(ChartSpec {
         chart_type: "line".to_owned(),
         title: format!("{}: climb envelope", scenario.name),
@@ -178,7 +207,7 @@ pub(crate) fn climb_envelope(scenario: &ResolvedScenario) -> AexResult<ChartSpec
             values: rates,
         }],
         annotations: Vec::new(),
-        warnings: scenario.warnings.clone(),
+        warnings,
     })
 }
 
@@ -406,3 +435,17 @@ fn chart_margin(item: &RequirementEvaluation) -> f64 {
         item.percentage_margin.unwrap_or(0.0)
     }
 }
+
+fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diagnostic>) {
+    for diagnostic in diagnostics {
+        if !target
+            .iter()
+            .any(|existing| existing.code == diagnostic.code && existing.path == diagnostic.path)
+        {
+            target.push(diagnostic);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests;

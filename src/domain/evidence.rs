@@ -379,14 +379,17 @@ fn validate_provenance(provenance: &EvidenceProvenance) -> AexResult<()> {
             "confidence must be finite and between zero and one",
         ));
     }
-    let mut model_ids = BTreeSet::new();
+    let mut model_scopes = BTreeSet::new();
     for domain in &provenance.validity_domains {
         domain.validate()?;
-        if !model_ids.insert(domain.model_id.as_str()) {
+        if !model_scopes.insert((
+            domain.model_id.as_str(),
+            domain.applicability_path.as_deref(),
+        )) {
             return Err(AexError::validation(
                 "DUPLICATE_MODEL_VALIDITY_DOMAIN",
                 "evidence.provenance.validity_domains",
-                "model validity domain identifiers must be unique",
+                "model validity domain identifiers and applicability paths must be unique",
             ));
         }
     }

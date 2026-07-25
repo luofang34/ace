@@ -9,9 +9,11 @@ use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::ResolvedScenario;
 use crate::domain::warning::WarningCode;
+use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::breguet;
 use crate::models::concept_geometry::ConceptGeometry;
+use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
 use crate::models::mission::MissionSimulator;
 use crate::models::mission_power;
 use crate::models::payload_range::PayloadRangeAnalyzer;
@@ -134,15 +136,17 @@ impl AnalysisBackend for NativeBackend {
         let structural_screen = structural_screen::evaluate(scenario)?;
         let mission_power_screen = mission_power::evaluate(scenario, &mission)?;
         let requirements =
-            evaluate_requirements(scenario, &mission, &performance, Some(&payload_range));
+            evaluate_requirements(scenario, &mission, &performance, Some(&payload_range))?;
         let breguet = breguet::estimate(
             scenario,
             performance.maximum_lift_to_drag_ratio,
             mission.total_fuel_burn_kg,
         )?;
         let weight = weight_estimate(scenario, mission.total_fuel_burn_kg)?;
+        let takeoff_field = estimate_takeoff_distance(scenario)?;
+        let landing_field = estimate_landing_distance(scenario)?;
+        let (polar, polar_warnings) = native_polar(scenario)?;
         let metrics = native_metrics(NativeMetricInputs {
-            scenario,
             geometry: request.geometry,
             performance: &performance,
             mission: &mission,
@@ -150,6 +154,8 @@ impl AnalysisBackend for NativeBackend {
             breguet: &breguet,
             structural: &structural_screen,
             mission_power: &mission_power_screen,
+            takeoff_field: &takeoff_field,
+            landing_field: &landing_field,
             weight_kg: weight,
         })?;
         let feasible = hard_requirements_passed(
@@ -175,6 +181,9 @@ impl AnalysisBackend for NativeBackend {
         warnings.extend(breguet.warnings);
         warnings.extend(structural_screen.provenance.warnings.clone());
         warnings.extend(mission_power_screen.provenance.warnings.clone());
+        extend_unique_warnings(&mut warnings, takeoff_field.warnings);
+        extend_unique_warnings(&mut warnings, landing_field.warnings);
+        extend_unique_warnings(&mut warnings, polar_warnings);
         warnings.push(Diagnostic::warning(
             WarningCode::NativeStabilityNotModeled,
             "The native backend does not estimate stability derivatives.",
@@ -183,7 +192,7 @@ impl AnalysisBackend for NativeBackend {
         Ok(AnalysisOutput {
             metrics,
             metric_validity: performance.metric_validity.clone(),
-            polar: native_polar(scenario),
+            polar,
             stability: StabilitySummary {
                 pitching_moment_slope_per_deg: None,
                 statically_stable: None,
@@ -196,6 +205,17 @@ impl AnalysisBackend for NativeBackend {
             failed_constraints,
             provenance: native_analysis_provenance(scenario, warnings, breguet.assumptions)?,
         })
+    }
+}
+
+fn extend_unique_warnings(target: &mut Vec<Diagnostic>, warnings: Vec<Diagnostic>) {
+    for warning in warnings {
+        if !target
+            .iter()
+            .any(|existing| existing.code == warning.code && existing.path == warning.path)
+        {
+            target.push(warning);
+        }
     }
 }
 
@@ -245,23 +265,24 @@ fn failed_constraints(
     failed
 }
 
-fn native_polar(scenario: &ResolvedScenario) -> Vec<PolarPoint> {
+fn native_polar(scenario: &ResolvedScenario) -> AexResult<(Vec<PolarPoint>, Vec<Diagnostic>)> {
     let aero = &scenario.aircraft.aerodynamics.clean;
-    let induced_factor =
-        1.0 / (std::f64::consts::PI * aero.oswald_efficiency * scenario.aircraft.wing.aspect_ratio);
-    (0..=8)
+    let evaluation = coefficient_evaluation_at_mach(&scenario.aircraft, "clean", 0.0)?;
+    let polar = evaluation.coefficients;
+    let points = (0..=8)
         .map(|index| {
             let lift_coefficient = -0.2 + f64::from(index) * 0.2;
             PolarPoint {
                 angle_of_attack_deg: None,
                 lift_coefficient,
-                drag_coefficient: aero.cd0
+                drag_coefficient: polar.cd0
                     + aero.additional_cd
-                    + induced_factor * lift_coefficient.powi(2),
+                    + polar.induced_drag_factor * lift_coefficient.powi(2),
                 pitching_moment_coefficient: None,
             }
         })
-        .collect()
+        .collect();
+    Ok((points, evaluation.warnings))
 }
 
 fn native_geometry_provenance(blended: bool) -> ResultProvenance {

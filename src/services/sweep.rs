@@ -10,7 +10,7 @@ use crate::domain::result::{ResultProvenance, SweepResult, SweepRow};
 use crate::domain::schema::{EngineProfile, Wing};
 use crate::domain::validity::MetricValidity;
 use crate::models::breguet;
-use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
+use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::services::resolver::complete_planform_overrides;
@@ -165,7 +165,7 @@ fn metric_values(
         performance.maximum_lift_to_drag_ratio,
         mission.total_fuel_burn_kg,
     )?;
-    let requirements = evaluate_requirements(scenario, mission, performance, Some(payload_range));
+    let requirements = evaluate_requirements(scenario, mission, performance, Some(payload_range))?;
     metrics
         .iter()
         .map(|metric| {
@@ -190,8 +190,12 @@ fn metric_values(
                         .cruise_feasible
                         .map(|feasible| f64::from(u8::from(feasible))),
                 )?,
-                "performance.takeoff_field_length" => estimate_takeoff_distance_m(scenario),
-                "performance.landing_field_length" => estimate_landing_distance_m(scenario)?,
+                "performance.takeoff_field_length" => {
+                    estimate_takeoff_distance(scenario)?.distance_m
+                }
+                "performance.landing_field_length" => {
+                    estimate_landing_distance(scenario)?.distance_m
+                }
                 "aerodynamics.maximum_lift_to_drag_ratio" => performance.maximum_lift_to_drag_ratio,
                 "geometry.aspect_ratio" => scenario.aircraft.wing.aspect_ratio,
                 "geometry.wing_area" => scenario.aircraft.wing.area_m2,

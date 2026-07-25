@@ -65,12 +65,20 @@ pub(crate) struct ValidityBound {
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub(crate) struct ModelValidityDomain {
     pub(crate) model_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) applicability_path: Option<String>,
     pub(crate) bounds: Vec<ValidityBound>,
 }
 
 impl ModelValidityDomain {
     pub(crate) fn validate(&self) -> AexResult<()> {
-        if self.model_id.trim().is_empty() || self.bounds.is_empty() {
+        if self.model_id.trim().is_empty()
+            || self
+                .applicability_path
+                .as_deref()
+                .is_some_and(|path| path.trim().is_empty())
+            || self.bounds.is_empty()
+        {
             return Err(AexError::validation(
                 "INVALID_MODEL_VALIDITY_DOMAIN",
                 "model_validity_domain",

@@ -1,3 +1,4 @@
+use crate::domain::aerodynamics::PolarTable;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{RequirementEvaluation, RequirementStatus};
 use crate::domain::schema::{MissionInitialState, Requirement, SegmentKind};
@@ -67,7 +68,8 @@ fn headline_verdict_requires_completion_and_every_hard_requirement() {
 #[test]
 fn sr71_boundary_ceiling_requirement_is_indeterminate_and_nullable()
 -> Result<(), Box<dyn std::error::Error>> {
-    let scenario = example_scenario("sr71")?;
+    let mut scenario = example_scenario("sr71")?;
+    scenario.aircraft.propulsion.sizing_factor = 2.0;
     let performance = PointAnalyzer::new(scenario.clone()).summary(None)?;
     let requirement = scenario
         .requirements
@@ -101,6 +103,30 @@ fn sr71_boundary_ceiling_requirement_is_indeterminate_and_nullable()
 }
 
 #[test]
+fn landing_stall_requirement_retains_reference_extrapolation()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let landing = &mut scenario.aircraft.aerodynamics.landing;
+    landing.polar_table = Some(PolarTable {
+        mach: vec![0.2, 0.8],
+        cd0: vec![landing.cd0; 2],
+        cl_max: vec![landing.cl_max; 2],
+        oswald_efficiency: Some(vec![landing.oswald_efficiency; 2]),
+        induced_drag_factor: None,
+    });
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None)?;
+    let evaluation = evaluations
+        .iter()
+        .find(|item| item.metric == "performance.stall_speed_landing")
+        .ok_or("missing landing-stall evaluation")?;
+
+    assert_eq!(evaluation.validity.status, ValidityStatus::Extrapolated);
+    Ok(())
+}
+
+#[test]
 fn legacy_boolean_requirement_result_remains_readable() -> Result<(), Box<dyn std::error::Error>> {
     let mut stored = serde_json::to_value(evaluated("range", "hard", true))?;
     let object = stored
@@ -123,7 +149,7 @@ fn achieved_cruise_requirement_fails_when_installed_power_cannot_close()
     scenario.aircraft.propulsion.sizing_factor = 0.5;
     let mission = MissionSimulator::new(scenario.clone()).simulate()?;
     let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
-    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None)?;
     let cruise = evaluations
         .iter()
         .find(|evaluation| evaluation.id == "cruise_speed")
@@ -165,7 +191,7 @@ fn altitude_limit_does_not_turn_a_power_shortfall_into_a_requirement_pass()
     requirement.required = 0.84;
     let mission = MissionSimulator::new(scenario.clone()).simulate()?;
     let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
-    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None)?;
     assert!(
         evaluations
             .iter()
@@ -214,7 +240,7 @@ fn achieved_cruise_requirement_uses_the_simulated_inherited_speed()
 
     let mission = MissionSimulator::new(scenario.clone()).simulate()?;
     let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
-    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None)?;
     let cruise = evaluations
         .iter()
         .find(|evaluation| evaluation.id == "cruise_speed")
@@ -241,7 +267,7 @@ fn hard_landing_fuel_floor_uses_completed_mission_fuel() -> Result<(), Box<dyn s
     }];
     let mission = MissionSimulator::new(scenario.clone()).simulate()?;
     let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
-    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None)?;
     let landing_fuel = evaluations
         .first()
         .ok_or("missing landing-fuel requirement evaluation")?;

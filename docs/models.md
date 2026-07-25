@@ -13,6 +13,25 @@ factor, drag coefficient, drag, power required, and L/D. Configuration-specific
 clean/takeoff/landing inputs determine `CD0`, `e`, and `CLmax`. A power-law
 wave-drag increment is optional above critical Mach.
 
+`aero.polar_table` linearly interpolates configuration-specific `CD0`, `CLmax`,
+and either Oswald efficiency or induced-drag factor on a strictly increasing
+Mach axis. Values outside the axis extrapolate from the nearest interval and
+emit a structured `MODEL_EXTRAPOLATION` diagnostic. The axis is the typed model
+validity domain with basis `tabulated_data`; each domain names its clean,
+takeoff, or landing `applicability_path`. A table cannot be combined with the
+power-law wave-drag correction because the table already defines the
+Mach-dependent drag behavior. Zero-speed field, native-polar, and drag-chart
+screens evaluate the table at Mach 0 and retain extrapolation diagnostics.
+Field-length metric validity is `extrapolated` when Mach 0 is outside the
+configuration table. Stall, best-glide, minimum-power, and maximum-L/D
+reference metrics carry the same per-metric validity, including through native
+results and requirements. Performance and climb charts retain both reference
+and sampled-point diagnostics. Flight analyses evaluate the table at the
+actual operating Mach. Point analysis preflights the requested configuration's
+table domain rather than substituting the clean domain. Its reference metrics
+carry configuration-aware `metric_validity`: stall speed uses the requested
+configuration, while best-glide speed and maximum L/D use clean.
+
 ## Propulsion
 
 `propulsion.piston_prop_simple` applies density-ratio power lapse, throttle,
@@ -118,6 +137,10 @@ canonical SI units and identify whether they come from a published
 specification, the model form, resolved profile data, tabulated data, or a
 screening assumption. Human-readable `validity_range` text remains part of
 provenance.
+
+When one model has configuration-specific domains, `model_id` and
+`applicability_path` jointly identify each domain. Study evidence preserves
+those scoped domains independently.
 
 ## Constraints and payload-range
 

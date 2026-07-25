@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{FOOT_M, GRAVITY_M_S2};
 use crate::domain::result::{MissionResult, PerformanceSummary, PointPerformanceResult};
@@ -10,17 +8,18 @@ use crate::models::aerodynamics::{
     minimum_drag_speed_m_s, minimum_power_speed_m_s, stall_speed_m_s,
 };
 use crate::models::atmosphere::Isa1976;
+use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
 use crate::models::propulsion::{OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion};
 
 mod cruise;
 mod solver;
 mod validity;
 
-use cruise::CruisePerformance;
 use solver::{bounded_root, bracket_roots};
 use validity::{
     aggregate as aggregate_validity, altitude_upper_bound, from_warnings as validity_from_warnings,
-    speed_upper_bound,
+    point_reference_validity, reference_metric_validity, speed_upper_bound,
+    summary_metric_validity,
 };
 
 const MAXIMUM_SPEED_METRIC: &str = "performance.maximum_level_speed";
@@ -74,6 +73,7 @@ impl PointAnalyzer {
     ) -> AexResult<PointPerformanceResult> {
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let mach = speed_m_s / atmosphere.speed_of_sound_m_s;
+        let reference = point_reference_validity(&self.scenario.aircraft, configuration)?;
         let stall_speed = stall_speed_m_s(
             &self.scenario.aircraft,
             configuration,
@@ -107,17 +107,13 @@ impl PointAnalyzer {
                 mode: OperatingMode::Cruise,
             },
         )?;
-        let available_power = propulsion
-            .propulsive_power_available_w
-            .unwrap_or_else(|| propulsion.thrust_available_n.unwrap_or(0.0) * speed_m_s);
-        let available_thrust = propulsion
-            .thrust_available_n
-            .unwrap_or_else(|| available_power / speed_m_s);
+        let (available_power, available_thrust) = available_propulsion(&propulsion, speed_m_s);
         let excess_power = available_power - aerodynamics.power_required_w;
         let excess_thrust = available_thrust - aerodynamics.drag_n;
         let rate_of_climb = excess_power / (mass_kg * GRAVITY_M_S2);
         let mut warnings = aerodynamics.warnings.clone();
-        warnings.extend(propulsion.warnings.clone());
+        extend_unique_diagnostics(&mut warnings, propulsion.warnings.clone());
+        extend_unique_diagnostics(&mut warnings, reference.warnings);
         Ok(PointPerformanceResult {
             scenario_id: self.scenario.id.clone(),
             altitude_m,
@@ -142,6 +138,7 @@ impl PointAnalyzer {
                 &self.scenario.aircraft,
                 "clean",
             )?,
+            metric_validity: reference.metric_validity,
             aerodynamics,
             propulsion,
             warnings,
@@ -170,20 +167,29 @@ impl PointAnalyzer {
             sea_level.density_kg_m3,
         )?;
         let maximum_speed = self.maximum_level_speed_solution(0.0, mass)?;
-        let threshold = match self.scenario.engine {
-            EngineProfile::Piston(_) => 100.0 * FOOT_M / 60.0,
-            EngineProfile::Turbofan(_) => 500.0 * FOOT_M / 60.0,
-        };
+        let threshold = service_ceiling_threshold(&self.scenario);
         let service_ceiling = self.ceiling_solution(mass, threshold)?;
         let absolute_ceiling = self.ceiling_solution(mass, 0.0)?;
         let cruise = self.cruise_performance(mission)?;
-        let metric_validity =
-            summary_metric_validity(&maximum_speed, &service_ceiling, &absolute_ceiling, &cruise);
+        let reference = reference_metric_validity(&self.scenario.aircraft)?;
+        let takeoff_field = estimate_takeoff_distance(&self.scenario)?;
+        let landing_field = estimate_landing_distance(&self.scenario)?;
+        let metric_validity = summary_metric_validity(
+            &maximum_speed,
+            &service_ceiling,
+            &absolute_ceiling,
+            &cruise,
+            &reference,
+            takeoff_field.validity,
+            landing_field.validity,
+        );
         let overall_validity = aggregate_validity(metric_validity.values());
-        let mut warnings = cruise.warnings;
-        warnings.push(Diagnostic::limitation(
-            "Ceilings use quasi-steady maximum excess-power sampling.",
-        ));
+        let warnings = summary_warnings(
+            cruise.warnings,
+            reference.warnings,
+            takeoff_field.warnings,
+            landing_field.warnings,
+        );
         Ok(PerformanceSummary {
             stall_speed_clean_m_s: stall_clean,
             stall_speed_landing_m_s: stall_landing,
@@ -441,43 +447,39 @@ impl PointAnalyzer {
     }
 }
 
-fn summary_metric_validity(
-    maximum_speed: &SolvedMetric,
-    service_ceiling: &SolvedMetric,
-    absolute_ceiling: &SolvedMetric,
-    cruise: &CruisePerformance,
-) -> BTreeMap<String, MetricValidity> {
-    let mut validity = BTreeMap::from([
-        (
-            MAXIMUM_SPEED_METRIC.to_owned(),
-            maximum_speed.validity.clone(),
-        ),
-        (
-            SERVICE_CEILING_METRIC.to_owned(),
-            service_ceiling.validity.clone(),
-        ),
-        (
-            ABSOLUTE_CEILING_METRIC.to_owned(),
-            absolute_ceiling.validity.clone(),
-        ),
-    ]);
-    for (present, metric) in [
-        (cruise.achieved_mach.is_some(), ACHIEVED_CRUISE_MACH_METRIC),
-        (
-            cruise.achieved_true_airspeed_m_s.is_some(),
-            ACHIEVED_CRUISE_TAS_METRIC,
-        ),
-        (
-            cruise.minimum_excess_power_w.is_some(),
-            MINIMUM_CRUISE_EXCESS_POWER_METRIC,
-        ),
-        (cruise.feasible.is_some(), CRUISE_FEASIBLE_METRIC),
-    ] {
-        if present {
-            validity.insert(metric.to_owned(), cruise.validity.clone());
-        }
+fn available_propulsion(
+    propulsion: &crate::domain::result::PropulsionState,
+    speed_m_s: f64,
+) -> (f64, f64) {
+    let power = propulsion
+        .propulsive_power_available_w
+        .unwrap_or_else(|| propulsion.thrust_available_n.unwrap_or(0.0) * speed_m_s);
+    let thrust = propulsion
+        .thrust_available_n
+        .unwrap_or_else(|| power / speed_m_s);
+    (power, thrust)
+}
+
+fn service_ceiling_threshold(scenario: &ResolvedScenario) -> f64 {
+    match scenario.engine {
+        EngineProfile::Piston(_) => 100.0 * FOOT_M / 60.0,
+        EngineProfile::Turbofan(_) => 500.0 * FOOT_M / 60.0,
     }
-    validity
+}
+
+fn summary_warnings(
+    mut warnings: Vec<Diagnostic>,
+    reference: Vec<Diagnostic>,
+    takeoff_field: Vec<Diagnostic>,
+    landing_field: Vec<Diagnostic>,
+) -> Vec<Diagnostic> {
+    extend_unique_diagnostics(&mut warnings, reference);
+    extend_unique_diagnostics(&mut warnings, takeoff_field);
+    extend_unique_diagnostics(&mut warnings, landing_field);
+    warnings.push(Diagnostic::limitation(
+        "Ceilings use quasi-steady maximum excess-power sampling.",
+    ));
+    warnings
 }
 
 fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diagnostic>) {

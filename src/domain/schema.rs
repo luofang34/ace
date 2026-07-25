@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 
+use crate::domain::aerodynamics::PolarTable;
 use crate::domain::capabilities::{AeroConfigurationKind, aero_configuration};
 use crate::domain::diagnostic::Diagnostic;
 use crate::domain::propulsion::TablePropulsionDeck;
@@ -88,6 +89,8 @@ pub(crate) struct RawAeroConfiguration {
     pub(crate) additional_cd: f64,
     pub(crate) mach_critical: Option<f64>,
     pub(crate) wave_drag: Option<WaveDrag>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) polar_table: Option<PolarTable>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -267,6 +270,8 @@ pub(crate) struct AeroConfiguration {
     pub(crate) additional_cd: f64,
     pub(crate) mach_critical: Option<f64>,
     pub(crate) wave_drag: Option<WaveDrag>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) polar_table: Option<PolarTable>,
 }
 
 #[derive(Debug, Clone, Serialize)]

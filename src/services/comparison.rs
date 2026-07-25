@@ -159,7 +159,7 @@ fn comparison_metric(
         "mission.completed_distance" => Ok(QuantityOutput::range(mission.total_distance.value)),
         "feasibility.hard_constraints_passed" => {
             let requirements =
-                evaluate_requirements(scenario, mission, performance, Some(payload_range));
+                evaluate_requirements(scenario, mission, performance, Some(payload_range))?;
             let passed = hard_requirements_passed(
                 mission.completed,
                 &scenario.requirements.items,

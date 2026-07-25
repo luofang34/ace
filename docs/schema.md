@@ -66,6 +66,36 @@ keeping the requested sweep variables unchanged in its result rows.
 Aspect-ratio linear sweep bounds are dimensionless bare numbers; `1` is also
 accepted as an explicit unit.
 
+Each clean, takeoff, or landing aerodynamic configuration may add a
+Mach-dependent polar table while retaining the schema-version-1 scalar fields:
+
+```yaml
+clean:
+  cd0: 0.012
+  oswald_efficiency: 0.72
+  cl_max: 1.05
+  polar_table:
+    mach: [0.0, 0.85, 1.15, 3.2]
+    cd0: [0.012, 0.013, 0.035, 0.0145]
+    cl_max: [1.05, 1.00, 0.85, 0.60]
+    oswald_efficiency: [0.72, 0.68, 0.50, 0.34]
+```
+
+The Mach axis requires at least two finite, nonnegative, strictly increasing
+breakpoints. `cd0`, `cl_max`, and the induced schedule have the same length and
+positive finite values. Exactly one of `oswald_efficiency` or
+`induced_drag_factor` is present. Oswald efficiency is bounded by `(0, 1]`.
+Inside the axis the model linearly interpolates; outside it the nearest
+interval extrapolates with `MODEL_EXTRAPOLATION`. `polar_table` and the legacy
+`wave_drag` correction are mutually exclusive. Typed table validity domains
+carry an `applicability_path` for the clean, takeoff, or landing configuration,
+so configurations with different Mach support remain distinguishable.
+Consumers that intentionally query Mach 0 retain the resulting diagnostic;
+field-length results also mark the corresponding metric validity as
+`extrapolated`. Other Mach-0 reference metrics, including stall, best-glide,
+minimum-power, and maximum-L/D values, publish matching validity metadata.
+Stored evidence treats `(model_id, applicability_path)` as the domain identity.
+
 Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
 payload-delivery and empty-return mission.
@@ -255,6 +285,11 @@ always makes its requirement indeterminate. Omitted validity metadata defaults
 to valid, and stored boolean-only requirement results remain readable.
 Indeterminate hard constraints are infeasible and retain positive normalized
 violation in study evidence.
+
+Point-performance results also carry additive `metric_validity` entries for
+stall speed, best-glide speed, and maximum L/D. Mach-zero table extrapolation
+is retained in both this map and the point warning channel. Stored point
+results without the map remain readable and default to an empty map.
 
 Performance summaries preserve the compatibility `cruise_mach` declaration
 and add explicit declared Mach/TAS, achieved cruise Mach/TAS, minimum cruise

@@ -79,6 +79,7 @@ Operators: `ge`, `le`, `eq`. Severities: `hard`, `soft`, `report_only`.
 
 - `atmosphere.isa1976`
 - `aero.parabolic_polar`
+- `aero.polar_table`
 - `aero.wave_drag_power_law`
 - `propulsion.piston_prop_simple`
 - `propulsion.turbofan_simple_deck`

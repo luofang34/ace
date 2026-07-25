@@ -5,6 +5,7 @@ use crate::domain::quantity::GRAVITY_M_S2;
 use crate::domain::result::{ConstraintResult, ModelMetadata};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::warning::WarningCode;
+use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 use crate::models::atmosphere::Isa1976;
 
 #[derive(Debug, Clone)]
@@ -31,20 +32,28 @@ impl ConstraintAnalyzer {
             .collect();
         let atmosphere = Isa1976::new(0.0).evaluate(0.0)?;
         let clean = &self.scenario.aircraft.aerodynamics.clean;
-        let parasite = clean.cd0 + clean.additional_cd;
-        let induced = 1.0
-            / (std::f64::consts::PI
-                * clean.oswald_efficiency
-                * self.scenario.aircraft.wing.aspect_ratio);
         let design_speed = design_speed(&self.scenario);
+        let clean_evaluation = coefficient_evaluation_at_mach(
+            &self.scenario.aircraft,
+            "clean",
+            design_speed / atmosphere.speed_of_sound_m_s,
+        )?;
+        let takeoff_evaluation =
+            coefficient_evaluation_at_mach(&self.scenario.aircraft, "takeoff", 0.0)?;
+        let landing_evaluation =
+            coefficient_evaluation_at_mach(&self.scenario.aircraft, "landing", 0.0)?;
+        let clean_polar = clean_evaluation.coefficients;
+        let takeoff_polar = takeoff_evaluation.coefficients;
+        let landing_polar = landing_evaluation.coefficients;
         let dynamic_pressure = 0.5 * atmosphere.density_kg_m3 * design_speed.powi(2);
         let constraints = build_constraints(
             &self.scenario,
             &wing_loading,
             dynamic_pressure,
-            parasite,
-            induced,
+            clean_polar.cd0 + clean.additional_cd,
+            clean_polar.induced_drag_factor,
             design_speed,
+            takeoff_polar.cl_max,
         );
         let selected_wing_loading = self.scenario.aircraft.mass.maximum_takeoff_mass_kg
             * GRAVITY_M_S2
@@ -53,10 +62,18 @@ impl ConstraintAnalyzer {
         let stall_limit = 0.5
             * atmosphere.density_kg_m3
             * landing_stall_requirement(&self.scenario).powi(2)
-            * self.scenario.aircraft.aerodynamics.landing.cl_max;
+            * landing_polar.cl_max;
         let feasible = feasible_mask(&wing_loading, &constraints, stall_limit, selected_loading);
         let selected_index = closest_index(&wing_loading, selected_wing_loading);
         let active = active_constraint(&constraints, selected_index);
+        let mut warnings = clean_evaluation.warnings;
+        warnings.extend(takeoff_evaluation.warnings);
+        warnings.extend(landing_evaluation.warnings);
+        warnings.push(Diagnostic::warning(
+            WarningCode::ApproximateTakeoffDistance,
+            "Takeoff constraint uses a labeled energy approximation without rotation dynamics.",
+            "analysis.constraints.takeoff_distance",
+        ));
         Ok(ConstraintResult {
             scenario_id: self.scenario.id.clone(),
             x_axis: "W/S [N/m^2]".to_owned(),
@@ -71,11 +88,7 @@ impl ConstraintAnalyzer {
             selected_wing_loading_n_m2: selected_wing_loading,
             selected_loading,
             active_controlling_constraint: active,
-            warnings: vec![Diagnostic::warning(
-                WarningCode::ApproximateTakeoffDistance,
-                "Takeoff constraint uses a labeled energy approximation without rotation dynamics.",
-                "analysis.constraints.takeoff_distance",
-            )],
+            warnings,
             model: ModelMetadata {
                 model_id: "performance.constraint_diagram".to_owned(),
                 model_version: "1.0.0".to_owned(),
@@ -93,6 +106,7 @@ fn build_constraints(
     parasite: f64,
     induced: f64,
     design_speed: f64,
+    takeoff_cl_max: f64,
 ) -> BTreeMap<String, Vec<f64>> {
     let climb_rate = match scenario.engine {
         EngineProfile::Piston(_) => 1.5,
@@ -121,7 +135,7 @@ fn build_constraints(
             "takeoff_distance_approximate".to_owned(),
             wing_loading
                 .iter()
-                .map(|loading| takeoff_constraint(scenario, *loading))
+                .map(|loading| takeoff_constraint(scenario, *loading, takeoff_cl_max))
                 .collect(),
         ),
     ])
@@ -170,10 +184,9 @@ fn loading_constraint(
     }
 }
 
-fn takeoff_constraint(scenario: &ResolvedScenario, wing_loading: f64) -> f64 {
+fn takeoff_constraint(scenario: &ResolvedScenario, wing_loading: f64, takeoff_cl_max: f64) -> f64 {
     let distance_m = takeoff_distance_requirement(scenario);
-    let lift_off_speed =
-        (2.0 * wing_loading / (1.225 * scenario.aircraft.aerodynamics.takeoff.cl_max)).sqrt() * 1.2;
+    let lift_off_speed = (2.0 * wing_loading / (1.225 * takeoff_cl_max)).sqrt() * 1.2;
     let thrust_to_weight = lift_off_speed.powi(2) / (2.0 * GRAVITY_M_S2 * distance_m) + 0.04;
     match scenario.engine {
         EngineProfile::Piston(_) => thrust_to_weight * lift_off_speed * GRAVITY_M_S2 / 0.7,
@@ -242,3 +255,6 @@ fn active_constraint(constraints: &BTreeMap<String, Vec<f64>>, selected_index: u
         .max_by(|(_, left), (_, right)| left.total_cmp(right))
         .map_or_else(|| "none".to_owned(), |(name, _)| name.clone())
 }
+
+#[cfg(test)]
+mod tests;
