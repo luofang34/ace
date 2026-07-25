@@ -8,6 +8,7 @@ mission:
     - id: captive_carry
       type: fixed_time
       duration: 60 min
+      altitude: 45000 ft
       thrust_fraction: 0.01
     - id: drop_and_light
       type: fixed_time

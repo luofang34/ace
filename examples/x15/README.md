@@ -8,11 +8,11 @@ wrong in labeled ways:
   zero altitude exponent, zero Mach coefficient, TSFC encoding Isp 279 s)
   because no rocket profile type exists.
 - Engine-off segments use `thrust_fraction: 0.01` because the schema forbids
-  exactly zero; the fake idle burns propellant during captive carry and glide,
-  which is why the mission fails mid-"glide".
-- `altitude` on the captive-carry `fixed_time` segment is currently accepted
-  and ignored (the mission starts at 0 m); there is no air-launch initial
-  state.
+  exactly zero; the fake idle burns propellant during captive carry and glide
+  and corrupts the mission fuel budget.
+- The captive-carry `fixed_time` altitude sets and propagates the 45,000 ft
+  operating point, but there is no explicit air-launch initial state, so the
+  first segment still begins from the default ground state.
 - The real flight profile (ballistic arc past 80 km, Mach 6.7) is outside the
   quasi-steady solver and the atmosphere domain entirely.
 

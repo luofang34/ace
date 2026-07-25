@@ -70,6 +70,14 @@ Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
 payload-delivery and empty-return mission.
 
+Mission fields are defined per segment type by the generated
+[`capabilities.md`](capabilities.md) matrix. Unlisted and arbitrary keys return
+`UNSUPPORTED_SEGMENT_FIELD`; fields in the same speed or throttle group are
+mutually exclusive. A timed segment may declare `altitude`, which controls its
+atmosphere and propulsion operating point and becomes the altitude inherited
+by the following segment. Schema-version-1 documents that declare one speed
+and one throttle representation retain their existing interpretation.
+
 Aerodynamic and propulsion diagnostics produced while evaluating a mission
 segment appear both on that segment and in the mission warning channel.
 Diagnostic paths use the stable segment ID, for example

@@ -22,17 +22,19 @@ The CLI command `aex capabilities --format json` and MCP tool `get_capabilities`
 
 | Type | Legal fields |
 | --- | --- |
-| `start_and_taxi` | `duration` (required), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `fixed_time` | `duration` (required), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `fixed_fuel` | `fuel_fraction` (exactly_one), `fuel_mass` (exactly_one) |
+| `start_and_taxi` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `fixed_time` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `fixed_fuel` | `fuel_fraction` (exactly_one: fuel), `fuel_mass` (exactly_one: fuel) |
 | `payload_drop` | `payload_mass` (required) |
-| `takeoff` | `duration` (required), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `climb` | `target_altitude` (required), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `cruise` | `distance` (required), `altitude` (optional), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `loiter` | `duration` (required), `altitude` (optional), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `descent` | `target_altitude` (optional), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `landing` | `duration` (optional), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
-| `reserve` | `duration` (required), `altitude` (optional), `indicated_airspeed` (optional), `true_airspeed` (optional), `mach` (optional), `power_fraction` (optional), `thrust_fraction` (optional) |
+| `takeoff` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `climb` | `target_altitude` (required), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `cruise` | `distance` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `loiter` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `descent` | `target_altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `landing` | `duration` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+| `reserve` | `duration` (required), `altitude` (optional), `indicated_airspeed` (at_most_one: speed), `true_airspeed` (at_most_one: speed), `mach` (at_most_one: speed), `power_fraction` (at_most_one: throttle), `thrust_fraction` (at_most_one: throttle) |
+
+Fields in the same `at_most_one` group are mutually exclusive. Fields in an `exactly_one` group require one and only one representation. Unlisted fields are rejected.
 
 Power/thrust fractions on climb, cruise, loiter, and reserve constrain the mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows the aerodynamic power required and is not scaled directly by throttle.
 

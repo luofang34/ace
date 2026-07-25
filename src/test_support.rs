@@ -17,6 +17,23 @@ pub(crate) fn example_scenario(name: &str) -> AexResult<ResolvedScenario> {
     )
 }
 
+pub(crate) fn fuel_exhaustion_scenario() -> AexResult<ResolvedScenario> {
+    let mut scenario = example_scenario("x15")?;
+    let mut segment = scenario.mission.segments.first().cloned().ok_or_else(|| {
+        crate::domain::diagnostic::AexError::validation(
+            "MISSING_TEST_SEGMENT",
+            "mission.segments",
+            "X-15 fixture requires a timed segment",
+        )
+    })?;
+    segment.id = "depletion_probe".to_owned();
+    segment.duration_s = Some(3_600.0);
+    segment.power_fraction = None;
+    segment.thrust_fraction = Some(1.0);
+    scenario.mission.segments = vec![segment];
+    Ok(scenario)
+}
+
 pub(crate) fn set_inferred_configuration(
     scenario: &mut ResolvedScenario,
     configuration: &str,

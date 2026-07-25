@@ -2,7 +2,7 @@ use std::io;
 
 use crate::domain::result::MissionResult;
 use crate::domain::schema::{MissionSegment, SegmentKind};
-use crate::test_support::example_scenario;
+use crate::test_support::{example_scenario, fuel_exhaustion_scenario};
 
 use super::{MissionSimulator, initial_fuel_load};
 
@@ -42,6 +42,53 @@ fn mission_mass_is_continuous_and_non_increasing() {
             }
         }
     }
+}
+
+#[test]
+fn timed_altitude_controls_fuel_and_propagates_state() -> Result<(), Box<dyn std::error::Error>> {
+    let sea_level = MissionSimulator::new(example_scenario("c172")?).simulate()?;
+    let mut elevated_scenario = example_scenario("c172")?;
+    let timed = elevated_scenario
+        .mission
+        .segments
+        .first_mut()
+        .ok_or_else(|| io::Error::other("C172 fixture has no timed segment"))?;
+    timed.altitude_m = Some(2_438.4);
+    let elevated = MissionSimulator::new(elevated_scenario).simulate()?;
+    let sea_segment = sea_level
+        .segments
+        .first()
+        .ok_or_else(|| io::Error::other("sea-level mission has no segment result"))?;
+    let elevated_segment = elevated
+        .segments
+        .first()
+        .ok_or_else(|| io::Error::other("elevated mission has no segment result"))?;
+    let following = elevated
+        .segments
+        .get(1)
+        .ok_or_else(|| io::Error::other("elevated mission has no following segment"))?;
+
+    assert!((elevated_segment.end_altitude_m - 2_438.4).abs() < 1.0e-8);
+    assert!((following.start_altitude_m - 2_438.4).abs() < 1.0e-8);
+    assert!((elevated_segment.fuel_burn_kg - sea_segment.fuel_burn_kg).abs() > 1.0e-6);
+    Ok(())
+}
+
+#[test]
+fn x15_captive_carry_establishes_air_launch_altitude() -> Result<(), Box<dyn std::error::Error>> {
+    let mission = MissionSimulator::new(example_scenario("x15")?).simulate()?;
+    let captive = mission
+        .segments
+        .first()
+        .ok_or_else(|| io::Error::other("X-15 mission has no captive-carry result"))?;
+    let drop = mission
+        .segments
+        .get(1)
+        .ok_or_else(|| io::Error::other("X-15 mission has no drop result"))?;
+
+    assert!((captive.end_altitude_m - 13_716.0).abs() < 1.0e-8);
+    assert!((drop.start_altitude_m - captive.end_altitude_m).abs() < 1.0e-8);
+    Ok(())
 }
 
 #[test]
@@ -87,15 +134,15 @@ fn payload_drop_reduces_mass_without_burning_fuel() {
 
 #[test]
 fn in_flight_depletion_is_reported_as_fuel_exhaustion() -> Result<(), Box<dyn std::error::Error>> {
-    let mission = MissionSimulator::new(example_scenario("x15")?).simulate()?;
+    let mission = MissionSimulator::new(fuel_exhaustion_scenario()?).simulate()?;
 
     assert!(!mission.completed);
     assert!(mission.fuel_exhausted);
     assert!(!mission.fuel_capacity_violation);
-    assert_eq!(mission.failed_segment.as_deref(), Some("glide_descent"));
+    assert_eq!(mission.failed_segment.as_deref(), Some("depletion_probe"));
     assert!(mission.warnings.iter().any(|warning| {
         warning.code == "FUEL_EXHAUSTED"
-            && warning.path.as_deref() == Some("mission.segments.glide_descent")
+            && warning.path.as_deref() == Some("mission.segments.depletion_probe")
     }));
     assert!(
         !mission

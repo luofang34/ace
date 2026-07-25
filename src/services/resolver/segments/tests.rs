@@ -4,10 +4,10 @@ use crate::domain::schema::RawMissionSegment;
 
 use super::resolve_segment;
 
-fn fixed_fuel() -> RawMissionSegment {
+fn raw_segment(kind: &str) -> RawMissionSegment {
     RawMissionSegment {
         id: "segment".to_owned(),
-        kind: "fixed_fuel".to_owned(),
+        kind: kind.to_owned(),
         duration: None,
         distance: None,
         target_altitude: None,
@@ -22,6 +22,10 @@ fn fixed_fuel() -> RawMissionSegment {
         payload_mass: None,
         additional_fields: Default::default(),
     }
+}
+
+fn fixed_fuel() -> RawMissionSegment {
+    raw_segment("fixed_fuel")
 }
 
 #[test]
@@ -67,4 +71,29 @@ fn exactly_one_fuel_representation_is_required() {
     let mut valid = fixed_fuel();
     valid.fuel_mass = Some("1 kg".to_owned());
     resolve_segment(valid, 0).expect("one representation is valid");
+}
+
+#[test]
+fn optional_speed_and_throttle_groups_are_exclusive() {
+    let mut speed = raw_segment("fixed_time");
+    speed.duration = Some("1 min".to_owned());
+    speed.indicated_airspeed = Some("100 kt".to_owned());
+    speed.mach = Some(0.5);
+    let error = resolve_segment(speed, 0).expect_err("speed representations are exclusive");
+    assert_eq!(error.detail().code, "SEGMENT_FIELD_EXCLUSIVITY");
+    assert!(error.detail().message.contains("speed"));
+
+    let mut throttle = raw_segment("fixed_time");
+    throttle.duration = Some("1 min".to_owned());
+    throttle.power_fraction = Some(0.5);
+    throttle.thrust_fraction = Some(0.5);
+    let error = resolve_segment(throttle, 0).expect_err("throttle representations are exclusive");
+    assert_eq!(error.detail().code, "SEGMENT_FIELD_EXCLUSIVITY");
+    assert!(error.detail().message.contains("throttle"));
+
+    let mut unambiguous = raw_segment("fixed_time");
+    unambiguous.duration = Some("1 min".to_owned());
+    unambiguous.mach = Some(0.5);
+    unambiguous.thrust_fraction = Some(0.5);
+    resolve_segment(unambiguous, 0).expect("one representation per optional group is valid");
 }

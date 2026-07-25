@@ -31,9 +31,12 @@ pub(crate) fn segment_operating_altitude(segment: &MissionSegment, current_altit
         SegmentKind::Descent => {
             0.5 * (current_altitude_m + segment.target_altitude_m.unwrap_or(0.0))
         }
-        SegmentKind::Cruise | SegmentKind::Loiter | SegmentKind::Reserve => {
-            segment.altitude_m.unwrap_or(current_altitude_m)
-        }
+        SegmentKind::StartAndTaxi
+        | SegmentKind::FixedTime
+        | SegmentKind::Takeoff
+        | SegmentKind::Cruise
+        | SegmentKind::Loiter
+        | SegmentKind::Reserve => segment.altitude_m.unwrap_or(current_altitude_m),
         _ => current_altitude_m,
     }
 }
@@ -42,9 +45,12 @@ pub(crate) fn segment_end_altitude(segment: &MissionSegment, current_altitude_m:
     match segment.kind {
         SegmentKind::Climb => segment.target_altitude_m.unwrap_or(current_altitude_m),
         SegmentKind::Descent => segment.target_altitude_m.unwrap_or(0.0),
-        SegmentKind::Cruise | SegmentKind::Loiter | SegmentKind::Reserve => {
-            segment.altitude_m.unwrap_or(current_altitude_m)
-        }
+        SegmentKind::StartAndTaxi
+        | SegmentKind::FixedTime
+        | SegmentKind::Takeoff
+        | SegmentKind::Cruise
+        | SegmentKind::Loiter
+        | SegmentKind::Reserve => segment.altitude_m.unwrap_or(current_altitude_m),
         _ => current_altitude_m,
     }
 }
