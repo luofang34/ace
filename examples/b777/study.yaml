@@ -1,0 +1,60 @@
+schema_version: 1
+study:
+  id: b777-local-design-space
+  name: B777 local wing and propulsion trade
+  baseline:
+    scenario_path: scenario.yaml
+  variables:
+    - id: wing_area
+      path: aircraft.geometry.wing.area
+      kind: continuous
+      values: ["410 m^2", "436.8 m^2", "465 m^2"]
+    - id: aspect_ratio
+      path: aircraft.geometry.wing.aspect_ratio
+      kind: continuous
+      values: ["9.0", "9.61", "10.2"]
+    - id: propulsion_sizing
+      path: aircraft.propulsion.sizing_factor
+      kind: continuous
+      values: ["0.92", "1.0", "1.08"]
+    - id: fuel_capacity
+      path: aircraft.mass.maximum_fuel_mass
+      kind: continuous
+      values: ["138000 kg", "145538 kg", "153000 kg"]
+  derived_parameters:
+    - target: aircraft.geometry.wing.span
+      method: derive_from_area_and_aspect_ratio
+    - target: aircraft.mass.maximum_takeoff_mass
+      method: preserve_baseline_mass_closure
+  objectives:
+    - id: minimize_fuel
+      metric: mission.total_fuel
+      direction: minimize
+    - id: minimize_takeoff_distance
+      metric: performance.takeoff_field_length
+      direction: minimize
+      weight: 0.5
+    - id: maximize_completed_distance
+      metric: mission.completed_distance
+      direction: maximize
+      weight: 0.25
+  constraints:
+    - id: mission_completed
+      metric: mission.completed
+      operator: eq
+      value: "true"
+    - id: takeoff_field_length
+      metric: performance.takeoff_field_length
+      operator: le
+      value: "11000 ft"
+  analysis:
+    screening_backend: native
+    refinement_backend: openvsp
+    refinement_candidate_limit: 4
+  search:
+    strategy: evolutionary
+    max_evaluations: 120
+    population: 24
+    generations: 8
+    mutation_rate: 0.2
+    seed: 777

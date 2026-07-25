@@ -17,6 +17,13 @@ fn scenario(name: &str) -> PathBuf {
         .join("scenario.yaml")
 }
 
+fn study(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join(name)
+        .join("study.yaml")
+}
+
 fn model501_scenario(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("examples")
@@ -42,10 +49,11 @@ fn json_output(arguments: &[&str]) -> Result<Value, Box<dyn Error>> {
 #[test]
 fn validates_both_reference_projects() -> Result<(), Box<dyn Error>> {
     for name in ["c172", "b777"] {
-        let scenario_path = scenario(name);
-        let path = scenario_path.to_string_lossy();
-        let result = json_output(&["validate", &path, "--format", "json"])?;
-        assert_eq!(result["valid"], true);
+        for document_path in [scenario(name), study(name)] {
+            let path = document_path.to_string_lossy();
+            let result = json_output(&["validate", &path, "--format", "json"])?;
+            assert_eq!(result["valid"], true);
+        }
     }
     Ok(())
 }

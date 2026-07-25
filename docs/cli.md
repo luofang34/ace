@@ -26,8 +26,11 @@ aex report RUN_ID
 aex mcp serve
 ```
 
+`aex validate` accepts aircraft, mission, requirements, profile, scenario, and
+study documents. For a study with a relative scenario baseline, it validates
+both the study contract and the resolved referenced scenario.
+
 Analysis common flags include `--format table|json|yaml|csv`, `--output`,
 `--strict`, `--explain`, `--no-cache`, `--seed`, and repeated
 `--set PATH=VALUE`. Plot `--output` names the SVG and `--spec-output` writes the
 structured chart response separately.
-

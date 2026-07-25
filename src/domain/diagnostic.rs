@@ -81,6 +81,24 @@ pub enum AexError {
         #[source]
         source: serde_json::Error,
     },
+    /// A persisted JSON record could not be decoded.
+    #[error("invalid stored JSON record {path}: {source}")]
+    StoredJson {
+        /// Content-addressed record path.
+        path: PathBuf,
+        /// JSON codec failure.
+        #[source]
+        source: serde_json::Error,
+    },
+    /// A persisted record failed its domain integrity checks.
+    #[error("invalid stored record {path}: {source}")]
+    StoredRecord {
+        /// Content-addressed record path.
+        path: PathBuf,
+        /// Domain validation failure.
+        #[source]
+        source: Box<AexError>,
+    },
     /// A document violated a stable validation rule.
     #[error("{code} at {path}: {message}")]
     Validation {

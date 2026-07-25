@@ -8,8 +8,9 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic, Severity};
 use crate::domain::schema::{
     AircraftDocument, MissionDocument, ProfileDocument, RequirementsDocument,
 };
+use crate::domain::study::{EmbeddedStudyBaseline, StudyDocument, validate_study_document};
 use crate::services::analysis::ApplicationService;
-use crate::services::profile_resolution::parse_engine_profile;
+use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
 use crate::services::requirement_resolution::resolve_requirements;
 use crate::services::resolver::{resolve_aircraft, resolve_mission};
 use crate::storage::project_store::read_yaml_value_blocking;
@@ -28,6 +29,17 @@ impl ApplicationService {
         if document.get("scenario").is_some() {
             self.resolve_blocking(path, &BTreeMap::new())?;
             return Ok(valid_result("scenario"));
+        }
+        if document.get("study").is_some() {
+            let typed: StudyDocument = from_value(document, "study")?;
+            validate_study_document(&typed)?;
+            if let Some(relative) = &typed.study.baseline.scenario_path {
+                let directory = path.parent().unwrap_or_else(|| Path::new("."));
+                self.resolve_blocking(&directory.join(relative), &BTreeMap::new())?;
+            } else if let Some(embedded) = &typed.study.baseline.embedded {
+                validate_embedded_study(embedded)?;
+            }
+            return Ok(valid_result("study"));
         }
         validate_document_value(&document, None)
     }
@@ -78,6 +90,13 @@ pub(crate) fn validate_document_value(
                 parse_engine_profile(typed.profile)?;
             }
         }
+        "study" => {
+            let typed: StudyDocument = from_value(document.clone(), "study")?;
+            validate_study_document(&typed)?;
+            if let Some(embedded) = &typed.study.baseline.embedded {
+                validate_embedded_study(embedded)?;
+            }
+        }
         _ => {
             return Err(AexError::validation(
                 "UNSUPPORTED_DOCUMENT_TYPE",
@@ -104,6 +123,20 @@ pub(crate) fn error_validation(document_type: &str, error: &AexError) -> Validat
     }
 }
 
+fn validate_embedded_study(embedded: &EmbeddedStudyBaseline) -> AexResult<()> {
+    resolve_aircraft(embedded.aircraft.clone())?;
+    resolve_mission(embedded.mission.clone())?;
+    resolve_requirements(embedded.requirements.clone())?;
+    for profile in &embedded.profiles {
+        if profile.profile.kind == "propeller" {
+            parse_propeller_profile(profile.profile.clone())?;
+        } else {
+            parse_engine_profile(profile.profile.clone())?;
+        }
+    }
+    Ok(())
+}
+
 fn from_value<T: serde::de::DeserializeOwned>(value: Value, path: &str) -> AexResult<T> {
     serde_yaml::from_value(value).map_err(|source| AexError::Yaml {
         path: path.into(),
@@ -112,7 +145,7 @@ fn from_value<T: serde::de::DeserializeOwned>(value: Value, path: &str) -> AexRe
 }
 
 fn detect_type(document: &Value) -> Option<String> {
-    ["aircraft", "mission", "requirements", "profile"]
+    ["aircraft", "mission", "requirements", "profile", "study"]
         .into_iter()
         .find(|key| document.get(*key).is_some())
         .map(str::to_owned)

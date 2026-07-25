@@ -139,6 +139,35 @@ aspect-ratio, and wing-spar packaging screens to pass. Optional OpenVSP runs
 only on the selected candidate; its static-pitch result is an independent
 verification gate and is not substituted into native feasibility.
 
+## ADR-021 — Studies are shareable schema documents
+
+A study is a schema-version-1 document that declares its baseline, variables,
+derived parameters, objectives, constraints, selected snapshots, analysis
+policy, and search policy. A baseline is either a relative scenario reference
+or a complete embedded document set. Absolute references are rejected so the
+same study can be copied, archived, and validated outside its authoring
+directory.
+
+Defaults are serialized and deterministic. Variable and objective identities
+are stable, integer values are type checked, conditional variables reference
+declared variables, and paths are canonical scenario paths. Search execution
+is a service concern; the document remains useful without running a search.
+
+## ADR-022 — Evaluations are immutable content-addressed evidence
+
+A candidate identity is the SHA-256 digest of its schema version, baseline
+digest, and normalized parameter map. An evaluation identity includes its
+candidate and input identity, analysis method and model versions, fidelity,
+status, metrics, constraints, diagnostics, provenance, dependencies, and
+artifacts. Any result or provenance change therefore creates a new evaluation
+rather than rewriting history.
+
+File repositories persist evaluations and study archives as immutable,
+digest-sharded JSON records. Repeating the same write is idempotent. Malformed
+JSON and content-ID mismatches retain the stored path in a typed error.
+Archives reference evaluation IDs and compact candidate descriptors; they do
+not create mutable candidate directories.
+
 ## ADR-023 — Aircraft configurations use components and relationships
 
 The canonical aircraft model represents configurations as stable component
@@ -180,3 +209,16 @@ A failed, unavailable, unsupported, or out-of-validity refinement remains a
 distinct state and does not cause silent substitution by a lower-fidelity
 value. Solver decks, meshes, and detailed model files are artifacts rather
 than canonical aircraft state.
+
+## ADR-025 — Study archives preserve decisions without mutable workspaces
+
+A study archive identifies the study and baseline digests, evaluator
+signature, completion state, candidate descriptors, evaluation IDs, and
+selected candidate IDs. Its content identity covers every field. Selected
+candidate snapshots may also travel with a study document, but immutable
+evaluation records remain separately addressable evidence.
+
+Archives record what was evaluated and selected without treating generated
+candidate directories as durable state. Workflow tools may reconstruct a
+candidate from the baseline and its parameter map, and promotion writes only
+explicit user-selected canonical documents.
