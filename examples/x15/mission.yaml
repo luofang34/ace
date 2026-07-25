@@ -9,7 +9,7 @@ mission:
       type: fixed_time
       duration: 60 min
       altitude: 45000 ft
-      thrust_fraction: 0.01
+      thrust_fraction: 0
     - id: drop_and_light
       type: fixed_time
       duration: 5 s
@@ -29,13 +29,13 @@ mission:
       type: descent
       target_altitude: 20000 ft
       mach: 0.8
-      thrust_fraction: 0.01
+      thrust_fraction: 0
     - id: pattern_glide
       type: descent
       target_altitude: 3000 ft
       indicated_airspeed: 250 kt
-      thrust_fraction: 0.01
+      thrust_fraction: 0
     - id: landing
       type: landing
       duration: 2 min
-      thrust_fraction: 0.01
+      thrust_fraction: 0

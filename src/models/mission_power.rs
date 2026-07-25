@@ -6,7 +6,7 @@ use crate::domain::result::{
     MissionPowerPoint, MissionPowerScreen, MissionResult, ResultProvenance,
 };
 use crate::domain::schema::{EngineProfile, ResolvedScenario, SegmentKind};
-use crate::models::mission::representative_speed;
+use crate::models::mission::{representative_speed, segment_engine_off};
 use crate::models::performance::PointAnalyzer;
 use crate::models::propulsion::OperatingMode;
 
@@ -25,6 +25,9 @@ pub(crate) fn evaluate(
         else {
             continue;
         };
+        if segment_engine_off(segment) {
+            continue;
+        }
         let Some(mode) = operating_mode(segment.kind) else {
             continue;
         };

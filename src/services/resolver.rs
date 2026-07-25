@@ -353,6 +353,22 @@ fn optional_fraction(value: Option<f64>, path: &str) -> AexResult<Option<f64>> {
     value.map(|item| fraction(item, path)).transpose()
 }
 
+fn throttle_fraction(value: f64, path: &str) -> AexResult<f64> {
+    if (0.0..=1.2).contains(&value) && value.is_finite() {
+        Ok(value)
+    } else {
+        Err(AexError::validation(
+            "INVALID_FRACTION",
+            path,
+            "value is outside [0, 1.2]",
+        ))
+    }
+}
+
+fn optional_throttle_fraction(value: Option<f64>, path: &str) -> AexResult<Option<f64>> {
+    value.map(|item| throttle_fraction(item, path)).transpose()
+}
+
 fn bounded(value: f64, lower: f64, upper: f64, path: &str) -> AexResult<f64> {
     if value >= lower && value <= upper && value.is_finite() {
         Ok(value)

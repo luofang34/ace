@@ -97,3 +97,29 @@ fn optional_speed_and_throttle_groups_are_exclusive() {
     unambiguous.thrust_fraction = Some(0.5);
     resolve_segment(unambiguous, 0).expect("one representation per optional group is valid");
 }
+
+#[test]
+fn zero_is_valid_only_for_throttle_fractions() {
+    for field in ["power", "thrust"] {
+        let mut raw = raw_segment("fixed_time");
+        raw.duration = Some("1 min".to_owned());
+        if field == "power" {
+            raw.power_fraction = Some(0.0);
+        } else {
+            raw.thrust_fraction = Some(0.0);
+        }
+        let resolved = resolve_segment(raw, 0).expect("zero throttle is engine off");
+        assert!(resolved.power_fraction == Some(0.0) || resolved.thrust_fraction == Some(0.0));
+    }
+
+    let mut negative = raw_segment("fixed_time");
+    negative.duration = Some("1 min".to_owned());
+    negative.thrust_fraction = Some(-0.01);
+    let error = resolve_segment(negative, 0).expect_err("negative throttle is invalid");
+    assert_eq!(error.detail().code, "INVALID_FRACTION");
+
+    let mut fuel = fixed_fuel();
+    fuel.fuel_fraction = Some(0.0);
+    let error = resolve_segment(fuel, 0).expect_err("zero fuel fraction remains invalid");
+    assert_eq!(error.detail().code, "INVALID_FRACTION");
+}

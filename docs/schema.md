@@ -77,6 +77,10 @@ mutually exclusive. A timed segment may declare `altitude`, which controls its
 atmosphere and propulsion operating point and becomes the altitude inherited
 by the following segment. Schema-version-1 documents that declare one speed
 and one throttle representation retain their existing interpretation.
+Explicit `power_fraction: 0` or `thrust_fraction: 0` means engine off: modeled
+propulsion output and fuel flow are exactly zero, and the point is not subject
+to a powered mission-reserve check. Engine-off climb to a higher altitude is
+rejected with `ENGINE_OFF_CLIMB_UNSUPPORTED`.
 
 Aerodynamic and propulsion diagnostics produced while evaluating a mission
 segment appear both on that segment and in the mission warning channel.

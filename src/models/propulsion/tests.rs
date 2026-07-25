@@ -31,3 +31,31 @@ fn piston_power_and_turbofan_thrust_lapse_with_altitude() {
         }
     }
 }
+
+#[test]
+fn zero_throttle_has_exactly_zero_output_and_fuel() -> Result<(), Box<dyn std::error::Error>> {
+    let atmosphere = Isa1976::new(0.0).evaluate(3_000.0)?;
+    for name in ["c172", "b777"] {
+        let scenario = example_scenario(name)?;
+        let state = evaluate(
+            &scenario,
+            &atmosphere,
+            PropulsionQuery {
+                altitude_m: 3_000.0,
+                true_airspeed_m_s: 100.0,
+                mach: 0.3,
+                throttle: 0.0,
+                mode: OperatingMode::Economy,
+            },
+        )?;
+        assert_eq!(state.thrust_available_n, Some(0.0));
+        assert_eq!(state.propulsive_power_available_w, Some(0.0));
+        assert!(
+            state
+                .shaft_power_available_w
+                .is_none_or(|power| power == 0.0)
+        );
+        assert_eq!(state.fuel_flow_kg_s, 0.0);
+    }
+    Ok(())
+}
