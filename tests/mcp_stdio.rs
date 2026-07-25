@@ -123,7 +123,8 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
                 "design_root": design_root.path(),
                 "baseline": "c172",
                 "parameters": {
-                    "aircraft.geometry.wing.aspect_ratio": "8.1"
+                    "aircraft.geometry.wing.aspect_ratio": "8.1",
+                    "aircraft.geometry.wing.span": format!("{} m", (16.17_f64 * 8.1).sqrt())
                 }
             }))?),
             task: None,
@@ -142,6 +143,7 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
                 "scenario_path": scenario_path,
                 "updates": {
                     "aircraft.geometry.wing.area": "17.2 m^2",
+                    "aircraft.geometry.wing.span": format!("{} m", (17.2_f64 * 8.1).sqrt()),
                     "aircraft.aerodynamics.clean.oswald_efficiency": "0.82"
                 }
             }))?),

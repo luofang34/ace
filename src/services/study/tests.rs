@@ -47,6 +47,32 @@ fn assert_no_candidate_directories_blocking(root: &Path) -> io::Result<()> {
     Ok(())
 }
 
+fn assert_study_result_planforms(
+    service: &ApplicationService,
+    result: &crate::domain::evidence::StudyRunResult,
+) -> Result<(), Box<dyn std::error::Error>> {
+    for selected in &result.selected_candidates {
+        let evidence = service.get_study_evidence_blocking(
+            &result.study_id,
+            Some(&result.archive_id),
+            &selected.candidate.candidate_id,
+        )?;
+        let metric = |id: &str| {
+            evidence
+                .results
+                .metrics
+                .get(id)
+                .map(|value| value.value)
+                .ok_or_else(|| io::Error::other(format!("missing study metric {id}")))
+        };
+        let area = metric("geometry.wing_area")?;
+        let span = metric("geometry.wing_span")?;
+        let aspect_ratio = metric("geometry.aspect_ratio")?;
+        assert!((span.powi(2) / area - aspect_ratio).abs() < 1.0e-12);
+    }
+    Ok(())
+}
+
 fn assert_reference_candidate_round_trips(
     service: &ApplicationService,
     study: &Path,
@@ -78,6 +104,13 @@ fn assert_reference_candidate_round_trips(
             - (operating_empty - baseline.operating_empty_mass_kg))
             .abs()
             < 1.0e-9
+    );
+    let resolved = service.resolve_blocking(prepared.scenario_path(), &descriptor.parameters)?;
+    assert!(
+        (resolved.aircraft.wing.span_m.powi(2) / resolved.aircraft.wing.area_m2
+            - resolved.aircraft.wing.aspect_ratio)
+            .abs()
+            < 1.0e-12
     );
     let evaluated = evaluation::evaluate_candidate_blocking(service, &prepared, descriptor, 0)?;
     let decoded = serde_json::from_slice(&serde_json::to_vec(&evaluated.evidence)?)?;
@@ -141,6 +174,7 @@ fn c172_study_reuses_evidence_and_promotes_one_design() -> Result<(), Box<dyn st
     assert_eq!(candidate_ids(&first), candidate_ids(&second));
     assert_eq!(candidate_ids(&first), candidate_ids(&queried));
     assert_eq!(second.reused_evaluations, first.evaluated_candidates);
+    assert_study_result_planforms(&service, &first)?;
 
     let selected = first
         .selected_candidates
@@ -188,6 +222,7 @@ fn b777_evolutionary_study_is_seeded_and_reusable() -> Result<(), Box<dyn std::e
     assert_eq!(first.archive_id, second.archive_id);
     assert_eq!(candidate_ids(&first), candidate_ids(&second));
     assert_eq!(second.reused_evaluations, first.evaluated_candidates);
+    assert_study_result_planforms(&service, &first)?;
     assert_no_candidate_directories_blocking(temporary.path())?;
     Ok(())
 }

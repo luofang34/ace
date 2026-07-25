@@ -72,6 +72,12 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     not consume the unique-candidate cap; reused study IDs require an archive
     discriminator; evidence links are cross-checked; and projected or
     unavailable charts are explicit.
+22. **Resolved wing planforms are closed.** Any two of area, span, and aspect
+    ratio derive the third; rounded triples are normalized through an inclusive
+    0.5% tolerance and larger conflicts return
+    `INCONSISTENT_WING_PLANFORM`. Direct overrides, all shipped examples,
+    study candidates, sweep rows, and refinement outputs are regression tested
+    against `aspect_ratio = span² / area`.
 
 ## Calibration bands
 

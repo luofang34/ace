@@ -51,6 +51,9 @@ code.
 
 Scenario resolution combines independent versioned documents. Dotted-path
 overrides apply before normalization, allowing reuse and declarative sweeps.
+Wing area, span, and aspect ratio reconcile at this boundary: any two define
+the third, rounded triples have a 0.5% tolerance, and the canonical ratio is
+always recomputed from resolved area and span.
 
 ## ADR-009 — Segment-based mission
 

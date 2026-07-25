@@ -7,11 +7,12 @@ use rayon::prelude::*;
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{GRAVITY_M_S2, parse_quantity};
 use crate::domain::result::{ResultProvenance, SweepResult, SweepRow};
-use crate::domain::schema::EngineProfile;
+use crate::domain::schema::{EngineProfile, Wing};
 use crate::models::breguet;
 use crate::models::field_performance::{estimate_landing_distance_m, estimate_takeoff_distance_m};
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::evaluate_requirements;
+use crate::services::resolver::complete_planform_overrides;
 
 #[derive(Debug, Clone)]
 pub(crate) struct SweepVariable {
@@ -34,8 +35,8 @@ impl SweepVariable {
                 "sweep count must be at least two",
             ));
         }
-        let (start_value, start_unit) = split_value_unit(start)?;
-        let (stop_value, stop_unit) = split_value_unit(stop)?;
+        let (start_value, start_unit) = split_value_unit(start, &path)?;
+        let (stop_value, stop_unit) = split_value_unit(stop, &path)?;
         if start_unit != stop_unit {
             return Err(AexError::validation(
                 "INCOMPATIBLE_UNITS",
@@ -51,7 +52,7 @@ impl SweepVariable {
                 } else {
                     start_value + fraction * (stop_value - start_value)
                 };
-                format!("{value:.12} {start_unit}")
+                format_sweep_value(value, &start_unit, &path)
             })
             .collect();
         Ok(Self { path, values })
@@ -72,16 +73,24 @@ impl ApplicationService {
                 "one or two sweep variables are required",
             ));
         }
+        let scenario = self.resolve_blocking(scenario_path, &BTreeMap::new())?;
         let combinations = combinations(variables);
         let cache: Arc<Mutex<BTreeMap<String, BTreeMap<String, f64>>>> =
             Arc::new(Mutex::new(BTreeMap::new()));
         let rows = combinations
             .par_iter()
-            .map(|overrides| self.sweep_row(scenario_path, overrides, metrics, &cache))
+            .map(|overrides| {
+                self.sweep_row(
+                    scenario_path,
+                    overrides,
+                    metrics,
+                    &scenario.aircraft.wing,
+                    &cache,
+                )
+            })
             .collect::<Vec<_>>()
             .into_iter()
             .collect::<AexResult<Vec<_>>>()?;
-        let scenario = self.resolve_blocking(scenario_path, &BTreeMap::new())?;
         Ok(SweepResult {
             scenario_id: scenario.id,
             rows,
@@ -96,9 +105,12 @@ impl ApplicationService {
         scenario_path: &Path,
         overrides: &BTreeMap<String, String>,
         metrics: &[String],
+        baseline_wing: &Wing,
         cache: &Arc<Mutex<BTreeMap<String, BTreeMap<String, f64>>>>,
     ) -> AexResult<SweepRow> {
-        let key = serde_json::to_string(overrides).map_err(|source| AexError::Json { source })?;
+        let evaluation_overrides = complete_planform_overrides(overrides, baseline_wing)?;
+        let key = serde_json::to_string(&evaluation_overrides)
+            .map_err(|source| AexError::Json { source })?;
         if let Some(cached) = cache
             .lock()
             .map_err(|source| AexError::analysis("SWEEP_CACHE_POISONED", source.to_string()))?
@@ -107,9 +119,10 @@ impl ApplicationService {
         {
             return Ok(row(overrides, cached));
         }
-        let (_, performance) = self.performance_blocking(scenario_path, overrides)?;
-        let (scenario, mission) = self.mission_blocking(scenario_path, overrides)?;
-        let (_, payload_range) = self.payload_range_blocking(scenario_path, overrides)?;
+        let (_, performance) = self.performance_blocking(scenario_path, &evaluation_overrides)?;
+        let (scenario, mission) = self.mission_blocking(scenario_path, &evaluation_overrides)?;
+        let (_, payload_range) =
+            self.payload_range_blocking(scenario_path, &evaluation_overrides)?;
         let resolved = metric_values(&scenario, &performance, &mission, &payload_range, metrics)?;
         cache
             .lock()
@@ -145,6 +158,7 @@ fn metric_values(
                 "aerodynamics.maximum_lift_to_drag_ratio" => performance.maximum_lift_to_drag_ratio,
                 "geometry.aspect_ratio" => scenario.aircraft.wing.aspect_ratio,
                 "geometry.wing_area" => scenario.aircraft.wing.area_m2,
+                "geometry.wing_span" => scenario.aircraft.wing.span_m,
                 "performance.wing_loading" => {
                     scenario.aircraft.mass.maximum_takeoff_mass_kg * GRAVITY_M_S2
                         / scenario.aircraft.wing.area_m2
@@ -248,25 +262,59 @@ fn row(overrides: &BTreeMap<String, String>, metrics: BTreeMap<String, f64>) -> 
     }
 }
 
-fn split_value_unit(raw: &str) -> AexResult<(f64, String)> {
-    let index = raw.find(char::is_whitespace).ok_or_else(|| {
-        AexError::validation(
+fn split_value_unit(raw: &str, path: &str) -> AexResult<(f64, String)> {
+    let Some(index) = raw.find(char::is_whitespace) else {
+        if dimensionless_sweep_path(path) {
+            return raw
+                .parse::<f64>()
+                .map(|value| (value, String::new()))
+                .map_err(|source| {
+                    AexError::validation("INVALID_SWEEP_VALUE", "sweep", source.to_string())
+                });
+        }
+        return Err(AexError::validation(
             "AMBIGUOUS_UNITLESS_VALUE",
             "sweep",
-            "sweep bounds require explicit units",
-        )
-    })?;
+            "physical sweep bounds require explicit units",
+        ));
+    };
     let value = raw[..index].parse::<f64>().map_err(|source| {
         AexError::validation("INVALID_SWEEP_VALUE", "sweep", source.to_string())
     })?;
     let unit = raw[index..].trim();
+    if dimensionless_sweep_path(path) && unit != "1" {
+        return Err(AexError::validation(
+            "INCOMPATIBLE_UNITS",
+            path,
+            "aspect-ratio sweep bounds must be bare numbers or use unit 1",
+        ));
+    }
     let _validated = match unit {
         "kg" => parse_quantity(raw, crate::domain::quantity::Dimension::Mass)?,
         "m^2" | "ft^2" => parse_quantity(raw, crate::domain::quantity::Dimension::Area)?,
         "m" | "ft" | "nmi" => parse_quantity(raw, crate::domain::quantity::Dimension::Length)?,
         _ => value,
     };
-    Ok((value, unit.to_owned()))
+    Ok((
+        value,
+        if dimensionless_sweep_path(path) {
+            String::new()
+        } else {
+            unit.to_owned()
+        },
+    ))
+}
+
+fn format_sweep_value(value: f64, unit: &str, path: &str) -> String {
+    if dimensionless_sweep_path(path) {
+        format!("{value:.12}")
+    } else {
+        format!("{value:.12} {unit}")
+    }
+}
+
+fn dimensionless_sweep_path(path: &str) -> bool {
+    path == "aircraft.geometry.wing.aspect_ratio"
 }
 
 fn sweep_provenance() -> ResultProvenance {
@@ -287,3 +335,6 @@ fn sweep_provenance() -> ResultProvenance {
         )],
     }
 }
+
+#[cfg(test)]
+mod tests;

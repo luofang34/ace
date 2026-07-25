@@ -52,10 +52,14 @@ fn set_path(target: &mut Value, parts: &[&str], raw_value: &str, full_path: &str
     })?;
     let key = Value::String(parts[0].to_owned());
     if parts.len() == 1 {
-        let current = mapping.get(&key).ok_or_else(|| {
+        let value = mapping.get(&key).map_or_else(
+            || optional_override_value(raw_value, full_path),
+            |current| override_value(current, raw_value, full_path).map(Some),
+        )?;
+        let value = value.ok_or_else(|| {
             AexError::validation("INVALID_OVERRIDE", full_path, "field does not exist")
         })?;
-        mapping.insert(key, override_value(current, raw_value, full_path)?);
+        mapping.insert(key, value);
         return Ok(());
     }
     let nested = mapping.get_mut(&key).ok_or_else(|| {
@@ -127,6 +131,16 @@ fn numeric_override(raw: &str, path: &str) -> AexResult<Value> {
             path,
             "numeric field requires a numeric value",
         ))
+    }
+}
+
+fn optional_override_value(raw: &str, path: &str) -> AexResult<Option<Value>> {
+    match path {
+        "aircraft.geometry.wing.area" | "aircraft.geometry.wing.span" => {
+            Ok(Some(Value::String(raw.to_owned())))
+        }
+        "aircraft.geometry.wing.aspect_ratio" => numeric_override(raw, path).map(Some),
+        _ => Ok(None),
     }
 }
 
