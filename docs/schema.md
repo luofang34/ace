@@ -172,6 +172,24 @@ a basis such as `published_specification`, `model_form`, `resolved_profile`, or
 readers. Omitted typed domains default to an empty list and empty lists are not
 serialized, preserving schema-version-1 stored-record identities.
 
+Scenario resolution preflights declared altitudes, speeds, Mach numbers,
+masses, and applicable aircraft limits against every model that consumes
+them. All breaches are returned together as `MODEL_DOMAIN_UNSUPPORTED`, ordered
+by path and model ID. Each violation carries its typed variable, declared value
+and unit, registered bounds and inclusivity, bound unit, and domain basis.
+Validation and analysis therefore reject the same unsupported scenario before
+simulation. A model bound is not applied to a declaration that the model does
+not consume; for example, a sea-level field-performance assumption does not
+bound cruise altitude.
+
+Non-finite declarations are invalid input and return `NON_FINITE_VALUE` before
+domain comparison. Mission simulation, payload-range analysis, and preflight
+share altitude propagation and the true-airspeed → Mach → indicated-airspeed
+selection rules; indicated airspeed is converted with the atmosphere at the
+segment operating altitude. Domain registrations carry their consuming model
+role independently of the human-readable model ID, so profile IDs cannot
+change which declarations a model receives.
+
 Bounded performance metrics carry additive `metric_validity` entries with
 `valid`, `extrapolated`, or `boundary_limited` status. Boundary-limited entries
 also identify the search or model boundary. Requirement evaluations expose

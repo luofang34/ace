@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use serde::de::DeserializeOwned;
 
@@ -10,8 +11,9 @@ use crate::domain::schema::{
 };
 use crate::domain::study::EmbeddedStudyBaseline;
 use crate::services::analysis::ApplicationService;
+use crate::storage::profile_store::FileProfileStore;
 
-use super::{resolve_aircraft, resolve_embedded_study};
+use super::{ScenarioResolver, resolve_aircraft, resolve_embedded_study};
 
 fn c172_aircraft_document() -> Result<AircraftDocument, Box<dyn std::error::Error>> {
     read_c172_document("aircraft.yaml")
@@ -180,8 +182,7 @@ fn inconsistent_override_is_rejected_and_paired_override_closes()
 
 #[test]
 fn every_shipped_example_resolves_a_closed_planform() -> Result<(), Box<dyn std::error::Error>> {
-    let temporary = tempfile::tempdir()?;
-    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let resolver = ScenarioResolver::new(Arc::new(FileProfileStore));
     let examples = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");
     let mut paths = Vec::new();
     collect_scenario_paths(&examples, &mut paths)?;
@@ -189,7 +190,7 @@ fn every_shipped_example_resolves_a_closed_planform() -> Result<(), Box<dyn std:
     assert!(!paths.is_empty());
 
     for path in paths {
-        let scenario = service.resolve_blocking(&path, &BTreeMap::new())?;
+        let scenario = resolver.resolve_blocking(&path, &BTreeMap::new())?;
         assert_closed_planform(&scenario);
     }
     Ok(())

@@ -27,36 +27,25 @@ fn unsupported_report_fixture(destination: &Path) -> Result<PathBuf, Box<dyn std
 fn fuel_exhaustion_report_fixture(
     destination: &Path,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/x15");
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172");
     fs::create_dir_all(destination.join("profiles"))?;
     for path in [
         "aircraft.yaml",
         "mission.yaml",
         "requirements.yaml",
         "scenario.yaml",
-        "profiles/xlr99.yaml",
+        "profiles/engine.yaml",
+        "profiles/propeller.yaml",
     ] {
         fs::copy(source.join(path), destination.join(path))?;
     }
-    retain_single_vertical_tail(&destination.join("aircraft.yaml"))?;
+    let aircraft_path = destination.join("aircraft.yaml");
+    let mut aircraft: serde_yaml::Value =
+        serde_yaml::from_str(&fs::read_to_string(&aircraft_path)?)?;
+    aircraft["aircraft"]["mass"]["maximum_fuel_mass"] =
+        serde_yaml::Value::String("1 kg".to_owned());
+    fs::write(aircraft_path, serde_yaml::to_string(&aircraft)?)?;
     Ok(destination.join("scenario.yaml"))
-}
-
-fn retain_single_vertical_tail(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let mut document: serde_yaml::Value = serde_yaml::from_str(&fs::read_to_string(path)?)?;
-    let components = document["aircraft"]["topology"]["components"]
-        .as_sequence_mut()
-        .ok_or_else(|| io::Error::other("missing topology components"))?;
-    components.retain(|component| component["id"].as_str() != Some("lower_vertical_tail"));
-    let relationships = document["aircraft"]["topology"]["relationships"]
-        .as_sequence_mut()
-        .ok_or_else(|| io::Error::other("missing topology relationships"))?;
-    relationships.retain(|relationship| {
-        relationship["source"].as_str() != Some("lower_vertical_tail")
-            && relationship["target"].as_str() != Some("lower_vertical_tail")
-    });
-    fs::write(path, serde_yaml::to_string(&document)?)?;
-    Ok(())
 }
 
 fn remove_horizontal_tail(path: &Path) -> Result<(), Box<dyn std::error::Error>> {

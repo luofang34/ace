@@ -89,7 +89,7 @@ impl AexMcpServer {
         &self,
         Parameters(request): Parameters<ValidateDocumentRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let yaml = serde_yaml::to_value(&request.document).map_err(mcp_error)?;
+        let yaml = serde_yaml::to_value(&request.document).map_err(mcp_serialization_error)?;
         let result = match validate_document_value(&yaml, Some(&request.document_type)) {
             Ok(valid) => valid,
             Err(error) => error_validation(&request.document_type, &error),
@@ -468,6 +468,20 @@ pub(crate) async fn serve_stdio(service: ApplicationService) -> AexResult<()> {
     Ok(())
 }
 
-fn mcp_error<E: std::fmt::Display>(source: E) -> ErrorData {
+fn mcp_error(source: AexError) -> ErrorData {
+    let detail = source.detail();
+    let message = detail.message.clone();
+    ErrorData::internal_error(
+        message,
+        Some(json!({
+            "code": detail.code,
+            "message": detail.message,
+            "path": detail.path,
+            "context": detail.context,
+        })),
+    )
+}
+
+fn mcp_serialization_error(source: impl std::fmt::Display) -> ErrorData {
     ErrorData::internal_error(source.to_string(), None)
 }

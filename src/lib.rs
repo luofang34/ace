@@ -13,6 +13,7 @@ mod storage;
 
 pub use cli::run_cli;
 pub use domain::diagnostic::AexError;
+pub use domain::validity::{ModelDomainViolation, ValidityBasis, ValidityVariable};
 pub use models::weight::{WeightClosureInput, WeightClosureResult, solve_weight_closure};
 
 #[cfg(test)]

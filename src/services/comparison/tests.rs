@@ -1,9 +1,32 @@
-use std::path::PathBuf;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 use crate::services::analysis::ApplicationService;
 use crate::test_support::example_scenario;
 
 use super::installed_loading;
+
+fn fuel_exhaustion_fixture(destination: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172");
+    fs::create_dir_all(destination.join("profiles"))?;
+    for path in [
+        "aircraft.yaml",
+        "mission.yaml",
+        "requirements.yaml",
+        "scenario.yaml",
+        "profiles/engine.yaml",
+        "profiles/propeller.yaml",
+    ] {
+        fs::copy(source.join(path), destination.join(path))?;
+    }
+    let aircraft_path = destination.join("aircraft.yaml");
+    let mut aircraft: serde_yaml::Value =
+        serde_yaml::from_str(&fs::read_to_string(&aircraft_path)?)?;
+    aircraft["aircraft"]["mass"]["maximum_fuel_mass"] =
+        serde_yaml::Value::String("1 kg".to_owned());
+    fs::write(aircraft_path, serde_yaml::to_string(&aircraft)?)?;
+    Ok(destination.join("scenario.yaml"))
+}
 
 #[test]
 fn turbofan_comparison_loading_includes_sizing_factor() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,10 +51,11 @@ fn piston_comparison_loading_includes_sizing_factor() -> Result<(), Box<dyn std:
 #[test]
 fn comparison_headline_metric_is_completion_gated() -> Result<(), Box<dyn std::error::Error>> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");
-    let paths = ["c172", "x15"]
-        .map(|name| root.join(name).join("scenario.yaml"))
-        .to_vec();
     let temporary = tempfile::tempdir()?;
+    let paths = vec![
+        root.join("c172/scenario.yaml"),
+        fuel_exhaustion_fixture(&temporary.path().join("incomplete"))?,
+    ];
     let service = ApplicationService::filesystem(temporary.path().join("runs"));
     let comparison =
         service.compare_blocking(&paths, &["feasibility.hard_constraints_passed".to_owned()])?;

@@ -10,6 +10,7 @@ use crate::domain::schema::{
 };
 use crate::domain::study::{StudyDocument, validate_study_document};
 use crate::services::analysis::ApplicationService;
+use crate::services::model_preflight::preflight_model_domains;
 use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
 use crate::services::profile_sanity::{engine_profile_warnings, propeller_profile_warnings};
 use crate::services::requirement_resolution::resolve_requirements;
@@ -39,7 +40,7 @@ impl ApplicationService {
                 self.resolve_blocking(&directory.join(relative), &BTreeMap::new())?
                     .warnings
             } else if let Some(embedded) = &typed.study.baseline.embedded {
-                resolve_embedded_study(embedded)?.warnings
+                embedded_study_warnings(embedded)?
             } else {
                 Vec::new()
             };
@@ -101,7 +102,7 @@ pub(crate) fn validate_document_value(
             let typed: StudyDocument = from_value(document.clone(), "study")?;
             validate_study_document(&typed)?;
             if let Some(embedded) = &typed.study.baseline.embedded {
-                let warnings = resolve_embedded_study(embedded)?.warnings;
+                let warnings = embedded_study_warnings(embedded)?;
                 return Ok(result_with_warnings(&document_type, warnings));
             }
         }
@@ -114,6 +115,14 @@ pub(crate) fn validate_document_value(
         }
     }
     Ok(valid_result(&document_type))
+}
+
+fn embedded_study_warnings(
+    embedded: &crate::domain::study::EmbeddedStudyBaseline,
+) -> AexResult<Vec<Diagnostic>> {
+    let resolved = resolve_embedded_study(embedded)?;
+    preflight_model_domains(&resolved)?;
+    Ok(resolved.warnings)
 }
 
 pub(crate) fn error_validation(document_type: &str, error: &AexError) -> ValidationResult {

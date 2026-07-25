@@ -39,6 +39,12 @@ fn successful_json(directory: &Path, arguments: &[&str]) -> Result<JsonValue, Bo
     Ok(serde_json::from_slice(&output.get_output().stdout)?)
 }
 
+fn failed_json(directory: &Path, arguments: &[&str]) -> Result<JsonValue, Box<dyn Error>> {
+    let output = command(directory).args(arguments).assert().failure();
+    assert!(output.get_output().stderr.is_empty());
+    Ok(serde_json::from_slice(&output.get_output().stdout)?)
+}
+
 fn fixture_path(name: &str, document: &str) -> PathBuf {
     examples_root().join(name).join(document)
 }
@@ -69,7 +75,7 @@ fn envelope_fixture_documents_remain_schema_v1_yaml() -> Result<(), Box<dyn Erro
 }
 
 #[test]
-fn typed_fixture_documents_validate_and_scenarios_resolve() -> Result<(), Box<dyn Error>> {
+fn typed_fixture_documents_validate_independently() -> Result<(), Box<dyn Error>> {
     const DOCUMENTS: [(&str, &str, &str); 8] = [
         ("sr71", "aircraft.yaml", "aircraft"),
         ("sr71", "mission.yaml", "mission"),
@@ -80,11 +86,6 @@ fn typed_fixture_documents_validate_and_scenarios_resolve() -> Result<(), Box<dy
         ("x15", "profiles/xlr99.yaml", "profile"),
         ("x15", "requirements.yaml", "requirements"),
     ];
-    const SCENARIOS: [(&str, &str, &str); 2] = [
-        ("sr71", "sr71-operational-sortie", "engine.pw_j58_class"),
-        ("x15", "x15-speed-mission", "engine.xlr99_class"),
-    ];
-
     let temporary = TempDir::new()?;
     for (name, document, expected_type) in DOCUMENTS {
         let path = fixture_path(name, document);
@@ -100,108 +101,49 @@ fn typed_fixture_documents_validate_and_scenarios_resolve() -> Result<(), Box<dy
         );
         assert_eq!(result["document_type"], expected_type);
     }
-    for (name, expected_id, expected_engine) in SCENARIOS {
-        let scenario = fixture_path(name, "scenario.yaml");
-        let resolved = successful_json(
-            temporary.path(),
-            &["resolve", &scenario.to_string_lossy(), "--format", "json"],
-        )?;
-        assert_eq!(resolved["engine"]["id"], expected_engine);
-        assert_eq!(resolved["id"], expected_id);
-    }
     Ok(())
 }
 
 #[test]
 fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
-    for name in ["sr71", "x15"] {
+    for (name, expected_count, required_path) in [
+        ("sr71", 7, "mission.segments.supersonic_cruise.altitude"),
+        ("x15", 5, "mission.segments.speed_run.mach"),
+    ] {
         let scenario = fixture_path(name, "scenario.yaml");
-        let result = successful_json(
+        let validation = failed_json(
             temporary.path(),
             &["validate", &scenario.to_string_lossy(), "--format", "json"],
         )?;
-        assert_eq!(result["valid"], true);
-    }
-
-    let sr71 = fixture_path("sr71", "scenario.yaml");
-    let performance = successful_json(
-        temporary.path(),
-        &[
-            "analyze",
-            "performance",
-            &sr71.to_string_lossy(),
-            "--format",
-            "json",
-        ],
-    )?;
-    assert_eq!(
-        performance["result"]["metric_validity"]["performance.service_ceiling"]["status"],
-        "boundary_limited"
-    );
-    assert_eq!(
-        performance["result"]["metric_validity"]["performance.maximum_level_speed"]["status"],
-        "extrapolated"
-    );
-    assert_eq!(
-        performance["result"]["model"]["validity_status"],
-        "boundary_limited"
-    );
-    assert_eq!(performance["result"]["cruise_feasible"], false);
-    assert!(
-        performance["result"]["warnings"]
+        let analysis = failed_json(
+            temporary.path(),
+            &[
+                "analyze",
+                "mission",
+                &scenario.to_string_lossy(),
+                "--format",
+                "json",
+            ],
+        )?;
+        assert_eq!(validation, analysis);
+        assert_eq!(validation["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
+        let violations = validation["error"]["context"]["violations"]
             .as_array()
-            .is_some_and(|warnings| warnings.iter().any(|warning| {
-                warning["code"] == "CRUISE_CONDITION_UNSUPPORTED"
-                    && warning["path"] == "mission.segments.supersonic_cruise"
-            }))
-    );
-    let output = command(temporary.path())
-        .args([
-            "analyze",
-            "mission",
-            &sr71.to_string_lossy(),
-            "--format",
-            "json",
-        ])
-        .output()?;
-    assert!(!output.status.success());
-    assert!(output.stderr.is_empty());
-    let error: JsonValue = serde_json::from_slice(&output.stdout)?;
-    assert_eq!(error["error"]["code"], "ATMOSPHERE_OUTSIDE_VALIDITY");
-
-    let x15 = fixture_path("x15", "scenario.yaml");
-    let result = successful_json(
-        temporary.path(),
-        &[
-            "analyze",
-            "mission",
-            &x15.to_string_lossy(),
-            "--format",
-            "json",
-        ],
-    )?;
-    assert_eq!(result["completion_status"], "incomplete");
-    assert_eq!(result["mission"]["completed"], false);
-    assert_eq!(result["mission"]["fuel_exhausted"], true);
-    assert_eq!(result["mission"]["fuel_capacity_violation"], false);
-    assert_eq!(result["hard_requirements_passed"], false);
-    assert_eq!(
-        result["requirements"][0]["metric"],
-        "performance.achieved_cruise_mach"
-    );
-    assert_eq!(result["performance"]["cruise_feasible"], true);
-    assert!(
-        result["report_markdown"]
-            .as_str()
-            .is_some_and(|report| report.contains("Hard requirements passed: false"))
-    );
-    let warnings = result["mission"]["warnings"]
-        .as_array()
-        .ok_or("missing mission warnings")?;
-    assert!(warnings.iter().any(|warning| {
-        warning["code"] == "FUEL_EXHAUSTED" && warning["path"] == "mission.segments.glide_descent"
-    }));
+            .ok_or("missing model-domain violations")?;
+        assert_eq!(violations.len(), expected_count);
+        assert!(
+            violations
+                .iter()
+                .any(|violation| violation["path"] == required_path)
+        );
+        assert!(violations.iter().all(|violation| {
+            violation["declared_value"].is_number()
+                && violation["declared_unit"].is_string()
+                && violation["bound_unit"].is_string()
+                && violation["basis"].is_string()
+        }));
+    }
     Ok(())
 }
 

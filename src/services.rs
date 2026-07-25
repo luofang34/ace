@@ -2,6 +2,7 @@ pub(crate) mod analysis;
 pub(crate) mod assumptions;
 pub(crate) mod comparison;
 pub(crate) mod design_experiments;
+pub(crate) mod model_preflight;
 pub(crate) mod overrides;
 pub(crate) mod profile_resolution;
 pub(crate) mod profile_sanity;

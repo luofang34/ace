@@ -16,6 +16,7 @@ use crate::models::constraints::ConstraintAnalyzer;
 use crate::models::mission::MissionSimulator;
 use crate::models::payload_range::PayloadRangeAnalyzer;
 use crate::models::performance::PointAnalyzer;
+use crate::services::model_preflight::{preflight_model_domains, preflight_operating_point};
 use crate::services::resolver::ScenarioResolver;
 use crate::storage::profile_store::{FileProfileStore, ProfileRepository};
 use crate::storage::project_store::read_yaml_value_blocking;
@@ -72,7 +73,9 @@ impl ApplicationService {
         path: &Path,
         overrides: &BTreeMap<String, String>,
     ) -> AexResult<ResolvedScenario> {
-        self.resolver.resolve_blocking(path, overrides)
+        let scenario = self.resolver.resolve_blocking(path, overrides)?;
+        preflight_model_domains(&scenario)?;
+        Ok(scenario)
     }
 
     pub(crate) fn point_blocking(
@@ -82,6 +85,16 @@ impl ApplicationService {
         condition: PointCondition,
     ) -> AexResult<(ResolvedScenario, PointPerformanceResult)> {
         let scenario = self.resolve_blocking(path, overrides)?;
+        let mass = condition
+            .mass_kg
+            .unwrap_or(scenario.aircraft.mass.maximum_takeoff_mass_kg);
+        preflight_operating_point(
+            &scenario,
+            condition.altitude_m,
+            condition.speed_m_s,
+            condition.mach,
+            mass,
+        )?;
         let atmosphere = Isa1976::new(0.0).evaluate(condition.altitude_m)?;
         let speed = condition
             .speed_m_s
@@ -97,9 +110,6 @@ impl ApplicationService {
                     "true airspeed or Mach is required",
                 )
             })?;
-        let mass = condition
-            .mass_kg
-            .unwrap_or(scenario.aircraft.mass.maximum_takeoff_mass_kg);
         let analyzer = PointAnalyzer::new(scenario.clone());
         let mut result =
             analyzer.point(condition.altitude_m, speed, mass, &condition.configuration)?;

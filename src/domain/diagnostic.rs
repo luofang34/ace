@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use thiserror::Error;
 
+use crate::domain::validity::ModelDomainViolation;
+
 pub(crate) type AexResult<T> = Result<T, AexError>;
 
 /// Stable machine-readable representation of a domain failure.
@@ -136,6 +138,14 @@ pub enum AexError {
         /// Human-readable failure detail.
         message: String,
     },
+    /// Declared operating conditions exceed one or more registered model domains.
+    #[error("MODEL_DOMAIN_UNSUPPORTED: {message}")]
+    ModelDomainUnsupported {
+        /// Aggregated human-readable summary.
+        message: String,
+        /// Deterministically ordered typed violations.
+        violations: Vec<ModelDomainViolation>,
+    },
     /// A referenced data profile was not found.
     #[error("requested profile {profile_id} was not found below {directory}")]
     ProfileNotFound {
@@ -233,6 +243,15 @@ impl AexError {
                 message.clone(),
                 Some("analysis".to_owned()),
                 empty_context(),
+            ),
+            Self::ModelDomainUnsupported {
+                message,
+                violations,
+            } => error_detail(
+                "MODEL_DOMAIN_UNSUPPORTED",
+                message.clone(),
+                violations.first().map(|violation| violation.path.clone()),
+                json!({ "violations": violations }),
             ),
             Self::ProfileNotFound {
                 profile_id,

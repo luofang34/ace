@@ -23,6 +23,15 @@ fn create_sr71_probe(directory: &Path) -> Result<PathBuf, Box<dyn Error>> {
     for relative in ["aircraft.yaml", "requirements.yaml", "scenario.yaml"] {
         fs::copy(source.join(relative), target.join(relative))?;
     }
+    let aircraft = fs::read_to_string(source.join("aircraft.yaml"))?
+        .replace("span: 16.94 m", "span: 29.16 m")
+        .replace("aspect_ratio: 1.69", "aspect_ratio: 5.0")
+        .replace("maximum_operating_mach: 3.3", "maximum_operating_mach: 0.9")
+        .replace(
+            "maximum_operating_altitude: 85000 ft",
+            "maximum_operating_altitude: 20000 m",
+        );
+    fs::write(target.join("aircraft.yaml"), aircraft)?;
     let profile = fs::read_to_string(source.join("profiles/j58.yaml"))?
         .replace("bypass_ratio: 0.0", "bypass_ratio: 0.2")
         .replace(
@@ -41,32 +50,18 @@ fn create_sr71_probe(directory: &Path) -> Result<PathBuf, Box<dyn Error>> {
     Ok(target.join("scenario.yaml"))
 }
 
-fn strict_stderr(directory: &Path, arguments: &[&str]) -> String {
+fn json_error(directory: &Path, arguments: &[&str]) -> Result<Value, Box<dyn Error>> {
     let output = command(directory).args(arguments).assert().failure();
-    String::from_utf8_lossy(&output.get_output().stderr).into_owned()
+    assert!(output.get_output().stderr.is_empty());
+    Ok(serde_json::from_slice(&output.get_output().stdout)?)
 }
 
 #[test]
-fn strict_point_and_mission_fail_on_the_same_sr71_model_warning() -> Result<(), Box<dyn Error>> {
+fn point_and_mission_share_resolve_time_domain_rejection() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     let scenario = create_sr71_probe(temporary.path())?;
     let path = scenario.to_string_lossy().into_owned();
-    let mission = command(temporary.path())
-        .args(["analyze", "mission", &path, "--format", "json"])
-        .assert()
-        .success();
-    let result: Value = serde_json::from_slice(&mission.get_output().stdout)?;
-    assert_eq!(result["mission"]["completed"], true);
-    assert!(
-        result["mission"]["segments"][0]["warnings"]
-            .as_array()
-            .is_some_and(|warnings| warnings.iter().any(|warning| {
-                warning["code"] == "MODEL_EXTRAPOLATION"
-                    && warning["path"] == "mission.segments.strict_probe.condition.mach"
-            }))
-    );
-
-    let point_error = strict_stderr(
+    let point_error = json_error(
         temporary.path(),
         &[
             "analyze",
@@ -76,14 +71,24 @@ fn strict_point_and_mission_fail_on_the_same_sr71_model_warning() -> Result<(), 
             "64000 ft",
             "--mach",
             "3.2",
-            "--strict",
+            "--format",
+            "json",
         ],
-    );
-    let mission_error = strict_stderr(temporary.path(), &["analyze", "mission", &path, "--strict"]);
-    for error in [point_error, mission_error] {
-        assert!(error.contains("STRICT_WARNING_FAILURE"));
-        assert!(error.contains("MODEL_EXTRAPOLATION"));
-        assert!(error.contains("Parabolic polar evaluated at Mach 3.200"));
-    }
+    )?;
+    let mission_error = json_error(
+        temporary.path(),
+        &["analyze", "mission", &path, "--format", "json"],
+    )?;
+
+    assert_eq!(point_error["error"], mission_error["error"]);
+    assert_eq!(mission_error["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
+    let violations = mission_error["error"]["context"]["violations"]
+        .as_array()
+        .ok_or("missing model-domain violations")?;
+    assert_eq!(violations.len(), 2);
+    assert!(violations.iter().all(|violation| {
+        violation["path"] == "mission.segments.strict_probe.mach"
+            && violation["declared_value"] == 3.2
+    }));
     Ok(())
 }
