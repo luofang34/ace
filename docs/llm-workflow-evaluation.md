@@ -23,7 +23,7 @@ object, and fix warning/metric plumbing so an eager LLM cannot be lied to.
 | C172 | All hard requirements pass; soft ceiling requirement honestly fails by 3.7% | 86 kg fuel / 383 nmi ≈ 9.4 gph at 65% — right. Stall 45 kt, L/D 11.9 — right. |
 | 777-300ER | All requirements pass, 7,490 nmi | Trip fuel 104.7 t is ~15–20% low; climb to FL350 takes 10 min / 2.8 t (real: ~22 min / ~8 t). The simplified climb model is the main error source. |
 | SR-71 | Authentic mission (78 kft): hard crash. Clamped to 64 kft: "completed", all hard requirements pass | Cruise point right by construction (24 t/hr at M3.2 — matches). Everything off-design is garbage: subsonic leg burns 11.6 t/hr (~3× real), landed with 7 kg of fuel, no warning about either. The fixture also raises fuel capacity from NASA's 80,280 lb (36,414 kg) figure to 46,180 kg because the model cannot represent operational post-takeoff refueling. |
-| X-15 | Resolve-time unsupported | Rocket profile type rejected; captive-carry altitude establishes a 45,000 ft operating point but no explicit initial state exists; forced idle burns propellant during engine-off captive carry; declared Mach and altitude exceed registered model domains. |
+| X-15 | Resolve-time unsupported | Rocket profile type rejected; captive-carry altitude establishes a 45,000 ft operating point but no explicit initial state exists; engine-off phases have zero thrust and fuel flow; declared Mach and altitude exceed registered model domains. |
 
 ## What works well for an LLM
 
@@ -40,11 +40,12 @@ object, and fix warning/metric plumbing so an eager LLM cannot be lied to.
 ## Deterministic fixture contract
 
 The regression check consumes the fixtures through the public CLI. Both
-scenarios currently validate and resolve because physical-domain preflight is
-not implemented. The authentic SR-71 mission then fails with
-`ATMOSPHERE_OUTSIDE_VALIDITY`. The X-15 command returns a structured result,
-but the mission is incomplete, reports `hard_requirements_passed: false`, and
-reports `FUEL_EXHAUSTED` at `mission.segments.glide_descent`.
+the authentic SR-71 and X-15 scenarios fail during resolve-time model-domain
+preflight with `MODEL_DOMAIN_UNSUPPORTED` and all known violating declaration
+paths. A direct X-15 simulator regression separately exercises the
+low-fidelity mission vocabulary: engine-off captive carry, glide, and landing
+burn exactly zero fuel, retain their kinematics, and do not report
+`FUEL_EXHAUSTED`.
 
 ## Flaws, ranked by how badly they mislead an LLM
 
@@ -79,11 +80,11 @@ reports `FUEL_EXHAUSTED` at `mission.segments.glide_descent`.
    "Validity" is the profile author's self-declared Mach/altitude box, not
    the calibration domain.
 7. **The mission schema still lacks real flight phases.**
-   `thrust_fraction` must be in (0, 1.2] — engine-off is inexpressible, and
-   the forced 0.01 workaround burns X-15 propellant. `altitude` on a
-   `fixed_time` segment controls its operating point and propagates to the
-   next segment. No explicit initial state / air launch or acceleration
-   segment exists, and climb rate is unclamped.
+   `thrust_fraction: 0` represents engine-off flight with zero fuel flow and
+   no powered-feasibility point. `altitude` on a `fixed_time` segment controls
+   its operating point and propagates to the next segment. No explicit initial
+   state / air launch or acceleration segment exists, and climb rate is
+   unclamped.
 8. **Error and response ergonomics fight the agent.** MCP domain failures
    surface as JSON-RPC -32603 protocol errors, not `isError` tool results,
    losing path/context. CLI errors under `--format json` are Rust Debug text

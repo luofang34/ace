@@ -92,6 +92,90 @@ fn x15_captive_carry_establishes_air_launch_altitude() -> Result<(), Box<dyn std
 }
 
 #[test]
+fn x15_engine_off_segments_burn_no_fuel_and_keep_kinematics()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mission = MissionSimulator::new(example_scenario("x15")?).simulate()?;
+    assert!(mission.completed);
+    assert!(!mission.fuel_exhausted);
+
+    for id in ["captive_carry", "glide_descent", "pattern_glide", "landing"] {
+        let segment = mission
+            .segments
+            .iter()
+            .find(|segment| segment.segment_id == id)
+            .ok_or_else(|| io::Error::other(format!("missing engine-off segment {id}")))?;
+        assert_eq!(segment.fuel_burn_kg, 0.0);
+        assert!(segment.duration_s > 0.0);
+    }
+    for id in ["glide_descent", "pattern_glide"] {
+        let segment = mission
+            .segments
+            .iter()
+            .find(|segment| segment.segment_id == id)
+            .ok_or_else(|| io::Error::other(format!("missing glide segment {id}")))?;
+        assert!(segment.distance_m > 0.0);
+        assert!(segment.end_altitude_m < segment.start_altitude_m);
+    }
+    for id in ["drop_and_light", "boost_climb", "speed_run"] {
+        let segment = mission
+            .segments
+            .iter()
+            .find(|segment| segment.segment_id == id)
+            .ok_or_else(|| io::Error::other(format!("missing powered segment {id}")))?;
+        assert!(segment.fuel_burn_kg > 0.0);
+    }
+    Ok(())
+}
+
+#[test]
+fn engine_off_cruise_keeps_distance_without_fuel_burn() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let cruise = scenario
+        .mission
+        .segments
+        .iter_mut()
+        .find(|segment| segment.kind == SegmentKind::Cruise)
+        .ok_or_else(|| io::Error::other("C172 fixture has no cruise segment"))?;
+    cruise.power_fraction = Some(0.0);
+    cruise.thrust_fraction = None;
+    let cruise_id = cruise.id.clone();
+    let mission = MissionSimulator::new(scenario).simulate()?;
+    let result = mission
+        .segments
+        .iter()
+        .find(|segment| segment.segment_id == cruise_id)
+        .ok_or_else(|| io::Error::other("engine-off cruise result is missing"))?;
+
+    assert_eq!(result.fuel_burn_kg, 0.0);
+    assert!(result.distance_m > 0.0);
+    assert!(result.duration_s > 0.0);
+    Ok(())
+}
+
+#[test]
+fn engine_off_climb_to_higher_altitude_is_rejected() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("x15")?;
+    let climb = scenario
+        .mission
+        .segments
+        .iter_mut()
+        .find(|segment| segment.kind == SegmentKind::Climb)
+        .ok_or_else(|| io::Error::other("X-15 fixture has no climb segment"))?;
+    let climb_id = climb.id.clone();
+    climb.thrust_fraction = Some(0.0);
+    climb.power_fraction = None;
+    let error = match MissionSimulator::new(scenario).simulate() {
+        Err(error) => error,
+        Ok(_) => return Err(io::Error::other("engine-off climb unexpectedly succeeded").into()),
+    };
+    let expected_path = format!("mission.segments.{climb_id}");
+
+    assert_eq!(error.detail().code, "ENGINE_OFF_CLIMB_UNSUPPORTED");
+    assert_eq!(error.detail().path.as_deref(), Some(expected_path.as_str()));
+    Ok(())
+}
+
+#[test]
 fn payload_drop_reduces_mass_without_burning_fuel() {
     let scenario = example_scenario("c172");
     assert!(scenario.is_ok());

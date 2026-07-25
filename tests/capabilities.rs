@@ -73,6 +73,7 @@ async fn cli_and_mcp_manifest_match_and_advertised_vocabulary_validates()
     validate_profile_types(&client, &mcp).await?;
     validate_segment_types(&client, &mcp).await?;
     validate_exclusive_segment_fields(&client).await?;
+    validate_engine_off_fractions(&client).await?;
     validate_unadvertised_segment_fields(&client).await?;
     validate_requirement_metrics(&client, &mcp).await?;
     validate_requirement_qualifiers(&client, &mcp).await?;
@@ -106,6 +107,30 @@ async fn validate_document_types(
         };
         let result = validate_document(client, kind, yaml_document(&path)?).await?;
         assert_eq!(result["valid"], true, "{kind}: {result}");
+    }
+    Ok(())
+}
+
+async fn validate_engine_off_fractions(
+    client: &rmcp::service::RunningService<rmcp::RoleClient, ()>,
+) -> Result<(), Box<dyn Error>> {
+    for field in ["power_fraction", "thrust_fraction"] {
+        let document = json!({
+            "schema_version": 1,
+            "mission": {
+                "id": "engine_off_test",
+                "name": "Engine-off test",
+                "payload": { "mass": "10 kg" },
+                "segments": [{
+                    "id": "segment",
+                    "type": "fixed_time",
+                    "duration": "1 min",
+                    (field): 0
+                }]
+            }
+        });
+        let result = validate_document(client, "mission", document).await?;
+        assert_eq!(result["valid"], true, "{field}: {result}");
     }
     Ok(())
 }

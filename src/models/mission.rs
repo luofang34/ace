@@ -256,6 +256,13 @@ impl MissionSimulator {
                 "climb requires a target altitude",
             )
         })?;
+        if segment_engine_off(segment) && target > state.altitude_m {
+            return Err(AexError::validation(
+                "ENGINE_OFF_CLIMB_UNSUPPORTED",
+                format!("mission.segments.{}", segment.id),
+                "engine-off climb cannot increase altitude",
+            ));
+        }
         let midpoint = segment_operating_altitude(segment, state.altitude_m);
         let speed = representative_speed(segment, &self.scenario, midpoint)?;
         let analyzer = PointAnalyzer::new(self.scenario.clone());
@@ -325,6 +332,7 @@ impl MissionSimulator {
             state.mass_kg,
             duration,
             OperatingMode::Cruise,
+            segment_engine_off(segment),
         )?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel.fuel_kg,
@@ -357,6 +365,7 @@ impl MissionSimulator {
             state.mass_kg,
             duration,
             OperatingMode::Economy,
+            segment_engine_off(segment),
         )?;
         Ok(SegmentComputation {
             fuel_burn_kg: fuel.fuel_kg,
@@ -367,6 +376,10 @@ impl MissionSimulator {
             warnings: fuel.warnings,
         })
     }
+}
+
+pub(crate) fn segment_engine_off(segment: &MissionSegment) -> bool {
+    segment.power_fraction == Some(0.0) || segment.thrust_fraction == Some(0.0)
 }
 
 fn mission_model(completed: bool) -> ModelMetadata {

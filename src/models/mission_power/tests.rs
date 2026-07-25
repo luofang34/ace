@@ -46,3 +46,33 @@ fn advertised_in_flight_throttle_fields_change_power_feasibility() -> AexResult<
     }
     Ok(())
 }
+
+#[test]
+fn engine_off_points_are_not_applicable_to_power_feasibility() -> AexResult<()> {
+    let mut scenario = example_scenario("c172")?;
+    let segment = scenario
+        .mission
+        .segments
+        .iter_mut()
+        .find(|segment| segment.kind == SegmentKind::Cruise)
+        .ok_or_else(|| AexError::analysis("MISSING_TEST_SEGMENT", "cruise segment is missing"))?;
+    segment.power_fraction = Some(0.0);
+    segment.thrust_fraction = None;
+    let segment_id = segment.id.clone();
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let screen = evaluate(&scenario, &mission)?;
+
+    assert!(
+        screen
+            .points
+            .iter()
+            .all(|point| point.segment_id != segment_id)
+    );
+    assert!(
+        screen
+            .failed_constraints
+            .iter()
+            .all(|constraint| constraint != &format!("mission_power.{segment_id}"))
+    );
+    Ok(())
+}

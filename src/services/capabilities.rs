@@ -132,6 +132,8 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          | Type | Legal fields |\n| --- | --- |\n{segments}\n\
          Fields in the same `at_most_one` group are mutually exclusive. Fields in an \
          `exactly_one` group require one and only one representation. Unlisted fields are rejected.\n\n\
+         A declared power or thrust fraction of zero means engine off and produces zero \
+         modeled propulsion output and fuel flow.\n\n\
          Power/thrust fractions on climb, cruise, loiter, and reserve constrain the \
          mission-power feasibility screen. Quasi-steady cruise/loiter fuel burn follows \
          the aerodynamic power required and is not scaled directly by throttle.\n\n\

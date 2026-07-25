@@ -7,7 +7,9 @@ use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::Dimension;
 use crate::domain::schema::{MissionSegment, RawMissionSegment};
 
-use super::{optional_fraction, optional_positive_quantity, optional_quantity};
+use super::{
+    optional_fraction, optional_positive_quantity, optional_quantity, optional_throttle_fraction,
+};
 
 pub(super) fn resolve_segment(raw: RawMissionSegment, index: usize) -> AexResult<MissionSegment> {
     let path = format!("mission.segments.{index}");
@@ -33,8 +35,11 @@ pub(super) fn resolve_segment(raw: RawMissionSegment, index: usize) -> AexResult
         )?,
         true_airspeed_m_s: optional_quantity(raw.true_airspeed.as_deref(), Dimension::Speed)?,
         mach: raw.mach,
-        power_fraction: optional_fraction(raw.power_fraction, &format!("{path}.power_fraction"))?,
-        thrust_fraction: optional_fraction(
+        power_fraction: optional_throttle_fraction(
+            raw.power_fraction,
+            &format!("{path}.power_fraction"),
+        )?,
+        thrust_fraction: optional_throttle_fraction(
             raw.thrust_fraction,
             &format!("{path}.thrust_fraction"),
         )?,

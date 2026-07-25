@@ -7,9 +7,8 @@ wrong in labeled ways:
 - The XLR99 rocket is forced into the turbofan deck (constant-thrust hack:
   zero altitude exponent, zero Mach coefficient, TSFC encoding Isp 279 s)
   because no rocket profile type exists.
-- Engine-off segments use `thrust_fraction: 0.01` because the schema forbids
-  exactly zero; the fake idle burns propellant during captive carry and glide
-  and corrupts the mission fuel budget.
+- Engine-off segments use `thrust_fraction: 0`, producing zero modeled thrust
+  and fuel flow while captive-carry, glide, and landing kinematics continue.
 - The captive-carry `fixed_time` altitude sets and propagates the 45,000 ft
   operating point, but there is no explicit air-launch initial state, so the
   first segment still begins from the default ground state.

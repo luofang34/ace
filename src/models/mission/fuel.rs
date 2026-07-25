@@ -24,7 +24,14 @@ pub(super) fn integrated(
     start_mass_kg: f64,
     duration_s: f64,
     mode: OperatingMode,
+    engine_off: bool,
 ) -> AexResult<FuelEvaluation> {
+    if engine_off {
+        return Ok(FuelEvaluation {
+            fuel_kg: 0.0,
+            warnings: Vec::new(),
+        });
+    }
     let steps = 24_u32;
     let step_duration = duration_s / f64::from(steps);
     let mut mass = start_mass_kg;
