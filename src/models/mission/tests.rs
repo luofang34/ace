@@ -86,8 +86,10 @@ fn x15_captive_carry_establishes_air_launch_altitude() -> Result<(), Box<dyn std
         .get(1)
         .ok_or_else(|| io::Error::other("X-15 mission has no drop result"))?;
 
+    assert!((captive.start_altitude_m - 13_716.0).abs() < 1.0e-8);
     assert!((captive.end_altitude_m - 13_716.0).abs() < 1.0e-8);
     assert!((drop.start_altitude_m - captive.end_altitude_m).abs() < 1.0e-8);
+    assert!((captive.start_mass_kg - 15_370.0).abs() < 1.0e-8);
     Ok(())
 }
 

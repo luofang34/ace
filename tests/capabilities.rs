@@ -12,6 +12,9 @@ use rmcp::model::CallToolRequestParams;
 use rmcp::transport::TokioChildProcess;
 use serde_json::{Value, json};
 
+#[path = "capabilities/initial_state.rs"]
+mod initial_state;
+
 const MISSING_OPENVSP: &str = "/path/that/does/not/contain/vspscript";
 
 fn root() -> PathBuf {
@@ -72,6 +75,7 @@ async fn cli_and_mcp_manifest_match_and_advertised_vocabulary_validates()
     validate_document_types(&client, &mcp).await?;
     validate_profile_types(&client, &mcp).await?;
     validate_segment_types(&client, &mcp).await?;
+    initial_state::validate(&client, &mcp).await?;
     validate_exclusive_segment_fields(&client).await?;
     validate_engine_off_fractions(&client).await?;
     validate_unadvertised_segment_fields(&client).await?;

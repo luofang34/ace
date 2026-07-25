@@ -32,7 +32,9 @@ pub(crate) fn evaluate(
             continue;
         };
         let altitude = segment_altitude(segment.kind, result);
-        let speed = representative_speed(segment, scenario, altitude)?;
+        let speed = result
+            .operating_speed_m_s
+            .map_or_else(|| representative_speed(segment, scenario, altitude), Ok)?;
         let mass = 0.5 * (result.start_mass_kg + result.end_mass_kg);
         let throttle = segment
             .power_fraction

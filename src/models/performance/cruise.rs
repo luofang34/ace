@@ -125,7 +125,12 @@ impl PointAnalyzer {
             self.scenario.aircraft.mass.maximum_takeoff_mass_kg,
             |result| result.start_mass_kg,
         );
-        let declared_true_airspeed_m_s = representative_speed(segment, &self.scenario, altitude_m)?;
+        let declared_true_airspeed_m_s = result
+            .and_then(|value| value.operating_speed_m_s)
+            .map_or_else(
+                || representative_speed(segment, &self.scenario, altitude_m),
+                Ok,
+            )?;
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let declared_mach = declared_true_airspeed_m_s / atmosphere.speed_of_sound_m_s;
         let evaluation = self.point(altitude_m, declared_true_airspeed_m_s, mass_kg, "clean")?;

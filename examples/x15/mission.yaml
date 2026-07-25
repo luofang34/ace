@@ -4,11 +4,13 @@ mission:
   name: X-15 Air-Launched Speed Mission (envelope-clamped)
   payload:
     mass: 250 kg
+  initial_state:
+    altitude: 45000 ft
+    fuel_mass: 8500 kg
   segments:
     - id: captive_carry
       type: fixed_time
       duration: 60 min
-      altitude: 45000 ft
       thrust_fraction: 0
     - id: drop_and_light
       type: fixed_time

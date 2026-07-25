@@ -4,8 +4,8 @@ use crate::backends::contracts::BackendDescriptor;
 use crate::domain::capabilities::{
     AeroConfigurationCapability, DocumentTypeCapability, MissionSegmentCapability,
     ProfileTypeCapability, REQUIREMENT_OPERATORS, REQUIREMENT_SEVERITIES,
-    RequirementMetricCapability, aero_configurations, document_types, mission_segments,
-    profile_types, requirement_metrics,
+    RequirementMetricCapability, SegmentFieldCapability, aero_configurations, document_types,
+    mission_initial_state_fields, mission_segments, profile_types, requirement_metrics,
 };
 #[cfg(test)]
 use crate::domain::capabilities::{MetricSource, ProfileRole, SegmentFieldRequirement};
@@ -28,6 +28,7 @@ pub(crate) struct CapabilitiesManifest {
     pub(crate) document_types: &'static [DocumentTypeCapability],
     pub(crate) profile_types: &'static [ProfileTypeCapability],
     pub(crate) configurations: &'static [AeroConfigurationCapability],
+    pub(crate) mission_initial_state_fields: &'static [SegmentFieldCapability],
     pub(crate) mission_segments: &'static [MissionSegmentCapability],
     pub(crate) requirement_metrics: &'static [RequirementMetricCapability],
     pub(crate) requirement_operators: &'static [&'static str],
@@ -57,6 +58,7 @@ fn manifest(backends: Vec<BackendDescriptor>) -> AexResult<CapabilitiesManifest>
         document_types: document_types(),
         profile_types: profile_types(),
         configurations: aero_configurations(),
+        mission_initial_state_fields: mission_initial_state_fields(),
         mission_segments: mission_segments(),
         requirement_metrics: requirement_metrics(),
         requirement_operators: &REQUIREMENT_OPERATORS,
@@ -91,6 +93,7 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
         .iter()
         .map(segment_markdown)
         .collect::<String>();
+    let initial_state_fields = initial_state_markdown(manifest.mission_initial_state_fields);
     let metrics = manifest
         .requirement_metrics
         .iter()
@@ -129,6 +132,7 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          | Type | Role |\n| --- | --- |\n{profiles}\n\
          ## Aerodynamic configurations\n\n{configurations}\n\n\
          ## Mission segments\n\n\
+         Initial-state fields: {initial_state_fields}.\n\n\
          | Type | Legal fields |\n| --- | --- |\n{segments}\n\
          Fields in the same `at_most_one` group are mutually exclusive. Fields in an \
          `exactly_one` group require one and only one representation. Unlisted fields are rejected.\n\n\
@@ -148,6 +152,15 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
 }
 
 #[cfg(test)]
+fn initial_state_markdown(fields: &[SegmentFieldCapability]) -> String {
+    fields
+        .iter()
+        .map(field_markdown)
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+#[cfg(test)]
 fn code_list(values: &[&str]) -> String {
     values
         .iter()
@@ -161,16 +174,19 @@ fn segment_markdown(segment: &MissionSegmentCapability) -> String {
     let fields = segment
         .fields
         .iter()
-        .map(|field| {
-            let requirement = field_requirement(field.requirement);
-            match field.alternative_group {
-                Some(group) => format!("`{}` ({requirement}: {group})", field.name),
-                None => format!("`{}` ({requirement})", field.name),
-            }
-        })
+        .map(field_markdown)
         .collect::<Vec<_>>()
         .join(", ");
     format!("| `{}` | {} |\n", segment.segment_type, fields)
+}
+
+#[cfg(test)]
+fn field_markdown(field: &SegmentFieldCapability) -> String {
+    let requirement = field_requirement(field.requirement);
+    match field.alternative_group {
+        Some(group) => format!("`{}` ({requirement}: {group})", field.name),
+        None => format!("`{}` ({requirement})", field.name),
+    }
 }
 
 #[cfg(test)]

@@ -5,7 +5,8 @@ use crate::domain::quantity::Dimension;
 mod mission;
 
 pub(crate) use mission::{
-    MissionSegmentCapability, SegmentFieldRequirement, mission_segment, mission_segments,
+    MissionSegmentCapability, SegmentFieldCapability, SegmentFieldRequirement,
+    mission_initial_state_fields, mission_segment, mission_segments,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

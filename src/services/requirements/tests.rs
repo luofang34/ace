@@ -1,6 +1,6 @@
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{RequirementEvaluation, RequirementStatus};
-use crate::domain::schema::Requirement;
+use crate::domain::schema::{MissionInitialState, Requirement, SegmentKind};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::models::mission::MissionSimulator;
 use crate::models::performance::PointAnalyzer;
@@ -180,5 +180,45 @@ fn altitude_limit_does_not_turn_a_power_shortfall_into_a_requirement_pass()
     assert_eq!(performance.achieved_cruise_mach, None);
     assert_eq!(performance.cruise_conditions.len(), 4);
     assert_eq!(performance.cruise_feasible, Some(false));
+    Ok(())
+}
+
+#[test]
+fn achieved_cruise_requirement_uses_the_simulated_inherited_speed()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let mut cruise = scenario
+        .mission
+        .segments
+        .iter()
+        .find(|segment| segment.kind == SegmentKind::Cruise)
+        .cloned()
+        .ok_or("missing C172 cruise segment")?;
+    cruise.distance_m = Some(1_000.0);
+    cruise.indicated_airspeed_m_s = None;
+    cruise.true_airspeed_m_s = None;
+    cruise.mach = None;
+    scenario.mission.segments = vec![cruise];
+    scenario.mission.initial_state = Some(MissionInitialState {
+        altitude_m: Some(0.0),
+        indicated_airspeed_m_s: None,
+        true_airspeed_m_s: Some(60.0),
+        mach: None,
+        fuel_fraction: Some(1.0),
+        fuel_mass_kg: None,
+    });
+
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None);
+    let cruise = evaluations
+        .iter()
+        .find(|evaluation| evaluation.id == "cruise_speed")
+        .ok_or("missing achieved cruise-speed requirement")?;
+
+    assert_eq!(performance.declared_cruise_true_airspeed_m_s, Some(60.0));
+    assert_eq!(performance.cruise_conditions.len(), 1);
+    assert!((performance.cruise_conditions[0].declared_true_airspeed_m_s - 60.0).abs() < 1.0e-8);
+    assert_eq!(cruise.resolved_status(), RequirementStatus::Pass);
     Ok(())
 }

@@ -1,6 +1,6 @@
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
-use crate::domain::result::{MissionResult, MissionSegmentResult, ModelMetadata};
+use crate::domain::result::MissionResult;
 use crate::domain::schema::{MissionSegment, ResolvedScenario, SegmentKind};
 use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
@@ -8,24 +8,23 @@ use crate::models::performance::PointAnalyzer;
 use crate::models::propulsion::OperatingMode;
 
 mod fuel;
+mod initial_state;
 mod operating_condition;
+mod record;
 
+#[cfg(test)]
+use initial_state::initial_fuel_load;
+use initial_state::{InitialMissionState, MissionState, initial_mission_state};
+use operating_condition::representative_speed_with_fallback;
 pub(crate) use operating_condition::{
     representative_speed, segment_end_altitude, segment_operating_altitude,
 };
+use record::{extend_unique_diagnostics, mission_model, scoped_segment_warnings, segment_result};
 
 #[derive(Debug, Clone)]
 pub(crate) struct MissionSimulator {
     scenario: ResolvedScenario,
     atmosphere: Isa1976,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct MissionState {
-    mass_kg: f64,
-    altitude_m: f64,
-    fuel_remaining_kg: f64,
-    payload_remaining_kg: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -35,14 +34,9 @@ struct SegmentComputation {
     distance_m: f64,
     duration_s: f64,
     end_altitude_m: f64,
+    end_speed_m_s: Option<f64>,
+    operating_speed_m_s: Option<f64>,
     warnings: Vec<Diagnostic>,
-}
-
-#[derive(Debug)]
-struct InitialFuelLoad {
-    loaded_kg: f64,
-    capacity_exceeded: bool,
-    warning: Option<Diagnostic>,
 }
 
 impl MissionSimulator {
@@ -55,24 +49,11 @@ impl MissionSimulator {
 
     pub(crate) fn simulate(&self) -> AexResult<MissionResult> {
         let aircraft = &self.scenario.aircraft;
-        let fuel_capacity = aircraft.mass.maximum_fuel_mass_kg;
-        let structural_fuel = (aircraft.mass.maximum_takeoff_mass_kg
-            - aircraft.mass.operating_empty_mass_kg
-            - self.scenario.mission.payload_mass_kg)
-            .max(0.0);
-        let InitialFuelLoad {
-            loaded_kg: initial_fuel,
+        let InitialMissionState {
+            mut state,
             capacity_exceeded,
             warning: fuel_load_warning,
-        } = initial_fuel_load(fuel_capacity.min(structural_fuel), fuel_capacity);
-        let mut state = MissionState {
-            mass_kg: aircraft.mass.operating_empty_mass_kg
-                + self.scenario.mission.payload_mass_kg
-                + initial_fuel,
-            altitude_m: 0.0,
-            fuel_remaining_kg: initial_fuel,
-            payload_remaining_kg: self.scenario.mission.payload_mass_kg,
-        };
+        } = initial_mission_state(&self.scenario)?;
         let initial_takeoff_mass = state.mass_kg;
         let mut segment_results = Vec::new();
         let mut total_distance = 0.0;
@@ -106,6 +87,7 @@ impl MissionSimulator {
             state.fuel_remaining_kg -= computation.fuel_burn_kg;
             state.payload_remaining_kg -= computation.payload_removed_kg;
             state.altitude_m = computation.end_altitude_m;
+            state.speed_m_s = computation.end_speed_m_s;
             total_distance += computation.distance_m;
             total_duration += computation.duration_s;
             total_fuel += computation.fuel_burn_kg;
@@ -162,7 +144,8 @@ impl MissionSimulator {
             .or(segment.thrust_fraction)
             .unwrap_or(0.1);
         let altitude = segment_operating_altitude(segment, state.altitude_m);
-        let speed = representative_speed(segment, &self.scenario, altitude)?;
+        let speed =
+            representative_speed_with_fallback(segment, &self.scenario, altitude, state.speed_m_s)?;
         let mode = if segment.kind == SegmentKind::Takeoff {
             OperatingMode::Takeoff
         } else {
@@ -179,6 +162,8 @@ impl MissionSimulator {
             },
             duration_s: duration,
             end_altitude_m: segment_end_altitude(segment, state.altitude_m),
+            end_speed_m_s: state.speed_m_s.map(|_| speed),
+            operating_speed_m_s: Some(speed),
             warnings: fuel_flow.warnings,
         })
     }
@@ -208,6 +193,8 @@ impl MissionSimulator {
             distance_m: 0.0,
             duration_s: 0.0,
             end_altitude_m: state.altitude_m,
+            end_speed_m_s: state.speed_m_s,
+            operating_speed_m_s: None,
             warnings: Vec::new(),
         })
     }
@@ -240,6 +227,8 @@ impl MissionSimulator {
             distance_m: 0.0,
             duration_s: 0.0,
             end_altitude_m: state.altitude_m,
+            end_speed_m_s: state.speed_m_s,
+            operating_speed_m_s: None,
             warnings: Vec::new(),
         })
     }
@@ -264,7 +253,8 @@ impl MissionSimulator {
             ));
         }
         let midpoint = segment_operating_altitude(segment, state.altitude_m);
-        let speed = representative_speed(segment, &self.scenario, midpoint)?;
+        let speed =
+            representative_speed_with_fallback(segment, &self.scenario, midpoint, state.speed_m_s)?;
         let analyzer = PointAnalyzer::new(self.scenario.clone());
         let climb = analyzer.maximum_rate_of_climb_with_diagnostics(midpoint, state.mass_kg)?;
         let throttle = segment
@@ -282,6 +272,8 @@ impl MissionSimulator {
             distance_m: speed * duration * 0.75,
             duration_s: duration,
             end_altitude_m: target,
+            end_speed_m_s: state.speed_m_s.map(|_| speed),
+            operating_speed_m_s: Some(speed),
             warnings,
         })
     }
@@ -293,7 +285,8 @@ impl MissionSimulator {
     ) -> AexResult<SegmentComputation> {
         let target = segment.target_altitude_m.unwrap_or(0.0);
         let midpoint = segment_operating_altitude(segment, state.altitude_m);
-        let speed = representative_speed(segment, &self.scenario, midpoint)?;
+        let speed =
+            representative_speed_with_fallback(segment, &self.scenario, midpoint, state.speed_m_s)?;
         let duration = (state.altitude_m - target).max(0.0) / 7.5;
         let throttle = segment
             .power_fraction
@@ -306,6 +299,8 @@ impl MissionSimulator {
             distance_m: speed * duration * 0.75,
             duration_s: duration,
             end_altitude_m: target,
+            end_speed_m_s: state.speed_m_s.map(|_| speed),
+            operating_speed_m_s: Some(speed),
             warnings: fuel_flow.warnings,
         })
     }
@@ -323,7 +318,8 @@ impl MissionSimulator {
             )
         })?;
         let altitude = segment_operating_altitude(segment, state.altitude_m);
-        let speed = representative_speed(segment, &self.scenario, altitude)?;
+        let speed =
+            representative_speed_with_fallback(segment, &self.scenario, altitude, state.speed_m_s)?;
         let duration = distance / speed;
         let fuel = fuel::integrated(
             self,
@@ -340,6 +336,8 @@ impl MissionSimulator {
             distance_m: distance,
             duration_s: duration,
             end_altitude_m: altitude,
+            end_speed_m_s: state.speed_m_s.map(|_| speed),
+            operating_speed_m_s: Some(speed),
             warnings: fuel.warnings,
         })
     }
@@ -357,7 +355,8 @@ impl MissionSimulator {
                 "loiter requires duration",
             )
         })?;
-        let speed = representative_speed(segment, &self.scenario, altitude)?;
+        let speed =
+            representative_speed_with_fallback(segment, &self.scenario, altitude, state.speed_m_s)?;
         let fuel = fuel::integrated(
             self,
             altitude,
@@ -373,6 +372,8 @@ impl MissionSimulator {
             distance_m: 0.0,
             duration_s: duration,
             end_altitude_m: altitude,
+            end_speed_m_s: state.speed_m_s.map(|_| speed),
+            operating_speed_m_s: Some(speed),
             warnings: fuel.warnings,
         })
     }
@@ -380,79 +381,6 @@ impl MissionSimulator {
 
 pub(crate) fn segment_engine_off(segment: &MissionSegment) -> bool {
     segment.power_fraction == Some(0.0) || segment.thrust_fraction == Some(0.0)
-}
-
-fn mission_model(completed: bool) -> ModelMetadata {
-    ModelMetadata {
-        model_id: "mission.quasi_steady".to_owned(),
-        model_version: "1.0.0".to_owned(),
-        fidelity_level: 1,
-        validity_status: if completed { "valid" } else { "incomplete" }.to_owned(),
-    }
-}
-
-fn initial_fuel_load(requested_kg: f64, capacity_kg: f64) -> InitialFuelLoad {
-    let capacity_exceeded = requested_kg > capacity_kg + 1.0e-8;
-    InitialFuelLoad {
-        loaded_kg: requested_kg.min(capacity_kg),
-        capacity_exceeded,
-        warning: capacity_exceeded.then(|| {
-            Diagnostic::warning(
-                WarningCode::FuelCapacityExceeded,
-                format!(
-                    "Requested initial fuel load {requested_kg} kg exceeds tank capacity \
-                     {capacity_kg} kg."
-                ),
-                "mission.initial_fuel_load",
-            )
-        }),
-    }
-}
-
-fn segment_result(
-    segment: &MissionSegment,
-    state: MissionState,
-    computation: &SegmentComputation,
-    warnings: Vec<Diagnostic>,
-) -> MissionSegmentResult {
-    MissionSegmentResult {
-        segment_id: segment.id.clone(),
-        start_mass_kg: state.mass_kg,
-        end_mass_kg: state.mass_kg - computation.fuel_burn_kg - computation.payload_removed_kg,
-        fuel_burn_kg: computation.fuel_burn_kg,
-        payload_removed_kg: computation.payload_removed_kg,
-        distance_m: computation.distance_m,
-        duration_s: computation.duration_s,
-        start_altitude_m: state.altitude_m,
-        end_altitude_m: computation.end_altitude_m,
-        warnings,
-    }
-}
-
-fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diagnostic>) {
-    for diagnostic in diagnostics {
-        if !target
-            .iter()
-            .any(|existing| existing.code == diagnostic.code && existing.path == diagnostic.path)
-        {
-            target.push(diagnostic);
-        }
-    }
-}
-
-fn scoped_segment_warnings(segment: &MissionSegment, warnings: &[Diagnostic]) -> Vec<Diagnostic> {
-    warnings
-        .iter()
-        .cloned()
-        .map(|mut warning| {
-            let base = format!("mission.segments.{}", segment.id);
-            warning.path = warning
-                .path
-                .as_deref()
-                .map_or_else(|| Some(base.clone()), |path| Some(format!("{base}.{path}")));
-            warning
-        })
-        .collect()
 }
 
 #[cfg(test)]

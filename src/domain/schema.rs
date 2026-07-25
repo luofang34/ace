@@ -11,7 +11,8 @@ use crate::domain::topology::{AircraftTopology, RawAircraftTopology};
 mod mission;
 
 pub(crate) use mission::{
-    Mission, MissionDocument, MissionSegment, RawMissionSegment, SegmentKind,
+    Mission, MissionDocument, MissionInitialState, MissionSegment, RawMissionInitialState,
+    RawMissionSegment, SegmentKind,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

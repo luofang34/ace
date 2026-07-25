@@ -4,8 +4,11 @@ Evaluated 2026-07-24 by driving the CLI and MCP server end-to-end on four
 airframes: the two shipped calibration examples (C172-class, B777-300ER-class)
 and two deliberately out-of-envelope stress cases authored for this evaluation
 (`examples/sr71/`, `examples/x15/`). All numbers below come from recorded runs.
+The verdict, result table, and ranked flaws preserve the original evaluation
+observations. The deterministic fixture contract records the guarded behavior
+implemented since that evaluation.
 
-**Verdict:** the tool produces genuinely sensible designs inside its envelope
+**Original verdict:** the tool produces genuinely sensible designs inside its envelope
 (C172 pass, 777 pass with ~15–20% fuel optimism), can fake one design point
 outside it (SR-71 cruise closes only after lying to the schema in four
 labeled places), and cannot represent the X-15 at all — but never says
@@ -23,7 +26,7 @@ object, and fix warning/metric plumbing so an eager LLM cannot be lied to.
 | C172 | All hard requirements pass; soft ceiling requirement honestly fails by 3.7% | 86 kg fuel / 383 nmi ≈ 9.4 gph at 65% — right. Stall 45 kt, L/D 11.9 — right. |
 | 777-300ER | All requirements pass, 7,490 nmi | Trip fuel 104.7 t is ~15–20% low; climb to FL350 takes 10 min / 2.8 t (real: ~22 min / ~8 t). The simplified climb model is the main error source. |
 | SR-71 | Authentic mission (78 kft): hard crash. Clamped to 64 kft: "completed", all hard requirements pass | Cruise point right by construction (24 t/hr at M3.2 — matches). Everything off-design is garbage: subsonic leg burns 11.6 t/hr (~3× real), landed with 7 kg of fuel, no warning about either. The fixture also raises fuel capacity from NASA's 80,280 lb (36,414 kg) figure to 46,180 kg because the model cannot represent operational post-takeoff refueling. |
-| X-15 | Resolve-time unsupported | Rocket profile type rejected; captive-carry altitude establishes a 45,000 ft operating point but no explicit initial state exists; engine-off phases have zero thrust and fuel flow; declared Mach and altitude exceed registered model domains. |
+| X-15 | Authentic rocket profile rejected; a low-fidelity stand-in reports completion | The schema cannot represent an air launch or engine-off flight, and the simplified climb reaches 19,812 m in 17 s before the run produces an invalid passing result. |
 
 ## What works well for an LLM
 
@@ -44,10 +47,10 @@ the authentic SR-71 and X-15 scenarios fail during resolve-time model-domain
 preflight with `MODEL_DOMAIN_UNSUPPORTED` and all known violating declaration
 paths. A direct X-15 simulator regression separately exercises the
 low-fidelity mission vocabulary: engine-off captive carry, glide, and landing
-burn exactly zero fuel, retain their kinematics, and do not report
-`FUEL_EXHAUSTED`.
+burn exactly zero fuel, retain their kinematics, inherit the explicit 45,000
+ft initial state, and do not report `FUEL_EXHAUSTED`.
 
-## Flaws, ranked by how badly they mislead an LLM
+## Original flaws, ranked by how badly they misled an LLM
 
 1. **Strict mode is path-dependent.** `analyze point --strict` at M3.2 fails
    with `STRICT_WARNING_FAILURE` (polar extrapolation); the same aircraft at
@@ -80,11 +83,10 @@ burn exactly zero fuel, retain their kinematics, and do not report
    "Validity" is the profile author's self-declared Mach/altitude box, not
    the calibration domain.
 7. **The mission schema still lacks real flight phases.**
-   `thrust_fraction: 0` represents engine-off flight with zero fuel flow and
-   no powered-feasibility point. `altitude` on a `fixed_time` segment controls
-   its operating point and propagates to the next segment. No explicit initial
-   state / air launch or acceleration segment exists, and climb rate is
-   unclamped.
+   There is no engine-off segment, mission initial state, or combined
+   acceleration/climb segment, and legacy climb rate is unclamped. The X-15
+   therefore cannot express its air launch or glide phases and reaches
+   19,812 m in 17 seconds under the low-fidelity stand-in.
 8. **Error and response ergonomics fight the agent.** MCP domain failures
    surface as JSON-RPC -32603 protocol errors, not `isError` tool results,
    losing path/context. CLI errors under `--format json` are Rust Debug text

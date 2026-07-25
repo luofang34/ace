@@ -1,14 +1,15 @@
 use crate::domain::diagnostic::{AexError, AexResult};
-use crate::domain::schema::{MissionSegment, ResolvedScenario, SegmentKind};
+use crate::domain::schema::ResolvedScenario;
 use crate::domain::validity::{
     ModelDomainViolation, ModelValidityDomain, ValidityBound, ValidityVariable,
 };
-use crate::models::mission::{segment_end_altitude, segment_operating_altitude};
 use crate::models::validity::{ModelDomainRole, scenario_domain_registrations};
 
+mod mission;
 mod speed;
 
-use speed::{EffectiveSpeed, effective_segment_speed, effective_speed};
+use mission::mission_declarations;
+use speed::{EffectiveSpeed, effective_speed};
 
 #[derive(Debug)]
 struct Declaration {
@@ -187,49 +188,6 @@ fn push_optional_limit(
     push_scopes(values, scopes, variable, path, value);
 }
 
-fn mission_declarations(
-    scenario: &ResolvedScenario,
-    values: &mut Vec<Declaration>,
-) -> AexResult<()> {
-    push_scopes(
-        values,
-        &[ModelDomainRole::Aerodynamics, ModelDomainRole::Structure],
-        ValidityVariable::Mass,
-        "mission.payload.mass",
-        scenario.mission.payload_mass_kg,
-    );
-    let mut current_altitude_m = 0.0;
-    for segment in &scenario.mission.segments {
-        let root = format!("mission.segments.{}", segment.id);
-        push_segment_altitude(values, &root, "altitude", segment.altitude_m);
-        push_segment_altitude(values, &root, "target_altitude", segment.target_altitude_m);
-        push_mission_segment_speed(values, &root, segment, scenario, current_altitude_m)?;
-        push_segment_mass(values, &root, "fuel_mass", segment.fuel_mass_kg);
-        push_segment_mass(values, &root, "payload_mass", segment.payload_mass_kg);
-        current_altitude_m = segment_end_altitude(segment, current_altitude_m);
-    }
-    Ok(())
-}
-
-fn push_mission_segment_speed(
-    values: &mut Vec<Declaration>,
-    root: &str,
-    segment: &MissionSegment,
-    scenario: &ResolvedScenario,
-    current_altitude_m: f64,
-) -> AexResult<()> {
-    if matches!(
-        segment.kind,
-        SegmentKind::FixedFuel | SegmentKind::PayloadDrop
-    ) {
-        return Ok(());
-    }
-    let altitude_m = segment_operating_altitude(segment, current_altitude_m);
-    let speed = effective_segment_speed(segment, scenario, altitude_m)?;
-    push_effective_speed(values, root, speed);
-    Ok(())
-}
-
 fn push_effective_speed(values: &mut Vec<Declaration>, root: &str, speed: Option<EffectiveSpeed>) {
     let Some(speed) = speed else {
         return;
@@ -249,33 +207,6 @@ fn push_effective_speed(values: &mut Vec<Declaration>, root: &str, speed: Option
         speed.mach,
         ValidityVariable::Mach,
         &[ModelDomainRole::Aerodynamics, ModelDomainRole::Propulsion],
-    );
-}
-
-fn push_segment_altitude(
-    values: &mut Vec<Declaration>,
-    root: &str,
-    field: &str,
-    value: Option<f64>,
-) {
-    push_segment_value(
-        values,
-        root,
-        field,
-        value,
-        ValidityVariable::Altitude,
-        &[ModelDomainRole::Atmosphere, ModelDomainRole::Propulsion],
-    );
-}
-
-fn push_segment_mass(values: &mut Vec<Declaration>, root: &str, field: &str, value: Option<f64>) {
-    push_segment_value(
-        values,
-        root,
-        field,
-        value,
-        ValidityVariable::Mass,
-        &[ModelDomainRole::Aerodynamics, ModelDomainRole::Structure],
     );
 }
 
