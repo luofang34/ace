@@ -1,10 +1,12 @@
 use std::collections::BTreeMap;
 
+use crate::domain::evidence::{ConstraintStatus, EvidenceConstraint};
 use crate::domain::quantity::QuantityOutput;
-use crate::domain::result::RequirementEvaluation;
+use crate::domain::result::{RequirementEvaluation, RequirementStatus};
 use crate::domain::schema::Requirement;
+use crate::domain::validity::MetricValidity;
 
-use super::insert_metric_aliases;
+use super::{candidate_is_feasible, insert_metric_aliases};
 
 fn declared_requirement(id: &str, severity: &str) -> Requirement {
     Requirement {
@@ -25,7 +27,13 @@ fn evaluated_requirement(id: &str, severity: &str, passed: bool) -> RequirementE
         actual: QuantityOutput::si(10.0, "m"),
         required: QuantityOutput::si(5.0, "m"),
         operator: "ge".to_owned(),
-        passed,
+        status: Some(if passed {
+            RequirementStatus::Pass
+        } else {
+            RequirementStatus::Fail
+        }),
+        passed: Some(passed),
+        validity: MetricValidity::default(),
         absolute_margin: 5.0,
         percentage_margin: Some(100.0),
         severity: severity.to_owned(),
@@ -56,4 +64,31 @@ fn study_headline_metric_is_gated_by_mission_completion() {
     )]);
     insert_metric_aliases(&mut completed, &declared, &evaluations);
     assert_eq!(completed["feasibility.hard_constraints_passed"].value, 1.0);
+}
+
+#[test]
+fn hard_indeterminate_requirement_cannot_be_feasible() {
+    let declared = [declared_requirement("ceiling", "hard")];
+    let mut evaluation = evaluated_requirement("ceiling", "hard", true);
+    evaluation.status = Some(RequirementStatus::Indeterminate);
+    evaluation.passed = None;
+    let constraint = EvidenceConstraint {
+        id: "ceiling".to_owned(),
+        metric: "performance.service_ceiling".to_owned(),
+        status: ConstraintStatus::Indeterminate,
+        severity: "hard".to_owned(),
+        actual: Some(QuantityOutput::si(19_900.0, "m")),
+        required: Some(QuantityOutput::si(24_384.0, "m")),
+        operator: "ge".to_owned(),
+        normalized_violation: 1.0,
+    };
+
+    assert!(!candidate_is_feasible(
+        &declared,
+        &[evaluation],
+        true,
+        true,
+        &[constraint],
+        true,
+    ));
 }

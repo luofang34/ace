@@ -125,6 +125,28 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
     }
 
     let sr71 = fixture_path("sr71", "scenario.yaml");
+    let performance = successful_json(
+        temporary.path(),
+        &[
+            "analyze",
+            "performance",
+            &sr71.to_string_lossy(),
+            "--format",
+            "json",
+        ],
+    )?;
+    assert_eq!(
+        performance["result"]["metric_validity"]["performance.service_ceiling"]["status"],
+        "boundary_limited"
+    );
+    assert_eq!(
+        performance["result"]["metric_validity"]["performance.maximum_level_speed"]["status"],
+        "extrapolated"
+    );
+    assert_eq!(
+        performance["result"]["model"]["validity_status"],
+        "boundary_limited"
+    );
     let output = command(temporary.path())
         .args([
             "analyze",

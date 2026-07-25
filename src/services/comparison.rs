@@ -7,6 +7,7 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{GRAVITY_M_S2, QuantityOutput};
 use crate::domain::result::ResultProvenance;
 use crate::domain::schema::EngineProfile;
+use crate::domain::validity::MetricValidity;
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 
@@ -21,6 +22,8 @@ pub(crate) struct ScenarioComparison {
 pub(crate) struct ComparisonRow {
     pub(crate) scenario_id: String,
     pub(crate) metrics: BTreeMap<String, QuantityOutput>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
 }
 
 impl ApplicationService {
@@ -59,6 +62,15 @@ impl ApplicationService {
             rows.push(ComparisonRow {
                 scenario_id: scenario.id,
                 metrics: values,
+                metric_validity: metrics
+                    .iter()
+                    .filter_map(|metric| {
+                        performance
+                            .metric_validity
+                            .get(metric)
+                            .map(|validity| (metric.clone(), validity.clone()))
+                    })
+                    .collect(),
             });
         }
         if propulsion_kinds.windows(2).any(|pair| pair[0] != pair[1]) {

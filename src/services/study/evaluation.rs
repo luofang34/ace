@@ -1,4 +1,5 @@
 mod constraints;
+mod validity;
 mod verdict;
 use std::collections::BTreeMap;
 
@@ -14,10 +15,10 @@ use crate::domain::evidence::{
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::study::StudyDefinition;
-use crate::domain::validity::ModelValidityDomain;
 use crate::services::analysis::ApplicationService;
 use crate::services::study::loading::PreparedStudy;
 
+use validity::{combined_domains, recorded_metrics};
 use verdict::{candidate_is_feasible, insert_metric_aliases};
 
 const FAILED_RANK: f64 = 1.0e12;
@@ -73,7 +74,7 @@ pub(super) fn evaluate_candidate_blocking(
 }
 
 pub(super) fn evaluator_signature() -> String {
-    format!("native-study-evidence-v7:{}", env!("CARGO_PKG_VERSION"))
+    format!("native-study-evidence-v8:{}", env!("CARGO_PKG_VERSION"))
 }
 
 fn evaluate_native_blocking(
@@ -109,6 +110,7 @@ fn evaluate_native_blocking(
         &analysis.failed_constraints,
         &prepared.document.study.constraints,
         &metrics,
+        &analysis.metric_validity,
     )?;
     let mut diagnostics = geometry.provenance.warnings.clone();
     diagnostics.extend(analysis.provenance.warnings.clone());
@@ -135,6 +137,7 @@ fn evaluate_native_blocking(
         status,
         analysis: evidence_analysis(&scenario),
         results: EvidenceResults {
+            metric_validity: recorded_metrics(&metrics, &analysis.metric_validity),
             metrics,
             constraints,
             diagnostics,
@@ -449,6 +452,7 @@ fn failed_evaluation(
         },
         results: EvidenceResults {
             metrics: BTreeMap::new(),
+            metric_validity: BTreeMap::new(),
             constraints: Vec::new(),
             diagnostics: vec![Diagnostic {
                 code: "CANDIDATE_EVALUATION_FAILED".to_owned(),
@@ -481,20 +485,5 @@ fn failed_evaluation(
     })
 }
 
-fn combined_domains(
-    first: &[ModelValidityDomain],
-    second: &[ModelValidityDomain],
-) -> Vec<ModelValidityDomain> {
-    let mut domains = Vec::new();
-    for domain in first.iter().chain(second) {
-        if !domains
-            .iter()
-            .any(|existing: &ModelValidityDomain| existing.model_id == domain.model_id)
-        {
-            domains.push(domain.clone());
-        }
-    }
-    domains
-}
 #[cfg(test)]
 mod tests;

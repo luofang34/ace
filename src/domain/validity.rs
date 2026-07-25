@@ -81,6 +81,67 @@ pub(crate) trait ValidityDomainProvider {
     fn validity_domain(&self) -> ModelValidityDomain;
 }
 
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum ValidityStatus {
+    #[default]
+    Valid,
+    BoundaryLimited,
+    Extrapolated,
+}
+
+impl ValidityStatus {
+    pub(crate) fn wire_name(self) -> &'static str {
+        match self {
+            Self::Valid => "valid",
+            Self::BoundaryLimited => "boundary_limited",
+            Self::Extrapolated => "extrapolated",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq, Eq)]
+pub(crate) struct MetricValidity {
+    pub(crate) status: ValidityStatus,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) boundary: Option<String>,
+}
+
+impl MetricValidity {
+    pub(crate) fn boundary_limited(boundary: &str) -> Self {
+        Self {
+            status: ValidityStatus::BoundaryLimited,
+            boundary: Some(boundary.to_owned()),
+        }
+    }
+
+    pub(crate) fn extrapolated() -> Self {
+        Self {
+            status: ValidityStatus::Extrapolated,
+            boundary: None,
+        }
+    }
+
+    pub(crate) fn validate(&self, path: &str) -> AexResult<()> {
+        let valid_boundary = match self.status {
+            ValidityStatus::BoundaryLimited => self
+                .boundary
+                .as_deref()
+                .is_some_and(|boundary| !boundary.trim().is_empty()),
+            ValidityStatus::Valid | ValidityStatus::Extrapolated => self.boundary.is_none(),
+        };
+        if valid_boundary {
+            Ok(())
+        } else {
+            Err(AexError::validation(
+                "INVALID_METRIC_VALIDITY",
+                path,
+                "only boundary-limited metrics require a non-empty boundary source",
+            ))
+        }
+    }
+}
+
 fn validate_bound(bound: &ValidityBound) -> AexResult<()> {
     if bound.unit != bound.variable.unit()
         || bound.minimum.is_none() && bound.maximum.is_none()

@@ -167,6 +167,16 @@ a basis such as `published_specification`, `model_form`, `resolved_profile`, or
 readers. Omitted typed domains default to an empty list and empty lists are not
 serialized, preserving schema-version-1 stored-record identities.
 
+Bounded performance metrics carry additive `metric_validity` entries with
+`valid`, `extrapolated`, or `boundary_limited` status. Boundary-limited entries
+also identify the search or model boundary. Requirement evaluations expose
+`status: pass|fail|indeterminate`; the compatibility field `passed` is a
+boolean for pass/fail and `null` for indeterminate. A boundary-limited actual
+always makes its requirement indeterminate. Omitted validity metadata defaults
+to valid, and stored boolean-only requirement results remain readable.
+Indeterminate hard constraints are infeasible and retain positive normalized
+violation in study evidence.
+
 Archive workflow data is additive and defaults to empty, so schema-version-1
 archives without it remain valid. A checkpoint records the completed
 generation, deterministic random-number state after population construction,

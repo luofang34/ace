@@ -7,6 +7,7 @@ use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{MissionPowerScreen, RequirementEvaluation, StructuralScreen};
 use crate::domain::schema::ResolvedScenario;
+use crate::domain::validity::MetricValidity;
 
 pub(crate) use crate::domain::result::ResultProvenance;
 
@@ -71,6 +72,8 @@ pub(crate) struct StabilitySummary {
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct AnalysisOutput {
     pub(crate) metrics: BTreeMap<String, QuantityOutput>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     pub(crate) polar: Vec<PolarPoint>,
     pub(crate) stability: StabilitySummary,
     pub(crate) structural_screen: Option<StructuralScreen>,

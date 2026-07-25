@@ -7,7 +7,7 @@ use crate::domain::content_identity::{
 };
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
-use crate::domain::validity::ModelValidityDomain;
+use crate::domain::validity::{MetricValidity, ModelValidityDomain};
 
 pub(crate) mod archive;
 mod workflow;
@@ -194,6 +194,8 @@ pub(crate) struct EvidenceAnalysis {
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub(crate) struct EvidenceResults {
     pub(crate) metrics: BTreeMap<String, QuantityOutput>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     pub(crate) constraints: Vec<EvidenceConstraint>,
     pub(crate) diagnostics: Vec<Diagnostic>,
 }
@@ -313,6 +315,16 @@ fn validate_analysis(analysis: &EvidenceAnalysis) -> AexResult<()> {
 fn validate_results(results: &EvidenceResults) -> AexResult<()> {
     for (metric, quantity) in &results.metrics {
         validate_quantity(quantity, &format!("evidence.results.metrics.{metric}"))?;
+    }
+    for (metric, validity) in &results.metric_validity {
+        if !results.metrics.contains_key(metric) {
+            return Err(AexError::validation(
+                "ORPHANED_METRIC_VALIDITY",
+                format!("evidence.results.metric_validity.{metric}"),
+                "metric validity metadata must refer to a recorded metric",
+            ));
+        }
+        validity.validate(&format!("evidence.results.metric_validity.{metric}"))?;
     }
     let mut ids = BTreeSet::new();
     for constraint in &results.constraints {

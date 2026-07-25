@@ -4,18 +4,20 @@ use crate::domain::content_identity::digest_serializable;
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::evidence::{ConstraintStatus, EvidenceConstraint};
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
-use crate::domain::result::RequirementEvaluation;
+use crate::domain::result::{RequirementEvaluation, RequirementStatus};
 use crate::domain::study::StudyConstraint;
+use crate::domain::validity::{MetricValidity, ValidityStatus};
 
 pub(super) fn collect(
     requirements: &[RequirementEvaluation],
     failed_model_constraints: &[String],
     study_constraints: &[StudyConstraint],
     metrics: &BTreeMap<String, QuantityOutput>,
+    metric_validity: &BTreeMap<String, MetricValidity>,
 ) -> AexResult<Vec<EvidenceConstraint>> {
     let mut constraints = requirement_constraints(requirements);
     constraints.extend(model_constraints(failed_model_constraints, &constraints)?);
-    for additional in additional_constraints(study_constraints, metrics)? {
+    for additional in additional_constraints(study_constraints, metrics, metric_validity)? {
         if let Some(index) = constraints
             .iter()
             .position(|constraint| constraint.id == additional.id)
@@ -34,19 +36,21 @@ fn requirement_constraints(requirements: &[RequirementEvaluation]) -> Vec<Eviden
         .map(|requirement| EvidenceConstraint {
             id: requirement.id.clone(),
             metric: requirement.metric.clone(),
-            status: if requirement.passed {
-                ConstraintStatus::Pass
-            } else {
-                ConstraintStatus::Fail
+            status: match requirement.resolved_status() {
+                RequirementStatus::Pass => ConstraintStatus::Pass,
+                RequirementStatus::Fail => ConstraintStatus::Fail,
+                RequirementStatus::Indeterminate => ConstraintStatus::Indeterminate,
             },
             severity: requirement.severity.clone(),
             actual: Some(requirement.actual.clone()),
             required: Some(requirement.required.clone()),
             operator: requirement.operator.clone(),
-            normalized_violation: if requirement.passed {
-                0.0
-            } else {
-                -requirement.absolute_margin / requirement.required.value.abs().max(1.0e-12)
+            normalized_violation: match requirement.resolved_status() {
+                RequirementStatus::Pass => 0.0,
+                RequirementStatus::Fail => {
+                    -requirement.absolute_margin / requirement.required.value.abs().max(1.0e-12)
+                }
+                RequirementStatus::Indeterminate => 1.0,
             },
         })
         .collect()
@@ -105,16 +109,18 @@ fn model_constraint_id(id: &str) -> AexResult<String> {
 fn additional_constraints(
     constraints: &[StudyConstraint],
     metrics: &BTreeMap<String, QuantityOutput>,
+    metric_validity: &BTreeMap<String, MetricValidity>,
 ) -> AexResult<Vec<EvidenceConstraint>> {
     constraints
         .iter()
-        .map(|constraint| additional_constraint(constraint, metrics))
+        .map(|constraint| additional_constraint(constraint, metrics, metric_validity))
         .collect()
 }
 
 fn additional_constraint(
     constraint: &StudyConstraint,
     metrics: &BTreeMap<String, QuantityOutput>,
+    metric_validity: &BTreeMap<String, MetricValidity>,
 ) -> AexResult<EvidenceConstraint> {
     let Some(actual) = metrics.get(&constraint.metric) else {
         return Ok(EvidenceConstraint {
@@ -129,6 +135,21 @@ fn additional_constraint(
         });
     };
     let required_value = parse_required(&constraint.value, &actual.unit)?;
+    if metric_validity
+        .get(&constraint.metric)
+        .is_some_and(|validity| validity.status == ValidityStatus::BoundaryLimited)
+    {
+        return Ok(EvidenceConstraint {
+            id: constraint.id.clone(),
+            metric: constraint.metric.clone(),
+            status: ConstraintStatus::Indeterminate,
+            severity: constraint.severity.clone(),
+            actual: Some(actual.clone()),
+            required: Some(QuantityOutput::si(required_value, &actual.unit)),
+            operator: constraint.operator.clone(),
+            normalized_violation: constraint.weight,
+        });
+    }
     let margin = constraint_margin(actual.value, required_value, &constraint.operator)?;
     let passed = constraint_passed(actual.value, required_value, &constraint.operator, margin);
     Ok(EvidenceConstraint {

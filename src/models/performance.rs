@@ -1,13 +1,29 @@
+use std::collections::BTreeMap;
+
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{FOOT_M, GRAVITY_M_S2};
 use crate::domain::result::{PerformanceSummary, PointPerformanceResult};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
+use crate::domain::validity::MetricValidity;
 use crate::models::aerodynamics::{
     FlightCondition, evaluate as evaluate_aerodynamics, maximum_lift_to_drag_ratio,
     minimum_drag_speed_m_s, minimum_power_speed_m_s, stall_speed_m_s,
 };
 use crate::models::atmosphere::Isa1976;
 use crate::models::propulsion::{OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion};
+
+mod solver;
+mod validity;
+
+use solver::{bounded_root, bracket_roots};
+use validity::{
+    aggregate as aggregate_validity, altitude_upper_bound, from_warnings as validity_from_warnings,
+    speed_upper_bound,
+};
+
+const MAXIMUM_SPEED_METRIC: &str = "performance.maximum_level_speed";
+const SERVICE_CEILING_METRIC: &str = "performance.service_ceiling";
+const ABSOLUTE_CEILING_METRIC: &str = "performance.absolute_ceiling";
 
 #[derive(Debug, Clone)]
 pub(crate) struct PointAnalyzer {
@@ -20,12 +36,19 @@ pub(crate) struct ClimbRateEvaluation {
     pub(crate) speed_m_s: f64,
     pub(crate) maximum_rate_m_s: f64,
     pub(crate) warnings: Vec<Diagnostic>,
+    validity: MetricValidity,
 }
 
 #[derive(Debug)]
 struct ExcessPowerEvaluation {
     value_w: f64,
     warnings: Vec<Diagnostic>,
+}
+
+#[derive(Debug)]
+struct SolvedMetric {
+    value: f64,
+    validity: MetricValidity,
 }
 
 impl PointAnalyzer {
@@ -140,13 +163,22 @@ impl PointAnalyzer {
             mass,
             sea_level.density_kg_m3,
         )?;
-        let maximum_speed = self.maximum_level_speed(0.0, mass)?;
+        let maximum_speed = self.maximum_level_speed_solution(0.0, mass)?;
         let threshold = match self.scenario.engine {
             EngineProfile::Piston(_) => 100.0 * FOOT_M / 60.0,
             EngineProfile::Turbofan(_) => 500.0 * FOOT_M / 60.0,
         };
-        let service_ceiling = self.ceiling(mass, threshold)?;
-        let absolute_ceiling = self.ceiling(mass, 0.0)?;
+        let service_ceiling = self.ceiling_solution(mass, threshold)?;
+        let absolute_ceiling = self.ceiling_solution(mass, 0.0)?;
+        let metric_validity = BTreeMap::from([
+            (MAXIMUM_SPEED_METRIC.to_owned(), maximum_speed.validity),
+            (SERVICE_CEILING_METRIC.to_owned(), service_ceiling.validity),
+            (
+                ABSOLUTE_CEILING_METRIC.to_owned(),
+                absolute_ceiling.validity,
+            ),
+        ]);
+        let overall_validity = aggregate_validity(metric_validity.values());
         Ok(PerformanceSummary {
             stall_speed_clean_m_s: stall_clean,
             stall_speed_landing_m_s: stall_landing,
@@ -161,15 +193,16 @@ impl PointAnalyzer {
                 &self.scenario.aircraft,
                 "clean",
             )?,
-            maximum_level_speed_m_s: maximum_speed,
-            service_ceiling_m: service_ceiling,
-            absolute_ceiling_m: absolute_ceiling,
+            maximum_level_speed_m_s: maximum_speed.value,
+            service_ceiling_m: service_ceiling.value,
+            absolute_ceiling_m: absolute_ceiling.value,
             cruise_mach: mission_cruise_mach(&self.scenario),
+            metric_validity,
             model: crate::domain::result::ModelMetadata {
                 model_id: "performance.point_envelope".to_owned(),
                 model_version: "1.0.0".to_owned(),
                 fidelity_level: 1,
-                validity_status: "valid".to_owned(),
+                validity_status: overall_validity.wire_name().to_owned(),
             },
             warnings: vec![Diagnostic::limitation(
                 "Ceilings use quasi-steady maximum excess-power sampling.",
@@ -177,7 +210,11 @@ impl PointAnalyzer {
         })
     }
 
-    pub(crate) fn maximum_level_speed(&self, altitude_m: f64, mass_kg: f64) -> AexResult<f64> {
+    fn maximum_level_speed_solution(
+        &self,
+        altitude_m: f64,
+        mass_kg: f64,
+    ) -> AexResult<SolvedMetric> {
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let stall = stall_speed_m_s(
             &self.scenario.aircraft,
@@ -185,15 +222,40 @@ impl PointAnalyzer {
             mass_kg,
             atmosphere.density_kg_m3,
         )?;
+        let lower = stall * 1.05;
         let upper = speed_upper_bound(&self.scenario, &atmosphere);
-        let roots = bracket_roots(stall * 1.05, upper, 180, |speed| {
+        let roots = bracket_roots(lower, upper.value, 180, |speed| {
             self.excess_power_at(altitude_m, speed, mass_kg, OperatingMode::Cruise, 1.0)
         })?;
         if let Some(root) = roots.last().copied() {
-            return Ok(root);
+            let validity = if (upper.value - root).abs() <= 1.0e-4 {
+                upper.validity()
+            } else if (root - lower).abs() <= 1.0e-4 {
+                MetricValidity::boundary_limited("performance.maximum_speed_search.minimum")
+            } else {
+                validity_from_warnings(
+                    &self
+                        .excess_power_evaluation(
+                            altitude_m,
+                            root,
+                            mass_kg,
+                            OperatingMode::Cruise,
+                            1.0,
+                        )?
+                        .warnings,
+                )
+            };
+            return Ok(SolvedMetric {
+                value: root,
+                validity,
+            });
         }
-        if self.excess_power_at(altitude_m, upper, mass_kg, OperatingMode::Cruise, 1.0)? > 0.0 {
-            return Ok(upper);
+        if self.excess_power_at(altitude_m, upper.value, mass_kg, OperatingMode::Cruise, 1.0)? > 0.0
+        {
+            return Ok(SolvedMetric {
+                value: upper.value,
+                validity: upper.validity(),
+            });
         }
         Err(AexError::analysis(
             "NO_MAXIMUM_SPEED_INTERSECTION",
@@ -225,10 +287,12 @@ impl PointAnalyzer {
         let upper = speed_upper_bound(&self.scenario, &atmosphere);
         let mut best_speed = stall * 1.2;
         let mut best_rate = f64::NEG_INFINITY;
+        let mut best_index = 0;
+        let mut best_validity = MetricValidity::default();
         let mut warnings = Vec::new();
         for index in 0..100 {
             let fraction = f64::from(index) / 99.0;
-            let speed = stall * 1.05 + fraction * (upper - stall * 1.05);
+            let speed = stall * 1.05 + fraction * (upper.value - stall * 1.05);
             let evaluation = self.excess_power_evaluation(
                 altitude_m,
                 speed,
@@ -236,41 +300,59 @@ impl PointAnalyzer {
                 OperatingMode::Climb,
                 1.0,
             )?;
-            extend_unique_diagnostics(&mut warnings, evaluation.warnings);
+            let validity = validity_from_warnings(&evaluation.warnings);
             let rate = evaluation.value_w / (mass_kg * GRAVITY_M_S2);
             if rate > best_rate {
                 best_rate = rate;
                 best_speed = speed;
+                best_index = index;
+                best_validity = validity;
             }
+            extend_unique_diagnostics(&mut warnings, evaluation.warnings);
         }
+        let validity = if best_index == 0 {
+            MetricValidity::boundary_limited("performance.climb_speed_search.minimum")
+        } else if best_index == 99 {
+            upper.validity()
+        } else {
+            best_validity
+        };
         Ok(ClimbRateEvaluation {
             speed_m_s: best_speed,
             maximum_rate_m_s: best_rate,
             warnings,
+            validity,
         })
     }
 
-    pub(crate) fn ceiling(&self, mass_kg: f64, threshold_m_s: f64) -> AexResult<f64> {
-        let maximum_altitude = self
-            .scenario
-            .aircraft
-            .limits
-            .maximum_operating_altitude_m
-            .unwrap_or(19_900.0)
-            .min(19_900.0);
+    fn ceiling_solution(&self, mass_kg: f64, threshold_m_s: f64) -> AexResult<SolvedMetric> {
+        let upper = altitude_upper_bound(&self.scenario);
         let function = |altitude| {
             self.maximum_rate_of_climb(altitude, mass_kg)
                 .map(|(_, rate)| rate - threshold_m_s)
         };
         let sea_level = function(0.0)?;
         if sea_level <= 0.0 {
-            return Ok(0.0);
+            return Ok(SolvedMetric {
+                value: 0.0,
+                validity: MetricValidity::boundary_limited(
+                    "performance.ceiling_search.minimum_altitude",
+                ),
+            });
         }
-        let top = function(maximum_altitude)?;
-        if top > 0.0 {
-            return Ok(maximum_altitude);
+        let top = function(upper.value)?;
+        if top >= 0.0 {
+            return Ok(SolvedMetric {
+                value: upper.value,
+                validity: upper.validity(),
+            });
         }
-        bounded_root(0.0, maximum_altitude, 1.0, 80, function)
+        let value = bounded_root(0.0, upper.value, 1.0, 80, function)?;
+        let evaluation = self.maximum_rate_of_climb_with_diagnostics(value, mass_kg)?;
+        Ok(SolvedMetric {
+            value,
+            validity: evaluation.validity,
+        })
     }
 
     pub(crate) fn excess_power_at(
@@ -345,80 +427,6 @@ fn extend_unique_diagnostics(target: &mut Vec<Diagnostic>, diagnostics: Vec<Diag
             target.push(diagnostic);
         }
     }
-}
-
-fn speed_upper_bound(
-    scenario: &ResolvedScenario,
-    atmosphere: &crate::domain::result::AtmosphereState,
-) -> f64 {
-    let mach_limit = scenario
-        .aircraft
-        .limits
-        .maximum_operating_mach
-        .unwrap_or(0.95)
-        * atmosphere.speed_of_sound_m_s;
-    scenario
-        .aircraft
-        .limits
-        .maximum_operating_speed_m_s
-        .unwrap_or(mach_limit)
-        .min(mach_limit)
-}
-
-fn bracket_roots<F>(start: f64, stop: f64, count: u32, function: F) -> AexResult<Vec<f64>>
-where
-    F: Fn(f64) -> AexResult<f64>,
-{
-    let mut roots = Vec::new();
-    let mut left = start;
-    let mut left_value = function(left)?;
-    for index in 1..=count {
-        let right = start + f64::from(index) * (stop - start) / f64::from(count);
-        let right_value = function(right)?;
-        if left_value * right_value <= 0.0 {
-            roots.push(bounded_root(left, right, 1.0e-5, 80, &function)?);
-        }
-        left = right;
-        left_value = right_value;
-    }
-    Ok(roots)
-}
-
-fn bounded_root<F>(
-    mut lower: f64,
-    mut upper: f64,
-    tolerance: f64,
-    iterations: u32,
-    function: F,
-) -> AexResult<f64>
-where
-    F: Fn(f64) -> AexResult<f64>,
-{
-    let mut lower_value = function(lower)?;
-    let upper_value = function(upper)?;
-    if lower_value * upper_value > 0.0 {
-        return Err(AexError::analysis(
-            "ROOT_NOT_BRACKETED",
-            format!("function has the same sign at {lower} and {upper}"),
-        ));
-    }
-    for _ in 0..iterations {
-        let midpoint = 0.5 * (lower + upper);
-        let midpoint_value = function(midpoint)?;
-        if (upper - lower).abs() <= tolerance {
-            return Ok(midpoint);
-        }
-        if lower_value * midpoint_value <= 0.0 {
-            upper = midpoint;
-        } else {
-            lower = midpoint;
-            lower_value = midpoint_value;
-        }
-    }
-    Err(AexError::analysis(
-        "ROOT_NON_CONVERGENCE",
-        format!("bounded solver did not converge in {iterations} iterations"),
-    ))
 }
 
 fn mission_cruise_mach(scenario: &ResolvedScenario) -> Option<f64> {

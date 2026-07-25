@@ -37,6 +37,7 @@ fn evidence(candidate_id: String) -> Result<EvidenceEnvelope, Box<dyn std::error
         },
         results: EvidenceResults {
             metrics: BTreeMap::new(),
+            metric_validity: BTreeMap::new(),
             constraints: Vec::new(),
             diagnostics: Vec::new(),
         },

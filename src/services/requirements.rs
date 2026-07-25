@@ -1,9 +1,24 @@
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
-    MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation,
+    MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation, RequirementStatus,
 };
 use crate::domain::schema::{Requirement, ResolvedScenario, SegmentKind};
+use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::models::field_performance::estimate_takeoff_distance_m;
+
+struct MetricInput {
+    actual: f64,
+    validity: MetricValidity,
+}
+
+impl MetricInput {
+    fn valid(actual: f64) -> Self {
+        Self {
+            actual,
+            validity: MetricValidity::default(),
+        }
+    }
+}
 
 pub(crate) fn evaluate_requirements(
     scenario: &ResolvedScenario,
@@ -17,7 +32,7 @@ pub(crate) fn evaluate_requirements(
         .iter()
         .filter_map(|requirement| {
             metric_value(requirement, scenario, mission, performance, payload_range)
-                .map(|actual| evaluate_one(requirement, actual))
+                .map(|input| evaluate_one(requirement, input))
         })
         .collect()
 }
@@ -61,7 +76,7 @@ fn requirement_passed(requirement: &Requirement, evaluations: &[RequirementEvalu
     evaluations.iter().any(|evaluation| {
         evaluation.id == requirement.id
             && evaluation.metric == requirement.metric
-            && evaluation.passed
+            && evaluation.is_passed()
     })
 }
 
@@ -71,26 +86,34 @@ fn metric_value(
     mission: &MissionResult,
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
-) -> Option<f64> {
+) -> Option<MetricInput> {
     match requirement.metric.as_str() {
-        "mission.payload_mass" => Some(scenario.mission.payload_mass_kg),
+        "mission.payload_mass" => Some(MetricInput::valid(scenario.mission.payload_mass_kg)),
         "performance.cruise_true_airspeed" => scenario
             .mission
             .segments
             .iter()
             .filter(|segment| segment.kind == SegmentKind::Cruise)
-            .find_map(|segment| segment.true_airspeed_m_s),
-        "mission.completed_distance" => Some(mission.total_distance.value),
-        "performance.service_ceiling" => Some(performance.service_ceiling_m),
-        "performance.stall_speed_landing" => Some(performance.stall_speed_landing_m_s),
-        "performance.cruise_mach" => performance.cruise_mach,
-        "performance.takeoff_field_length" => Some(estimate_takeoff_distance_m(scenario)),
-        "performance.full_payload_range" => {
-            payload_range.and_then(|result| point_range(result, "full_payload_mission"))
+            .find_map(|segment| segment.true_airspeed_m_s)
+            .map(MetricInput::valid),
+        "mission.completed_distance" => Some(MetricInput::valid(mission.total_distance.value)),
+        "performance.service_ceiling" => Some(MetricInput {
+            actual: performance.service_ceiling_m,
+            validity: performance.validity_for("performance.service_ceiling"),
+        }),
+        "performance.stall_speed_landing" => {
+            Some(MetricInput::valid(performance.stall_speed_landing_m_s))
         }
-        "performance.zero_payload_ferry_range" => {
-            payload_range.and_then(|result| point_range(result, "zero_payload_ferry"))
+        "performance.cruise_mach" => performance.cruise_mach.map(MetricInput::valid),
+        "performance.takeoff_field_length" => {
+            Some(MetricInput::valid(estimate_takeoff_distance_m(scenario)))
         }
+        "performance.full_payload_range" => payload_range
+            .and_then(|result| point_range(result, "full_payload_mission"))
+            .map(MetricInput::valid),
+        "performance.zero_payload_ferry_range" => payload_range
+            .and_then(|result| point_range(result, "zero_payload_ferry"))
+            .map(MetricInput::valid),
         _ => None,
     }
 }
@@ -103,13 +126,21 @@ fn point_range(result: &PayloadRangeResult, id: &str) -> Option<f64> {
         .map(|point| point.range.value)
 }
 
-fn evaluate_one(requirement: &Requirement, actual: f64) -> RequirementEvaluation {
+fn evaluate_one(requirement: &Requirement, input: MetricInput) -> RequirementEvaluation {
+    let actual = input.actual;
     let margin = match requirement.operator.as_str() {
         "le" => requirement.required - actual,
         "eq" => -(actual - requirement.required).abs(),
         _ => actual - requirement.required,
     };
-    let passed = margin >= -1.0e-9;
+    let numerical_pass = margin >= -1.0e-9;
+    let (status, passed) = if input.validity.status == ValidityStatus::BoundaryLimited {
+        (RequirementStatus::Indeterminate, None)
+    } else if numerical_pass {
+        (RequirementStatus::Pass, Some(true))
+    } else {
+        (RequirementStatus::Fail, Some(false))
+    };
     let percentage = if requirement.required.abs() > 1.0e-12 {
         Some(100.0 * margin / requirement.required.abs())
     } else {
@@ -121,11 +152,14 @@ fn evaluate_one(requirement: &Requirement, actual: f64) -> RequirementEvaluation
         actual: quantity(actual, &requirement.unit, &requirement.metric),
         required: quantity(requirement.required, &requirement.unit, &requirement.metric),
         operator: requirement.operator.clone(),
+        status: Some(status),
         passed,
+        validity: input.validity,
         absolute_margin: margin,
         percentage_margin: percentage,
         severity: requirement.severity.clone(),
-        warning_state: margin.abs() <= requirement.required.abs() * 1.0e-6,
+        warning_state: status != RequirementStatus::Indeterminate
+            && margin.abs() <= requirement.required.abs() * 1.0e-6,
     }
 }
 
