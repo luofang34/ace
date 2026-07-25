@@ -39,3 +39,28 @@ omit that file use SI. The option changes only `display_value` and
 `--output` names the SVG and `--spec-output` writes the structured chart
 response separately. Strict mode promotes model extrapolation,
 agent-assumption, and profile `PARAMETER_OUTSIDE_TYPICAL` warnings.
+
+## Error responses
+
+An explicit `--format json` applies to failures as well as successful results.
+Every argument, document, quantity, analysis, profile, filesystem, or backend
+failure writes exactly one object to stdout and returns a nonzero status:
+
+```json
+{
+  "error": {
+    "code": "ATMOSPHERE_OUTSIDE_VALIDITY",
+    "message": "altitude 23774.4 m is outside -2000 to 20000 m",
+    "path": "analysis",
+    "context": {}
+  }
+}
+```
+
+`code` is stable for machine decisions, `path` identifies the affected
+argument, document field, file, or subsystem and may be `null`, and `context`
+is always an object. Error objects always use stdout, including requests with
+`--output`; stderr remains empty so an agent can parse the complete response
+without combining streams. Human-format failures write a concise tracing
+diagnostic to stderr and no stdout. Help and version requests remain successful
+and keep their normal text output.

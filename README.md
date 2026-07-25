@@ -23,6 +23,10 @@ cargo run --bin aex -- analyze point examples/b777/scenario.yaml \
 cargo run --bin aex -- analyze mission examples/b777/scenario.yaml --format json
 ```
 
+With `--format json`, failures also return one machine-readable
+`{"error":{"code","message","path","context"}}` object on stdout with a
+nonzero status. See [the CLI error contract](docs/cli.md#error-responses).
+
 SI values remain authoritative inside the solver and persisted runs. The
 example projects select Aviation-US display metadata, so ranges use nautical
 miles, speeds use knots, altitudes use feet, and masses use pounds:

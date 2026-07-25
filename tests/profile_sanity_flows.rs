@@ -77,8 +77,13 @@ fn sweep_propagates_profile_warnings_and_promotes_them_in_strict_mode() -> Resul
         .arg("--strict")
         .assert()
         .failure();
+    assert!(strict.get_output().stderr.is_empty());
+    let error: Value = serde_json::from_slice(&strict.get_output().stdout)?;
+    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
     assert!(
-        String::from_utf8_lossy(&strict.get_output().stderr).contains("PARAMETER_OUTSIDE_TYPICAL")
+        error["error"]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
     );
     Ok(())
 }
