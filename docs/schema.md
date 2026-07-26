@@ -194,6 +194,35 @@ opposed center-body leading- and trailing-edge sweeps. OpenVSP translates it
 to the backend's quarter-chord representation without exposing backend
 parameter identifiers.
 
+Conventional aircraft may declare first-class fuselage and tail geometry:
+
+```yaml
+geometry:
+  wing: { area: 16.17 m^2, span: 11.0 m, sweep_quarter_chord: 0 deg }
+  fuselage:
+    length: 8.25 m
+    diameter: 1.34 m
+  horizontal_tail:
+    area: 3.234 m^2
+    arm: 4.125 m
+  vertical_tail:
+    area: 1.617 m^2
+    arm: 4.125 m
+```
+
+Every added block and scalar is optional for schema-version-1 compatibility.
+Explicit scalars take precedence. Missing values on a matching conventional
+topology component use the versioned `ace_conventional_geometry` statistical
+correlation, and each resolved scalar records whether it came from user input
+or that correlation. Geometry declared without the corresponding topology
+component returns `GEOMETRY_COMPONENT_MISMATCH`. A topology without fuselage
+or tail components receives no invented conventional geometry. Correlation
+outputs also appear in the assumptions ledger with their ID and version.
+Dotted overrides may create an omitted optional geometry block.
+Assumption records therefore include additive nullable `correlation_id` and
+`correlation_version` fields; non-correlation entries serialize them as null
+or blank CSV columns.
+
 Thrust-engine profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
 retains conservative defaults when they are absent.

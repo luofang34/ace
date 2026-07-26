@@ -55,6 +55,70 @@ fn c172_script_places_and_sizes_the_concept() -> Result<(), Box<dyn std::error::
 }
 
 #[test]
+fn conventional_script_honors_independent_tail_arms() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario
+        .aircraft
+        .geometry
+        .horizontal_tail
+        .as_mut()
+        .ok_or_else(|| std::io::Error::other("missing horizontal tail"))?
+        .arm
+        .value = 12.34;
+    scenario
+        .aircraft
+        .geometry
+        .vertical_tail
+        .as_mut()
+        .ok_or_else(|| std::io::Error::other("missing vertical tail"))?
+        .arm
+        .value = 23.45;
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("c172.vsp3"))?;
+
+    assert!(script.contains("horizontal_tail, \"X_Rel_Location\", \"XForm\", 15.145000000000"));
+    assert!(script.contains("vertical_tail, \"X_Rel_Location\", \"XForm\", 26.255000000000"));
+    Ok(())
+}
+
+#[test]
+fn conventional_script_skips_absent_resolved_components() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.geometry.horizontal_tail = None;
+    scenario
+        .aircraft
+        .topology
+        .components
+        .retain(|component| component.kind != "horizontal_tail");
+    scenario
+        .aircraft
+        .topology
+        .relationships
+        .retain(|relationship| {
+            relationship.source != "horizontal_tail" && relationship.target != "horizontal_tail"
+        });
+    let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let script =
+        super::geometry::geometry_script(&scenario, &native, std::path::Path::new("c172.vsp3"))?;
+
+    assert!(script.contains(
+        "if ( 0 == 1 )\n    {\n        string horizontal_tail = AddGeom( \"WING\", \"\" );"
+    ));
+    assert!(script.contains(
+        "if ( 1 == 1 )\n    {\n        string vertical_tail = AddGeom( \"WING\", \"\" );"
+    ));
+    Ok(())
+}
+
+#[test]
 fn transport_script_places_two_engine_envelopes() -> Result<(), Box<dyn std::error::Error>> {
     let scenario = example_scenario("b777")?;
     let native = NativeBackend.generate_geometry_blocking(GeometryRequest {
@@ -211,6 +275,38 @@ fn conventional_visual_snapshots_are_stable() -> Result<(), Box<dyn std::error::
     let b777 = super::geometry::visual_snapshot(&example_scenario("b777")?);
     assert_eq!(c172, include_str!("../../../tests/golden/openvsp/c172.svg"));
     assert_eq!(b777, include_str!("../../../tests/golden/openvsp/b777.svg"));
+    Ok(())
+}
+
+#[test]
+fn conventional_visual_snapshot_omits_absent_components() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.geometry.fuselage = None;
+    scenario.aircraft.geometry.horizontal_tail = None;
+    scenario.aircraft.geometry.vertical_tail = None;
+    let omitted = ["fuselage", "horizontal_tail", "vertical_tail"];
+    scenario
+        .aircraft
+        .topology
+        .components
+        .retain(|component| !omitted.contains(&component.kind.as_str()));
+    scenario
+        .aircraft
+        .topology
+        .relationships
+        .retain(|relationship| {
+            !omitted.contains(&relationship.source.as_str())
+                && !omitted.contains(&relationship.target.as_str())
+        });
+    let snapshot = super::geometry::visual_snapshot(&scenario);
+
+    assert!(snapshot.contains("id=\"wing\""));
+    assert!(!snapshot.contains("id=\"fuselage\""));
+    assert!(!snapshot.contains("id=\"horizontal-tail\""));
+    assert!(!snapshot.contains("id=\"vertical-tail\""));
+    assert!(!snapshot.contains("NaN"));
+    assert!(!snapshot.contains("inf"));
     Ok(())
 }
 

@@ -10,9 +10,14 @@ use crate::domain::diagnostic::Diagnostic;
 use crate::domain::propulsion::TablePropulsionDeck;
 use crate::domain::topology::{AircraftTopology, RawAircraftTopology};
 
+mod geometry;
 mod mission;
 mod requirements;
 
+pub(crate) use geometry::{
+    AircraftGeometry, FuselageGeometry, GeometryValue, GeometryValueProvenance, RawGeometry,
+    RawTailGeometry, RawWing, TailGeometry,
+};
 pub(crate) use mission::{
     EnergySchedulePoint, Mission, MissionDocument, MissionInitialState, MissionSegment,
     RawEnergySchedulePoint, RawMissionInitialState, RawMissionSegment, SegmentKind,
@@ -57,24 +62,6 @@ pub(crate) struct RawMass {
     pub(crate) operating_empty_mass: String,
     pub(crate) maximum_payload_mass: String,
     pub(crate) maximum_fuel_mass: String,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct RawGeometry {
-    pub(crate) wing: RawWing,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct RawWing {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) area: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) span: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) aspect_ratio: Option<f64>,
-    pub(crate) sweep_quarter_chord: String,
-    #[serde(default)]
-    pub(crate) center_body_edge_sweep: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -174,6 +161,10 @@ pub(crate) struct AssumptionEntry {
     pub(crate) unit: Option<String>,
     pub(crate) provenance_kind: String,
     pub(crate) source: String,
+    #[serde(default)]
+    pub(crate) correlation_id: Option<String>,
+    #[serde(default)]
+    pub(crate) correlation_version: Option<u32>,
     pub(crate) confidence: String,
     pub(crate) explicitly_provided: bool,
     pub(crate) inherited_from_profile: bool,
@@ -205,6 +196,7 @@ pub(crate) struct Aircraft {
     pub(crate) metadata: ConceptMetadata,
     pub(crate) mass: MassProperties,
     pub(crate) wing: Wing,
+    pub(crate) geometry: AircraftGeometry,
     pub(crate) aerodynamics: Aerodynamics,
     pub(crate) propulsion: Propulsion,
     pub(crate) limits: AircraftLimits,

@@ -120,6 +120,14 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     regulatory-derived OEI gradient cites 14 CFR 25.121(b). C172 and B777
     template checks use achieved metrics without changing their hard verdicts,
     and evaluated evidence retains each requirement's provenance.
+30. **Conventional geometry is first-class and shared.** Optional fuselage
+    length/diameter and horizontal/vertical tail area/arm fields resolve per
+    scalar, with explicit input taking precedence over a versioned statistical
+    correlation. Geometry without a matching topology component is rejected,
+    and tailless topology receives no invented tails. Native wetted area,
+    structural tail volumes, OpenVSP scripts, and visual snapshots consume the
+    same resolved values; explicit C172 and B777 geometry preserves their
+    calibration output.
 
 ## Calibration bands
 

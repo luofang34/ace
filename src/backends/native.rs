@@ -299,11 +299,12 @@ fn native_geometry_provenance(blended: bool) -> ResultProvenance {
         )
     } else {
         (
-            "planform identities and empirical tail-volume ratios",
+            "planform identities and resolved conventional geometry",
             vec![
-                "horizontal tail area is 20-24% of wing area".to_owned(),
-                "vertical tail area is 10-12% of wing area".to_owned(),
-                "fuselage dimensions scale from wing span and area".to_owned(),
+                "explicit fuselage and tail geometry takes precedence".to_owned(),
+                "missing conventional geometry uses versioned statistical correlations".to_owned(),
+                "wetted area uses the same resolved geometry supplied to geometry backends"
+                    .to_owned(),
             ],
             vec!["conventional fixed-wing configurations".to_owned()],
         )

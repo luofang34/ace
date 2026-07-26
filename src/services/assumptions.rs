@@ -1,16 +1,24 @@
 use serde_yaml::{Mapping, Value};
 
-use crate::domain::schema::{AssumptionEntry, EngineProfile, PropellerProfile};
+use crate::domain::schema::{
+    Aircraft, AssumptionEntry, EngineProfile, GeometryValue, PropellerProfile,
+};
 
 pub(crate) fn collect_all_assumptions(
-    aircraft: &Value,
+    aircraft_document: &Value,
     mission: &Value,
     requirements: &Value,
+    aircraft: &Aircraft,
     engine: &EngineProfile,
     propeller: Option<&PropellerProfile>,
 ) -> Vec<AssumptionEntry> {
     let mut entries = Vec::new();
-    collect_assumptions("aircraft", aircraft.get("aircraft"), false, &mut entries);
+    collect_assumptions(
+        "aircraft",
+        aircraft_document.get("aircraft"),
+        false,
+        &mut entries,
+    );
     collect_assumptions("mission", mission.get("mission"), false, &mut entries);
     collect_assumptions(
         "requirements",
@@ -18,6 +26,7 @@ pub(crate) fn collect_all_assumptions(
         false,
         &mut entries,
     );
+    collect_derived_geometry_assumptions(aircraft, &mut entries);
     entries.push(profile_assumption(
         "aircraft.propulsion.profile",
         engine.profile_id(),
@@ -61,6 +70,8 @@ fn collect_assumptions(
                 "scenario document"
             }
             .to_owned(),
+            correlation_id: None,
+            correlation_version: None,
             confidence: if inherited { "medium" } else { "high" }.to_owned(),
             explicitly_provided: !inherited,
             inherited_from_profile: inherited,
@@ -89,10 +100,63 @@ fn profile_assumption(path: &str, profile_id: &str) -> AssumptionEntry {
         unit: None,
         provenance_kind: "reference".to_owned(),
         source: "selected profile".to_owned(),
+        correlation_id: None,
+        correlation_version: None,
         confidence: "medium".to_owned(),
         explicitly_provided: true,
         inherited_from_profile: true,
         supplied_by_default: false,
+    }
+}
+
+fn collect_derived_geometry_assumptions(aircraft: &Aircraft, entries: &mut Vec<AssumptionEntry>) {
+    let geometry = &aircraft.geometry;
+    let values = [
+        (
+            "aircraft.geometry.fuselage.length",
+            geometry.fuselage.as_ref().map(|item| &item.length),
+        ),
+        (
+            "aircraft.geometry.fuselage.diameter",
+            geometry.fuselage.as_ref().map(|item| &item.diameter),
+        ),
+        (
+            "aircraft.geometry.horizontal_tail.area",
+            geometry.horizontal_tail.as_ref().map(|item| &item.area),
+        ),
+        (
+            "aircraft.geometry.horizontal_tail.arm",
+            geometry.horizontal_tail.as_ref().map(|item| &item.arm),
+        ),
+        (
+            "aircraft.geometry.vertical_tail.area",
+            geometry.vertical_tail.as_ref().map(|item| &item.area),
+        ),
+        (
+            "aircraft.geometry.vertical_tail.arm",
+            geometry.vertical_tail.as_ref().map(|item| &item.arm),
+        ),
+    ];
+    for (path, value) in values {
+        if let Some(value) = value.filter(|item| !item.provenance.explicitly_provided) {
+            entries.push(derived_geometry_assumption(path, value));
+        }
+    }
+}
+
+fn derived_geometry_assumption(path: &str, value: &GeometryValue) -> AssumptionEntry {
+    AssumptionEntry {
+        parameter_path: path.to_owned(),
+        resolved_value: serde_json::Value::from(value.value),
+        unit: Some(value.unit.to_owned()),
+        provenance_kind: value.provenance.kind.to_owned(),
+        source: value.provenance.source.to_owned(),
+        correlation_id: value.provenance.correlation_id.map(str::to_owned),
+        correlation_version: value.provenance.correlation_version,
+        confidence: "low".to_owned(),
+        explicitly_provided: false,
+        inherited_from_profile: false,
+        supplied_by_default: true,
     }
 }
 
@@ -132,6 +196,12 @@ fn is_quantity_path(path: &str) -> bool {
             | "aircraft.geometry.wing.span"
             | "aircraft.geometry.wing.sweep_quarter_chord"
             | "aircraft.geometry.wing.center_body_edge_sweep"
+            | "aircraft.geometry.fuselage.length"
+            | "aircraft.geometry.fuselage.diameter"
+            | "aircraft.geometry.horizontal_tail.area"
+            | "aircraft.geometry.horizontal_tail.arm"
+            | "aircraft.geometry.vertical_tail.area"
+            | "aircraft.geometry.vertical_tail.arm"
             | "aircraft.limits.maximum_operating_speed"
             | "aircraft.limits.maximum_operating_altitude"
             | "mission.payload.mass"

@@ -27,10 +27,11 @@ impl Projection {
 pub(super) fn visual_snapshot(scenario: &ResolvedScenario) -> String {
     let concept = ConceptGeometry::from_scenario(scenario);
     let layout = conventional_propulsion_layout(scenario, concept);
+    let represented_length_m = represented_length_m(scenario, concept, layout);
     let projection = Projection {
         x_origin: 50.0,
         y_origin: CANVAS_HEIGHT * 0.5,
-        x_scale: 700.0 / concept.fuselage_length_m,
+        x_scale: 700.0 / represented_length_m,
         y_scale: 280.0 / scenario.aircraft.wing.span_m,
     };
     let mut svg = format!(
@@ -50,20 +51,23 @@ fn airframe_svg(
     projection: Projection,
 ) -> String {
     let wing = &scenario.aircraft.wing;
-    let root_chord = 2.0 * wing.area_m2 / (wing.span_m * (1.0 + concept.taper_ratio));
-    let tip_chord = root_chord * concept.taper_ratio;
-    let semispan = wing.span_m * 0.5;
-    let tip_leading_x = concept.wing_x_m
-        + semispan * wing.sweep_quarter_chord_rad.tan()
-        + 0.25 * (root_chord - tip_chord);
-    let fuselage = rectangle(
-        "fuselage",
-        0.0,
-        0.0,
-        concept.fuselage_length_m,
-        concept.fuselage_width_m,
-        projection,
-    );
+    let (root_chord, tip_chord, semispan, tip_leading_x) =
+        wing_outline_dimensions(scenario, concept);
+    let fuselage = scenario
+        .aircraft
+        .geometry
+        .fuselage
+        .as_ref()
+        .map_or_else(String::new, |_| {
+            rectangle(
+                "fuselage",
+                0.0,
+                0.0,
+                concept.fuselage_length_m,
+                concept.fuselage_width_m,
+                projection,
+            )
+        });
     let wing = format!(
         "    <polygon id=\"wing\" data-area-m2=\"{:.3}\" points=\"{}\"/>\n",
         wing.area_m2,
@@ -76,8 +80,43 @@ fn airframe_svg(
             projection
         )
     );
-    let tail = tail_svg(concept, projection);
+    let tail = tail_svg(scenario, concept, projection);
     format!("{fuselage}{wing}{tail}")
+}
+
+fn wing_outline_dimensions(
+    scenario: &ResolvedScenario,
+    concept: ConceptGeometry,
+) -> (f64, f64, f64, f64) {
+    let wing = &scenario.aircraft.wing;
+    let root_chord = 2.0 * wing.area_m2 / (wing.span_m * (1.0 + concept.taper_ratio));
+    let tip_chord = root_chord * concept.taper_ratio;
+    let semispan = wing.span_m * 0.5;
+    let tip_leading_x = concept.wing_x_m
+        + semispan * wing.sweep_quarter_chord_rad.tan()
+        + 0.25 * (root_chord - tip_chord);
+    (root_chord, tip_chord, semispan, tip_leading_x)
+}
+
+fn represented_length_m(
+    scenario: &ResolvedScenario,
+    concept: ConceptGeometry,
+    layout: ConventionalPropulsionLayout,
+) -> f64 {
+    let (root_chord, tip_chord, _, tip_leading_x) = wing_outline_dimensions(scenario, concept);
+    let mut maximum_x = (concept.wing_x_m + root_chord).max(tip_leading_x + tip_chord);
+    if scenario.aircraft.geometry.fuselage.is_some() {
+        maximum_x = maximum_x.max(concept.fuselage_length_m);
+    }
+    if scenario.aircraft.geometry.horizontal_tail.is_some() {
+        let horizontal_span = (4.0 * concept.horizontal_tail_area_m2).sqrt();
+        let horizontal_chord = concept.horizontal_tail_area_m2 / horizontal_span;
+        maximum_x = maximum_x.max(concept.horizontal_tail_x_m + horizontal_chord);
+    }
+    if scenario.aircraft.geometry.vertical_tail.is_some() {
+        maximum_x = maximum_x.max(vertical_tail_end_x(scenario, concept));
+    }
+    maximum_x.max(layout.engine_x_m + layout.engine.length_m)
 }
 
 fn wing_points(
@@ -100,26 +139,51 @@ fn wing_points(
     .join(" ")
 }
 
-fn tail_svg(concept: ConceptGeometry, projection: Projection) -> String {
-    let horizontal_span = (4.0 * concept.horizontal_tail_area_m2).sqrt();
-    let horizontal_chord = concept.horizontal_tail_area_m2 / horizontal_span;
-    let horizontal = rectangle(
-        "horizontal-tail",
-        concept.tail_x_m,
-        0.0,
-        horizontal_chord,
-        horizontal_span,
-        projection,
-    );
-    let vertical = format!(
-        "    <line id=\"vertical-tail\" data-area-m2=\"{:.3}\" x1=\"{:.2}\" y1=\"{:.2}\" x2=\"{:.2}\" y2=\"{:.2}\"/>\n",
-        concept.vertical_tail_area_m2,
-        projection.x(concept.tail_x_m),
-        projection.y(0.0),
-        projection.x(concept.fuselage_length_m),
-        projection.y(0.0)
-    );
+fn tail_svg(
+    scenario: &ResolvedScenario,
+    concept: ConceptGeometry,
+    projection: Projection,
+) -> String {
+    let horizontal = scenario
+        .aircraft
+        .geometry
+        .horizontal_tail
+        .as_ref()
+        .map_or_else(String::new, |_| {
+            let span = (4.0 * concept.horizontal_tail_area_m2).sqrt();
+            rectangle(
+                "horizontal-tail",
+                concept.horizontal_tail_x_m,
+                0.0,
+                concept.horizontal_tail_area_m2 / span,
+                span,
+                projection,
+            )
+        });
+    let vertical = scenario
+        .aircraft
+        .geometry
+        .vertical_tail
+        .as_ref()
+        .map_or_else(String::new, |_| {
+            format!(
+                "    <line id=\"vertical-tail\" data-area-m2=\"{:.3}\" x1=\"{:.2}\" y1=\"{:.2}\" x2=\"{:.2}\" y2=\"{:.2}\"/>\n",
+                concept.vertical_tail_area_m2,
+                projection.x(concept.vertical_tail_x_m),
+                projection.y(0.0),
+                projection.x(vertical_tail_end_x(scenario, concept)),
+                projection.y(0.0)
+            )
+        });
     format!("{horizontal}{vertical}")
+}
+
+fn vertical_tail_end_x(scenario: &ResolvedScenario, concept: ConceptGeometry) -> f64 {
+    if scenario.aircraft.geometry.fuselage.is_some() {
+        concept.fuselage_length_m
+    } else {
+        concept.vertical_tail_x_m + (concept.vertical_tail_area_m2 / 1.8).sqrt()
+    }
 }
 
 fn propulsion_svg(layout: ConventionalPropulsionLayout, projection: Projection) -> String {

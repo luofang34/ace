@@ -290,3 +290,17 @@ field remains available for reporting, while legacy declared requirement paths
 return `DECLARED_METRIC_NOT_BINDABLE` with the achieved replacement. This keeps
 schema version 1 readable without allowing an input to prove its own
 requirement.
+
+## ADR-028 — Resolved aircraft geometry is the shared source of truth
+
+Schema-version-1 aircraft may add optional fuselage length/diameter and
+horizontal/vertical tail area/arm blocks. Resolution occurs per scalar:
+explicit document values take precedence, while missing values on matching
+conventional topology components use a named, versioned statistical
+correlation. Each resolved value retains its unit and provenance.
+
+Topology governs whether a geometry block may exist. Explicit geometry without
+the corresponding component is invalid, and absent tailless components do not
+receive conventional correlations. Native wetted area, structural tail-volume
+screening, and OpenVSP generation consume the same resolved geometry so no
+backend independently invents competing dimensions.

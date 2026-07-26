@@ -93,6 +93,13 @@ fn explicit_reference_topology_round_trips() -> Result<(), Box<dyn std::error::E
     assert!(!aircraft.topology.inferred);
     assert!(aircraft.topology.has_component_kind("horizontal_tail"));
     assert_eq!(aircraft.topology.relationships.len(), 6);
+    let fuselage = aircraft
+        .geometry
+        .fuselage
+        .ok_or_else(|| std::io::Error::other("missing resolved fuselage"))?;
+    assert_eq!(fuselage.length.value, 8.25);
+    assert!(fuselage.length.provenance.explicitly_provided);
+    assert_eq!(fuselage.length.provenance.kind, "user_input");
     Ok(())
 }
 

@@ -34,6 +34,12 @@ aircraft:
   geometry:
     wing:
       area: 16.17 m^2
+    fuselage:
+      length: 8.25 m
+      diameter: 1.34 m
+    horizontal_tail:
+      area: 3.2 m^2
+      arm: 4.1 m
 mission:
   payload:
     mass: 230 kg
@@ -84,6 +90,10 @@ requirements:
     for (path, unit) in [
         ("aircraft.mass.maximum_takeoff_mass", "kg"),
         ("aircraft.geometry.wing.area", "m^2"),
+        ("aircraft.geometry.fuselage.length", "m"),
+        ("aircraft.geometry.fuselage.diameter", "m"),
+        ("aircraft.geometry.horizontal_tail.area", "m^2"),
+        ("aircraft.geometry.horizontal_tail.arm", "m"),
         ("mission.payload.mass", "kg"),
         ("mission.initial_state.altitude", "ft"),
         ("mission.initial_state.true_airspeed", "kt"),
@@ -110,5 +120,57 @@ fn shipped_c172_ledger_preserves_name_and_physical_units() -> Result<(), Box<dyn
     assert_eq!(serialized["resolved_value"], name.resolved_value);
     assert_eq!(serialized["unit"], serde_json::Value::Null);
     assert_eq!(mass.unit.as_deref(), Some("kg"));
+    Ok(())
+}
+
+#[test]
+fn derived_geometry_ledger_retains_correlation_provenance() -> Result<(), Box<dyn std::error::Error>>
+{
+    let scenario = example_scenario("sr71")?;
+    let length = entry(&scenario.assumptions, "aircraft.geometry.fuselage.length")?;
+    let vertical_area = entry(
+        &scenario.assumptions,
+        "aircraft.geometry.vertical_tail.area",
+    )?;
+
+    for assumption in [length, vertical_area] {
+        assert_eq!(
+            assumption.provenance_kind,
+            "statistical_correlation".to_owned()
+        );
+        assert_eq!(
+            assumption.correlation_id.as_deref(),
+            Some("ace_conventional_geometry")
+        );
+        assert_eq!(assumption.correlation_version, Some(1));
+        assert!(!assumption.explicitly_provided);
+        assert!(assumption.supplied_by_default);
+    }
+    assert_eq!(length.unit.as_deref(), Some("m"));
+    assert_eq!(vertical_area.unit.as_deref(), Some("m^2"));
+    assert!(
+        entry(
+            &scenario.assumptions,
+            "aircraft.geometry.horizontal_tail.area"
+        )
+        .is_err()
+    );
+    Ok(())
+}
+
+#[test]
+fn mixed_geometry_assumptions_serialize_as_fixed_width_csv()
+-> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("sr71")?;
+    let mut writer = csv::Writer::from_writer(Vec::new());
+    for assumption in &scenario.assumptions {
+        writer.serialize(assumption)?;
+    }
+    let csv = String::from_utf8(writer.into_inner()?)?;
+
+    assert!(csv.lines().next().is_some_and(|header| {
+        header.contains("correlation_id") && header.contains("correlation_version")
+    }));
+    assert!(csv.contains("ace_conventional_geometry"));
     Ok(())
 }

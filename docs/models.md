@@ -66,17 +66,36 @@ dry-mass change to operating empty mass.
 ## OpenVSP geometry refinement
 
 Conventional OpenVSP geometry includes fuselage, wing, horizontal and vertical
-tails, engine envelopes, and a resolved propeller when present. Explicit
-turbofan length and diameter values take precedence; missing turbofan
-dimensions and piston envelopes use engine dry-mass cube-root correlations.
-These dimensions are visualization and low-order wetted-area inputs, not
-packaging substantiation.
+tails, engine envelopes, and a resolved propeller when present. Fuselage
+length/diameter and horizontal/vertical tail area/arm come from one resolved
+aircraft geometry shared with the native wetted-area and structural screens.
+Explicit aircraft values take precedence; partial or absent conventional
+blocks use versioned statistical correlations with per-scalar provenance.
+Explicit turbofan length and diameter values take precedence; missing
+turbofan dimensions and piston envelopes use engine dry-mass cube-root
+correlations. These dimensions are conceptual inputs, not packaging
+substantiation.
+
+The `ace_conventional_geometry` correlation uses the resolved wing area `S`,
+span `b`, and any resolved fuselage length `L_f`. Transport means a transport
+category or turbofan architecture. Version 1 applies:
+
+| Scalar | Light aircraft | Transport |
+|---|---:|---:|
+| `L_f` when absent | `0.75 b` | `1.15 b` |
+| fuselage diameter when absent | `sqrt(S) / 3` | `sqrt(S) / 5` |
+| horizontal-tail area when absent | `0.20 S` | `0.24 S` |
+| vertical-tail area when absent | `0.10 S` | `0.12 S` |
+| either tail arm when absent | `0.50 L_f` | `0.42 L_f` |
 
 CompGeom evaluates the complete generated model for wetted area. VSPAERO uses
 the named `ACE_VSPAERO_LIFTING` set, which contains only the modeled lifting
 surfaces; fuselage and propulsion geometry remain in the `.vsp3` artifact but
-do not enter the vortex-lattice solve. OpenVSP results remain an explicit
-refinement alongside the mandatory native baseline.
+do not enter the vortex-lattice solve. Conventional script generation creates
+fuselage and tail objects only when their resolved topology-backed geometry is
+present. OpenVSP results remain an explicit refinement alongside the mandatory
+native baseline. The deterministic SVG preview follows the same component
+presence rules and scales from the geometry it actually renders.
 
 ## Point and envelope performance
 
@@ -128,7 +147,9 @@ point must retain a 3% installed-reference-power reserve.
 The native structural screen estimates ultimate wing-root bending, required
 spar-cap area, spar-cap packaging ratio, horizontal and vertical tail-volume
 coefficients, and aspect-ratio validity. It assumes a 1.5 ultimate factor,
-240 MPa cap allowable, and a 9%-chord spar depth.
+240 MPa cap allowable, and a 9%-chord spar depth. Tail-volume coefficients use
+the same resolved tail areas and independent arms supplied to geometry
+backends.
 
 Passing this screen means the concept is suitable for further study. Detailed
 loads, joints, buckling, fatigue, flutter, aeroelasticity, and certification

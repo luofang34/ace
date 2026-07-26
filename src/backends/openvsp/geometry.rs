@@ -86,6 +86,18 @@ fn conventional_airframe_values(
     let wing = &scenario.aircraft.wing;
     let transport = scenario.aircraft.category.contains("transport");
     vec![
+        (
+            "__HAS_FUSELAGE__",
+            u8::from(scenario.aircraft.geometry.fuselage.is_some()).to_string(),
+        ),
+        (
+            "__HAS_HORIZONTAL_TAIL__",
+            u8::from(scenario.aircraft.geometry.horizontal_tail.is_some()).to_string(),
+        ),
+        (
+            "__HAS_VERTICAL_TAIL__",
+            u8::from(scenario.aircraft.geometry.vertical_tail.is_some()).to_string(),
+        ),
         ("__FUSELAGE_LENGTH__", decimal(concept.fuselage_length_m)),
         ("__NOSE_WIDTH__", decimal(concept.fuselage_width_m * 0.72)),
         ("__NOSE_HEIGHT__", decimal(concept.fuselage_height_m * 0.78)),
@@ -122,7 +134,11 @@ fn conventional_airframe_values(
             "__VERTICAL_TAIL_AREA__",
             decimal(native.metrics.vertical_tail_area.value),
         ),
-        ("__TAIL_X__", decimal(concept.tail_x_m)),
+        (
+            "__HORIZONTAL_TAIL_X__",
+            decimal(concept.horizontal_tail_x_m),
+        ),
+        ("__VERTICAL_TAIL_X__", decimal(concept.vertical_tail_x_m)),
         ("__TAIL_Z__", decimal(concept.tail_z_m)),
     ]
 }

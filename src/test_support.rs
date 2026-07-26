@@ -69,5 +69,22 @@ pub(crate) fn set_inferred_configuration(
         scenario.aircraft.propulsion.engine_count,
         scenario.aircraft.propulsion.propeller_profile.is_some(),
     )?;
+    if !scenario.aircraft.topology.has_component_kind("fuselage") {
+        scenario.aircraft.geometry.fuselage = None;
+    }
+    if !scenario
+        .aircraft
+        .topology
+        .has_component_kind("horizontal_tail")
+    {
+        scenario.aircraft.geometry.horizontal_tail = None;
+    }
+    if !scenario
+        .aircraft
+        .topology
+        .has_component_kind("vertical_tail")
+    {
+        scenario.aircraft.geometry.vertical_tail = None;
+    }
     Ok(())
 }

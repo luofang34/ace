@@ -68,6 +68,7 @@ fn remove_horizontal_tail(directory: &Path) -> Result<(), Box<dyn std::error::Er
         relationship["source"].as_str() != Some("horizontal_tail")
             && relationship["target"].as_str() != Some("horizontal_tail")
     });
+    document["aircraft"]["geometry"]["horizontal_tail"] = serde_yaml::Value::Null;
     fs::write(path, serde_yaml::to_string(&document)?)?;
     Ok(())
 }
