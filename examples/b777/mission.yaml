@@ -48,7 +48,7 @@ mission:
       altitude: 15000 ft
       mach: 0.60
     - id: reserve
-      type: loiter
+      type: reserve
       duration: 30 min
       altitude: 1500 ft
       true_airspeed: 220 kt

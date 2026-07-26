@@ -35,6 +35,7 @@ fn study_constraint_replaces_matching_baseline_requirement()
         percentage_margin: Some(40.0),
         severity: "soft".to_owned(),
         warning_state: false,
+        provenance: None,
     };
     let study = StudyConstraint {
         id: "field_length".to_owned(),

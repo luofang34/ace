@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use crate::domain::evidence::{ConstraintStatus, EvidenceConstraint};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{RequirementEvaluation, RequirementStatus};
-use crate::domain::schema::Requirement;
+use crate::domain::schema::{Requirement, RequirementProvenance};
 use crate::domain::validity::MetricValidity;
 
 use super::{candidate_is_feasible, insert_metric_aliases};
@@ -17,6 +17,14 @@ fn declared_requirement(id: &str, severity: &str) -> Requirement {
         unit: "m".to_owned(),
         severity: severity.to_owned(),
         weight: None,
+        provenance: RequirementProvenance {
+            kind: "test".to_owned(),
+            source: "test fixture".to_owned(),
+            citation: None,
+            non_regulatory: true,
+            template_id: None,
+            template_version: None,
+        },
     }
 }
 
@@ -38,6 +46,7 @@ fn evaluated_requirement(id: &str, severity: &str, passed: bool) -> RequirementE
         percentage_margin: Some(100.0),
         severity: severity.to_owned(),
         warning_state: false,
+        provenance: None,
     }
 }
 

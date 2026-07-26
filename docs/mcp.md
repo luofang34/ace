@@ -30,8 +30,9 @@ structured JSON output for:
 `get_capabilities` returns the same manifest as `aex capabilities --format
 json`. Agents can discover legal document/profile types, configurations,
 mission fields, bindable metrics and declared-only replacements, model
-domains, warning policy, and backend availability before constructing a
-request. The stable vocabulary also generates the
+domains, versioned requirement templates and provenance, warning policy, and
+backend availability before constructing a request. The stable vocabulary
+also generates the
 [capability reference](capabilities.md).
 
 All scenario tools accept repository-relative or absolute paths. Overrides are

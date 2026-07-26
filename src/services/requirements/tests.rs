@@ -1,9 +1,10 @@
 use crate::domain::aerodynamics::PolarTable;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{RequirementEvaluation, RequirementStatus};
-use crate::domain::schema::{MissionInitialState, Requirement, SegmentKind};
+use crate::domain::schema::{MissionInitialState, Requirement, RequirementProvenance, SegmentKind};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::models::mission::MissionSimulator;
+use crate::models::payload_range::PayloadRangeAnalyzer;
 use crate::models::performance::PointAnalyzer;
 use crate::test_support::{example_scenario, low_landing_fuel_sr71_scenario};
 
@@ -21,6 +22,7 @@ fn declared(id: &str, severity: &str) -> Requirement {
         unit: "m".to_owned(),
         severity: severity.to_owned(),
         weight: None,
+        provenance: test_provenance(),
     }
 }
 
@@ -42,6 +44,7 @@ fn evaluated(id: &str, severity: &str, passed: bool) -> RequirementEvaluation {
         percentage_margin: Some(0.0),
         severity: severity.to_owned(),
         warning_state: false,
+        provenance: None,
     }
 }
 
@@ -264,6 +267,7 @@ fn hard_landing_fuel_floor_uses_completed_mission_fuel() -> Result<(), Box<dyn s
         unit: "kg".to_owned(),
         severity: "hard".to_owned(),
         weight: None,
+        provenance: test_provenance(),
     }];
     let mission = MissionSimulator::new(scenario.clone()).simulate()?;
     let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
@@ -280,5 +284,59 @@ fn hard_landing_fuel_floor_uses_completed_mission_fuel() -> Result<(), Box<dyn s
         &scenario.requirements.items,
         &evaluations
     ));
+    Ok(())
+}
+
+fn test_provenance() -> RequirementProvenance {
+    RequirementProvenance {
+        kind: "test".to_owned(),
+        source: "test fixture".to_owned(),
+        citation: None,
+        non_regulatory: true,
+        template_id: None,
+        template_version: None,
+    }
+}
+
+#[test]
+fn shipped_templates_evaluate_achieved_checks_without_changing_hard_verdicts()
+-> Result<(), Box<dyn std::error::Error>> {
+    for (name, template_id, reserve_s) in [
+        ("c172", "light_aircraft_conceptual", 2_700.0),
+        ("b777", "transport_conceptual", 1_800.0),
+    ] {
+        let scenario = example_scenario(name)?;
+        let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+        let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+        let payload_range = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
+        let evaluations =
+            evaluate_requirements(&scenario, &mission, &performance, Some(&payload_range))?;
+        let template_items = scenario
+            .requirements
+            .items
+            .iter()
+            .filter(|requirement| {
+                requirement.provenance.template_id.as_deref() == Some(template_id)
+            })
+            .collect::<Vec<_>>();
+        assert!(!template_items.is_empty());
+        assert!(template_items.iter().all(|requirement| {
+            evaluations
+                .iter()
+                .find(|evaluation| evaluation.id == requirement.id)
+                .and_then(|evaluation| evaluation.provenance.as_ref())
+                .is_some_and(|provenance| provenance.template_id.as_deref() == Some(template_id))
+        }));
+        let reserve = evaluations
+            .iter()
+            .find(|evaluation| evaluation.id == "reserve_duration")
+            .ok_or("missing reserve-duration evaluation")?;
+        assert_eq!(reserve.actual.value, reserve_s);
+        assert!(hard_requirements_passed(
+            mission.completed,
+            &scenario.requirements.items,
+            &evaluations
+        ));
+    }
     Ok(())
 }

@@ -8,10 +8,10 @@ use super::evaluate;
 
 fn point(kind: SegmentKind, throttle: f64) -> AexResult<MissionPowerPoint> {
     let mut scenario = example_scenario("c172")?;
-    let source_kind = if kind == SegmentKind::Cruise {
-        SegmentKind::Cruise
-    } else {
-        SegmentKind::Loiter
+    let source_kind = match kind {
+        SegmentKind::Cruise => SegmentKind::Cruise,
+        SegmentKind::Loiter | SegmentKind::Reserve => SegmentKind::Reserve,
+        _ => kind,
     };
     let segment = scenario
         .mission

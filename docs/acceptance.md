@@ -112,6 +112,14 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     an immutable run reference below 8 KiB for the B777. `detail: true`
     preserves the full shape, while the advertised `generate_report` request
     retrieves the identical stored detail without rerunning simulation.
+29. **Requirement templates are versioned, achieved, and traceable.** Shipped
+    light-aircraft and transport templates resolve from the capability
+    registry, permit only value/severity/weight overrides, preserve immutable
+    metric/operator/provenance identity, and append noncolliding custom items.
+    The transport engine-count parameter must match the aircraft; its
+    regulatory-derived OEI gradient cites 14 CFR 25.121(b). C172 and B777
+    template checks use achieved metrics without changing their hard verdicts,
+    and evaluated evidence retains each requirement's provenance.
 
 ## Calibration bands
 

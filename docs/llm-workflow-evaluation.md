@@ -60,6 +60,10 @@ protocol errors.
 Mission simulation persists the canonical full result but returns a compact
 verdict, totals, segment table, diagnostics, and run reference by default.
 Full detail is opt-in and retrievable by run ID without recomputation.
+The capability manifest advertises versioned light-aircraft and transport
+requirement templates. Template identity and provenance are immutable while
+values, severities, and weights are explicit overrides; both shipped
+calibration examples evaluate the template's achieved metrics.
 
 ## Original flaws, ranked by how badly they misled an LLM
 

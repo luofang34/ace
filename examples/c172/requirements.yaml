@@ -1,7 +1,13 @@
 schema_version: 1
 requirements:
   id: c172_reference_requirements
+  template:
+    id: light_aircraft_conceptual
+    version: 1
   items:
+    - id: stall_speed_landing
+      value: 50 kt
+      severity: hard
     - id: payload
       metric: mission.payload_mass
       operator: ge
@@ -23,8 +29,3 @@ requirements:
       value: 13000 ft
       severity: soft
       weight: 0.4
-    - id: stall_speed_landing
-      metric: performance.stall_speed_landing
-      operator: le
-      value: 50 kt
-      severity: hard

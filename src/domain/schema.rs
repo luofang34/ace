@@ -11,10 +11,15 @@ use crate::domain::propulsion::TablePropulsionDeck;
 use crate::domain::topology::{AircraftTopology, RawAircraftTopology};
 
 mod mission;
+mod requirements;
 
 pub(crate) use mission::{
     EnergySchedulePoint, Mission, MissionDocument, MissionInitialState, MissionSegment,
     RawEnergySchedulePoint, RawMissionInitialState, RawMissionSegment, SegmentKind,
+};
+pub(crate) use requirements::{
+    RawRequirement, RawRequirementProvenance, Requirement, RequirementProvenance,
+    RequirementTemplateReference, Requirements, RequirementsDocument,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -119,28 +124,6 @@ pub(crate) struct RawLimits {
     pub(crate) maximum_operating_altitude: Option<String>,
     pub(crate) maximum_load_factor: Option<f64>,
     pub(crate) minimum_load_factor: Option<f64>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct RequirementsDocument {
-    pub(crate) schema_version: u32,
-    pub(crate) requirements: RawRequirements,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct RawRequirements {
-    pub(crate) id: String,
-    pub(crate) items: Vec<RawRequirement>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct RawRequirement {
-    pub(crate) id: String,
-    pub(crate) metric: String,
-    pub(crate) operator: String,
-    pub(crate) value: Value,
-    pub(crate) severity: String,
-    pub(crate) weight: Option<f64>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -289,23 +272,6 @@ pub(crate) struct AircraftLimits {
     pub(crate) maximum_operating_altitude_m: Option<f64>,
     pub(crate) maximum_load_factor: Option<f64>,
     pub(crate) minimum_load_factor: Option<f64>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct Requirements {
-    pub(crate) id: String,
-    pub(crate) items: Vec<Requirement>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct Requirement {
-    pub(crate) id: String,
-    pub(crate) metric: String,
-    pub(crate) operator: String,
-    pub(crate) required: f64,
-    pub(crate) unit: String,
-    pub(crate) severity: String,
-    pub(crate) weight: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
