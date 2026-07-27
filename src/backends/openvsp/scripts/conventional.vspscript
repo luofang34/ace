@@ -44,14 +44,17 @@ void main()
     ClearVSPModel();
     SetSetName( SET_FIRST_USER, "ACE_VSPAERO_LIFTING" );
 
-    string fuselage = AddGeom( "FUSELAGE", "" );
-    SetGeomName( fuselage, "ACE_Fuselage" );
-    SetSetFlag( fuselage, SET_FIRST_USER, false );
-    SetParmVal( fuselage, "Length", "Design", __FUSELAGE_LENGTH__ );
-    string fuselage_surface = GetXSecSurf( fuselage, 0 );
-    SetEllipse( fuselage_surface, 1, __NOSE_WIDTH__, __NOSE_HEIGHT__ );
-    SetEllipse( fuselage_surface, 2, __FUSELAGE_WIDTH__, __FUSELAGE_HEIGHT__ );
-    SetEllipse( fuselage_surface, 3, __TAIL_WIDTH__, __TAIL_HEIGHT__ );
+    if ( __HAS_FUSELAGE__ == 1 )
+    {
+        string fuselage = AddGeom( "FUSELAGE", "" );
+        SetGeomName( fuselage, "ACE_Fuselage" );
+        SetSetFlag( fuselage, SET_FIRST_USER, false );
+        SetParmVal( fuselage, "Length", "Design", __FUSELAGE_LENGTH__ );
+        string fuselage_surface = GetXSecSurf( fuselage, 0 );
+        SetEllipse( fuselage_surface, 1, __NOSE_WIDTH__, __NOSE_HEIGHT__ );
+        SetEllipse( fuselage_surface, 2, __FUSELAGE_WIDTH__, __FUSELAGE_HEIGHT__ );
+        SetEllipse( fuselage_surface, 3, __TAIL_WIDTH__, __TAIL_HEIGHT__ );
+    }
 
     string wing = AddGeom( "WING", "" );
     SetGeomName( wing, "ACE_Main_Wing" );
@@ -72,26 +75,32 @@ void main()
     SetParmVal( wing, "CamberLoc", "XSecCurve_1", 0.4 );
     SetParmVal( wing, "ThickChord", "XSecCurve_1", 0.12 );
 
-    string horizontal_tail = AddGeom( "WING", "" );
-    SetGeomName( horizontal_tail, "ACE_Horizontal_Tail" );
-    SetSetFlag( horizontal_tail, SET_FIRST_USER, true );
-    SetParmVal( horizontal_tail, "TotalArea", "WingGeom", __HORIZONTAL_TAIL_AREA__ );
-    SetParmVal( horizontal_tail, "TotalAR", "WingGeom", 4.0 );
-    SetParmVal( horizontal_tail, "Taper", "XSec_1", 0.55 );
-    SetParmVal( horizontal_tail, "X_Rel_Location", "XForm", __TAIL_X__ );
-    SetParmVal( horizontal_tail, "Z_Rel_Location", "XForm", __TAIL_Z__ );
-    SetParmVal( horizontal_tail, "Sym_Planar_Flag", "Sym", SYM_XZ );
+    if ( __HAS_HORIZONTAL_TAIL__ == 1 )
+    {
+        string horizontal_tail = AddGeom( "WING", "" );
+        SetGeomName( horizontal_tail, "ACE_Horizontal_Tail" );
+        SetSetFlag( horizontal_tail, SET_FIRST_USER, true );
+        SetParmVal( horizontal_tail, "TotalArea", "WingGeom", __HORIZONTAL_TAIL_AREA__ );
+        SetParmVal( horizontal_tail, "TotalAR", "WingGeom", 4.0 );
+        SetParmVal( horizontal_tail, "Taper", "XSec_1", 0.55 );
+        SetParmVal( horizontal_tail, "X_Rel_Location", "XForm", __HORIZONTAL_TAIL_X__ );
+        SetParmVal( horizontal_tail, "Z_Rel_Location", "XForm", __TAIL_Z__ );
+        SetParmVal( horizontal_tail, "Sym_Planar_Flag", "Sym", SYM_XZ );
+    }
 
-    string vertical_tail = AddGeom( "WING", "" );
-    SetGeomName( vertical_tail, "ACE_Vertical_Tail" );
-    SetSetFlag( vertical_tail, SET_FIRST_USER, true );
-    SetParmVal( vertical_tail, "TotalArea", "WingGeom", __VERTICAL_TAIL_AREA__ );
-    SetParmVal( vertical_tail, "TotalAR", "WingGeom", 1.8 );
-    SetParmVal( vertical_tail, "Taper", "XSec_1", 0.45 );
-    SetParmVal( vertical_tail, "X_Rel_Location", "XForm", __TAIL_X__ );
-    SetParmVal( vertical_tail, "Z_Rel_Location", "XForm", __TAIL_Z__ );
-    SetParmVal( vertical_tail, "X_Rel_Rotation", "XForm", 90.0 );
-    SetParmVal( vertical_tail, "Sym_Planar_Flag", "Sym", 0 );
+    if ( __HAS_VERTICAL_TAIL__ == 1 )
+    {
+        string vertical_tail = AddGeom( "WING", "" );
+        SetGeomName( vertical_tail, "ACE_Vertical_Tail" );
+        SetSetFlag( vertical_tail, SET_FIRST_USER, true );
+        SetParmVal( vertical_tail, "TotalArea", "WingGeom", __VERTICAL_TAIL_AREA__ );
+        SetParmVal( vertical_tail, "TotalAR", "WingGeom", 1.8 );
+        SetParmVal( vertical_tail, "Taper", "XSec_1", 0.45 );
+        SetParmVal( vertical_tail, "X_Rel_Location", "XForm", __VERTICAL_TAIL_X__ );
+        SetParmVal( vertical_tail, "Z_Rel_Location", "XForm", __TAIL_Z__ );
+        SetParmVal( vertical_tail, "X_Rel_Rotation", "XForm", 90.0 );
+        SetParmVal( vertical_tail, "Sym_Planar_Flag", "Sym", 0 );
+    }
 
     if ( __HAS_PROPELLER__ == 1 )
     {

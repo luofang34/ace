@@ -328,7 +328,7 @@ fn openvsp_geometry_provenance(scenario: &ResolvedScenario) -> ResultProvenance 
         method: "OpenVSP parametric geometry and CompGeom".to_owned(),
         backend: "openvsp".to_owned(),
         assumptions: vec![
-            "fuselage length and tail areas use native conceptual sizing inputs".to_owned(),
+            "resolved aircraft geometry controls component presence and dimensions".to_owned(),
             engine_envelope_assumption(scenario),
             "CompGeom wetted area includes the full airframe and propulsion envelope".to_owned(),
             "OpenVSP component parameters remain adapter-internal".to_owned(),

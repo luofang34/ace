@@ -64,6 +64,10 @@ The capability manifest advertises versioned light-aircraft and transport
 requirement templates. Template identity and provenance are immutable while
 values, severities, and weights are explicit overrides; both shipped
 calibration examples evaluate the template's achieved metrics.
+Conventional fuselage and tail geometry is now first-class. Explicit scalars
+win, partial blocks receive traceable statistical completion, topology
+mismatches fail, and native/OpenVSP/structural consumers share one resolved
+representation.
 
 ## Original flaws, ranked by how badly they misled an LLM
 

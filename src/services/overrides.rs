@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use serde_yaml::Value;
+use serde_yaml::{Mapping, Value};
 
 use crate::domain::diagnostic::{AexError, AexResult};
 
@@ -62,10 +62,28 @@ fn set_path(target: &mut Value, parts: &[&str], raw_value: &str, full_path: &str
         mapping.insert(key, value);
         return Ok(());
     }
+    if is_optional_geometry_mapping(full_path, parts) {
+        let nested = mapping
+            .entry(key)
+            .or_insert_with(|| Value::Mapping(Mapping::new()));
+        if nested.is_null() {
+            *nested = Value::Mapping(Mapping::new());
+        }
+        return set_path(nested, &parts[1..], raw_value, full_path);
+    }
     let nested = mapping.get_mut(&key).ok_or_else(|| {
         AexError::validation("INVALID_OVERRIDE", full_path, "field does not exist")
     })?;
     set_path(nested, &parts[1..], raw_value, full_path)
+}
+
+fn is_optional_geometry_mapping(full_path: &str, remaining: &[&str]) -> bool {
+    remaining.len() == 2
+        && matches!(
+            remaining[0],
+            "fuselage" | "horizontal_tail" | "vertical_tail"
+        )
+        && full_path.starts_with("aircraft.geometry.")
 }
 
 fn set_sequence_path(
@@ -136,9 +154,14 @@ fn numeric_override(raw: &str, path: &str) -> AexResult<Value> {
 
 fn optional_override_value(raw: &str, path: &str) -> AexResult<Option<Value>> {
     match path {
-        "aircraft.geometry.wing.area" | "aircraft.geometry.wing.span" => {
-            Ok(Some(Value::String(raw.to_owned())))
-        }
+        "aircraft.geometry.wing.area"
+        | "aircraft.geometry.wing.span"
+        | "aircraft.geometry.fuselage.length"
+        | "aircraft.geometry.fuselage.diameter"
+        | "aircraft.geometry.horizontal_tail.area"
+        | "aircraft.geometry.horizontal_tail.arm"
+        | "aircraft.geometry.vertical_tail.area"
+        | "aircraft.geometry.vertical_tail.arm" => Ok(Some(Value::String(raw.to_owned()))),
         "aircraft.geometry.wing.aspect_ratio" => numeric_override(raw, path).map(Some),
         _ => Ok(None),
     }

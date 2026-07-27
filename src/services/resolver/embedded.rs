@@ -49,6 +49,7 @@ pub(crate) fn resolve_embedded_study(
         &aircraft_value,
         &mission_value,
         &requirements_value,
+        &aircraft,
         &engine,
         propeller.as_ref(),
     );

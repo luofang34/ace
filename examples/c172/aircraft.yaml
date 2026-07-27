@@ -48,6 +48,15 @@ aircraft:
       aspect_ratio: 7.49
       sweep_quarter_chord: 0 deg
       center_body_edge_sweep: null
+    fuselage:
+      length: 8.25 m
+      diameter: 1.340397 m
+    horizontal_tail:
+      area: 3.234 m^2
+      arm: 4.125 m
+    vertical_tail:
+      area: 1.617 m^2
+      arm: 4.125 m
   aerodynamics:
     model: aero.parabolic_polar
     clean:

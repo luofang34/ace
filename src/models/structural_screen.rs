@@ -34,11 +34,21 @@ fn conventional_screen(scenario: &ResolvedScenario) -> StructuralScreen {
     let required_cap_area = 2.0 * bending_moment / (ALLOWABLE_CAP_STRESS_PA * spar_depth);
     let available_cap_area = 0.004 * root_chord.powi(2);
     let packaging_ratio = required_cap_area / available_cap_area;
-    let tail_arm = concept.tail_arm_m();
     let mean_chord = wing.area_m2 / wing.span_m;
-    let horizontal_volume =
-        concept.horizontal_tail_area_m2 * tail_arm / (wing.area_m2 * mean_chord);
-    let vertical_volume = concept.vertical_tail_area_m2 * tail_arm / (wing.area_m2 * wing.span_m);
+    let horizontal_volume = aircraft
+        .geometry
+        .horizontal_tail
+        .as_ref()
+        .map_or(0.0, |tail| {
+            tail.area.value * tail.arm.value / (wing.area_m2 * mean_chord)
+        });
+    let vertical_volume = aircraft
+        .geometry
+        .vertical_tail
+        .as_ref()
+        .map_or(0.0, |tail| {
+            tail.area.value * tail.arm.value / (wing.area_m2 * wing.span_m)
+        });
     let transport = aircraft.category.contains("transport");
     let mut failed = Vec::new();
     if packaging_ratio > MAXIMUM_CAP_PACKAGING_RATIO {
@@ -121,13 +131,14 @@ fn blended_wing_screen(scenario: &ResolvedScenario) -> AexResult<StructuralScree
 
 fn conventional_provenance() -> ResultProvenance {
     ResultProvenance {
-        method: "cantilever wing bending and empirical tail-volume screening".to_owned(),
+        method: "cantilever wing bending and resolved tail-volume screening".to_owned(),
         backend: "native".to_owned(),
         assumptions: vec![
             "elliptic-to-uniform conservative root bending moment W n b / 8".to_owned(),
             "1.5 ultimate factor on the declared positive limit load".to_owned(),
             "240 MPa spar-cap allowable and 9% root-chord spar depth".to_owned(),
             "spar-cap packaging allowance is 0.4% of root-chord squared".to_owned(),
+            "tail volumes use resolved tail areas and arms".to_owned(),
         ],
         validity_range: vec![
             "conventional cantilever fixed-wing layouts".to_owned(),

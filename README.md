@@ -102,7 +102,8 @@ polars with explicit transonic behavior, density-lapsed piston power, simple
 and tabulated turbofan thrust/fuel decks, bounded speed and ceiling solves,
 mission integration, constraint diagrams, payload-range, requirement margins,
 SVG charts, and content-addressed run manifests. Concept-design feasibility
-also includes a bounded weight iteration, empirical tail sizing, Breguet
+also includes a bounded weight iteration, resolved conventional geometry with
+versioned statistical completion, Breguet
 range/endurance, takeoff/landing estimates, mission operating-point power
 reserve, and a conceptual wing-spar/tail-volume structural screen with explicit provenance
 and validity limits.

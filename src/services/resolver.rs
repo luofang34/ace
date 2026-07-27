@@ -23,6 +23,7 @@ use crate::storage::project_store::read_yaml_value_blocking;
 
 mod embedded;
 mod energy_climb;
+mod geometry;
 mod initial_state;
 mod planform;
 mod polar;
@@ -86,6 +87,7 @@ impl ScenarioResolver {
             &aircraft_value,
             &mission_value,
             &requirements_value,
+            &aircraft,
             &engine,
             propeller.as_ref(),
         );
@@ -164,6 +166,13 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
         raw.propulsion.propeller_profile.is_some(),
     )?;
     let wing = planform::resolve_wing(&raw.geometry.wing)?;
+    let geometry = geometry::resolve_geometry(
+        &raw.geometry,
+        &topology,
+        &wing,
+        &raw.category,
+        &raw.propulsion_architecture,
+    )?;
     let aerodynamics = Aerodynamics {
         model: raw.aerodynamics.model,
         clean: resolve_aero(raw.aerodynamics.clean, "clean")?,
@@ -196,6 +205,7 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
         },
         mass,
         wing,
+        geometry,
         aerodynamics,
         propulsion: Propulsion {
             profile: raw.propulsion.profile,
@@ -308,7 +318,7 @@ fn validate_payload(aircraft: &Aircraft, mission: &Mission) -> AexResult<()> {
     Ok(())
 }
 
-fn positive_quantity(raw: &str, dimension: Dimension, path: &str) -> AexResult<f64> {
+pub(super) fn positive_quantity(raw: &str, dimension: Dimension, path: &str) -> AexResult<f64> {
     positive(parse_quantity(raw, dimension)?, path)
 }
 

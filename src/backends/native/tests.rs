@@ -8,6 +8,46 @@ use crate::test_support::{example_scenario, fuel_exhaustion_scenario};
 use super::{NativeBackend, failed_constraints, native_polar};
 
 #[test]
+fn native_wetted_area_uses_resolved_geometry() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    let fuselage = scenario
+        .aircraft
+        .geometry
+        .fuselage
+        .as_mut()
+        .ok_or_else(|| std::io::Error::other("missing fuselage geometry"))?;
+    fuselage.length.value = 9.0;
+    fuselage.diameter.value = 1.5;
+    scenario
+        .aircraft
+        .geometry
+        .horizontal_tail
+        .as_mut()
+        .ok_or_else(|| std::io::Error::other("missing horizontal tail"))?
+        .area
+        .value = 4.0;
+    scenario
+        .aircraft
+        .geometry
+        .vertical_tail
+        .as_mut()
+        .ok_or_else(|| std::io::Error::other("missing vertical tail"))?
+        .area
+        .value = 2.0;
+    let geometry = NativeBackend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let expected = 2.05 * (scenario.aircraft.wing.area_m2 + 4.0 + 2.0)
+        + 0.85 * std::f64::consts::PI * 1.5 * 9.0;
+
+    assert_eq!(geometry.metrics.horizontal_tail_area.value, 4.0);
+    assert_eq!(geometry.metrics.vertical_tail_area.value, 2.0);
+    assert!((geometry.metrics.wetted_area.value - expected).abs() < 1.0e-12);
+    Ok(())
+}
+
+#[test]
 fn native_polar_retains_reference_mach_extrapolation() -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
     let clean = &mut scenario.aircraft.aerodynamics.clean;
