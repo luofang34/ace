@@ -125,6 +125,7 @@ impl AnalysisBackend for OpenVspBackend {
             stability,
             structural_screen: None,
             mission_power_screen: None,
+            mass_properties: None,
             requirements: Vec::new(),
             feasible: None,
             failed_constraints: Vec::new(),

@@ -29,3 +29,8 @@ requirements:
       value: 13000 ft
       severity: soft
       weight: 0.4
+    - id: static_margin
+      metric: stability.minimum_static_margin
+      operator: ge
+      value: 0.10
+      severity: hard

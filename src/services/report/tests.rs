@@ -61,6 +61,10 @@ fn remove_horizontal_tail(path: &Path) -> Result<(), Box<dyn std::error::Error>>
         relationship["source"].as_str() != Some("horizontal_tail")
             && relationship["target"].as_str() != Some("horizontal_tail")
     });
+    let mass_components = document["aircraft"]["mass"]["components"]
+        .as_sequence_mut()
+        .ok_or_else(|| io::Error::other("missing mass components"))?;
+    mass_components.retain(|component| component["id"].as_str() != Some("horizontal_tail"));
     document["aircraft"]["geometry"]["horizontal_tail"] = serde_yaml::Value::Null;
     fs::write(path, serde_yaml::to_string(&document)?)?;
     Ok(())
@@ -148,7 +152,7 @@ fn report_counts_and_fails_unevaluable_hard_requirements() -> Result<(), Box<dyn
     let decision = concept_decision(&completed, &mission, &scenario);
 
     assert!(!decision.feasible);
-    assert_eq!(decision.hard_requirements_passed, 3);
-    assert_eq!(decision.hard_requirements_total, 4);
+    assert_eq!(decision.hard_requirements_passed, 4);
+    assert_eq!(decision.hard_requirements_total, 5);
     Ok(())
 }

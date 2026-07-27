@@ -73,6 +73,15 @@ async fn detail_mode_matches_the_retrieved_immutable_result() -> Result<(), Box<
             .is_some_and(|items| !items.is_empty())
     );
     assert!(detailed["total_distance"].is_object());
+    assert_eq!(
+        detailed["mass_properties"]["statement"]["closure_error_kg"]["value"],
+        0.0
+    );
+    assert!(
+        detailed["mass_properties"]["states"]
+            .as_array()
+            .is_some_and(|states| !states.is_empty())
+    );
     let report = retrieve(&client, &detailed).await?;
     let fields = detailed
         .as_object_mut()

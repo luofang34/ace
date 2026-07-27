@@ -2,7 +2,8 @@ use crate::domain::capabilities::{RequirementMetric, requirement_metric};
 use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
-    MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation, RequirementStatus,
+    MassPropertiesAnalysis, MissionResult, PayloadRangeResult, PerformanceSummary,
+    RequirementEvaluation, RequirementStatus,
 };
 use crate::domain::schema::{Requirement, ResolvedScenario, SegmentKind};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
@@ -10,6 +11,7 @@ use crate::models::field_performance::{
     FieldPerformanceEstimate, estimate_landing_distance, estimate_second_segment_climb_gradient,
     estimate_takeoff_distance,
 };
+use crate::models::mass_properties;
 
 struct MetricInput {
     actual: f64,
@@ -31,11 +33,17 @@ pub(crate) fn evaluate_requirements(
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
 ) -> AexResult<Vec<RequirementEvaluation>> {
+    let mass_properties = mass_properties::evaluate(scenario, mission)?;
     let mut evaluations = Vec::new();
     for requirement in &scenario.requirements.items {
-        if let Some(input) =
-            metric_value(requirement, scenario, mission, performance, payload_range)?
-        {
+        if let Some(input) = metric_value(
+            requirement,
+            scenario,
+            mission,
+            performance,
+            payload_range,
+            &mass_properties,
+        )? {
             evaluations.push(evaluate_one(requirement, input));
         }
     }
@@ -91,26 +99,23 @@ fn metric_value(
     mission: &MissionResult,
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
+    mass_properties: &MassPropertiesAnalysis,
 ) -> AexResult<Option<MetricInput>> {
     let Some(metric) = requirement_metric(&requirement.metric).map(|item| item.metric) else {
         return Ok(None);
     };
     let input = match metric {
-        RequirementMetric::MissionPayloadMass => {
-            Some(MetricInput::valid(scenario.mission.payload_mass_kg))
-        }
+        RequirementMetric::MissionPayloadMass => mission_payload_input(scenario),
         RequirementMetric::AchievedCruiseTrueAirspeed => performance
             .achieved_cruise_true_airspeed_m_s
             .map(|actual| performance_input(performance, &requirement.metric, actual)),
-        RequirementMetric::MissionCompletedDistance => {
-            Some(MetricInput::valid(mission.total_distance.value))
-        }
+        RequirementMetric::MissionCompletedDistance => valid_input(mission.total_distance.value),
         RequirementMetric::MissionLandingFuel => mission
             .landing_fuel
             .as_ref()
             .map(|fuel| MetricInput::valid(fuel.value)),
         RequirementMetric::MissionReserveDuration => {
-            Some(MetricInput::valid(reserve_duration_s(scenario, mission)))
+            valid_input(reserve_duration_s(scenario, mission))
         }
         RequirementMetric::ServiceCeiling => Some(MetricInput {
             actual: performance.service_ceiling_m,
@@ -134,12 +139,8 @@ fn metric_value(
                 f64::from(u8::from(actual)),
             )
         }),
-        RequirementMetric::TakeoffFieldLength => {
-            Some(field_distance_input(estimate_takeoff_distance(scenario)?))
-        }
-        RequirementMetric::LandingFieldLength => {
-            Some(field_distance_input(estimate_landing_distance(scenario)?))
-        }
+        RequirementMetric::TakeoffFieldLength => field_input(estimate_takeoff_distance(scenario)?),
+        RequirementMetric::LandingFieldLength => field_input(estimate_landing_distance(scenario)?),
         RequirementMetric::AllEngineClimbGradient => Some(climb_gradient_input(
             scenario,
             scenario.aircraft.propulsion.engine_count,
@@ -153,11 +154,45 @@ fn metric_value(
         RequirementMetric::ZeroPayloadFerryRange => payload_range
             .and_then(|result| point_range(result, "zero_payload_ferry"))
             .map(MetricInput::valid),
+        RequirementMetric::MinimumCenterOfGravity => Some(MetricInput::valid(
+            mass_properties.minimum_center_of_gravity.value,
+        )),
+        RequirementMetric::MaximumCenterOfGravity => Some(MetricInput::valid(
+            mass_properties.maximum_center_of_gravity.value,
+        )),
+        RequirementMetric::MinimumStaticMargin => {
+            optional_stability_input(mass_properties.minimum_static_margin)
+        }
+        RequirementMetric::MaximumStaticMargin => {
+            optional_stability_input(mass_properties.maximum_static_margin)
+        }
         RequirementMetric::DeclaredCruiseMach | RequirementMetric::DeclaredCruiseTrueAirspeed => {
             None
         }
     };
     Ok(input)
+}
+
+fn valid_input(actual: f64) -> Option<MetricInput> {
+    Some(MetricInput::valid(actual))
+}
+
+fn mission_payload_input(scenario: &ResolvedScenario) -> Option<MetricInput> {
+    valid_input(scenario.mission.payload_mass_kg)
+}
+
+fn field_input(estimate: FieldPerformanceEstimate) -> Option<MetricInput> {
+    Some(field_distance_input(estimate))
+}
+
+fn optional_stability_input(value: Option<f64>) -> Option<MetricInput> {
+    Some(value.map_or_else(
+        || MetricInput {
+            actual: 0.0,
+            validity: MetricValidity::unsupported(),
+        },
+        MetricInput::valid,
+    ))
 }
 
 fn field_distance_input(estimate: FieldPerformanceEstimate) -> MetricInput {
@@ -234,7 +269,10 @@ fn evaluate_one(requirement: &Requirement, input: MetricInput) -> RequirementEva
         _ => actual - requirement.required,
     };
     let numerical_pass = margin >= -1.0e-9;
-    let (status, passed) = if input.validity.status == ValidityStatus::BoundaryLimited {
+    let (status, passed) = if matches!(
+        input.validity.status,
+        ValidityStatus::BoundaryLimited | ValidityStatus::Unsupported
+    ) {
         (RequirementStatus::Indeterminate, None)
     } else if numerical_pass {
         (RequirementStatus::Pass, Some(true))

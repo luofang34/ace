@@ -304,3 +304,33 @@ the corresponding component is invalid, and absent tailless components do not
 receive conventional correlations. Native wetted area, structural tail-volume
 screening, and OpenVSP generation consume the same resolved geometry so no
 backend independently invents competing dimensions.
+
+## ADR-029 — Mass properties close before stability is evaluated
+
+The resolved aircraft contains one longitudinal mass statement spanning every
+topology component. Explicit component masses take precedence. A selected
+engine profile supplies installed engine dry mass when the matching component
+does not declare a fixed mass. The remaining operating-empty-mass residual is
+distributed only among statistical components with a named, versioned
+correlation. Statistical weights vary by aircraft category and topology
+component count before normalization. Fixed and profile masses are never
+rescaled; if they exceed declared operating empty mass, resolution fails.
+
+Every component mass and station records its source. Fuel and payload have
+separate centroid stations. Native mission states combine the fixed
+operating-empty moment with the simulated fuel and payload remaining after
+each segment, so CG excursion follows the same histories used for mission mass
+and fuel results. Missing tailless stations scale from resolved wing geometry
+rather than a fixed dimensional placeholder. Immutable study evidence retains
+the full typed mass statement, mission states, provenance, and failed
+constraints. Evidence validation rechecks component/OEW closure, state mass
+and moment closure, near-zero closure error, reported extrema, stability
+support, every margin from neutral point/CG/reference chord, the instability
+failure label, and provenance before assigning a content identity.
+
+Conventional static margin uses a conceptual neutral point derived from the
+resolved wing and horizontal-tail volume. Minimum and maximum CG and static
+margin are bindable requirements. A nonpositive native static margin fails the
+conceptual screen. Tailless topology retains mass and CG results, but its
+neutral point is explicitly unsupported; static-margin requirements and study
+objectives are therefore unavailable rather than numeric passes.

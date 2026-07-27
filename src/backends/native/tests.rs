@@ -236,3 +236,46 @@ fn fuel_failure_constraint_labels_are_independent() -> Result<(), Box<dyn std::e
     );
     Ok(())
 }
+
+#[test]
+fn tail_heavy_c172_fails_requirement_and_native_stability_screen()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario
+        .aircraft
+        .mass
+        .statement
+        .components
+        .iter_mut()
+        .find(|component| component.component_id == "fuselage")
+        .ok_or("missing fuselage mass component")?
+        .station
+        .value = 5.5;
+    let backend = NativeBackend;
+    let geometry = backend.generate_geometry_blocking(GeometryRequest {
+        scenario: &scenario,
+        artifact_path: None,
+    })?;
+    let analysis = backend.analyze_blocking(AnalysisRequest {
+        scenario: &scenario,
+        geometry: &geometry,
+    })?;
+
+    assert_eq!(analysis.feasible, Some(false));
+    for expected in ["static_margin", "stability.static_margin"] {
+        assert!(
+            analysis
+                .failed_constraints
+                .iter()
+                .any(|failure| failure == expected)
+        );
+    }
+    assert!(
+        analysis
+            .mass_properties
+            .as_ref()
+            .and_then(|mass| mass.minimum_static_margin)
+            .is_some_and(|margin| margin < 0.0)
+    );
+    Ok(())
+}

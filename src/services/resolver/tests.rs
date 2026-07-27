@@ -100,6 +100,7 @@ fn explicit_reference_topology_round_trips() -> Result<(), Box<dyn std::error::E
     assert_eq!(fuselage.length.value, 8.25);
     assert!(fuselage.length.provenance.explicitly_provided);
     assert_eq!(fuselage.length.provenance.kind, "user_input");
+    assert!(aircraft.mass.statement.closure_error_kg.abs() < 1.0e-9);
     Ok(())
 }
 
@@ -288,6 +289,30 @@ fn inconsistent_override_is_rejected_and_paired_override_closes()
         ]),
     )?;
     assert_closed_planform(&paired);
+    Ok(())
+}
+
+#[test]
+fn fixed_component_mass_cannot_be_hidden_by_statistical_normalization()
+-> Result<(), Box<dyn std::error::Error>> {
+    let temporary = tempfile::tempdir()?;
+    let service = ApplicationService::filesystem(temporary.path().join("runs"));
+    let scenario = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/scenario.yaml");
+    let result = service.resolve_blocking(
+        &scenario,
+        &BTreeMap::from([(
+            "aircraft.mass.components.wing.mass".to_owned(),
+            "800 kg".to_owned(),
+        )]),
+    );
+
+    assert!(matches!(
+        result,
+        Err(AexError::Validation {
+            code: "FIXED_MASS_EXCEEDS_OEW",
+            ..
+        })
+    ));
     Ok(())
 }
 

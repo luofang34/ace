@@ -80,10 +80,21 @@ fn tailless_topology_does_not_invent_conventional_geometry()
     document.aircraft.geometry.fuselage = None;
     document.aircraft.geometry.horizontal_tail = None;
     document.aircraft.geometry.vertical_tail = None;
-    let aircraft = resolve_aircraft(document)?;
+    document.aircraft.mass.components.clear();
+    document.aircraft.mass.fuel_station = None;
+    document.aircraft.mass.payload_station = None;
+    let aircraft = resolve_aircraft(document.clone())?;
+    let mut scaled_document = document;
+    scaled_document.aircraft.geometry.wing.area = Some("32.34 m^2".to_owned());
+    scaled_document.aircraft.geometry.wing.aspect_ratio = None;
+    let scaled = resolve_aircraft(scaled_document)?;
 
     assert!(aircraft.geometry.fuselage.is_none());
     assert!(aircraft.geometry.horizontal_tail.is_none());
     assert!(aircraft.geometry.vertical_tail.is_none());
+    assert!(aircraft.mass.statement.payload_station.value > 1.0);
+    assert!(
+        scaled.mass.statement.payload_station.value > aircraft.mass.statement.payload_station.value
+    );
     Ok(())
 }

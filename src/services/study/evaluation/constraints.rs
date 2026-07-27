@@ -137,7 +137,12 @@ fn additional_constraint(
     let required_value = parse_required(&constraint.value, &actual.unit)?;
     if metric_validity
         .get(&constraint.metric)
-        .is_some_and(|validity| validity.status == ValidityStatus::BoundaryLimited)
+        .is_some_and(|validity| {
+            matches!(
+                validity.status,
+                ValidityStatus::BoundaryLimited | ValidityStatus::Unsupported
+            )
+        })
     {
         return Ok(EvidenceConstraint {
             id: constraint.id.clone(),

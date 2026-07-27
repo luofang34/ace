@@ -78,6 +78,13 @@ fn assert_study_result_planforms(
             assert!(evidence.results.metrics.contains_key(id));
             assert!(evidence.results.metric_validity.contains_key(id));
         }
+        let mass_properties = evidence
+            .results
+            .mass_properties
+            .as_ref()
+            .ok_or_else(|| io::Error::other("study evidence omitted mass properties"))?;
+        assert!(!mass_properties.statement.components.is_empty());
+        assert!(!mass_properties.states.is_empty());
     }
     Ok(())
 }

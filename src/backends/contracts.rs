@@ -5,7 +5,9 @@ use serde::Serialize;
 
 use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::QuantityOutput;
-use crate::domain::result::{MissionPowerScreen, RequirementEvaluation, StructuralScreen};
+use crate::domain::result::{
+    MassPropertiesAnalysis, MissionPowerScreen, RequirementEvaluation, StructuralScreen,
+};
 use crate::domain::schema::ResolvedScenario;
 use crate::domain::validity::MetricValidity;
 
@@ -66,6 +68,10 @@ pub(crate) struct PolarPoint {
 pub(crate) struct StabilitySummary {
     pub(crate) pitching_moment_slope_per_deg: Option<f64>,
     pub(crate) statically_stable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) neutral_point: Option<QuantityOutput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) minimum_static_margin: Option<f64>,
     pub(crate) note: String,
 }
 
@@ -78,6 +84,8 @@ pub(crate) struct AnalysisOutput {
     pub(crate) stability: StabilitySummary,
     pub(crate) structural_screen: Option<StructuralScreen>,
     pub(crate) mission_power_screen: Option<MissionPowerScreen>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) mass_properties: Option<MassPropertiesAnalysis>,
     pub(crate) requirements: Vec<RequirementEvaluation>,
     pub(crate) feasible: Option<bool>,
     pub(crate) failed_constraints: Vec<String>,

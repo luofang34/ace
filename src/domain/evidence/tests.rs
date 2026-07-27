@@ -8,6 +8,8 @@ use crate::domain::validity::{
 };
 use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
+use crate::models::mass_properties;
+use crate::models::mission::MissionSimulator;
 use crate::models::validity::scenario_domains;
 use crate::test_support::example_scenario;
 
@@ -15,11 +17,106 @@ use super::archive::StudyArchiveDraft;
 use super::{
     CandidateDescriptor, CandidateOutcome, ConstraintStatus, EvaluationStatus, EvidenceAnalysis,
     EvidenceConstraint, EvidenceDraft, EvidenceEnvelope, EvidenceProvenance, EvidenceResults,
-    StudyArchive, StudyArchiveWorkflow,
+    MassPropertiesEvidence, StudyArchive, StudyArchiveWorkflow,
 };
 
 fn digest(character: char) -> String {
     character.to_string().repeat(64)
+}
+
+#[test]
+fn malformed_mass_properties_cannot_receive_an_evidence_id()
+-> Result<(), Box<dyn std::error::Error>> {
+    let valid = valid_mass_properties_evidence()?;
+
+    let mut empty_states = valid.as_draft();
+    if let Some(mass) = &mut empty_states.results.mass_properties {
+        mass.states.clear();
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(empty_states)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    let mut broken_closure = valid.as_draft();
+    if let Some(mass) = &mut broken_closure.results.mass_properties {
+        mass.statement.operating_empty_mass.value += 1.0;
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(broken_closure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    let mut nonzero_closure = valid.as_draft();
+    if let Some(mass) = &mut nonzero_closure.results.mass_properties {
+        mass.statement.operating_empty_mass.value -= 1.0;
+        mass.statement.closure_error_kg = 1.0;
+        mass.closure_error.value = 1.0;
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(nonzero_closure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    let mut contradictory_margins = valid.as_draft();
+    if let Some(mass) = &mut contradictory_margins.results.mass_properties {
+        for state in &mut mass.states {
+            state.static_margin = state.static_margin.map(|margin| margin + 0.1);
+        }
+        mass.minimum_static_margin = mass.minimum_static_margin.map(|margin| margin + 0.1);
+        mass.maximum_static_margin = mass.maximum_static_margin.map(|margin| margin + 0.1);
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(contradictory_margins)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    let mut contradictory_failure = valid.as_draft();
+    if let Some(mass) = &mut contradictory_failure.results.mass_properties {
+        mass.failed_constraints
+            .push("stability.static_margin".to_owned());
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(contradictory_failure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    Ok(())
+}
+
+#[test]
+fn unsupported_stability_cannot_claim_a_static_margin_failure()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut unsupported_failure = valid_mass_properties_evidence()?.as_draft();
+    if let Some(mass) = &mut unsupported_failure.results.mass_properties {
+        mass.stability_supported = false;
+        mass.neutral_point = None;
+        mass.minimum_static_margin = None;
+        mass.maximum_static_margin = None;
+        mass.states
+            .iter_mut()
+            .for_each(|state| state.static_margin = None);
+        mass.failed_constraints
+            .push("stability.static_margin".to_owned());
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(unsupported_failure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+    Ok(())
+}
+
+fn valid_mass_properties_evidence() -> Result<EvidenceEnvelope, Box<dyn std::error::Error>> {
+    let candidate = candidate("16 m^2")?;
+    let base = evidence(candidate.candidate_id, 120.0)?;
+    let scenario = example_scenario("c172")?;
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let analysis = mass_properties::evaluate(&scenario, &mission)?;
+    let mut draft = base.as_draft();
+    draft.results.mass_properties = Some(MassPropertiesEvidence::from(&analysis));
+    let valid = EvidenceEnvelope::from_draft(draft)?;
+    valid.validate()?;
+    Ok(valid)
 }
 
 fn candidate(area: &str) -> Result<CandidateDescriptor, Box<dyn std::error::Error>> {
@@ -76,6 +173,7 @@ fn evidence_with_metadata(
                 QuantityOutput::si(metric_value, "kg"),
             )]),
             metric_validity,
+            mass_properties: None,
             constraints: vec![EvidenceConstraint {
                 id: "fuel-floor".to_owned(),
                 metric: "mission.total_fuel".to_owned(),

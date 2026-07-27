@@ -18,6 +18,7 @@ use crate::services::report::LIMITATION;
 use crate::services::report::markdown_report;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::services::sweep::SweepVariable;
+use crate::storage::run_store::RunAttribution;
 
 use super::output::{emit_blocking, emit_scenario_blocking};
 use super::plots::execute_plot;
@@ -110,7 +111,7 @@ fn execute_point(service: &ApplicationService, arguments: PointArgs) -> AexResul
         &result,
         &result.warnings,
         arguments.common.seed,
-        &[],
+        RunAttribution::default(),
     )?;
     emit_scenario_blocking(
         &AnalysisEnvelope {
@@ -139,7 +140,7 @@ fn execute_mission(service: &ApplicationService, arguments: ScenarioArgs) -> Aex
         &mission,
         &mission.warnings,
         arguments.common.seed,
-        &[],
+        RunAttribution::with_mass_properties(),
     )?;
     let headline_passed = hard_requirements_passed(
         mission.completed,
@@ -193,7 +194,7 @@ fn execute_constraints(service: &ApplicationService, arguments: ConstraintArgs) 
         &result,
         &result.warnings,
         arguments.common.seed,
-        &[],
+        RunAttribution::default(),
     )?;
     emit_scenario_blocking(
         &AnalysisEnvelope {
@@ -218,7 +219,7 @@ fn execute_payload_range(service: &ApplicationService, arguments: ScenarioArgs) 
         &result,
         &result.warnings,
         arguments.common.seed,
-        &[],
+        RunAttribution::default(),
     )?;
     emit_scenario_blocking(
         &AnalysisEnvelope {
@@ -243,7 +244,7 @@ fn execute_performance(service: &ApplicationService, arguments: ScenarioArgs) ->
         &result,
         &result.warnings,
         arguments.common.seed,
-        &[],
+        RunAttribution::default(),
     )?;
     emit_scenario_blocking(
         &AnalysisEnvelope {
@@ -274,7 +275,7 @@ fn execute_sweep(service: &ApplicationService, arguments: SweepArgs) -> AexResul
         &result,
         &result.warnings,
         arguments.common.seed,
-        &[],
+        RunAttribution::with_mass_properties(),
     )?;
     emit_scenario_blocking(
         &AnalysisEnvelope {

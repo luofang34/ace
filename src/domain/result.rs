@@ -7,7 +7,13 @@ use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::{AssumptionEntry, RequirementProvenance};
 use crate::domain::validity::{MetricValidity, ModelValidityDomain};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+mod mass_properties;
+
+pub(crate) use mass_properties::{
+    MassPropertiesAnalysis, MassPropertiesMetricSnapshot, MassPropertiesState,
+};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub(crate) struct ResultProvenance {
     pub(crate) method: String,
     pub(crate) backend: String,

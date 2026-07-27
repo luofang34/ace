@@ -20,7 +20,9 @@ use crate::services::model_preflight::{preflight_model_domains, preflight_operat
 use crate::services::resolver::ScenarioResolver;
 use crate::storage::profile_store::{FileProfileStore, ProfileRepository};
 use crate::storage::project_store::read_yaml_value_blocking;
-use crate::storage::run_store::{FileRunStore, PersistRunRequest, RunRecord, RunRepository};
+use crate::storage::run_store::{
+    FileRunStore, PersistRunRequest, RunAttribution, RunRecord, RunRepository,
+};
 use crate::storage::study_store::{FileStudyStore, StudyRepository};
 
 #[derive(Debug, Clone)]
@@ -233,7 +235,7 @@ impl ApplicationService {
         result: &T,
         warnings: &[Diagnostic],
         seed: u64,
-        artifacts: &[String],
+        attribution: RunAttribution<'_>,
     ) -> AexResult<RunRecord> {
         let result_value =
             serde_json::to_value(result).map_err(|source| AexError::Json { source })?;
@@ -247,7 +249,8 @@ impl ApplicationService {
             result: &result_value,
             warnings,
             seed,
-            artifacts,
+            artifacts: attribution.artifacts,
+            model_usage: attribution.model_usage,
         })
     }
 

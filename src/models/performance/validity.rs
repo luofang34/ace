@@ -143,6 +143,7 @@ pub(super) fn aggregate<'a>(
     let mut aggregate = ValidityStatus::Valid;
     for validity in validities {
         match validity.status {
+            ValidityStatus::Unsupported => return ValidityStatus::Unsupported,
             ValidityStatus::BoundaryLimited => return ValidityStatus::BoundaryLimited,
             ValidityStatus::Extrapolated => aggregate = ValidityStatus::Extrapolated,
             ValidityStatus::Valid => {}

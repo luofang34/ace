@@ -4,7 +4,8 @@ use crate::backends::contracts::GeometryOutput;
 use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
-    MissionPowerScreen, MissionResult, PayloadRangeResult, PerformanceSummary, StructuralScreen,
+    MassPropertiesAnalysis, MissionPowerScreen, MissionResult, PayloadRangeResult,
+    PerformanceSummary, StructuralScreen,
 };
 use crate::models::breguet::BreguetEstimate;
 use crate::models::field_performance::FieldPerformanceEstimate;
@@ -20,6 +21,7 @@ pub(super) struct NativeMetricInputs<'a> {
     pub(super) takeoff_field: &'a FieldPerformanceEstimate,
     pub(super) landing_field: &'a FieldPerformanceEstimate,
     pub(super) weight_kg: f64,
+    pub(super) mass_properties: &'a MassPropertiesAnalysis,
 }
 
 pub(super) fn native_metrics(
@@ -29,7 +31,45 @@ pub(super) fn native_metrics(
     insert_aircraft_metrics(&mut metrics, &input)?;
     insert_mission_metrics(&mut metrics, &input);
     insert_structural_metrics(&mut metrics, &input);
+    insert_mass_properties_metrics(&mut metrics, input.mass_properties);
     Ok(metrics)
+}
+
+fn insert_mass_properties_metrics(
+    metrics: &mut BTreeMap<String, QuantityOutput>,
+    analysis: &MassPropertiesAnalysis,
+) {
+    metrics.insert(
+        "mass_properties.minimum_center_of_gravity".to_owned(),
+        analysis.minimum_center_of_gravity.clone(),
+    );
+    metrics.insert(
+        "mass_properties.maximum_center_of_gravity".to_owned(),
+        analysis.maximum_center_of_gravity.clone(),
+    );
+    metrics.insert(
+        "mass_properties.closure_error".to_owned(),
+        analysis.closure_error.clone(),
+    );
+    metrics.insert(
+        "stability.neutral_point".to_owned(),
+        analysis
+            .neutral_point
+            .clone()
+            .unwrap_or_else(|| QuantityOutput::si(0.0, "m")),
+    );
+    insert(
+        metrics,
+        "stability.minimum_static_margin",
+        analysis.minimum_static_margin.unwrap_or(0.0),
+        "1",
+    );
+    insert(
+        metrics,
+        "stability.maximum_static_margin",
+        analysis.maximum_static_margin.unwrap_or(0.0),
+        "1",
+    );
 }
 
 fn insert_aircraft_metrics(
