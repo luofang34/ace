@@ -11,7 +11,7 @@ use crate::domain::content_identity::digest_serializable;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic, Severity};
 use crate::domain::evidence::{
     CandidateDescriptor, CandidateOutcome, EvaluationStatus, EvidenceAnalysis, EvidenceDraft,
-    EvidenceEnvelope, EvidenceProvenance, EvidenceResults,
+    EvidenceEnvelope, EvidenceProvenance, EvidenceResults, MassPropertiesEvidence,
 };
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
@@ -149,9 +149,7 @@ fn evaluate_native_blocking(
             mass_properties: analysis
                 .mass_properties
                 .as_ref()
-                .map(serde_json::to_value)
-                .transpose()
-                .map_err(|source| AexError::Json { source })?,
+                .map(MassPropertiesEvidence::from),
             metrics,
             constraints,
             diagnostics,

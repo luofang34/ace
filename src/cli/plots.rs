@@ -15,6 +15,7 @@ use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::warning::enforce_strict;
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::evaluate_requirements;
+use crate::storage::run_store::{RunAttribution, RunModelUsage};
 
 use super::output::emit_scenario_blocking;
 
@@ -41,7 +42,10 @@ pub(super) fn execute_plot(service: &ApplicationService, arguments: PlotArgs) ->
         &chart,
         &chart.warnings,
         arguments.seed,
-        std::slice::from_ref(&artifact),
+        RunAttribution {
+            artifacts: std::slice::from_ref(&artifact),
+            model_usage: plot_model_usage(arguments.kind),
+        },
     )?;
     emit_scenario_blocking(
         &PlotOutput {
@@ -53,6 +57,14 @@ pub(super) fn execute_plot(service: &ApplicationService, arguments: PlotArgs) ->
     )?;
     tracing::info!(run_id = %run.run_id, artifact = %artifact, "plot completed");
     Ok(())
+}
+
+fn plot_model_usage(kind: PlotKind) -> RunModelUsage {
+    if matches!(kind, PlotKind::RequirementMargins) {
+        RunModelUsage::with_mass_properties()
+    } else {
+        RunModelUsage::default()
+    }
 }
 
 fn generate_chart(
@@ -94,5 +106,17 @@ fn generate_chart(
             )?;
             Ok(requirement_margins(scenario, &evaluations))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PlotKind, plot_model_usage};
+
+    #[test]
+    fn only_requirement_margin_plots_attribute_mass_properties() {
+        assert!(plot_model_usage(PlotKind::RequirementMargins).mass_properties);
+        assert!(!plot_model_usage(PlotKind::DragPolar).mass_properties);
+        assert!(!plot_model_usage(PlotKind::MissionMass).mass_properties);
     }
 }

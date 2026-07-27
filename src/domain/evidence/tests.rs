@@ -8,6 +8,8 @@ use crate::domain::validity::{
 };
 use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
+use crate::models::mass_properties;
+use crate::models::mission::MissionSimulator;
 use crate::models::validity::scenario_domains;
 use crate::test_support::example_scenario;
 
@@ -15,11 +17,44 @@ use super::archive::StudyArchiveDraft;
 use super::{
     CandidateDescriptor, CandidateOutcome, ConstraintStatus, EvaluationStatus, EvidenceAnalysis,
     EvidenceConstraint, EvidenceDraft, EvidenceEnvelope, EvidenceProvenance, EvidenceResults,
-    StudyArchive, StudyArchiveWorkflow,
+    MassPropertiesEvidence, StudyArchive, StudyArchiveWorkflow,
 };
 
 fn digest(character: char) -> String {
     character.to_string().repeat(64)
+}
+
+#[test]
+fn malformed_mass_properties_cannot_receive_an_evidence_id()
+-> Result<(), Box<dyn std::error::Error>> {
+    let candidate = candidate("16 m^2")?;
+    let base = evidence(candidate.candidate_id, 120.0)?;
+    let scenario = example_scenario("c172")?;
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let analysis = mass_properties::evaluate(&scenario, &mission)?;
+    let mut draft = base.as_draft();
+    draft.results.mass_properties = Some(MassPropertiesEvidence::from(&analysis));
+    let valid = EvidenceEnvelope::from_draft(draft)?;
+    valid.validate()?;
+
+    let mut empty_states = valid.as_draft();
+    if let Some(mass) = &mut empty_states.results.mass_properties {
+        mass.states.clear();
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(empty_states)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    let mut broken_closure = valid.as_draft();
+    if let Some(mass) = &mut broken_closure.results.mass_properties {
+        mass.statement.operating_empty_mass.value += 1.0;
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(broken_closure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+    Ok(())
 }
 
 fn candidate(area: &str) -> Result<CandidateDescriptor, Box<dyn std::error::Error>> {

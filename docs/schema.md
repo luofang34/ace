@@ -256,6 +256,9 @@ metrics are `mass_properties.minimum_center_of_gravity`,
 `stability.minimum_static_margin`/`stability.maximum_static_margin`. Tailless
 static-margin validity is
 `unsupported`, so requirement status is `indeterminate` and `passed` is null.
+Study evidence stores this result as a typed, invariant-validated block; empty
+states, invalid quantities, broken mass/CG closure, and inconsistent extrema
+are rejected before the evaluation receives a content ID.
 
 Thrust-engine profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and

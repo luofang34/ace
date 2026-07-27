@@ -13,7 +13,7 @@ pub(crate) use mass_properties::{
     MassPropertiesAnalysis, MassPropertiesMetricSnapshot, MassPropertiesState,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub(crate) struct ResultProvenance {
     pub(crate) method: String,
     pub(crate) backend: String,

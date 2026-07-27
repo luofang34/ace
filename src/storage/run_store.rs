@@ -50,6 +50,35 @@ pub(crate) struct PersistRunRequest<'a> {
     pub(crate) warnings: &'a [Diagnostic],
     pub(crate) seed: u64,
     pub(crate) artifacts: &'a [String],
+    pub(crate) model_usage: RunModelUsage,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct RunModelUsage {
+    pub(crate) mass_properties: bool,
+}
+
+impl RunModelUsage {
+    pub(crate) const fn with_mass_properties() -> Self {
+        Self {
+            mass_properties: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct RunAttribution<'a> {
+    pub(crate) artifacts: &'a [String],
+    pub(crate) model_usage: RunModelUsage,
+}
+
+impl RunAttribution<'_> {
+    pub(crate) const fn with_mass_properties() -> Self {
+        Self {
+            artifacts: &[],
+            model_usage: RunModelUsage::with_mass_properties(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -166,7 +195,7 @@ fn manifest_models(request: &PersistRunRequest<'_>) -> Vec<ModelManifestEntry> {
             fidelity_level: 1,
         },
     ];
-    if request.analysis == "mission" {
+    if request.model_usage.mass_properties {
         models.push(ModelManifestEntry {
             model_id: "stability.native_mass_properties".to_owned(),
             model_version: "1".to_owned(),

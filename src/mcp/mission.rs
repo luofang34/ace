@@ -10,6 +10,7 @@ use crate::models::mass_properties;
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::storage::project_store::display_unit_system_blocking;
+use crate::storage::run_store::RunAttribution;
 
 use super::output::json_output_with_system;
 use super::schema::MissionRequest;
@@ -44,7 +45,14 @@ pub(super) fn simulate(
     let mass_properties = mass_properties::evaluate(&scenario, &mission).map_err(mcp_error)?;
     let detail = detailed_result(&mission, &mass_properties, passed)?;
     let run = service
-        .persist_blocking(&scenario, "mission", &detail, &mission.warnings, 0, &[])
+        .persist_blocking(
+            &scenario,
+            "mission",
+            &detail,
+            &mission.warnings,
+            0,
+            RunAttribution::with_mass_properties(),
+        )
         .map_err(mcp_error)?;
     let response = if request.detail {
         detailed_response(detail, &run.run_id, unit_system)?

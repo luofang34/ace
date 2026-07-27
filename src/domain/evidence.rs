@@ -10,9 +10,11 @@ use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 use crate::domain::validity::{MetricValidity, ModelValidityDomain};
 
 pub(crate) mod archive;
+mod mass_properties;
 mod workflow;
 
 pub(crate) use archive::StudyArchive;
+pub(crate) use mass_properties::MassPropertiesEvidence;
 pub(crate) use workflow::{
     CandidateOutcome, CandidateSummary, OptimizerCheckpoint, StudyArchiveWorkflow, StudyLoadResult,
     StudyRunResult,
@@ -197,7 +199,7 @@ pub(crate) struct EvidenceResults {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) mass_properties: Option<serde_json::Value>,
+    pub(crate) mass_properties: Option<MassPropertiesEvidence>,
     pub(crate) constraints: Vec<EvidenceConstraint>,
     pub(crate) diagnostics: Vec<Diagnostic>,
 }
@@ -328,17 +330,8 @@ fn validate_results(results: &EvidenceResults) -> AexResult<()> {
         }
         validity.validate(&format!("evidence.results.metric_validity.{metric}"))?;
     }
-    if results.mass_properties.as_ref().is_some_and(|value| {
-        !value
-            .get("statement")
-            .is_some_and(serde_json::Value::is_object)
-            || !value.get("states").is_some_and(serde_json::Value::is_array)
-    }) {
-        return Err(AexError::validation(
-            "INVALID_EVIDENCE_MASS_PROPERTIES",
-            "evidence.results.mass_properties",
-            "mass-properties evidence requires a component statement and mission states",
-        ));
+    if let Some(mass_properties) = &results.mass_properties {
+        mass_properties.validate()?;
     }
     let mut ids = BTreeSet::new();
     for constraint in &results.constraints {

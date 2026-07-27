@@ -83,8 +83,8 @@ fn assert_study_result_planforms(
             .mass_properties
             .as_ref()
             .ok_or_else(|| io::Error::other("study evidence omitted mass properties"))?;
-        assert!(mass_properties["statement"]["components"].is_array());
-        assert!(mass_properties["states"].is_array());
+        assert!(!mass_properties.statement.components.is_empty());
+        assert!(!mass_properties.states.is_empty());
     }
     Ok(())
 }
