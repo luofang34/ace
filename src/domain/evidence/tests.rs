@@ -27,15 +27,7 @@ fn digest(character: char) -> String {
 #[test]
 fn malformed_mass_properties_cannot_receive_an_evidence_id()
 -> Result<(), Box<dyn std::error::Error>> {
-    let candidate = candidate("16 m^2")?;
-    let base = evidence(candidate.candidate_id, 120.0)?;
-    let scenario = example_scenario("c172")?;
-    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
-    let analysis = mass_properties::evaluate(&scenario, &mission)?;
-    let mut draft = base.as_draft();
-    draft.results.mass_properties = Some(MassPropertiesEvidence::from(&analysis));
-    let valid = EvidenceEnvelope::from_draft(draft)?;
-    valid.validate()?;
+    let valid = valid_mass_properties_evidence()?;
 
     let mut empty_states = valid.as_draft();
     if let Some(mass) = &mut empty_states.results.mass_properties {
@@ -88,7 +80,43 @@ fn malformed_mass_properties_cannot_receive_an_evidence_id()
         EvidenceEnvelope::from_draft(contradictory_failure)
             .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
     );
+
     Ok(())
+}
+
+#[test]
+fn unsupported_stability_cannot_claim_a_static_margin_failure()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut unsupported_failure = valid_mass_properties_evidence()?.as_draft();
+    if let Some(mass) = &mut unsupported_failure.results.mass_properties {
+        mass.stability_supported = false;
+        mass.neutral_point = None;
+        mass.minimum_static_margin = None;
+        mass.maximum_static_margin = None;
+        mass.states
+            .iter_mut()
+            .for_each(|state| state.static_margin = None);
+        mass.failed_constraints
+            .push("stability.static_margin".to_owned());
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(unsupported_failure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+    Ok(())
+}
+
+fn valid_mass_properties_evidence() -> Result<EvidenceEnvelope, Box<dyn std::error::Error>> {
+    let candidate = candidate("16 m^2")?;
+    let base = evidence(candidate.candidate_id, 120.0)?;
+    let scenario = example_scenario("c172")?;
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let analysis = mass_properties::evaluate(&scenario, &mission)?;
+    let mut draft = base.as_draft();
+    draft.results.mass_properties = Some(MassPropertiesEvidence::from(&analysis));
+    let valid = EvidenceEnvelope::from_draft(draft)?;
+    valid.validate()?;
+    Ok(valid)
 }
 
 fn candidate(area: &str) -> Result<CandidateDescriptor, Box<dyn std::error::Error>> {

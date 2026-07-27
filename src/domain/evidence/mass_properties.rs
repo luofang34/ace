@@ -358,7 +358,7 @@ fn validate_stability(evidence: &MassPropertiesEvidence) -> AexResult<()> {
             "unsupported stability cannot publish numeric values",
         ))
     } else {
-        Ok(())
+        validate_stability_failure(evidence, false)
     }
 }
 
@@ -400,7 +400,7 @@ fn validate_supported_stability(
             "reported static-margin bounds do not match mission states",
         ));
     }
-    validate_stability_failure(evidence, minimum)
+    validate_stability_failure(evidence, minimum <= 0.0)
 }
 
 fn margin_bounds(values: &[f64]) -> Option<(f64, f64)> {
@@ -425,15 +425,12 @@ fn validate_failed_constraints(constraints: &[String]) -> AexResult<()> {
     }
 }
 
-fn validate_stability_failure(
-    evidence: &MassPropertiesEvidence,
-    minimum_margin: f64,
-) -> AexResult<()> {
+fn validate_stability_failure(evidence: &MassPropertiesEvidence, expected: bool) -> AexResult<()> {
     let declared = evidence
         .failed_constraints
         .iter()
         .any(|item| item == "stability.static_margin");
-    if declared == (minimum_margin <= 0.0) {
+    if declared == expected {
         Ok(())
     } else {
         Err(invalid(
