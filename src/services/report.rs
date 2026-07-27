@@ -216,6 +216,7 @@ fn evaluation_polar(scenario: &ResolvedScenario, evaluation: &BackendEvaluation)
             unit: "1".to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![SeriesSpec {
             id: "drag_coefficient".to_owned(),
             label: "CD".to_owned(),

@@ -85,6 +85,7 @@ impl ConstraintAnalyzer {
             wing_loading_n_m2: wing_loading,
             constraints,
             feasible_region_mask: feasible,
+            stall_wing_loading_limit_n_m2: stall_limit,
             selected_wing_loading_n_m2: selected_wing_loading,
             selected_loading,
             active_controlling_constraint: active,

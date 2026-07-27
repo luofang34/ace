@@ -435,6 +435,23 @@ The `preserve_baseline_mass_closure` derivation applies propulsion dry-mass
 growth to both operating empty mass and maximum takeoff mass, while fuel
 capacity changes adjust maximum takeoff mass by the same amount.
 
+Chart specifications support an additive `surface` object for carpet and
+contour plots. `x.values` and `y.values` define strictly increasing grid
+coordinates. `surface.values` and `surface.feasible_mask` each contain exactly
+`x.values.length * y.values.length` entries in y-row/x-column order. A surface
+also declares `label`, `unit`, and optional `contour_levels`. Existing chart
+records omit `surface` and remain readable. Invalid dimensions, non-finite
+values, or unordered axes return `INVALID_CHART_SURFACE` before artifact
+creation.
+
+Constraint results add `stall_wing_loading_limit_n_m2`; the carpet feasible
+mask is true only where wing loading does not exceed that limit and plotted
+loading meets the controlling analyzer boundary. Sweep rows add the
+requirements-based `feasible` verdict used by two-variable sweep surfaces.
+Complete rectangular grid-study archives expose an objective surface through
+their returned chart. Irregular or evolutionary archives remain scatter plots
+with `IRREGULAR_TRADE_SPACE`.
+
 Archive consumers cross-check every outcome against the referenced candidate
 and immutable evidence record, including study ID and recorded feasibility.
 Queries do not infer a revision when multiple study, baseline, or evaluator
