@@ -28,6 +28,7 @@ pub(crate) fn evaluate(
         minimum_center_of_gravity: QuantityOutput::si(snapshot.minimum_center_of_gravity_m, "m"),
         maximum_center_of_gravity: QuantityOutput::si(snapshot.maximum_center_of_gravity_m, "m"),
         neutral_point: neutral_point.map(|value| QuantityOutput::si(value, "m")),
+        reference_chord: QuantityOutput::si(mean_chord, "m"),
         minimum_static_margin: snapshot.minimum_static_margin,
         maximum_static_margin: static_margin_bounds(&states).map(|(_, maximum)| maximum),
         stability_supported: neutral_point.is_some(),

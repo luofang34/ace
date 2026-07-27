@@ -258,7 +258,9 @@ static-margin validity is
 `unsupported`, so requirement status is `indeterminate` and `passed` is null.
 Study evidence stores this result as a typed, invariant-validated block; empty
 states, invalid quantities, broken mass/CG closure, and inconsistent extrema
-are rejected before the evaluation receives a content ID.
+are rejected before the evaluation receives a content ID. The resolved
+reference chord is recorded so every state static margin and its failure label
+can be recomputed independently.
 
 Thrust-engine profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and

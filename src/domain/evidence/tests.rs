@@ -54,6 +54,40 @@ fn malformed_mass_properties_cannot_receive_an_evidence_id()
         EvidenceEnvelope::from_draft(broken_closure)
             .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
     );
+
+    let mut nonzero_closure = valid.as_draft();
+    if let Some(mass) = &mut nonzero_closure.results.mass_properties {
+        mass.statement.operating_empty_mass.value -= 1.0;
+        mass.statement.closure_error_kg = 1.0;
+        mass.closure_error.value = 1.0;
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(nonzero_closure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    let mut contradictory_margins = valid.as_draft();
+    if let Some(mass) = &mut contradictory_margins.results.mass_properties {
+        for state in &mut mass.states {
+            state.static_margin = state.static_margin.map(|margin| margin + 0.1);
+        }
+        mass.minimum_static_margin = mass.minimum_static_margin.map(|margin| margin + 0.1);
+        mass.maximum_static_margin = mass.maximum_static_margin.map(|margin| margin + 0.1);
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(contradictory_margins)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
+
+    let mut contradictory_failure = valid.as_draft();
+    if let Some(mass) = &mut contradictory_failure.results.mass_properties {
+        mass.failed_constraints
+            .push("stability.static_margin".to_owned());
+    }
+    assert!(
+        EvidenceEnvelope::from_draft(contradictory_failure)
+            .is_err_and(|error| { error.detail().code == "INVALID_EVIDENCE_MASS_PROPERTIES" })
+    );
     Ok(())
 }
 

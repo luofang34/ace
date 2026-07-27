@@ -324,8 +324,9 @@ and fuel results. Missing tailless stations scale from resolved wing geometry
 rather than a fixed dimensional placeholder. Immutable study evidence retains
 the full typed mass statement, mission states, provenance, and failed
 constraints. Evidence validation rechecks component/OEW closure, state mass
-and moment closure, reported extrema, stability support, and provenance before
-assigning a content identity.
+and moment closure, near-zero closure error, reported extrema, stability
+support, every margin from neutral point/CG/reference chord, the instability
+failure label, and provenance before assigning a content identity.
 
 Conventional static margin uses a conceptual neutral point derived from the
 resolved wing and horizontal-tail volume. Minimum and maximum CG and static

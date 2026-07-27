@@ -4,12 +4,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::QuantityOutput;
-use crate::domain::result::{MassPropertiesAnalysis, MassPropertiesState, ResultProvenance};
+use crate::domain::result::{MassPropertiesAnalysis, ResultProvenance};
 use crate::domain::schema::{
     ComponentMass, ComponentMassStatement, MassPropertyProvenance, MassPropertyValue,
 };
 
 const CLOSURE_TOLERANCE: f64 = 1.0e-6;
+
+mod conversion;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub(crate) struct MassPropertiesEvidence {
@@ -19,6 +21,7 @@ pub(crate) struct MassPropertiesEvidence {
     pub(crate) minimum_center_of_gravity: QuantityOutput,
     pub(crate) maximum_center_of_gravity: QuantityOutput,
     pub(crate) neutral_point: Option<QuantityOutput>,
+    pub(crate) reference_chord: QuantityOutput,
     pub(crate) minimum_static_margin: Option<f64>,
     pub(crate) maximum_static_margin: Option<f64>,
     pub(crate) stability_supported: bool,
@@ -81,6 +84,7 @@ impl From<&MassPropertiesAnalysis> for MassPropertiesEvidence {
             minimum_center_of_gravity: value.minimum_center_of_gravity.clone(),
             maximum_center_of_gravity: value.maximum_center_of_gravity.clone(),
             neutral_point: value.neutral_point.clone(),
+            reference_chord: value.reference_chord.clone(),
             minimum_static_margin: value.minimum_static_margin,
             maximum_static_margin: value.maximum_static_margin,
             stability_supported: value.stability_supported,
@@ -147,19 +151,6 @@ impl From<&MassPropertyProvenance> for MassPropertyProvenanceEvidence {
     }
 }
 
-impl From<&MassPropertiesState> for MassStateEvidence {
-    fn from(value: &MassPropertiesState) -> Self {
-        Self {
-            id: value.id.clone(),
-            total_mass: value.total_mass.clone(),
-            fuel_mass: value.fuel_mass.clone(),
-            payload_mass: value.payload_mass.clone(),
-            center_of_gravity: value.center_of_gravity.clone(),
-            static_margin: value.static_margin,
-        }
-    }
-}
-
 impl MassPropertiesEvidence {
     pub(crate) fn validate(&self) -> AexResult<()> {
         validate_statement(&self.statement)?;
@@ -174,8 +165,11 @@ impl MassPropertiesEvidence {
         )?;
         if self.closure_error.unit != "kg"
             || !close(self.closure_error.value, self.statement.closure_error_kg)
+            || self.statement.closure_error_kg.abs() > CLOSURE_TOLERANCE
         {
-            return Err(invalid("closure error does not match the mass statement"));
+            return Err(invalid(
+                "closure error must match the mass statement and be near zero",
+            ));
         }
         Ok(())
     }
@@ -344,6 +338,7 @@ fn validate_bounds(evidence: &MassPropertiesEvidence) -> AexResult<()> {
 }
 
 fn validate_stability(evidence: &MassPropertiesEvidence) -> AexResult<()> {
+    validate_quantity_unit(&evidence.reference_chord, "m", true)?;
     if let Some(neutral_point) = &evidence.neutral_point {
         validate_quantity_unit(neutral_point, "m", false)?;
     }
@@ -371,26 +366,41 @@ fn validate_supported_stability(
     evidence: &MassPropertiesEvidence,
     margins: &[f64],
 ) -> AexResult<()> {
+    let neutral_point = evidence
+        .neutral_point
+        .as_ref()
+        .ok_or_else(|| invalid("supported stability requires a neutral point"))?
+        .value;
+    if evidence.states.iter().any(|state| {
+        !state.static_margin.is_some_and(|margin| {
+            close(
+                margin,
+                (neutral_point - state.center_of_gravity.value) / evidence.reference_chord.value,
+            )
+        })
+    }) {
+        return Err(invalid(
+            "state static margin does not match neutral point, CG, and reference chord",
+        ));
+    }
     let Some((minimum, maximum)) = margin_bounds(margins) else {
         return Err(invalid(
             "supported stability requires every mission-state margin",
         ));
     };
-    let valid = evidence.neutral_point.is_some()
-        && margins.len() == evidence.states.len()
+    let valid = margins.len() == evidence.states.len()
         && evidence
             .minimum_static_margin
             .is_some_and(|value| close(value, minimum))
         && evidence
             .maximum_static_margin
             .is_some_and(|value| close(value, maximum));
-    if valid {
-        Ok(())
-    } else {
-        Err(invalid(
+    if !valid {
+        return Err(invalid(
             "reported static-margin bounds do not match mission states",
-        ))
+        ));
     }
+    validate_stability_failure(evidence, minimum)
 }
 
 fn margin_bounds(values: &[f64]) -> Option<(f64, f64)> {
@@ -412,6 +422,23 @@ fn validate_failed_constraints(constraints: &[String]) -> AexResult<()> {
         ))
     } else {
         Ok(())
+    }
+}
+
+fn validate_stability_failure(
+    evidence: &MassPropertiesEvidence,
+    minimum_margin: f64,
+) -> AexResult<()> {
+    let declared = evidence
+        .failed_constraints
+        .iter()
+        .any(|item| item == "stability.static_margin");
+    if declared == (minimum_margin <= 0.0) {
+        Ok(())
+    } else {
+        Err(invalid(
+            "static-margin failure label does not match the minimum margin",
+        ))
     }
 }
 

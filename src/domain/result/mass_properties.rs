@@ -14,6 +14,7 @@ pub(crate) struct MassPropertiesAnalysis {
     pub(crate) maximum_center_of_gravity: QuantityOutput,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) neutral_point: Option<QuantityOutput>,
+    pub(crate) reference_chord: QuantityOutput,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) minimum_static_margin: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]

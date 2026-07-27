@@ -30,6 +30,7 @@ fn c172_statement_closes_and_start_cg_matches_hand_calculation()
         .sum::<f64>();
     assert!((empty_moment - 2_586.0).abs() < 1.0e-9);
     assert!(statement.closure_error_kg.abs() < 1.0e-9);
+    assert!((analysis.reference_chord.value - 16.17 / 11.0).abs() < 1.0e-12);
     assert!((analysis.states[0].center_of_gravity.value - expected_cg).abs() < 1.0e-12);
     assert!(
         analysis
