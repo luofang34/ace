@@ -45,6 +45,7 @@ fn records() -> Result<(EvidenceEnvelope, StudyArchive), Box<dyn std::error::Err
                 QuantityOutput::si(120.0, "kg"),
             )]),
             metric_validity: BTreeMap::new(),
+            mass_properties: None,
             constraints: Vec::new(),
             diagnostics: Vec::new(),
         },

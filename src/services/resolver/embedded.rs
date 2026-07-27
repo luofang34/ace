@@ -34,7 +34,7 @@ pub(crate) fn resolve_embedded_study(
         &mut requirements_value,
         &raw.overrides,
     )?;
-    let aircraft = resolve_aircraft(deserialize_value(aircraft_value.clone(), "aircraft")?)?;
+    let mut aircraft = resolve_aircraft(deserialize_value(aircraft_value.clone(), "aircraft")?)?;
     let mission = resolve_mission(deserialize_value(mission_value.clone(), "mission")?)?;
     let requirements = resolve_requirements(deserialize_value(
         requirements_value.clone(),
@@ -45,6 +45,8 @@ pub(crate) fn resolve_embedded_study(
     validate_initial_state(&aircraft, &mission)?;
     validate_energy_schedule_limits(&aircraft, &mission)?;
     let (engine, propeller) = resolve_embedded_profiles(&embedded.profiles, &aircraft)?;
+    let sizing_factor = aircraft.propulsion.sizing_factor;
+    super::mass::finalize(&mut aircraft.mass, &engine, sizing_factor)?;
     let assumptions = collect_all_assumptions(
         &aircraft_value,
         &mission_value,
@@ -141,3 +143,6 @@ fn serialize_value<T: serde::Serialize>(value: &T, path: &str) -> AexResult<Valu
         source,
     })
 }
+
+#[cfg(test)]
+mod tests;

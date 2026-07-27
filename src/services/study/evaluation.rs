@@ -1,4 +1,5 @@
 mod constraints;
+mod objectives;
 mod validity;
 mod verdict;
 use std::collections::BTreeMap;
@@ -14,10 +15,12 @@ use crate::domain::evidence::{
 };
 use crate::domain::quantity::{Dimension, QuantityOutput, parse_quantity};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
-use crate::domain::study::StudyDefinition;
 use crate::services::analysis::ApplicationService;
 use crate::services::study::loading::PreparedStudy;
 
+#[cfg(test)]
+use objectives::objective_metric_value;
+use objectives::objective_values;
 use validity::{combined_domains, recorded_metrics};
 use verdict::{candidate_is_feasible, insert_metric_aliases};
 
@@ -74,7 +77,7 @@ pub(super) fn evaluate_candidate_blocking(
 }
 
 pub(super) fn evaluator_signature() -> String {
-    format!("native-study-evidence-v9:{}", env!("CARGO_PKG_VERSION"))
+    format!("native-study-evidence-v10:{}", env!("CARGO_PKG_VERSION"))
 }
 
 fn evaluate_native_blocking(
@@ -114,7 +117,12 @@ fn evaluate_native_blocking(
     )?;
     let mut diagnostics = geometry.provenance.warnings.clone();
     diagnostics.extend(analysis.provenance.warnings.clone());
-    let objective_values = objective_values(&prepared.document.study, &metrics, &mut diagnostics);
+    let objective_values = objective_values(
+        &prepared.document.study,
+        &metrics,
+        &analysis.metric_validity,
+        &mut diagnostics,
+    );
     let objectives_available = objective_values.len() == prepared.document.study.objectives.len();
     let feasible = candidate_is_feasible(
         &scenario.requirements.items,
@@ -138,6 +146,12 @@ fn evaluate_native_blocking(
         analysis: evidence_analysis(&scenario),
         results: EvidenceResults {
             metric_validity: recorded_metrics(&metrics, &analysis.metric_validity),
+            mass_properties: analysis
+                .mass_properties
+                .as_ref()
+                .map(serde_json::to_value)
+                .transpose()
+                .map_err(|source| AexError::Json { source })?,
             metrics,
             constraints,
             diagnostics,
@@ -257,35 +271,6 @@ fn insert_scenario_metrics(
     ] {
         metrics.insert(id.to_owned(), QuantityOutput::si(value, "kg"));
     }
-}
-
-fn objective_values(
-    study: &StudyDefinition,
-    metrics: &BTreeMap<String, QuantityOutput>,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> BTreeMap<String, f64> {
-    study
-        .objectives
-        .iter()
-        .filter_map(|objective| {
-            metrics.get(&objective.metric).map_or_else(
-                || {
-                    diagnostics.push(Diagnostic {
-                        code: "STUDY_OBJECTIVE_UNAVAILABLE".to_owned(),
-                        severity: Severity::Error,
-                        message: format!(
-                            "objective {} requires missing metric {}",
-                            objective.id, objective.metric
-                        ),
-                        path: Some(format!("study.objectives.{}", objective.id)),
-                        context: serde_json::Value::Null,
-                    });
-                    None
-                },
-                |metric| Some((objective.id.clone(), metric.value)),
-            )
-        })
-        .collect()
 }
 
 fn hard_constraint_violation(constraints: &[crate::domain::evidence::EvidenceConstraint]) -> f64 {
@@ -457,6 +442,7 @@ fn failed_evaluation(
         results: EvidenceResults {
             metrics: BTreeMap::new(),
             metric_validity: BTreeMap::new(),
+            mass_properties: None,
             constraints: Vec::new(),
             diagnostics: vec![Diagnostic {
                 code: "CANDIDATE_EVALUATION_FAILED".to_owned(),

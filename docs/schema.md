@@ -253,7 +253,8 @@ using actual remaining fuel and payload. Conventional horizontal-tail volume
 provides the conceptual neutral point and static-margin range. Bindable
 metrics are `mass_properties.minimum_center_of_gravity`,
 `mass_properties.maximum_center_of_gravity`, and
-`stability.minimum_static_margin`. Tailless static-margin validity is
+`stability.minimum_static_margin`/`stability.maximum_static_margin`. Tailless
+static-margin validity is
 `unsupported`, so requirement status is `indeterminate` and `passed` is null.
 
 Thrust-engine profiles may provide `dimensions.overall_length` and

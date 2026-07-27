@@ -76,6 +76,7 @@ fn evidence_with_metadata(
                 QuantityOutput::si(metric_value, "kg"),
             )]),
             metric_validity,
+            mass_properties: None,
             constraints: vec![EvidenceConstraint {
                 id: "fuel-floor".to_owned(),
                 metric: "mission.total_fuel".to_owned(),

@@ -1,12 +1,13 @@
 use std::collections::BTreeMap;
 
+use crate::domain::diagnostic::Diagnostic;
 use crate::domain::evidence::{ConstraintStatus, EvidenceConstraint};
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{RequirementEvaluation, RequirementStatus};
 use crate::domain::schema::{Requirement, RequirementProvenance};
-use crate::domain::validity::MetricValidity;
+use crate::domain::validity::{MetricValidity, ValidityStatus};
 
-use super::{candidate_is_feasible, insert_metric_aliases};
+use super::{candidate_is_feasible, insert_metric_aliases, objective_metric_value};
 
 fn declared_requirement(id: &str, severity: &str) -> Requirement {
     Requirement {
@@ -100,4 +101,30 @@ fn hard_indeterminate_requirement_cannot_be_feasible() {
         &[constraint],
         true,
     ));
+}
+
+#[test]
+fn unsupported_metric_cannot_supply_a_study_objective() {
+    let metrics = BTreeMap::from([(
+        "stability.minimum_static_margin".to_owned(),
+        QuantityOutput::si(0.0, "1"),
+    )]);
+    let validity = BTreeMap::from([(
+        "stability.minimum_static_margin".to_owned(),
+        MetricValidity {
+            status: ValidityStatus::Unsupported,
+            boundary: None,
+        },
+    )]);
+    let mut diagnostics = Vec::<Diagnostic>::new();
+    let value = objective_metric_value(
+        "static_margin",
+        "stability.minimum_static_margin",
+        &metrics,
+        &validity,
+        &mut diagnostics,
+    );
+
+    assert_eq!(value, None);
+    assert_eq!(diagnostics[0].code, "STUDY_OBJECTIVE_UNAVAILABLE");
 }

@@ -105,21 +105,17 @@ fn metric_value(
         return Ok(None);
     };
     let input = match metric {
-        RequirementMetric::MissionPayloadMass => {
-            Some(MetricInput::valid(scenario.mission.payload_mass_kg))
-        }
+        RequirementMetric::MissionPayloadMass => mission_payload_input(scenario),
         RequirementMetric::AchievedCruiseTrueAirspeed => performance
             .achieved_cruise_true_airspeed_m_s
             .map(|actual| performance_input(performance, &requirement.metric, actual)),
-        RequirementMetric::MissionCompletedDistance => {
-            Some(MetricInput::valid(mission.total_distance.value))
-        }
+        RequirementMetric::MissionCompletedDistance => valid_input(mission.total_distance.value),
         RequirementMetric::MissionLandingFuel => mission
             .landing_fuel
             .as_ref()
             .map(|fuel| MetricInput::valid(fuel.value)),
         RequirementMetric::MissionReserveDuration => {
-            Some(MetricInput::valid(reserve_duration_s(scenario, mission)))
+            valid_input(reserve_duration_s(scenario, mission))
         }
         RequirementMetric::ServiceCeiling => Some(MetricInput {
             actual: performance.service_ceiling_m,
@@ -143,12 +139,8 @@ fn metric_value(
                 f64::from(u8::from(actual)),
             )
         }),
-        RequirementMetric::TakeoffFieldLength => {
-            Some(field_distance_input(estimate_takeoff_distance(scenario)?))
-        }
-        RequirementMetric::LandingFieldLength => {
-            Some(field_distance_input(estimate_landing_distance(scenario)?))
-        }
+        RequirementMetric::TakeoffFieldLength => field_input(estimate_takeoff_distance(scenario)?),
+        RequirementMetric::LandingFieldLength => field_input(estimate_landing_distance(scenario)?),
         RequirementMetric::AllEngineClimbGradient => Some(climb_gradient_input(
             scenario,
             scenario.aircraft.propulsion.engine_count,
@@ -169,19 +161,38 @@ fn metric_value(
             mass_properties.maximum_center_of_gravity.value,
         )),
         RequirementMetric::MinimumStaticMargin => {
-            Some(mass_properties.minimum_static_margin.map_or_else(
-                || MetricInput {
-                    actual: 0.0,
-                    validity: MetricValidity::unsupported(),
-                },
-                MetricInput::valid,
-            ))
+            optional_stability_input(mass_properties.minimum_static_margin)
+        }
+        RequirementMetric::MaximumStaticMargin => {
+            optional_stability_input(mass_properties.maximum_static_margin)
         }
         RequirementMetric::DeclaredCruiseMach | RequirementMetric::DeclaredCruiseTrueAirspeed => {
             None
         }
     };
     Ok(input)
+}
+
+fn valid_input(actual: f64) -> Option<MetricInput> {
+    Some(MetricInput::valid(actual))
+}
+
+fn mission_payload_input(scenario: &ResolvedScenario) -> Option<MetricInput> {
+    valid_input(scenario.mission.payload_mass_kg)
+}
+
+fn field_input(estimate: FieldPerformanceEstimate) -> Option<MetricInput> {
+    Some(field_distance_input(estimate))
+}
+
+fn optional_stability_input(value: Option<f64>) -> Option<MetricInput> {
+    Some(value.map_or_else(
+        || MetricInput {
+            actual: 0.0,
+            validity: MetricValidity::unsupported(),
+        },
+        MetricInput::valid,
+    ))
 }
 
 fn field_distance_input(estimate: FieldPerformanceEstimate) -> MetricInput {

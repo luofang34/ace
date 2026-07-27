@@ -372,3 +372,58 @@ fn tailless_static_margin_requirement_is_indeterminate_and_nullable()
     ));
     Ok(())
 }
+
+#[test]
+fn c172_static_margin_bounds_are_both_bindable() -> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.requirements.items.extend([
+        Requirement {
+            id: "static_margin_upper".to_owned(),
+            metric: "stability.maximum_static_margin".to_owned(),
+            operator: "le".to_owned(),
+            required: 0.25,
+            unit: "1".to_owned(),
+            severity: "hard".to_owned(),
+            weight: None,
+            provenance: test_provenance(),
+        },
+        Requirement {
+            id: "forward_cg".to_owned(),
+            metric: "mass_properties.minimum_center_of_gravity".to_owned(),
+            operator: "ge".to_owned(),
+            required: 3.30,
+            unit: "m".to_owned(),
+            severity: "hard".to_owned(),
+            weight: None,
+            provenance: test_provenance(),
+        },
+        Requirement {
+            id: "aft_cg".to_owned(),
+            metric: "mass_properties.maximum_center_of_gravity".to_owned(),
+            operator: "le".to_owned(),
+            required: 3.50,
+            unit: "m".to_owned(),
+            severity: "hard".to_owned(),
+            weight: None,
+            provenance: test_provenance(),
+        },
+    ]);
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None)?;
+
+    for (id, metric) in [
+        ("static_margin", "stability.minimum_static_margin"),
+        ("static_margin_upper", "stability.maximum_static_margin"),
+        ("forward_cg", "mass_properties.minimum_center_of_gravity"),
+        ("aft_cg", "mass_properties.maximum_center_of_gravity"),
+    ] {
+        let evaluation = evaluations
+            .iter()
+            .find(|item| item.id == id)
+            .ok_or("missing static-margin bound evaluation")?;
+        assert_eq!(evaluation.metric, metric);
+        assert_eq!(evaluation.resolved_status(), RequirementStatus::Pass);
+    }
+    Ok(())
+}

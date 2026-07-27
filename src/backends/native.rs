@@ -7,13 +7,21 @@ use crate::backends::contracts::{
 };
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::QuantityOutput;
+use crate::domain::result::{
+    MassPropertiesAnalysis, MissionPowerScreen, MissionResult, PayloadRangeResult,
+    PerformanceSummary, RequirementEvaluation, StructuralScreen,
+};
 use crate::domain::schema::ResolvedScenario;
+use crate::domain::validity::MetricValidity;
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::breguet;
+use crate::models::breguet::BreguetEstimate;
 use crate::models::concept_geometry::ConceptGeometry;
-use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
+use crate::models::field_performance::{
+    FieldPerformanceEstimate, estimate_landing_distance, estimate_takeoff_distance,
+};
 use crate::models::mass_properties;
 use crate::models::mission::MissionSimulator;
 use crate::models::mission_power;
@@ -36,6 +44,22 @@ pub(crate) use topology::native_topology_violations;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub(crate) struct NativeBackend;
+
+struct NativeAnalysisState {
+    mission: MissionResult,
+    performance: PerformanceSummary,
+    payload_range: PayloadRangeResult,
+    structural_screen: StructuralScreen,
+    mission_power_screen: MissionPowerScreen,
+    mass_properties: MassPropertiesAnalysis,
+    requirements: Vec<RequirementEvaluation>,
+    breguet: BreguetEstimate,
+    weight_kg: f64,
+    takeoff_field: FieldPerformanceEstimate,
+    landing_field: FieldPerformanceEstimate,
+    polar: Vec<PolarPoint>,
+    polar_warnings: Vec<Diagnostic>,
+}
 
 fn geometry_dimensions(
     wing_area: f64,
@@ -130,111 +154,183 @@ impl GeometryBackend for NativeBackend {
 
 impl AnalysisBackend for NativeBackend {
     fn analyze_blocking(&self, request: AnalysisRequest<'_>) -> AexResult<AnalysisOutput> {
-        let scenario = request.scenario;
-        let mission = MissionSimulator::new(scenario.clone()).simulate()?;
-        let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
-        let payload_range = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
-        let structural_screen = structural_screen::evaluate(scenario)?;
-        let mission_power_screen = mission_power::evaluate(scenario, &mission)?;
-        let mass_properties = mass_properties::evaluate(scenario, &mission)?;
-        let requirements =
-            evaluate_requirements(scenario, &mission, &performance, Some(&payload_range))?;
-        let breguet = breguet::estimate(
-            scenario,
-            performance.maximum_lift_to_drag_ratio,
-            mission.total_fuel_burn_kg,
-        )?;
-        let weight = weight_estimate(scenario, mission.total_fuel_burn_kg)?;
-        let takeoff_field = estimate_takeoff_distance(scenario)?;
-        let landing_field = estimate_landing_distance(scenario)?;
-        let (polar, polar_warnings) = native_polar(scenario)?;
-        let metrics = native_metrics(NativeMetricInputs {
-            geometry: request.geometry,
-            performance: &performance,
-            mission: &mission,
-            payload_range: &payload_range,
-            breguet: &breguet,
-            structural: &structural_screen,
-            mission_power: &mission_power_screen,
-            takeoff_field: &takeoff_field,
-            landing_field: &landing_field,
-            weight_kg: weight,
-            mass_properties: &mass_properties,
-        })?;
-        let mut metric_validity = performance.metric_validity.clone();
-        let stability_validity = if mass_properties.stability_supported {
-            crate::domain::validity::MetricValidity::default()
-        } else {
-            crate::domain::validity::MetricValidity::unsupported()
-        };
-        for metric in [
-            "stability.neutral_point",
-            "stability.minimum_static_margin",
-            "stability.maximum_static_margin",
-        ] {
-            metric_validity.insert(metric.to_owned(), stability_validity.clone());
-        }
-        let feasible = hard_requirements_passed(
-            mission.completed,
-            &request.scenario.requirements.items,
-            &requirements,
-        ) && !mission.fuel_exhausted
-            && !mission.fuel_capacity_violation
-            && !mission.takeoff_mass_violation
-            && performance.cruise_feasible.unwrap_or(true)
-            && structural_screen.passed
-            && mission_power_screen.passed
-            && mass_properties.failed_constraints.is_empty();
-        let mut failed_constraints =
-            failed_constraints(&scenario.requirements.items, &requirements, &mission);
-        failed_constraints.extend(structural_screen.failed_constraints.clone());
-        failed_constraints.extend(mission_power_screen.failed_constraints.clone());
-        failed_constraints.extend(mass_properties.failed_constraints.clone());
-        if performance.cruise_feasible == Some(false) {
-            failed_constraints.push("cruise_capability".to_owned());
-        }
-        let mut warnings = performance.warnings.clone();
-        warnings.extend(mission.warnings.clone());
-        warnings.extend(payload_range.warnings.clone());
-        warnings.extend(breguet.warnings);
-        warnings.extend(structural_screen.provenance.warnings.clone());
-        warnings.extend(mission_power_screen.provenance.warnings.clone());
-        warnings.extend(mass_properties.provenance.warnings.clone());
-        extend_unique_warnings(&mut warnings, takeoff_field.warnings);
-        extend_unique_warnings(&mut warnings, landing_field.warnings);
-        extend_unique_warnings(&mut warnings, polar_warnings);
-        if !mass_properties.stability_supported {
-            warnings.push(Diagnostic::warning(
-                WarningCode::NativeStabilityNotModeled,
-                "The native backend cannot estimate tailless neutral-point stability.",
-                "analysis.stability",
-            ));
-        }
-        Ok(AnalysisOutput {
-            metrics,
-            metric_validity,
-            polar,
-            stability: StabilitySummary {
-                pitching_moment_slope_per_deg: None,
-                statically_stable: mass_properties
-                    .minimum_static_margin
-                    .map(|margin| margin > 0.0),
-                neutral_point: mass_properties.neutral_point.clone(),
-                minimum_static_margin: mass_properties.minimum_static_margin,
-                note: if mass_properties.stability_supported {
-                    "Native neutral point uses the resolved horizontal-tail volume.".to_owned()
-                } else {
-                    "Native tailless neutral-point stability is unsupported.".to_owned()
-                },
-            },
-            structural_screen: Some(structural_screen),
-            mission_power_screen: Some(mission_power_screen),
-            mass_properties: Some(mass_properties),
-            requirements,
-            feasible: Some(feasible),
-            failed_constraints,
-            provenance: native_analysis_provenance(scenario, warnings, breguet.assumptions)?,
-        })
+        let state = evaluate_native_state(request.scenario)?;
+        build_native_output(request, state)
+    }
+}
+
+fn evaluate_native_state(scenario: &ResolvedScenario) -> AexResult<NativeAnalysisState> {
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let payload_range = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
+    let structural_screen = structural_screen::evaluate(scenario)?;
+    let mission_power_screen = mission_power::evaluate(scenario, &mission)?;
+    let mass_properties = mass_properties::evaluate(scenario, &mission)?;
+    let requirements =
+        evaluate_requirements(scenario, &mission, &performance, Some(&payload_range))?;
+    let breguet = breguet::estimate(
+        scenario,
+        performance.maximum_lift_to_drag_ratio,
+        mission.total_fuel_burn_kg,
+    )?;
+    let weight_kg = weight_estimate(scenario, mission.total_fuel_burn_kg)?;
+    let takeoff_field = estimate_takeoff_distance(scenario)?;
+    let landing_field = estimate_landing_distance(scenario)?;
+    let (polar, polar_warnings) = native_polar(scenario)?;
+    Ok(NativeAnalysisState {
+        mission,
+        performance,
+        payload_range,
+        structural_screen,
+        mission_power_screen,
+        mass_properties,
+        requirements,
+        breguet,
+        weight_kg,
+        takeoff_field,
+        landing_field,
+        polar,
+        polar_warnings,
+    })
+}
+
+fn build_native_output(
+    request: AnalysisRequest<'_>,
+    state: NativeAnalysisState,
+) -> AexResult<AnalysisOutput> {
+    let metrics = native_state_metrics(request.geometry, &state)?;
+    let metric_validity = native_metric_validity(&state);
+    let feasible = native_feasible(request.scenario, &state);
+    let failed_constraints = native_failed_constraints(request.scenario, &state);
+    let warnings = native_warnings(&state);
+    let stability = native_stability_summary(&state.mass_properties);
+    let provenance = native_analysis_provenance(
+        request.scenario,
+        warnings,
+        state.breguet.assumptions.clone(),
+    )?;
+    Ok(AnalysisOutput {
+        metrics,
+        metric_validity,
+        polar: state.polar,
+        stability,
+        structural_screen: Some(state.structural_screen),
+        mission_power_screen: Some(state.mission_power_screen),
+        mass_properties: Some(state.mass_properties),
+        requirements: state.requirements,
+        feasible: Some(feasible),
+        failed_constraints,
+        provenance,
+    })
+}
+
+fn native_state_metrics(
+    geometry: &GeometryOutput,
+    state: &NativeAnalysisState,
+) -> AexResult<BTreeMap<String, QuantityOutput>> {
+    native_metrics(NativeMetricInputs {
+        geometry,
+        performance: &state.performance,
+        mission: &state.mission,
+        payload_range: &state.payload_range,
+        breguet: &state.breguet,
+        structural: &state.structural_screen,
+        mission_power: &state.mission_power_screen,
+        takeoff_field: &state.takeoff_field,
+        landing_field: &state.landing_field,
+        weight_kg: state.weight_kg,
+        mass_properties: &state.mass_properties,
+    })
+}
+
+fn native_metric_validity(state: &NativeAnalysisState) -> BTreeMap<String, MetricValidity> {
+    let mut validity = state.performance.metric_validity.clone();
+    let stability = if state.mass_properties.stability_supported {
+        MetricValidity::default()
+    } else {
+        MetricValidity::unsupported()
+    };
+    for metric in [
+        "stability.neutral_point",
+        "stability.minimum_static_margin",
+        "stability.maximum_static_margin",
+    ] {
+        validity.insert(metric.to_owned(), stability.clone());
+    }
+    validity
+}
+
+fn native_feasible(scenario: &ResolvedScenario, state: &NativeAnalysisState) -> bool {
+    hard_requirements_passed(
+        state.mission.completed,
+        &scenario.requirements.items,
+        &state.requirements,
+    ) && !state.mission.fuel_exhausted
+        && !state.mission.fuel_capacity_violation
+        && !state.mission.takeoff_mass_violation
+        && state.performance.cruise_feasible.unwrap_or(true)
+        && state.structural_screen.passed
+        && state.mission_power_screen.passed
+        && state.mass_properties.failed_constraints.is_empty()
+}
+
+fn native_failed_constraints(
+    scenario: &ResolvedScenario,
+    state: &NativeAnalysisState,
+) -> Vec<String> {
+    let mut failed = failed_constraints(
+        &scenario.requirements.items,
+        &state.requirements,
+        &state.mission,
+    );
+    failed.extend(state.structural_screen.failed_constraints.clone());
+    failed.extend(state.mission_power_screen.failed_constraints.clone());
+    failed.extend(state.mass_properties.failed_constraints.clone());
+    if state.performance.cruise_feasible == Some(false) {
+        failed.push("cruise_capability".to_owned());
+    }
+    failed
+}
+
+fn native_warnings(state: &NativeAnalysisState) -> Vec<Diagnostic> {
+    let mut warnings = state.performance.warnings.clone();
+    warnings.extend(state.mission.warnings.clone());
+    warnings.extend(state.payload_range.warnings.clone());
+    warnings.extend(state.breguet.warnings.clone());
+    warnings.extend(state.structural_screen.provenance.warnings.clone());
+    warnings.extend(state.mission_power_screen.provenance.warnings.clone());
+    warnings.extend(state.mass_properties.provenance.warnings.clone());
+    extend_unique_warnings(&mut warnings, state.takeoff_field.warnings.clone());
+    extend_unique_warnings(&mut warnings, state.landing_field.warnings.clone());
+    extend_unique_warnings(&mut warnings, state.polar_warnings.clone());
+    if !state.mass_properties.stability_supported {
+        warnings.push(Diagnostic::warning(
+            WarningCode::NativeStabilityNotModeled,
+            "The native backend cannot estimate tailless neutral-point stability.",
+            "analysis.stability",
+        ));
+    }
+    warnings
+}
+
+fn native_stability_summary(mass: &MassPropertiesAnalysis) -> StabilitySummary {
+    let (statically_stable, note) = if mass.stability_supported {
+        (
+            mass.minimum_static_margin.map(|margin| margin > 0.0),
+            "Native neutral point uses the resolved horizontal-tail volume.",
+        )
+    } else {
+        (
+            None,
+            "Native tailless neutral-point stability is unsupported.",
+        )
+    };
+    StabilitySummary {
+        pitching_moment_slope_per_deg: None,
+        statically_stable,
+        neutral_point: mass.neutral_point.clone(),
+        minimum_static_margin: mass.minimum_static_margin,
+        note: note.to_owned(),
     }
 }
 

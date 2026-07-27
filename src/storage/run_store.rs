@@ -138,30 +138,42 @@ fn manifest(
         timestamp,
         deterministic_seed: request.seed,
         content_hash: content_hash.to_owned(),
-        models: vec![
-            ModelManifestEntry {
-                model_id: "atmosphere.isa1976".to_owned(),
-                model_version: "1.0.0".to_owned(),
-                fidelity_level: 1,
-            },
-            ModelManifestEntry {
-                model_id: request.scenario.aircraft.aerodynamics.model.clone(),
-                model_version: "1.0.0".to_owned(),
-                fidelity_level: 1,
-            },
-            ModelManifestEntry {
-                model_id: request.scenario.engine.model_id().to_owned(),
-                model_version: "1".to_owned(),
-                fidelity_level: 1,
-            },
-            ModelManifestEntry {
-                model_id: "stability.native_mass_properties".to_owned(),
-                model_version: "1".to_owned(),
-                fidelity_level: 1,
-            },
-        ],
+        models: manifest_models(request),
         artifacts: request.artifacts.to_vec(),
     }
+}
+
+fn manifest_models(request: &PersistRunRequest<'_>) -> Vec<ModelManifestEntry> {
+    let mut models = vec![
+        ModelManifestEntry {
+            model_id: "atmosphere.isa1976".to_owned(),
+            model_version: "1.0.0".to_owned(),
+            fidelity_level: 1,
+        },
+        ModelManifestEntry {
+            model_id: request.scenario.aircraft.aerodynamics.model.clone(),
+            model_version: "1.0.0".to_owned(),
+            fidelity_level: 1,
+        },
+        ModelManifestEntry {
+            model_id: request.scenario.engine.model_id().to_owned(),
+            model_version: "1".to_owned(),
+            fidelity_level: 1,
+        },
+        ModelManifestEntry {
+            model_id: "mass.component_buildup".to_owned(),
+            model_version: "1".to_owned(),
+            fidelity_level: 1,
+        },
+    ];
+    if request.analysis == "mission" {
+        models.push(ModelManifestEntry {
+            model_id: "stability.native_mass_properties".to_owned(),
+            model_version: "1".to_owned(),
+            fidelity_level: 1,
+        });
+    }
+    models
 }
 
 fn write_run_files(

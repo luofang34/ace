@@ -107,7 +107,7 @@ fn resolve_statement(
         )?,
         payload_station: station_value(
             raw.payload_station.as_deref(),
-            payload_station_m(geometry),
+            payload_station_m(geometry, wing),
             "aircraft.mass.payload_station",
             "payload centroid correlation",
         )?,
@@ -157,7 +157,7 @@ fn component_mass(
     let path = format!("aircraft.mass.components.{}", component.id);
     let mass = match declared.and_then(|item| item.mass.as_deref()) {
         Some(value) => fixed_value(value, Dimension::Mass, "kg", &format!("{path}.mass"))?,
-        None => statistical_mass(component),
+        None => statistical_mass(component, category),
     };
     let station = station_value(
         declared.and_then(|item| item.station.as_deref()),
@@ -174,9 +174,9 @@ fn component_mass(
     })
 }
 
-fn statistical_mass(component: &AircraftComponent) -> MassPropertyValue {
+fn statistical_mass(component: &AircraftComponent, category: &str) -> MassPropertyValue {
     MassPropertyValue {
-        value: component_weight(&component.kind),
+        value: component_weight(&component.kind, category) * f64::from(component.count),
         unit: "kg",
         provenance: MassPropertyProvenance {
             kind: "statistical",
@@ -304,7 +304,7 @@ fn component_station_m(
     wing: &Wing,
     category: &str,
 ) -> f64 {
-    let length = fuselage_length_m(geometry);
+    let length = reference_length_m(geometry, wing);
     let chord = wing.area_m2 / wing.span_m;
     let wing_le = wing_leading_edge_m(length, category);
     match component.kind.as_str() {
@@ -329,18 +329,21 @@ fn component_station_m(
 }
 
 fn fuel_station_m(geometry: &AircraftGeometry, wing: &Wing, category: &str) -> f64 {
-    wing_leading_edge_m(fuselage_length_m(geometry), category) + 0.40 * wing.area_m2 / wing.span_m
+    wing_leading_edge_m(reference_length_m(geometry, wing), category)
+        + 0.40 * wing.area_m2 / wing.span_m
 }
 
-fn payload_station_m(geometry: &AircraftGeometry) -> f64 {
-    0.45 * fuselage_length_m(geometry)
+fn payload_station_m(geometry: &AircraftGeometry, wing: &Wing) -> f64 {
+    0.45 * reference_length_m(geometry, wing)
 }
 
-fn fuselage_length_m(geometry: &AircraftGeometry) -> f64 {
+fn reference_length_m(geometry: &AircraftGeometry, wing: &Wing) -> f64 {
     geometry
         .fuselage
         .as_ref()
-        .map_or(1.0, |fuselage| fuselage.length.value)
+        .map_or(2.5 * wing.area_m2 / wing.span_m, |fuselage| {
+            fuselage.length.value
+        })
 }
 
 fn wing_leading_edge_m(length: f64, category: &str) -> f64 {
@@ -351,19 +354,29 @@ fn wing_leading_edge_m(length: f64, category: &str) -> f64 {
     }
 }
 
-fn component_weight(kind: &str) -> f64 {
-    match kind {
-        "fuselage" => 0.35,
-        "wing" => 0.30,
-        "horizontal_tail" => 0.05,
-        "vertical_tail" => 0.04,
-        "canard" => 0.04,
-        "lifting_body" => 0.65,
-        "boom" => 0.10,
-        "engine" => 0.20,
-        "propeller" => 0.04,
-        "fuel_system" => 0.08,
-        "payload" => 0.02,
+fn component_weight(kind: &str, category: &str) -> f64 {
+    let transport = category.contains("transport");
+    match (kind, transport) {
+        ("fuselage", true) => 0.30,
+        ("wing", true) => 0.28,
+        ("horizontal_tail", true) => 0.04,
+        ("vertical_tail", true) => 0.03,
+        ("fuel_system", true) => 0.10,
+        ("payload", true) => 0.03,
+        ("fuselage", false) => 0.35,
+        ("wing", false) => 0.30,
+        ("horizontal_tail", false) => 0.05,
+        ("vertical_tail", false) => 0.04,
+        ("canard", _) => 0.04,
+        ("lifting_body", _) => 0.65,
+        ("boom", _) => 0.10,
+        ("engine", _) => 0.20,
+        ("propeller", _) => 0.04,
+        ("fuel_system", _) => 0.08,
+        ("payload", _) => 0.02,
         _ => 0.01,
     }
 }
+
+#[cfg(test)]
+mod tests;

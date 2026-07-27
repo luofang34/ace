@@ -196,6 +196,8 @@ pub(crate) struct EvidenceResults {
     pub(crate) metrics: BTreeMap<String, QuantityOutput>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) mass_properties: Option<serde_json::Value>,
     pub(crate) constraints: Vec<EvidenceConstraint>,
     pub(crate) diagnostics: Vec<Diagnostic>,
 }
@@ -325,6 +327,18 @@ fn validate_results(results: &EvidenceResults) -> AexResult<()> {
             ));
         }
         validity.validate(&format!("evidence.results.metric_validity.{metric}"))?;
+    }
+    if results.mass_properties.as_ref().is_some_and(|value| {
+        !value
+            .get("statement")
+            .is_some_and(serde_json::Value::is_object)
+            || !value.get("states").is_some_and(serde_json::Value::is_array)
+    }) {
+        return Err(AexError::validation(
+            "INVALID_EVIDENCE_MASS_PROPERTIES",
+            "evidence.results.mass_properties",
+            "mass-properties evidence requires a component statement and mission states",
+        ));
     }
     let mut ids = BTreeSet::new();
     for constraint in &results.constraints {

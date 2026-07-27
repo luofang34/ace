@@ -85,6 +85,7 @@ Transport OEI second-segment gradients are regulatory-derived from [14 CFR 25.12
 | `mass_properties.minimum_center_of_gravity` | `achieved` | yes | `m` | — |
 | `mass_properties.maximum_center_of_gravity` | `achieved` | yes | `m` | — |
 | `stability.minimum_static_margin` | `achieved` | yes | `1` | — |
+| `stability.maximum_static_margin` | `achieved` | yes | `1` | — |
 | `performance.cruise_mach` | `declared` | no | `1` | `performance.achieved_cruise_mach` |
 | `performance.cruise_true_airspeed` | `declared` | no | `m/s` | `performance.achieved_cruise_true_airspeed` |
 

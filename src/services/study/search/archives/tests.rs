@@ -27,7 +27,7 @@ fn stale_evaluator_archives_are_not_reused() -> Result<(), Box<dyn std::error::E
     })?;
     service.studies.save_archive_blocking(&stale)?;
 
-    assert!(evaluator_signature().starts_with("native-study-evidence-v9:"));
+    assert!(evaluator_signature().starts_with("native-study-evidence-v10:"));
     assert!(matching_archive(&service, &prepared)?.is_none());
     Ok(())
 }
