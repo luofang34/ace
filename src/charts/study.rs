@@ -1,6 +1,6 @@
-use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec};
+use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec, SurfaceSpec};
 use crate::domain::diagnostic::Diagnostic;
-use crate::domain::evidence::StudyRunResult;
+use crate::domain::evidence::{StudyRunResult, StudyTradeSurface};
 use crate::domain::warning::WarningCode;
 
 #[derive(Debug, Clone)]
@@ -12,6 +12,13 @@ struct TradePoint {
 }
 
 pub(crate) fn trade_space(result: &StudyRunResult) -> Option<ChartSpec> {
+    if let Some(surface) = &result.trade_surface {
+        return Some(surface_trade_space(result, surface));
+    }
+    scatter_trade_space(result)
+}
+
+fn scatter_trade_space(result: &StudyRunResult) -> Option<ChartSpec> {
     let using_pareto = !result.pareto_candidates.is_empty();
     let candidates = if using_pareto {
         &result.pareto_candidates
@@ -42,7 +49,14 @@ pub(crate) fn trade_space(result: &StudyRunResult) -> Option<ChartSpec> {
     } else {
         "selected"
     };
-    let warnings = projection_warnings(first, x_id, y_id);
+    let mut warnings = projection_warnings(first, x_id, y_id);
+    if result.irregular_trade_space {
+        warnings.push(Diagnostic::warning(
+            WarningCode::IrregularTradeSpace,
+            "study outcomes do not form a complete rectangular two-variable grid",
+            "study.search",
+        ));
+    }
     Some(ChartSpec {
         chart_type: "scatter".to_owned(),
         title: format!("{}: {selection_label} trade space", result.study_id),
@@ -56,6 +70,7 @@ pub(crate) fn trade_space(result: &StudyRunResult) -> Option<ChartSpec> {
             unit: "reported SI".to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![SeriesSpec {
             id: if using_pareto {
                 "pareto_candidates".to_owned()
@@ -80,6 +95,64 @@ pub(crate) fn trade_space(result: &StudyRunResult) -> Option<ChartSpec> {
             .collect(),
         warnings,
     })
+}
+
+fn surface_trade_space(result: &StudyRunResult, surface: &StudyTradeSurface) -> ChartSpec {
+    ChartSpec {
+        chart_type: "carpet".to_owned(),
+        title: format!("{}: rectangular trade surface", result.study_id),
+        x: AxisSpec {
+            label: surface.x_path.clone(),
+            unit: surface.x_unit.clone(),
+            values: surface.x_values.clone(),
+        },
+        y: AxisSpec {
+            label: surface.y_path.clone(),
+            unit: surface.y_unit.clone(),
+            values: surface.y_values.clone(),
+        },
+        surface: Some(SurfaceSpec {
+            label: surface.objective_id.clone(),
+            unit: "reported SI".to_owned(),
+            values: surface.values.clone(),
+            feasible_mask: surface.feasible_mask.clone(),
+            contour_levels: contour_levels(&surface.values),
+        }),
+        series: Vec::new(),
+        annotations: surface_annotations(result, surface),
+        warnings: Vec::new(),
+    }
+}
+
+fn surface_annotations(result: &StudyRunResult, surface: &StudyTradeSurface) -> Vec<Annotation> {
+    result
+        .selected_candidates
+        .iter()
+        .chain(result.pareto_candidates.iter())
+        .filter_map(|summary| {
+            Some(Annotation {
+                x: parse_parameter(summary.candidate.parameters.get(&surface.x_path)?)?,
+                y: parse_parameter(summary.candidate.parameters.get(&surface.y_path)?)?,
+                label: summary.candidate.candidate_id.chars().take(18).collect(),
+            })
+        })
+        .collect()
+}
+
+fn parse_parameter(raw: &str) -> Option<f64> {
+    raw.split_whitespace().next()?.parse().ok()
+}
+
+fn contour_levels(values: &[f64]) -> Vec<f64> {
+    let minimum = values.iter().copied().fold(f64::INFINITY, f64::min);
+    let maximum = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    if (maximum - minimum).abs() <= f64::EPSILON {
+        Vec::new()
+    } else {
+        [0.25, 0.5, 0.75]
+            .map(|fraction| minimum + fraction * (maximum - minimum))
+            .to_vec()
+    }
 }
 
 fn projection_warnings(

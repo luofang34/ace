@@ -297,6 +297,8 @@ pub(crate) struct ConstraintResult {
     pub(crate) wing_loading_n_m2: Vec<f64>,
     pub(crate) constraints: std::collections::BTreeMap<String, Vec<f64>>,
     pub(crate) feasible_region_mask: Vec<bool>,
+    #[serde(default)]
+    pub(crate) stall_wing_loading_limit_n_m2: f64,
     pub(crate) selected_wing_loading_n_m2: f64,
     pub(crate) selected_loading: f64,
     pub(crate) active_controlling_constraint: String,
@@ -308,6 +310,8 @@ pub(crate) struct ConstraintResult {
 pub(crate) struct SweepRow {
     pub(crate) variables: std::collections::BTreeMap<String, serde_json::Value>,
     pub(crate) metrics: std::collections::BTreeMap<String, f64>,
+    #[serde(default)]
+    pub(crate) feasible: bool,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
     pub(crate) warnings: Vec<Diagnostic>,

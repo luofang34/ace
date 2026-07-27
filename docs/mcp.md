@@ -78,11 +78,13 @@ and every hard requirement passes.
 embedded baseline. `run_design_study` performs deterministic grid or seeded
 evolutionary search with native analysis. The result contains bounded Pareto
 and selected-candidate summaries, its immutable archive reference, reuse
-counts, and a two-objective trade-space chart when applicable. Supplying
-`artifact_path` writes that chart as SVG and fails with
-`STUDY_CHART_UNAVAILABLE` when fewer than two objectives are reported. Studies
-with more than two objectives return `STUDY_CHART_PROJECTED`, including the
-displayed and omitted objective IDs.
+counts, and a trade-space chart when applicable. A complete rectangular
+two-variable grid returns a row-major objective surface and feasible mask.
+Evolutionary, higher-dimensional, conditional, or incomplete spaces remain
+Pareto scatter and return `IRREGULAR_TRADE_SPACE`; higher-dimensional
+objective scatter also returns `STUDY_CHART_PROJECTED` with displayed and
+omitted objective IDs. Supplying `artifact_path` writes the chart as SVG and
+fails with `STUDY_CHART_UNAVAILABLE` when no chart can be formed.
 
 The service checkpoints immutable archives throughout a run. Repeating a
 completed study returns the same archive and reuses every evaluation. If only

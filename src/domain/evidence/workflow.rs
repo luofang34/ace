@@ -77,4 +77,21 @@ pub(crate) struct StudyRunResult {
     pub(crate) selected_candidates: Vec<CandidateSummary>,
     pub(crate) archive_path: String,
     pub(crate) complete: bool,
+    #[serde(skip)]
+    pub(crate) trade_surface: Option<StudyTradeSurface>,
+    #[serde(skip)]
+    pub(crate) irregular_trade_space: bool,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct StudyTradeSurface {
+    pub(crate) x_path: String,
+    pub(crate) x_unit: String,
+    pub(crate) x_values: Vec<f64>,
+    pub(crate) y_path: String,
+    pub(crate) y_unit: String,
+    pub(crate) y_values: Vec<f64>,
+    pub(crate) objective_id: String,
+    pub(crate) values: Vec<f64>,
+    pub(crate) feasible_mask: Vec<bool>,
 }
