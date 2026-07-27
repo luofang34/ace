@@ -138,6 +138,7 @@ pub(crate) enum ValidityStatus {
     Valid,
     BoundaryLimited,
     Extrapolated,
+    Unsupported,
 }
 
 impl ValidityStatus {
@@ -146,6 +147,7 @@ impl ValidityStatus {
             Self::Valid => "valid",
             Self::BoundaryLimited => "boundary_limited",
             Self::Extrapolated => "extrapolated",
+            Self::Unsupported => "unsupported",
         }
     }
 }
@@ -172,13 +174,22 @@ impl MetricValidity {
         }
     }
 
+    pub(crate) fn unsupported() -> Self {
+        Self {
+            status: ValidityStatus::Unsupported,
+            boundary: None,
+        }
+    }
+
     pub(crate) fn validate(&self, path: &str) -> AexResult<()> {
         let valid_boundary = match self.status {
             ValidityStatus::BoundaryLimited => self
                 .boundary
                 .as_deref()
                 .is_some_and(|boundary| !boundary.trim().is_empty()),
-            ValidityStatus::Valid | ValidityStatus::Extrapolated => self.boundary.is_none(),
+            ValidityStatus::Valid | ValidityStatus::Extrapolated | ValidityStatus::Unsupported => {
+                self.boundary.is_none()
+            }
         };
         if valid_boundary {
             Ok(())

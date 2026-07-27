@@ -154,6 +154,11 @@ fn manifest(
                 model_version: "1".to_owned(),
                 fidelity_level: 1,
             },
+            ModelManifestEntry {
+                model_id: "stability.native_mass_properties".to_owned(),
+                model_version: "1".to_owned(),
+                fidelity_level: 1,
+            },
         ],
         artifacts: request.artifacts.to_vec(),
     }

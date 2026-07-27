@@ -91,7 +91,6 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
     assert_eq!(structured["total_distance"]["display_unit"], "nmi");
     assert_eq!(structured["landing_fuel"]["unit"], "kg");
     assert_eq!(structured["landing_fuel"]["display_unit"], "lb");
-
     let backends = client
         .call_tool(CallToolRequestParams {
             meta: None,

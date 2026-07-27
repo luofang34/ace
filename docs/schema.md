@@ -223,6 +223,39 @@ Assumption records therefore include additive nullable `correlation_id` and
 `correlation_version` fields; non-correlation entries serialize them as null
 or blank CSV columns.
 
+Aircraft mass limits may add a component statement and longitudinal fuel and
+payload stations:
+
+```yaml
+mass:
+  maximum_takeoff_mass: 1111 kg
+  operating_empty_mass: 767 kg
+  maximum_payload_mass: 376 kg
+  maximum_fuel_mass: 144 kg
+  components:
+    - { id: fuselage, station: 4.15 m }
+    - { id: wing, mass: 120 kg, station: 3.20 m }
+    - { id: powerplant, station: 0.80 m }
+  fuel_station: 3.20 m
+  payload_station: 3.40 m
+```
+
+Component IDs reference the aircraft topology. A declared mass or station is
+fixed. Missing engine mass comes from installed profile dry mass; other
+missing masses share the statistical OEW residual, and missing stations use a
+versioned centroid correlation. Every resolved source is preserved in the
+mass statement and assumptions ledger. Fixed and profile component masses
+cannot be normalized away: values above OEW return
+`FIXED_MASS_EXCEEDS_OEW`.
+
+Native analysis records CG at mission start and after every simulated segment,
+using actual remaining fuel and payload. Conventional horizontal-tail volume
+provides the conceptual neutral point and static-margin range. Bindable
+metrics are `mass_properties.minimum_center_of_gravity`,
+`mass_properties.maximum_center_of_gravity`, and
+`stability.minimum_static_margin`. Tailless static-margin validity is
+`unsupported`, so requirement status is `indeterminate` and `passed` is null.
+
 Thrust-engine profiles may provide `dimensions.overall_length` and
 `dimensions.maximum_diameter`. OpenVSP uses them for the engine envelope and
 retains conservative defaults when they are absent.

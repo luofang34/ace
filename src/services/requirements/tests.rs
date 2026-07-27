@@ -6,7 +6,9 @@ use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::models::mission::MissionSimulator;
 use crate::models::payload_range::PayloadRangeAnalyzer;
 use crate::models::performance::PointAnalyzer;
-use crate::test_support::{example_scenario, low_landing_fuel_sr71_scenario};
+use crate::test_support::{
+    example_scenario, low_landing_fuel_sr71_scenario, set_inferred_configuration,
+};
 
 use super::{
     MetricInput, evaluate_one, evaluate_requirements, failed_hard_requirement_ids,
@@ -338,5 +340,35 @@ fn shipped_templates_evaluate_achieved_checks_without_changing_hard_verdicts()
             &evaluations
         ));
     }
+    Ok(())
+}
+
+#[test]
+fn tailless_static_margin_requirement_is_indeterminate_and_nullable()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("c172")?;
+    set_inferred_configuration(&mut scenario, "tailless_flying_wing")?;
+    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let evaluations = evaluate_requirements(&scenario, &mission, &performance, None)?;
+    let static_margin = evaluations
+        .iter()
+        .find(|item| item.metric == "stability.minimum_static_margin")
+        .ok_or("missing static-margin evaluation")?;
+
+    assert_eq!(
+        static_margin.resolved_status(),
+        RequirementStatus::Indeterminate
+    );
+    assert_eq!(static_margin.passed, None);
+    assert_eq!(static_margin.validity.status, ValidityStatus::Unsupported);
+    let stored = serde_json::to_value(static_margin)?;
+    assert_eq!(stored["validity"]["status"], "unsupported");
+    assert!(stored["passed"].is_null());
+    assert!(!hard_requirements_passed(
+        mission.completed,
+        &scenario.requirements.items,
+        &evaluations
+    ));
     Ok(())
 }

@@ -245,6 +245,9 @@ fn aggregate_validity<'a>(validities: impl Iterator<Item = &'a MetricValidity>) 
 
 fn combine_validity(left: &MetricValidity, right: &MetricValidity) -> MetricValidity {
     match (left.status, right.status) {
+        (ValidityStatus::Unsupported, _) | (_, ValidityStatus::Unsupported) => {
+            MetricValidity::unsupported()
+        }
         (ValidityStatus::BoundaryLimited, _) => left.clone(),
         (_, ValidityStatus::BoundaryLimited) => right.clone(),
         (ValidityStatus::Extrapolated, _) | (_, ValidityStatus::Extrapolated) => {

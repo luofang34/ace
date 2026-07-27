@@ -6,6 +6,7 @@ use serde_json::{Map, Value, json};
 
 use crate::domain::presentation::DisplayUnitSystem;
 use crate::domain::warning::enforce_strict;
+use crate::models::mass_properties;
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::storage::project_store::display_unit_system_blocking;
@@ -40,7 +41,8 @@ pub(super) fn simulate(
         &scenario.requirements.items,
         &requirements,
     );
-    let detail = detailed_result(&mission, passed)?;
+    let mass_properties = mass_properties::evaluate(&scenario, &mission).map_err(mcp_error)?;
+    let detail = detailed_result(&mission, &mass_properties, passed)?;
     let run = service
         .persist_blocking(&scenario, "mission", &detail, &mission.warnings, 0, &[])
         .map_err(mcp_error)?;
@@ -54,10 +56,16 @@ pub(super) fn simulate(
 
 fn detailed_result(
     mission: &crate::domain::result::MissionResult,
+    mass_properties: &crate::domain::result::MassPropertiesAnalysis,
     passed: bool,
 ) -> Result<Value, ErrorData> {
     let mut result = serde_json::to_value(mission).map_err(mcp_serialization_error)?;
-    object_fields(&mut result)?.insert("hard_requirements_passed".to_owned(), Value::Bool(passed));
+    let fields = object_fields(&mut result)?;
+    fields.insert("hard_requirements_passed".to_owned(), Value::Bool(passed));
+    fields.insert(
+        "mass_properties".to_owned(),
+        serde_json::to_value(mass_properties).map_err(mcp_serialization_error)?,
+    );
     Ok(result)
 }
 

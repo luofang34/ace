@@ -2,7 +2,8 @@ use crate::domain::capabilities::{RequirementMetric, requirement_metric};
 use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::{
-    MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation, RequirementStatus,
+    MassPropertiesAnalysis, MissionResult, PayloadRangeResult, PerformanceSummary,
+    RequirementEvaluation, RequirementStatus,
 };
 use crate::domain::schema::{Requirement, ResolvedScenario, SegmentKind};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
@@ -10,6 +11,7 @@ use crate::models::field_performance::{
     FieldPerformanceEstimate, estimate_landing_distance, estimate_second_segment_climb_gradient,
     estimate_takeoff_distance,
 };
+use crate::models::mass_properties;
 
 struct MetricInput {
     actual: f64,
@@ -31,11 +33,17 @@ pub(crate) fn evaluate_requirements(
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
 ) -> AexResult<Vec<RequirementEvaluation>> {
+    let mass_properties = mass_properties::evaluate(scenario, mission)?;
     let mut evaluations = Vec::new();
     for requirement in &scenario.requirements.items {
-        if let Some(input) =
-            metric_value(requirement, scenario, mission, performance, payload_range)?
-        {
+        if let Some(input) = metric_value(
+            requirement,
+            scenario,
+            mission,
+            performance,
+            payload_range,
+            &mass_properties,
+        )? {
             evaluations.push(evaluate_one(requirement, input));
         }
     }
@@ -91,6 +99,7 @@ fn metric_value(
     mission: &MissionResult,
     performance: &PerformanceSummary,
     payload_range: Option<&PayloadRangeResult>,
+    mass_properties: &MassPropertiesAnalysis,
 ) -> AexResult<Option<MetricInput>> {
     let Some(metric) = requirement_metric(&requirement.metric).map(|item| item.metric) else {
         return Ok(None);
@@ -153,6 +162,21 @@ fn metric_value(
         RequirementMetric::ZeroPayloadFerryRange => payload_range
             .and_then(|result| point_range(result, "zero_payload_ferry"))
             .map(MetricInput::valid),
+        RequirementMetric::MinimumCenterOfGravity => Some(MetricInput::valid(
+            mass_properties.minimum_center_of_gravity.value,
+        )),
+        RequirementMetric::MaximumCenterOfGravity => Some(MetricInput::valid(
+            mass_properties.maximum_center_of_gravity.value,
+        )),
+        RequirementMetric::MinimumStaticMargin => {
+            Some(mass_properties.minimum_static_margin.map_or_else(
+                || MetricInput {
+                    actual: 0.0,
+                    validity: MetricValidity::unsupported(),
+                },
+                MetricInput::valid,
+            ))
+        }
         RequirementMetric::DeclaredCruiseMach | RequirementMetric::DeclaredCruiseTrueAirspeed => {
             None
         }
@@ -234,7 +258,10 @@ fn evaluate_one(requirement: &Requirement, input: MetricInput) -> RequirementEva
         _ => actual - requirement.required,
     };
     let numerical_pass = margin >= -1.0e-9;
-    let (status, passed) = if input.validity.status == ValidityStatus::BoundaryLimited {
+    let (status, passed) = if matches!(
+        input.validity.status,
+        ValidityStatus::BoundaryLimited | ValidityStatus::Unsupported
+    ) {
         (RequirementStatus::Indeterminate, None)
     } else if numerical_pass {
         (RequirementStatus::Pass, Some(true))

@@ -65,6 +65,9 @@ pub(crate) enum RequirementMetric {
     OeiSecondSegmentClimbGradient,
     FullPayloadRange,
     ZeroPayloadFerryRange,
+    MinimumCenterOfGravity,
+    MaximumCenterOfGravity,
+    MinimumStaticMargin,
     DeclaredCruiseMach,
     DeclaredCruiseTrueAirspeed,
 }
@@ -262,7 +265,7 @@ const TEMPLATES: [RequirementTemplateCapability; 2] = [
     },
 ];
 
-const REQUIREMENT_METRICS: [RequirementMetricCapability; 18] = [
+const REQUIREMENT_METRICS: [RequirementMetricCapability; 21] = [
     metric(
         "mission.payload_mass",
         RequirementMetric::MissionPayloadMass,
@@ -389,6 +392,30 @@ const REQUIREMENT_METRICS: [RequirementMetricCapability; 18] = [
         MetricSource::Achieved,
         true,
         RequirementValueKind::Length,
+        None,
+    ),
+    metric(
+        "mass_properties.minimum_center_of_gravity",
+        RequirementMetric::MinimumCenterOfGravity,
+        MetricSource::Achieved,
+        true,
+        RequirementValueKind::Length,
+        None,
+    ),
+    metric(
+        "mass_properties.maximum_center_of_gravity",
+        RequirementMetric::MaximumCenterOfGravity,
+        MetricSource::Achieved,
+        true,
+        RequirementValueKind::Length,
+        None,
+    ),
+    metric(
+        "stability.minimum_static_margin",
+        RequirementMetric::MinimumStaticMargin,
+        MetricSource::Achieved,
+        true,
+        RequirementValueKind::Scalar,
         None,
     ),
     metric(

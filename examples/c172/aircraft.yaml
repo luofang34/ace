@@ -41,6 +41,15 @@ aircraft:
     operating_empty_mass: 767 kg
     maximum_payload_mass: 376 kg
     maximum_fuel_mass: 144 kg
+    components:
+      - { id: fuselage, station: 4.15 m }
+      - { id: wing, mass: 120 kg, station: 3.20 m }
+      - { id: horizontal_tail, mass: 15 kg, station: 6.93 m }
+      - { id: vertical_tail, mass: 10 kg, station: 6.90 m }
+      - { id: powerplant, station: 0.80 m }
+      - { id: propeller, mass: 25 kg, station: 0.15 m }
+    fuel_station: 3.20 m
+    payload_station: 3.40 m
   geometry:
     wing:
       area: 16.17 m^2

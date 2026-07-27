@@ -11,12 +11,17 @@ use crate::domain::propulsion::TablePropulsionDeck;
 use crate::domain::topology::{AircraftTopology, RawAircraftTopology};
 
 mod geometry;
+mod mass;
 mod mission;
 mod requirements;
 
 pub(crate) use geometry::{
     AircraftGeometry, FuselageGeometry, GeometryValue, GeometryValueProvenance, RawGeometry,
     RawTailGeometry, RawWing, TailGeometry,
+};
+pub(crate) use mass::{
+    ComponentMass, ComponentMassStatement, MassProperties, MassPropertyProvenance,
+    MassPropertyValue, RawComponentMass, RawMass,
 };
 pub(crate) use mission::{
     EnergySchedulePoint, Mission, MissionDocument, MissionInitialState, MissionSegment,
@@ -54,14 +59,6 @@ pub(crate) struct RawAircraft {
 pub(crate) struct ConceptMetadata {
     pub(crate) purpose: String,
     pub(crate) certification_use: String,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct RawMass {
-    pub(crate) maximum_takeoff_mass: String,
-    pub(crate) operating_empty_mass: String,
-    pub(crate) maximum_payload_mass: String,
-    pub(crate) maximum_fuel_mass: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -203,14 +200,6 @@ pub(crate) struct Aircraft {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct MassProperties {
-    pub(crate) maximum_takeoff_mass_kg: f64,
-    pub(crate) operating_empty_mass_kg: f64,
-    pub(crate) maximum_payload_mass_kg: f64,
-    pub(crate) maximum_fuel_mass_kg: f64,
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub(crate) struct Wing {
     pub(crate) area_m2: f64,
     pub(crate) span_m: f64,
@@ -285,6 +274,13 @@ impl EngineProfile {
         match self {
             Self::Piston(profile) => &profile.id,
             Self::Turbofan(profile) => &profile.id,
+        }
+    }
+
+    pub(crate) fn dry_mass_kg(&self) -> f64 {
+        match self {
+            Self::Piston(profile) => profile.dry_mass_kg,
+            Self::Turbofan(profile) => profile.dry_mass_kg,
         }
     }
 }

@@ -304,3 +304,26 @@ the corresponding component is invalid, and absent tailless components do not
 receive conventional correlations. Native wetted area, structural tail-volume
 screening, and OpenVSP generation consume the same resolved geometry so no
 backend independently invents competing dimensions.
+
+## ADR-029 — Mass properties close before stability is evaluated
+
+The resolved aircraft contains one longitudinal mass statement spanning every
+topology component. Explicit component masses take precedence. A selected
+engine profile supplies installed engine dry mass when the matching component
+does not declare a fixed mass. The remaining operating-empty-mass residual is
+distributed only among statistical components with a named, versioned
+correlation. Fixed and profile masses are never rescaled; if they exceed
+declared operating empty mass, resolution fails.
+
+Every component mass and station records its source. Fuel and payload have
+separate centroid stations. Native mission states combine the fixed
+operating-empty moment with the simulated fuel and payload remaining after
+each segment, so CG excursion follows the same histories used for mission mass
+and fuel results.
+
+Conventional static margin uses a conceptual neutral point derived from the
+resolved wing and horizontal-tail volume. CG and static-margin metrics are
+bindable requirements. A nonpositive native static margin fails the conceptual
+screen. Tailless topology retains mass and CG results, but its neutral point is
+explicitly unsupported; a static-margin requirement is therefore
+indeterminate with `passed: null`, never a numeric pass.

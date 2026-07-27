@@ -14,6 +14,7 @@ use crate::models::blended_wing::{BlendedWingPlanform, is_blended_wing_body};
 use crate::models::breguet;
 use crate::models::concept_geometry::ConceptGeometry;
 use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
+use crate::models::mass_properties;
 use crate::models::mission::MissionSimulator;
 use crate::models::mission_power;
 use crate::models::payload_range::PayloadRangeAnalyzer;
@@ -135,6 +136,7 @@ impl AnalysisBackend for NativeBackend {
         let payload_range = PayloadRangeAnalyzer::new(scenario.clone()).analyze()?;
         let structural_screen = structural_screen::evaluate(scenario)?;
         let mission_power_screen = mission_power::evaluate(scenario, &mission)?;
+        let mass_properties = mass_properties::evaluate(scenario, &mission)?;
         let requirements =
             evaluate_requirements(scenario, &mission, &performance, Some(&payload_range))?;
         let breguet = breguet::estimate(
@@ -157,7 +159,21 @@ impl AnalysisBackend for NativeBackend {
             takeoff_field: &takeoff_field,
             landing_field: &landing_field,
             weight_kg: weight,
+            mass_properties: &mass_properties,
         })?;
+        let mut metric_validity = performance.metric_validity.clone();
+        let stability_validity = if mass_properties.stability_supported {
+            crate::domain::validity::MetricValidity::default()
+        } else {
+            crate::domain::validity::MetricValidity::unsupported()
+        };
+        for metric in [
+            "stability.neutral_point",
+            "stability.minimum_static_margin",
+            "stability.maximum_static_margin",
+        ] {
+            metric_validity.insert(metric.to_owned(), stability_validity.clone());
+        }
         let feasible = hard_requirements_passed(
             mission.completed,
             &request.scenario.requirements.items,
@@ -167,11 +183,13 @@ impl AnalysisBackend for NativeBackend {
             && !mission.takeoff_mass_violation
             && performance.cruise_feasible.unwrap_or(true)
             && structural_screen.passed
-            && mission_power_screen.passed;
+            && mission_power_screen.passed
+            && mass_properties.failed_constraints.is_empty();
         let mut failed_constraints =
             failed_constraints(&scenario.requirements.items, &requirements, &mission);
         failed_constraints.extend(structural_screen.failed_constraints.clone());
         failed_constraints.extend(mission_power_screen.failed_constraints.clone());
+        failed_constraints.extend(mass_properties.failed_constraints.clone());
         if performance.cruise_feasible == Some(false) {
             failed_constraints.push("cruise_capability".to_owned());
         }
@@ -181,25 +199,37 @@ impl AnalysisBackend for NativeBackend {
         warnings.extend(breguet.warnings);
         warnings.extend(structural_screen.provenance.warnings.clone());
         warnings.extend(mission_power_screen.provenance.warnings.clone());
+        warnings.extend(mass_properties.provenance.warnings.clone());
         extend_unique_warnings(&mut warnings, takeoff_field.warnings);
         extend_unique_warnings(&mut warnings, landing_field.warnings);
         extend_unique_warnings(&mut warnings, polar_warnings);
-        warnings.push(Diagnostic::warning(
-            WarningCode::NativeStabilityNotModeled,
-            "The native backend does not estimate stability derivatives.",
-            "analysis.stability",
-        ));
+        if !mass_properties.stability_supported {
+            warnings.push(Diagnostic::warning(
+                WarningCode::NativeStabilityNotModeled,
+                "The native backend cannot estimate tailless neutral-point stability.",
+                "analysis.stability",
+            ));
+        }
         Ok(AnalysisOutput {
             metrics,
-            metric_validity: performance.metric_validity.clone(),
+            metric_validity,
             polar,
             stability: StabilitySummary {
                 pitching_moment_slope_per_deg: None,
-                statically_stable: None,
-                note: "No native stability-derivative model is registered.".to_owned(),
+                statically_stable: mass_properties
+                    .minimum_static_margin
+                    .map(|margin| margin > 0.0),
+                neutral_point: mass_properties.neutral_point.clone(),
+                minimum_static_margin: mass_properties.minimum_static_margin,
+                note: if mass_properties.stability_supported {
+                    "Native neutral point uses the resolved horizontal-tail volume.".to_owned()
+                } else {
+                    "Native tailless neutral-point stability is unsupported.".to_owned()
+                },
             },
             structural_screen: Some(structural_screen),
             mission_power_screen: Some(mission_power_screen),
+            mass_properties: Some(mass_properties),
             requirements,
             feasible: Some(feasible),
             failed_constraints,

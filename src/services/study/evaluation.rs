@@ -184,6 +184,10 @@ fn evidence_analysis(scenario: &ResolvedScenario) -> EvidenceAnalysis {
                 "structures".to_owned(),
                 "structures.conceptual_screen.v2".to_owned(),
             ),
+            (
+                "mass_properties".to_owned(),
+                "stability.native_mass_properties.v1".to_owned(),
+            ),
         ]),
         fidelity_level: 1,
     }

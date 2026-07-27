@@ -5,6 +5,7 @@ pub(crate) mod breguet;
 pub(crate) mod concept_geometry;
 pub(crate) mod constraints;
 pub(crate) mod field_performance;
+pub(crate) mod mass_properties;
 pub(crate) mod mission;
 pub(crate) mod mission_power;
 pub(crate) mod payload_range;

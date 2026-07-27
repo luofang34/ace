@@ -65,6 +65,8 @@ pub(super) fn stability_summary(points: &[PolarPoint]) -> StabilitySummary {
     StabilitySummary {
         pitching_moment_slope_per_deg: slope,
         statically_stable: slope.map(|value| value < 0.0),
+        neutral_point: None,
+        minimum_static_margin: None,
         note: "Static pitch stability inferred from the VSPAERO CMy-alpha slope.".to_owned(),
     }
 }

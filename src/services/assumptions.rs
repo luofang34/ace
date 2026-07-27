@@ -1,7 +1,7 @@
 use serde_yaml::{Mapping, Value};
 
 use crate::domain::schema::{
-    Aircraft, AssumptionEntry, EngineProfile, GeometryValue, PropellerProfile,
+    Aircraft, AssumptionEntry, EngineProfile, GeometryValue, MassPropertyValue, PropellerProfile,
 };
 
 pub(crate) fn collect_all_assumptions(
@@ -27,6 +27,7 @@ pub(crate) fn collect_all_assumptions(
         &mut entries,
     );
     collect_derived_geometry_assumptions(aircraft, &mut entries);
+    collect_derived_mass_assumptions(aircraft, &mut entries);
     entries.push(profile_assumption(
         "aircraft.propulsion.profile",
         engine.profile_id(),
@@ -38,6 +39,54 @@ pub(crate) fn collect_all_assumptions(
         ));
     }
     entries
+}
+
+fn collect_derived_mass_assumptions(aircraft: &Aircraft, entries: &mut Vec<AssumptionEntry>) {
+    let statement = &aircraft.mass.statement;
+    for component in &statement.components {
+        let base = format!("aircraft.mass.components.{}", component.component_id);
+        if !component.mass.provenance.explicitly_provided {
+            entries.push(derived_mass_assumption(
+                &format!("{base}.mass"),
+                &component.mass,
+            ));
+        }
+        if !component.station.provenance.explicitly_provided {
+            entries.push(derived_mass_assumption(
+                &format!("{base}.station"),
+                &component.station,
+            ));
+        }
+    }
+    for (path, value) in [
+        ("aircraft.mass.fuel_station", &statement.fuel_station),
+        ("aircraft.mass.payload_station", &statement.payload_station),
+    ] {
+        if !value.provenance.explicitly_provided {
+            entries.push(derived_mass_assumption(path, value));
+        }
+    }
+}
+
+fn derived_mass_assumption(path: &str, value: &MassPropertyValue) -> AssumptionEntry {
+    AssumptionEntry {
+        parameter_path: path.to_owned(),
+        resolved_value: serde_json::Value::from(value.value),
+        unit: Some(value.unit.to_owned()),
+        provenance_kind: value.provenance.kind.to_owned(),
+        source: value.provenance.source.clone(),
+        correlation_id: value.provenance.correlation_id.map(str::to_owned),
+        correlation_version: value.provenance.correlation_version,
+        confidence: if value.provenance.kind == "profile" {
+            "medium"
+        } else {
+            "low"
+        }
+        .to_owned(),
+        explicitly_provided: false,
+        inherited_from_profile: value.provenance.kind == "profile",
+        supplied_by_default: value.provenance.kind != "profile",
+    }
 }
 
 fn collect_assumptions(
@@ -192,6 +241,8 @@ fn is_quantity_path(path: &str) -> bool {
             | "aircraft.mass.operating_empty_mass"
             | "aircraft.mass.maximum_payload_mass"
             | "aircraft.mass.maximum_fuel_mass"
+            | "aircraft.mass.fuel_station"
+            | "aircraft.mass.payload_station"
             | "aircraft.geometry.wing.area"
             | "aircraft.geometry.wing.span"
             | "aircraft.geometry.wing.sweep_quarter_chord"
@@ -209,20 +260,22 @@ fn is_quantity_path(path: &str) -> bool {
             | "mission.initial_state.indicated_airspeed"
             | "mission.initial_state.true_airspeed"
             | "mission.initial_state.fuel_mass"
-    ) || sequence_quantity_path(
-        path,
-        "mission.segments.",
-        &[
-            "duration",
-            "distance",
-            "target_altitude",
-            "altitude",
-            "indicated_airspeed",
-            "true_airspeed",
-            "fuel_mass",
-            "payload_mass",
-        ],
-    ) || energy_schedule_quantity_path(path)
+    ) || sequence_quantity_path(path, "aircraft.mass.components.", &["mass", "station"])
+        || sequence_quantity_path(
+            path,
+            "mission.segments.",
+            &[
+                "duration",
+                "distance",
+                "target_altitude",
+                "altitude",
+                "indicated_airspeed",
+                "true_airspeed",
+                "fuel_mass",
+                "payload_mass",
+            ],
+        )
+        || energy_schedule_quantity_path(path)
         || sequence_quantity_path(path, "requirements.items.", &["value"])
 }
 

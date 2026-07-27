@@ -80,6 +80,7 @@ fn tailless_topology_does_not_invent_conventional_geometry()
     document.aircraft.geometry.fuselage = None;
     document.aircraft.geometry.horizontal_tail = None;
     document.aircraft.geometry.vertical_tail = None;
+    document.aircraft.mass.components.clear();
     let aircraft = resolve_aircraft(document)?;
 
     assert!(aircraft.geometry.fuselage.is_none());

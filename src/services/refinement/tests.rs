@@ -37,6 +37,10 @@ fn copy_c172_without_horizontal_tail(
         relationship["source"].as_str() != Some("horizontal_tail")
             && relationship["target"].as_str() != Some("horizontal_tail")
     });
+    let mass_components = document["aircraft"]["mass"]["components"]
+        .as_sequence_mut()
+        .ok_or_else(|| io::Error::other("missing mass components"))?;
+    mass_components.retain(|component| component["id"].as_str() != Some("horizontal_tail"));
     document["aircraft"]["geometry"]["horizontal_tail"] = serde_yaml::Value::Null;
     fs::write(aircraft_path, serde_yaml::to_string(&document)?)?;
     Ok(destination.join("scenario.yaml"))

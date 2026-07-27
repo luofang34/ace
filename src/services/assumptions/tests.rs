@@ -174,3 +174,28 @@ fn mixed_geometry_assumptions_serialize_as_fixed_width_csv()
     assert!(csv.contains("ace_conventional_geometry"));
     Ok(())
 }
+
+#[test]
+fn resolved_mass_statement_sources_are_recorded_in_the_ledger()
+-> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("c172")?;
+    let fuselage = entry(
+        &scenario.assumptions,
+        "aircraft.mass.components.fuselage.mass",
+    )?;
+    let engine = entry(
+        &scenario.assumptions,
+        "aircraft.mass.components.powerplant.mass",
+    )?;
+
+    assert_eq!(fuselage.provenance_kind, "statistical");
+    assert_eq!(
+        fuselage.correlation_id.as_deref(),
+        Some("mass.component_fraction")
+    );
+    assert_eq!(fuselage.correlation_version, Some(1));
+    assert_eq!(engine.provenance_kind, "profile");
+    assert!(engine.inherited_from_profile);
+    assert_eq!(engine.unit.as_deref(), Some("kg"));
+    Ok(())
+}

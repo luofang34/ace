@@ -9,8 +9,8 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{
     AeroConfiguration, Aerodynamics, Aircraft, AircraftDocument, AircraftLimits, ConceptMetadata,
-    EngineProfile, MassProperties, Mission, MissionDocument, PropellerProfile, Propulsion,
-    RawAeroConfiguration, RequirementsDocument, ResolvedScenario, ScenarioDocument,
+    EngineProfile, Mission, MissionDocument, PropellerProfile, Propulsion, RawAeroConfiguration,
+    RequirementsDocument, ResolvedScenario, ScenarioDocument,
 };
 use crate::domain::topology::AircraftTopology;
 use crate::services::assumptions::collect_all_assumptions;
@@ -25,6 +25,7 @@ mod embedded;
 mod energy_climb;
 mod geometry;
 mod initial_state;
+mod mass;
 mod planform;
 mod polar;
 mod segments;
@@ -75,7 +76,7 @@ impl ScenarioResolver {
         require_schema_version(aircraft_document.schema_version, "aircraft")?;
         require_schema_version(mission_document.schema_version, "mission")?;
         require_schema_version(requirements_document.schema_version, "requirements")?;
-        let aircraft = resolve_aircraft(aircraft_document)?;
+        let mut aircraft = resolve_aircraft(aircraft_document)?;
         let mission = resolve_mission(mission_document)?;
         let requirements = resolve_requirements(requirements_document)?;
         validate_template_context(&requirements, aircraft.propulsion.engine_count)?;
@@ -83,6 +84,8 @@ impl ScenarioResolver {
         validate_initial_state(&aircraft, &mission)?;
         validate_energy_schedule_limits(&aircraft, &mission)?;
         let (engine, propeller) = self.resolve_profiles(directory, &aircraft)?;
+        let sizing_factor = aircraft.propulsion.sizing_factor;
+        mass::finalize(&mut aircraft.mass, &engine, sizing_factor)?;
         let assumptions = collect_all_assumptions(
             &aircraft_value,
             &mission_value,
@@ -158,7 +161,6 @@ fn require_schema_version(version: u32, path: &str) -> AexResult<()> {
 
 pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft> {
     let raw = document.aircraft;
-    let mass = resolve_mass(&raw.mass)?;
     let topology = AircraftTopology::resolve(
         raw.topology,
         &raw.configuration,
@@ -173,6 +175,7 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
         &raw.category,
         &raw.propulsion_architecture,
     )?;
+    let mass = mass::resolve(&raw.mass, &topology, &geometry, &wing, &raw.category)?;
     let aerodynamics = Aerodynamics {
         model: raw.aerodynamics.model,
         clean: resolve_aero(raw.aerodynamics.clean, "clean")?,
@@ -220,39 +223,6 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
         },
         limits,
     })
-}
-
-fn resolve_mass(raw: &crate::domain::schema::RawMass) -> AexResult<MassProperties> {
-    let result = MassProperties {
-        maximum_takeoff_mass_kg: positive_quantity(
-            &raw.maximum_takeoff_mass,
-            Dimension::Mass,
-            "aircraft.mass.maximum_takeoff_mass",
-        )?,
-        operating_empty_mass_kg: positive_quantity(
-            &raw.operating_empty_mass,
-            Dimension::Mass,
-            "aircraft.mass.operating_empty_mass",
-        )?,
-        maximum_payload_mass_kg: positive_quantity(
-            &raw.maximum_payload_mass,
-            Dimension::Mass,
-            "aircraft.mass.maximum_payload_mass",
-        )?,
-        maximum_fuel_mass_kg: positive_quantity(
-            &raw.maximum_fuel_mass,
-            Dimension::Mass,
-            "aircraft.mass.maximum_fuel_mass",
-        )?,
-    };
-    if result.operating_empty_mass_kg >= result.maximum_takeoff_mass_kg {
-        return Err(AexError::validation(
-            "INVALID_MASS_LIMIT",
-            "aircraft.mass.operating_empty_mass",
-            "operating empty mass must be below maximum takeoff mass",
-        ));
-    }
-    Ok(result)
 }
 
 fn resolve_aero(raw: RawAeroConfiguration, name: &str) -> AexResult<AeroConfiguration> {
