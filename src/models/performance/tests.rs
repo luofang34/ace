@@ -424,3 +424,75 @@ fn declared_isa_offset_changes_point_and_mission_results() -> Result<(), Box<dyn
     assert_ne!(fuel(hot)?, fuel(standard)?);
     Ok(())
 }
+
+#[test]
+fn forward_cg_raises_trimmed_stall_speed_and_power_required()
+-> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("c172")?;
+    let stations = crate::models::mass_properties::longitudinal_stations(&scenario)
+        .ok_or("C172 has a horizontal tail")?;
+    let analyzer = PointAnalyzer::new(scenario);
+    let at = |cg| analyzer.point_at_cg(1_500.0, 50.0, 1_000.0, "clean", cg);
+    let untrimmed = at(None)?;
+    let neutral = at(Some(stations.wing_aerodynamic_center_m))?;
+    // A CG at the wing aerodynamic center needs no tail load.
+    assert!((neutral.stall_speed_m_s - untrimmed.stall_speed_m_s).abs() < 1e-9);
+    assert_eq!(neutral.trim_wing_lift_fraction, Some(1.0));
+    let forward = at(Some(stations.wing_aerodynamic_center_m - 0.3))?;
+    let aft = at(Some(stations.wing_aerodynamic_center_m + 0.2))?;
+    assert!(forward.stall_speed_m_s > untrimmed.stall_speed_m_s);
+    assert!(forward.power_required_w > aft.power_required_w);
+    assert!(forward.trim_wing_lift_fraction.unwrap_or(0.0) > 1.0);
+    assert!(aft.trim_wing_lift_fraction.unwrap_or(2.0) < 1.0);
+    // Weight, not wing lift, sets the climb rate denominator.
+    assert_eq!(forward.mass_kg, 1_000.0);
+    assert!(at(Some(stations.tail_aerodynamic_center_m + 0.1)).is_err());
+    Ok(())
+}
+
+#[test]
+fn cg_trim_uses_a_declared_wing_station_and_flags_the_correlated_one()
+-> Result<(), Box<dyn std::error::Error>> {
+    let correlated = example_scenario("c172")?;
+    let estimated = crate::models::mass_properties::longitudinal_stations(&correlated)
+        .ok_or("C172 has a horizontal tail")?;
+    assert!(!estimated.wing_station_declared);
+    let point = PointAnalyzer::new(correlated.clone()).point_at_cg(
+        1_500.0,
+        50.0,
+        1_000.0,
+        "clean",
+        Some(estimated.wing_aerodynamic_center_m),
+    )?;
+    assert!(
+        point
+            .warnings
+            .iter()
+            .any(|warning| warning.code == "CORRELATED_GEOMETRY_STATION")
+    );
+
+    let mut declared = correlated;
+    declared.aircraft.wing.aerodynamic_center_m = Some(estimated.wing_aerodynamic_center_m + 0.5);
+    let stations = crate::models::mass_properties::longitudinal_stations(&declared)
+        .ok_or("C172 has a horizontal tail")?;
+    assert!(stations.wing_station_declared);
+    assert_eq!(
+        stations.wing_aerodynamic_center_m,
+        estimated.wing_aerodynamic_center_m + 0.5
+    );
+    let point = PointAnalyzer::new(declared).point_at_cg(
+        1_500.0,
+        50.0,
+        1_000.0,
+        "clean",
+        Some(stations.wing_aerodynamic_center_m),
+    )?;
+    assert_eq!(point.trim_wing_lift_fraction, Some(1.0));
+    assert!(
+        !point
+            .warnings
+            .iter()
+            .any(|warning| warning.code == "CORRELATED_GEOMETRY_STATION")
+    );
+    Ok(())
+}

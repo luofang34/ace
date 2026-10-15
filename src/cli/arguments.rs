@@ -72,6 +72,8 @@ pub(super) struct PointArgs {
     pub(super) speed: Option<String>,
     pub(super) mach: Option<f64>,
     pub(super) mass: Option<String>,
+    /// Longitudinal CG station to trim the point at.
+    pub(super) cg: Option<String>,
     pub(super) configuration: String,
     pub(super) common: CommonArgs,
 }

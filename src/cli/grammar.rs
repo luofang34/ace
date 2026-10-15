@@ -113,6 +113,11 @@ fn analysis() -> Command {
                 )
                 .arg(Arg::new("mass").long("mass"))
                 .arg(
+                    Arg::new("cg")
+                        .long("cg")
+                        .help("Longitudinal CG station to trim at, from the geometry datum"),
+                )
+                .arg(
                     Arg::new("configuration")
                         .long("configuration")
                         .default_value("clean"),

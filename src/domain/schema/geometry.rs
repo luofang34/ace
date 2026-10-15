@@ -22,6 +22,9 @@ pub(crate) struct RawWing {
     pub(crate) sweep_quarter_chord: String,
     #[serde(default)]
     pub(crate) center_body_edge_sweep: Option<String>,
+    /// Mean-chord aerodynamic-center station from the mass-properties datum.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) aerodynamic_center: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]

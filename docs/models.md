@@ -119,6 +119,15 @@ formula as mission segments (shaft engines: cruise BSFC times required power
 divided by the propeller's cruise `propeller_efficiency`), alongside
 `fuel_flow_max_power_kg_s` at full throttle.
 
+A point declared with a longitudinal CG is trimmed by moments about the
+horizontal-tail aerodynamic center: the wing carries
+`W * (x_tail - x_cg) / (x_tail - x_wing)`, so a forward CG raises stall speed
+and induced drag, while climb rate still divides by the full weight. The wing
+and tail aerodynamic centers are the same stations the static-margin neutral
+point uses: a declared `aircraft.geometry.wing.aerodynamic_center`, or else a
+fuselage-length layout correlation that is reported as
+`CORRELATED_GEOMETRY_STATION`.
+
 Performance results include `metric_validity` for maximum level speed, service
 ceiling, and absolute ceiling. An interior root is `valid`; an interior root
 that uses a model outside its registered envelope is `extrapolated`. A maximum

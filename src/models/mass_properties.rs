@@ -152,7 +152,20 @@ fn state(
     })
 }
 
-fn neutral_point_m(scenario: &ResolvedScenario) -> Option<f64> {
+/// Longitudinal stations of the conceptual layout used for stability and trim.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct LongitudinalStations {
+    pub(crate) wing_aerodynamic_center_m: f64,
+    /// Whether the wing station was declared rather than estimated by correlation.
+    pub(crate) wing_station_declared: bool,
+    pub(crate) tail_aerodynamic_center_m: f64,
+    pub(crate) tail_volume: f64,
+    pub(crate) mean_chord_m: f64,
+}
+
+/// Wing and horizontal-tail aerodynamic centers from the conceptual layout; absent
+/// without a horizontal tail and fuselage.
+pub(crate) fn longitudinal_stations(scenario: &ResolvedScenario) -> Option<LongitudinalStations> {
     if !scenario
         .aircraft
         .topology
@@ -164,14 +177,30 @@ fn neutral_point_m(scenario: &ResolvedScenario) -> Option<f64> {
     let fuselage = geometry.fuselage.as_ref()?;
     let tail = geometry.horizontal_tail.as_ref()?;
     let wing = &scenario.aircraft.wing;
-    let mean_chord = wing.area_m2 / wing.span_m;
-    let wing_leading_edge = if scenario.aircraft.category.contains("transport") {
-        0.42 * fuselage.length.value
-    } else {
-        0.34 * fuselage.length.value
+    let mean_chord_m = wing.area_m2 / wing.span_m;
+    // Without a declared station, place the wing leading edge by a fuselage-length
+    // layout correlation and take the quarter mean chord.
+    let correlated = || {
+        let fraction = if scenario.aircraft.category.contains("transport") {
+            0.42
+        } else {
+            0.34
+        };
+        fraction * fuselage.length.value + 0.25 * mean_chord_m
     };
-    let tail_volume = tail.area.value * tail.arm.value / (wing.area_m2 * mean_chord);
-    Some(wing_leading_edge + (0.25 + 0.60 * tail_volume) * mean_chord)
+    let wing_aerodynamic_center_m = wing.aerodynamic_center_m.unwrap_or_else(correlated);
+    Some(LongitudinalStations {
+        wing_aerodynamic_center_m,
+        wing_station_declared: wing.aerodynamic_center_m.is_some(),
+        tail_aerodynamic_center_m: wing_aerodynamic_center_m + tail.arm.value,
+        tail_volume: tail.area.value * tail.arm.value / (wing.area_m2 * mean_chord_m),
+        mean_chord_m,
+    })
+}
+
+fn neutral_point_m(scenario: &ResolvedScenario) -> Option<f64> {
+    let stations = longitudinal_stations(scenario)?;
+    Some(stations.wing_aerodynamic_center_m + 0.60 * stations.tail_volume * stations.mean_chord_m)
 }
 
 fn static_margin_bounds(states: &[MassPropertiesState]) -> Option<(f64, f64)> {

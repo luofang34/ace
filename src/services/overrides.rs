@@ -166,6 +166,7 @@ fn optional_override_value(raw: &str, path: &str) -> AexResult<Option<Value>> {
         | "aircraft.geometry.horizontal_tail.arm"
         | "aircraft.geometry.vertical_tail.area"
         | "aircraft.geometry.vertical_tail.arm"
+        | "aircraft.geometry.wing.aerodynamic_center"
         | "mission.atmosphere.isa_offset"
         | "mission.field.elevation"
         | "mission.field.takeoff_mass"

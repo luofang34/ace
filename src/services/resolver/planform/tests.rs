@@ -12,6 +12,7 @@ fn raw_wing(area: Option<f64>, span: Option<f64>, aspect_ratio: Option<f64>) -> 
         aspect_ratio,
         sweep_quarter_chord: "0 deg".to_owned(),
         center_body_edge_sweep: None,
+        aerodynamic_center: None,
     }
 }
 
@@ -129,6 +130,7 @@ fn sweep_completion_closes_every_planform_variable_combination()
                 .transpose()?,
             sweep_quarter_chord: "0 deg".to_owned(),
             center_body_edge_sweep: None,
+            aerodynamic_center: None,
         })?;
         assert_closed(&wing);
     }

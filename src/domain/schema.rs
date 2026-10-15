@@ -207,6 +207,9 @@ pub(crate) struct Wing {
     pub(crate) aspect_ratio: f64,
     pub(crate) sweep_quarter_chord_rad: f64,
     pub(crate) center_body_edge_sweep_rad: Option<f64>,
+    /// Declared mean-chord aerodynamic-center station; absent uses a layout correlation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) aerodynamic_center_m: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize)]

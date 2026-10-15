@@ -106,6 +106,7 @@ fn analysis(matches: &ArgMatches) -> Result<AnalyzeCommand, Error> {
             speed: optional(args, "speed"),
             mach: optional(args, "mach"),
             mass: optional(args, "mass"),
+            cg: optional(args, "cg"),
             configuration: required(args, "configuration")?,
         })),
         "constraints" => Ok(AnalyzeCommand::Constraints(ConstraintArgs {

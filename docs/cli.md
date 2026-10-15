@@ -13,7 +13,7 @@ Primary commands:
 aex capabilities
 aex validate DOCUMENT
 aex resolve SCENARIO
-aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE) [--mass VALUE]
+aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE) [--mass VALUE] [--cg VALUE]
 aex analyze performance SCENARIO [--mass VALUE] [--landing-mass VALUE]
 aex analyze mission SCENARIO
 aex analyze constraints SCENARIO
@@ -49,6 +49,10 @@ accepts `--strict` as well. The exhaustive decisions for every shipped warning
 code are generated in [the strict warning policy](strict-warning-policy.md).
 
 `analyze point --mass` sets the point's mass (default maximum takeoff mass).
+`analyze point --cg VALUE` trims the point at that longitudinal CG station
+(from the geometry datum): the wing then carries the tail-trimmed lift, which
+sets stall speed and induced drag, and the result reports
+`trim_wing_lift_fraction`. It requires horizontal-tail and fuselage geometry.
 `analyze performance --mass` sets `mission.field.takeoff_mass`, the mass of the
 whole performance summary including ceilings and takeoff field length;
 `--landing-mass` sets `mission.field.landing_mass` for the landing field

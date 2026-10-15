@@ -40,6 +40,10 @@ pub(super) fn resolve_wing(raw: &RawWing) -> AexResult<Wing> {
             raw.center_body_edge_sweep.as_deref(),
             Dimension::Angle,
         )?,
+        aerodynamic_center_m: optional_quantity(
+            raw.aerodynamic_center.as_deref(),
+            Dimension::Length,
+        )?,
     })
 }
 
