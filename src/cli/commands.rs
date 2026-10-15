@@ -118,6 +118,11 @@ fn execute_point(service: &ApplicationService, arguments: PointArgs) -> AexResul
         .as_deref()
         .map(|value| parse_quantity(value, Dimension::Mass))
         .transpose()?;
+    let center_of_gravity = arguments
+        .cg
+        .as_deref()
+        .map(|value| parse_quantity(value, Dimension::Length))
+        .transpose()?;
     let (scenario, result) = service.point_blocking(
         &arguments.scenario,
         &arguments.common.override_map(),
@@ -126,6 +131,7 @@ fn execute_point(service: &ApplicationService, arguments: PointArgs) -> AexResul
             speed_m_s: speed,
             mach: arguments.mach,
             mass_kg: mass,
+            center_of_gravity_m: center_of_gravity,
             configuration: arguments.configuration,
         },
     )?;

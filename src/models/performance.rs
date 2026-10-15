@@ -16,10 +16,12 @@ use crate::models::propulsion::{
 mod ceiling;
 mod cruise;
 mod solver;
+mod trim;
 mod validity;
 
 use ceiling::service_ceiling_threshold;
 use solver::bracket_roots;
+use trim::trim_wing_lift_fraction;
 use validity::{
     aggregate as aggregate_validity, from_warnings as validity_from_warnings,
     point_reference_validity, reference_metric_validity, speed_upper_bound,
@@ -77,13 +79,31 @@ impl PointAnalyzer {
         mass_kg: f64,
         configuration: &str,
     ) -> AexResult<PointPerformanceResult> {
+        self.point_at_cg(altitude_m, speed_m_s, mass_kg, configuration, None)
+    }
+
+    /// Point performance with an optional longitudinal CG: the wing then carries the
+    /// trimmed lift (more ahead of the aerodynamic center, less behind it), which
+    /// sets stall speed and induced drag; climb still uses the full mass.
+    pub(crate) fn point_at_cg(
+        &self,
+        altitude_m: f64,
+        speed_m_s: f64,
+        mass_kg: f64,
+        configuration: &str,
+        center_of_gravity_m: Option<f64>,
+    ) -> AexResult<PointPerformanceResult> {
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let mach = speed_m_s / atmosphere.speed_of_sound_m_s;
         let reference = point_reference_validity(&self.scenario.aircraft, configuration)?;
+        let trim = center_of_gravity_m
+            .map(|cg| trim_wing_lift_fraction(&self.scenario, cg))
+            .transpose()?;
+        let wing_lift_mass_kg = mass_kg * trim.unwrap_or(1.0);
         let stall_speed = stall_speed_m_s(
             &self.scenario.aircraft,
             configuration,
-            mass_kg,
+            wing_lift_mass_kg,
             atmosphere.density_kg_m3,
         )?;
         if speed_m_s < stall_speed {
@@ -102,7 +122,7 @@ impl PointAnalyzer {
                 density_kg_m3: atmosphere.density_kg_m3,
                 speed_of_sound_m_s: atmosphere.speed_of_sound_m_s,
                 true_airspeed_m_s: speed_m_s,
-                mass_kg,
+                mass_kg: wing_lift_mass_kg,
             },
         )?;
         let propulsion = evaluate_propulsion(
@@ -131,6 +151,12 @@ impl PointAnalyzer {
         extend_unique_diagnostics(&mut warnings, propulsion.warnings.clone());
         extend_unique_diagnostics(&mut warnings, reference.warnings);
         extend_unique_diagnostics(&mut warnings, required_flow.warnings);
+        if center_of_gravity_m.is_some() {
+            extend_unique_diagnostics(
+                &mut warnings,
+                trim::correlated_station_warning(&self.scenario),
+            );
+        }
         Ok(PointPerformanceResult {
             scenario_id: self.scenario.id.clone(),
             altitude_m,
@@ -148,6 +174,8 @@ impl PointAnalyzer {
             fuel_flow_required_kg_s: required_flow.flow_kg_s,
             fuel_flow_max_power_kg_s: propulsion.fuel_flow_kg_s,
             propeller_efficiency: required_flow.propeller_efficiency,
+            center_of_gravity_m,
+            trim_wing_lift_fraction: trim,
             best_glide_speed_m_s: minimum_drag_speed_m_s(
                 &self.scenario.aircraft,
                 "clean",

@@ -249,6 +249,12 @@ geometry:
     arm: 4.125 m
 ```
 
+`wing.aerodynamic_center` optionally declares the mean-chord aerodynamic-center
+station from the mass-properties datum, which is the same datum as the CG. The
+static-margin neutral point and CG-trimmed points use it. Without it they place
+the wing leading edge at 34% (42% for transports) of fuselage length plus a
+quarter mean chord, and CG-trimmed points report `CORRELATED_GEOMETRY_STATION`.
+
 Every added block and scalar is optional for schema-version-1 compatibility.
 Explicit scalars take precedence. Missing values on a matching conventional
 topology component use the versioned `ace_conventional_geometry` statistical

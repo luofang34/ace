@@ -273,20 +273,11 @@ impl AexMcpServer {
     ) -> Result<Json<ObjectOutput>, ErrorData> {
         let altitude =
             parse_quantity(&request.condition.altitude, Dimension::Length).map_err(mcp_error)?;
-        let speed = request
-            .condition
-            .true_airspeed
-            .as_deref()
-            .map(|value| parse_quantity(value, Dimension::Speed))
-            .transpose()
-            .map_err(mcp_error)?;
-        let mass = request
-            .condition
-            .mass
-            .as_deref()
-            .map(|value| parse_quantity(value, Dimension::Mass))
-            .transpose()
-            .map_err(mcp_error)?;
+        let condition = &request.condition;
+        let speed = optional_quantity(condition.true_airspeed.as_deref(), Dimension::Speed)?;
+        let mass = optional_quantity(condition.mass.as_deref(), Dimension::Mass)?;
+        let center_of_gravity =
+            optional_quantity(condition.center_of_gravity.as_deref(), Dimension::Length)?;
         let (_, result) = self
             .service
             .point_blocking(
@@ -297,6 +288,7 @@ impl AexMcpServer {
                     speed_m_s: speed,
                     mach: request.condition.mach,
                     mass_kg: mass,
+                    center_of_gravity_m: center_of_gravity,
                     configuration: request
                         .condition
                         .configuration
@@ -492,4 +484,10 @@ impl AexMcpServer {
 
 fn mcp_serialization_error(source: impl std::fmt::Display) -> ErrorData {
     ErrorData::internal_error(source.to_string(), None)
+}
+fn optional_quantity(value: Option<&str>, dimension: Dimension) -> Result<Option<f64>, ErrorData> {
+    value
+        .map(|value| parse_quantity(value, dimension))
+        .transpose()
+        .map_err(mcp_error)
 }

@@ -68,6 +68,11 @@ warning_registry! {
         false,
         "Example metadata does not explicitly prohibit certification use."
     ),
+    CorrelatedGeometryStation => (
+        "CORRELATED_GEOMETRY_STATION",
+        false,
+        "A result depends on a geometry station estimated by layout correlation rather than declared."
+    ),
     CrossClassComparison => (
         "CROSS_CLASS_COMPARISON",
         false,

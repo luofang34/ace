@@ -63,6 +63,9 @@ pub(super) struct PointRequestCondition {
     pub(super) true_airspeed: Option<String>,
     pub(super) mach: Option<f64>,
     pub(super) mass: Option<String>,
+    /// Longitudinal CG station to trim at, from the geometry datum.
+    #[serde(default)]
+    pub(super) center_of_gravity: Option<String>,
     pub(super) configuration: Option<String>,
 }
 

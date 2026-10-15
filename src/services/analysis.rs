@@ -31,6 +31,8 @@ pub(crate) struct PointCondition {
     pub(crate) speed_m_s: Option<f64>,
     pub(crate) mach: Option<f64>,
     pub(crate) mass_kg: Option<f64>,
+    /// Longitudinal CG to trim at; absent leaves the wing carrying the full weight.
+    pub(crate) center_of_gravity_m: Option<f64>,
     pub(crate) configuration: String,
 }
 
@@ -119,8 +121,13 @@ impl ApplicationService {
                 )
             })?;
         let analyzer = PointAnalyzer::new(scenario.clone());
-        let mut result =
-            analyzer.point(condition.altitude_m, speed, mass, &condition.configuration)?;
+        let mut result = analyzer.point_at_cg(
+            condition.altitude_m,
+            speed,
+            mass,
+            &condition.configuration,
+            condition.center_of_gravity_m,
+        )?;
         prepend_scenario_warnings(&scenario, &mut result.warnings);
         Ok((scenario, result))
     }
