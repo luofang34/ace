@@ -206,3 +206,46 @@ fn wing_projected_area_matches_independent_trapezoid_geometry() {
     }
     assert!((area - quantity(&document, "wing.area") * (1000.0 / 300.0_f64).powi(2)).abs() < 1e-8);
 }
+
+#[test]
+fn customer_branding_changes_presentation_only_and_survives_replay() {
+    let mut session = session();
+    let neutral = document(&mut session, Paper::A3);
+    let branded = ace_drawing::compose_branded(
+        neutral.input.clone(),
+        Paper::A3,
+        ace_drawing::Branding {
+            organization: "Example Aerospace".into(),
+            title: "Transport Concept".into(),
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        neutral.input.snapshot.model_digest,
+        branded.input.snapshot.model_digest
+    );
+    assert_eq!(
+        serde_json::to_value(&neutral.input.snapshot).unwrap(),
+        serde_json::to_value(&branded.input.snapshot).unwrap()
+    );
+    let svg = branded.svg().unwrap();
+    assert!(svg.contains("Example Aerospace / Transport Concept"));
+    assert!(!svg.contains("ACE"));
+    assert!(!neutral.svg().unwrap().contains("ACE"));
+    let pdf = branded.pdf().unwrap();
+    let text = std::str::from_utf8(&pdf).unwrap();
+    assert!(text.contains("/Creator (Example Aerospace)"));
+    assert!(!text.contains("ACE"));
+    let reopened: DrawingDocument =
+        serde_json::from_slice(&serde_json::to_vec(&branded).unwrap()).unwrap();
+    assert_eq!(pdf, reopened.pdf().unwrap());
+    assert_eq!(svg, reopened.svg().unwrap());
+    let mut altered = reopened;
+    altered.branding.as_mut().unwrap().organization = "Changed".into();
+    assert!(altered.verify().is_err());
+    let invalid = ace_drawing::Branding {
+        organization: "Unsupported\nHeader".into(),
+        title: "Study".into(),
+    };
+    assert!(ace_drawing::compose_branded(neutral.input, Paper::A3, invalid).is_err());
+}

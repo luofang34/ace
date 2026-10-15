@@ -81,6 +81,13 @@ fn drawing(args: &ArgMatches) -> Result<Command, Error> {
         candidate: optional(args, "candidate"),
         scenario: required(args, "mission")?,
         replay: args.get_flag("replay"),
+        branding: (args.contains_id("brand") || args.contains_id("drawing-title")).then(|| {
+            ace_drawing::Branding {
+                organization: optional(args, "brand").unwrap_or_default(),
+                title: optional(args, "drawing-title")
+                    .unwrap_or_else(|| ace_drawing::Branding::default().title),
+            }
+        }),
         common: common(args)?,
     }))
 }

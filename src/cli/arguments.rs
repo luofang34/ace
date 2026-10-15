@@ -50,6 +50,7 @@ pub(super) struct DrawingArgs {
     pub candidate: Option<usize>,
     pub scenario: String,
     pub replay: bool,
+    pub branding: Option<ace_drawing::Branding>,
     pub common: CommonArgs,
 }
 

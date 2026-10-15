@@ -3,9 +3,13 @@ use crate::{Primitive, Scene, Stroke};
 mod pdf;
 pub(crate) use pdf::pdf;
 
-pub(crate) fn svg(scene: &Scene, digest: &str) -> String {
+pub(crate) fn svg(scene: &Scene, digest: &str, branding: Option<&crate::Branding>) -> String {
+    let title = branding
+        .map(|b| b.heading())
+        .unwrap_or_else(|| "ACE Aircraft Synthesis Drawing".into());
+    let title = xml(&title);
     let mut result = format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}mm" height="{}mm" viewBox="0 0 {} {}"><title>ACE Aircraft Synthesis Drawing</title><desc>Content {}; all source evidence in drawing.json. Conceptual, not for manufacture.</desc><rect width="100%" height="100%" fill="white"/>"#,
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}mm" height="{}mm" viewBox="0 0 {} {}"><title>{title}</title><desc>Content {}; all source evidence in drawing.json. Conceptual, not for manufacture.</desc><rect width="100%" height="100%" fill="white"/>"#,
         scene.width_mm, scene.height_mm, scene.width_mm, scene.height_mm, digest
     );
     for element in &scene.elements {

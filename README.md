@@ -161,6 +161,10 @@ not overwritten. The directory contains a frozen `drawing.json`, vector SVG/PDF,
 from the same millimetre scene. `--paper A1` doubles the drawing's linear size.
 `--candidate` is a zero-based explicit selection, not a claim of optimality;
 without `--plan`, the supplied design is calculated and studies remain uncomputed.
+`--brand "Your Organization" --drawing-title "Concept Study" customizes the heading
+and PDF metadata; the default presentation has no tool branding. Printable ASCII
+text is supported; logos and embedded Unicode fonts are unavailable. Branding is
+frozen with the page without changing the vehicle or calculation evidence.
 `--mission` selects the mission/operating case. `--set` changes canonical inputs
 before calculation; replay preserves the frozen page and rejects edits.
 Native `vehicle.concept_geometry` generates ellipsoidal body ends and trapezoidal

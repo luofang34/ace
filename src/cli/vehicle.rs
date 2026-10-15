@@ -16,6 +16,7 @@ pub(super) fn drawing_blocking(args: DrawingArgs) -> AexResult<()> {
             candidate: args.candidate,
             scenario: args.scenario,
             replay: args.replay,
+            branding: args.branding,
         },
     )?;
     emit_canonical_blocking(&result, &args.common.output)

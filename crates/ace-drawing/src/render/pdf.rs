@@ -1,6 +1,6 @@
 use crate::{Primitive, Scene};
 
-pub(crate) fn pdf(scene: &Scene, digest: &str) -> Vec<u8> {
+pub(crate) fn pdf(scene: &Scene, digest: &str, branding: Option<&crate::Branding>) -> Vec<u8> {
     let factor = 72.0 / 25.4;
     let mut content = format!(
         "q\n{factor} 0 0 -{factor} 0 {} cm\n1 J 1 j\n",
@@ -50,7 +50,7 @@ pub(crate) fn pdf(scene: &Scene, digest: &str) -> Vec<u8> {
         }
     }
     content.push_str("Q\n");
-    encode(scene, content, digest)
+    encode(scene, content, digest, branding)
 }
 
 fn paint(hex: &str, stroke: bool) -> String {
@@ -71,8 +71,15 @@ fn escape(text: &str) -> String {
         .replace(')', "\\)")
 }
 
-fn encode(scene: &Scene, content: String, digest: &str) -> Vec<u8> {
+fn encode(
+    scene: &Scene,
+    content: String,
+    digest: &str,
+    branding: Option<&crate::Branding>,
+) -> Vec<u8> {
     let factor = 72.0 / 25.4;
+    let title = escape(branding.map_or("Aircraft Synthesis Drawing", |b| &b.title));
+    let creator = escape(branding.map_or("ACE", |b| &b.organization));
     let objects = [
         "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
         "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
@@ -88,10 +95,14 @@ fn encode(scene: &Scene, content: String, digest: &str) -> Vec<u8> {
             content.len()
         ),
         format!(
-            "<< /Title (Aircraft Synthesis Drawing) /Creator (ACE) /Subject (drawing sha256:{digest}; evidence in drawing.json) >>"
+            "<< /Title ({title}) /Creator ({creator}) /Subject (drawing sha256:{digest}; evidence in drawing.json) >>"
         ),
     ];
-    let mut pdf = b"%PDF-1.4\n%ACE\n".to_vec();
+    let mut pdf = if branding.is_some() {
+        b"%PDF-1.4\n%Drawing\n".to_vec()
+    } else {
+        b"%PDF-1.4\n%ACE\n".to_vec()
+    };
     let mut offsets = Vec::new();
     for (i, object) in objects.iter().enumerate() {
         offsets.push(pdf.len());

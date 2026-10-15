@@ -16,6 +16,7 @@ pub(crate) struct DrawingOptions {
     pub candidate: Option<usize>,
     pub scenario: String,
     pub replay: bool,
+    pub branding: Option<ace_drawing::Branding>,
 }
 
 #[derive(Serialize)]
@@ -34,7 +35,11 @@ pub(crate) fn run_blocking(
     options: DrawingOptions,
 ) -> AexResult<DrawingOutputs> {
     let document = if options.replay {
-        if !overrides.is_empty() || options.plan.is_some() || options.candidate.is_some() {
+        if !overrides.is_empty()
+            || options.plan.is_some()
+            || options.candidate.is_some()
+            || options.branding.is_some()
+        {
             return Err(AexError::validation(
                 "DRAWING_REPLAY",
                 "options",
@@ -50,9 +55,10 @@ pub(crate) fn run_blocking(
         document.verify().map_err(drawing_error)?;
         document
     } else {
-        ace_drawing::compose(
+        ace_drawing::compose_branded(
             calculate_blocking(source, overrides, &options)?,
             options.paper,
+            options.branding.clone().unwrap_or_default(),
         )
         .map_err(drawing_error)?
     };

@@ -82,6 +82,16 @@ fn drawing() -> Command {
                     .value_parser(value_parser!(usize)),
             )
             .arg(Arg::new("mission").long("mission").default_value("design"))
+            .arg(
+                Arg::new("brand")
+                    .long("brand")
+                    .help("Customer organization in the drawing header and PDF metadata (ASCII)"),
+            )
+            .arg(
+                Arg::new("drawing-title")
+                    .long("drawing-title")
+                    .help("Customer-facing drawing title (ASCII)"),
+            )
             .arg(flag("replay")),
     )
 }

@@ -1,4 +1,4 @@
-use crate::{DrawingError, DrawingResult, Scene};
+use crate::{Branding, DrawingError, DrawingResult, Scene};
 use ace_engine::Snapshot;
 use ace_model::VehicleModel;
 use serde::{Deserialize, Serialize};
@@ -43,13 +43,26 @@ pub struct DrawingDocument {
     pub generator: ace_engine::BuildIdentity,
     /// Frozen renderer-independent scene.
     pub scene: Scene,
+    /// Frozen presentation identity; absent preserves the original drawing format.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub branding: Option<Branding>,
 }
 
 /// Compose a readable engineering drawing without changing or recomputing its source design.
 pub fn compose(input: DrawingInput, paper: Paper) -> DrawingResult<DrawingDocument> {
+    compose_branded(input, paper, Branding::default())
+}
+
+/// Compose a customer-branded drawing while preserving source model and run identities.
+pub fn compose_branded(
+    input: DrawingInput,
+    paper: Paper,
+    branding: Branding,
+) -> DrawingResult<DrawingDocument> {
+    branding.validate()?;
     verify_input(&input)?;
     let sheet = ace_sheet::project(&input.model, &input.snapshot)?;
-    let scene = crate::layout::compose(&sheet, &input, paper)?;
+    let scene = crate::layout::compose(&sheet, &input, paper, &branding)?;
     let mut document = DrawingDocument {
         schema: "ace.synthesis-drawing/1".into(),
         digest: String::new(),
@@ -57,6 +70,7 @@ pub fn compose(input: DrawingInput, paper: Paper) -> DrawingResult<DrawingDocume
         paper,
         generator: ace_engine::implementation_identity(),
         scene,
+        branding: Some(branding),
     };
     document.digest = digest(&document)?;
     Ok(document)
@@ -72,6 +86,9 @@ impl DrawingDocument {
                 "document content address mismatch".into(),
             ));
         }
+        if let Some(branding) = &self.branding {
+            branding.validate()?;
+        }
         verify_input(&self.input)?;
         crate::layout::validate(&self.scene)
     }
@@ -79,13 +96,21 @@ impl DrawingDocument {
     /// Serialize vector SVG from the shared scene; text retains evidence keys and object IDs.
     pub fn svg(&self) -> DrawingResult<String> {
         self.verify()?;
-        Ok(crate::render::svg(&self.scene, &self.digest))
+        Ok(crate::render::svg(
+            &self.scene,
+            &self.digest,
+            self.branding.as_ref(),
+        ))
     }
 
     /// Serialize one vector PDF page using the same millimetre scene and standard PDF fonts.
     pub fn pdf(&self) -> DrawingResult<Vec<u8>> {
         self.verify()?;
-        Ok(crate::render::pdf(&self.scene, &self.digest))
+        Ok(crate::render::pdf(
+            &self.scene,
+            &self.digest,
+            self.branding.as_ref(),
+        ))
     }
 }
 

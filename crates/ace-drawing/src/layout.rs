@@ -6,7 +6,12 @@ mod charts;
 mod geometry;
 mod statements;
 
-pub(crate) fn compose(sheet: &Sheet, input: &DrawingInput, paper: Paper) -> DrawingResult<Scene> {
+pub(crate) fn compose(
+    sheet: &Sheet,
+    input: &DrawingInput,
+    paper: Paper,
+    branding: &crate::Branding,
+) -> DrawingResult<Scene> {
     let mut scene = Scene {
         width_mm: 420.0,
         height_mm: 297.0,
@@ -17,7 +22,7 @@ pub(crate) fn compose(sheet: &Sheet, input: &DrawingInput, paper: Paper) -> Draw
     geometry::draw(&mut scene, sheet)?;
     statements::draw(&mut scene, sheet, input)?;
     charts::draw(&mut scene, sheet, input)?;
-    title(&mut scene, sheet, input, paper);
+    title(&mut scene, sheet, input, paper, branding);
     if matches!(paper, Paper::A1) {
         scene.width_mm = 841.0;
         scene.height_mm = 594.0;
@@ -137,15 +142,17 @@ fn study_evidence(result: &mut BTreeMap<String, Evidence>, input: &DrawingInput,
     }
 }
 
-fn title(scene: &mut Scene, sheet: &Sheet, input: &DrawingInput, paper: Paper) {
-    scene.label(
-        [8.0, 14.0],
-        "ACE / AIRCRAFT SYNTHESIS DRAWING",
-        5.0,
-        true,
-        Stroke::Outline,
-        "layout",
-    );
+fn title(
+    scene: &mut Scene,
+    sheet: &Sheet,
+    input: &DrawingInput,
+    paper: Paper,
+    branding: &crate::Branding,
+) {
+    let heading = branding.heading();
+    // Bound every glyph by one em so wide customer names cannot overlap status text.
+    let size = 5.0_f64.min(280.0 / (heading.len() as f64 * 1.02));
+    scene.label([8.0, 14.0], heading, size, true, Stroke::Outline, "layout");
     scene.text(
         [8.0, 20.0],
         format!(
