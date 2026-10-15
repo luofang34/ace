@@ -336,7 +336,17 @@ impl MissionSimulator {
         let altitude = segment_operating_altitude(segment, state.altitude_m);
         let speed =
             representative_speed_with_fallback(segment, &self.scenario, altitude, state.speed_m_s)?;
-        let duration = distance / speed;
+        let ground_speed = speed - segment.headwind_m_s.unwrap_or(0.0);
+        if ground_speed <= 0.0 {
+            return Err(AexError::analysis(
+                "HEADWIND_EXCEEDS_AIRSPEED",
+                format!(
+                    "mission.segments.{}.headwind leaves no ground speed at {speed:.1} m/s TAS",
+                    segment.id
+                ),
+            ));
+        }
+        let duration = distance / ground_speed;
         let fuel = fuel::integrated(
             self,
             altitude,

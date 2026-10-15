@@ -154,6 +154,9 @@ fn numeric_override(raw: &str, path: &str) -> AexResult<Value> {
 }
 
 fn optional_override_value(raw: &str, path: &str) -> AexResult<Option<Value>> {
+    if path.starts_with("mission.segments.") && path.ends_with(".headwind") {
+        return Ok(Some(Value::String(raw.to_owned())));
+    }
     match path {
         "aircraft.geometry.wing.area"
         | "aircraft.geometry.wing.span"

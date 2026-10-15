@@ -89,6 +89,7 @@ const ENERGY_CLIMB_FIELDS: &[SegmentFieldCapability] = &[
 const CRUISE_FIELDS: &[SegmentFieldCapability] = &[
     required("distance"),
     optional("altitude"),
+    optional("headwind"),
     at_most_one("indicated_airspeed", "speed"),
     at_most_one("true_airspeed", "speed"),
     at_most_one("mach", "speed"),

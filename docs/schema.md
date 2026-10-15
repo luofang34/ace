@@ -134,6 +134,12 @@ Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
 payload-delivery and empty-return mission.
 
+Cruise segments may declare `headwind` (negative for a tailwind). The segment
+`distance` is ground distance flown at true airspeed minus headwind, so a
+headwind lengthens the segment time and fuel; a headwind at or above the true
+airspeed is rejected. It can be set with
+`--set mission.segments.<id>.headwind=10 m/s`.
+
 Missions may declare `atmosphere.isa_offset`, a temperature deviation in `K`,
 `degC` or `degF` (default `0 K`). Every native point, performance, field,
 constraint and mission evaluation of that scenario uses ISA shifted by it, and

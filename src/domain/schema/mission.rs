@@ -103,6 +103,8 @@ pub(crate) struct RawMissionSegment {
     pub(crate) fuel_mass: Option<String>,
     pub(crate) payload_mass: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) headwind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) schedule: Option<Vec<RawEnergySchedulePoint>>,
     #[serde(flatten, default, skip_serializing_if = "BTreeMap::is_empty")]
     pub(crate) additional_fields: BTreeMap<String, Value>,
@@ -167,6 +169,9 @@ pub(crate) struct MissionSegment {
     pub(crate) fuel_fraction: Option<f64>,
     pub(crate) fuel_mass_kg: Option<f64>,
     pub(crate) payload_mass_kg: Option<f64>,
+    /// Along-track wind against the aircraft; negative is a tailwind.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) headwind_m_s: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) energy_schedule: Option<Vec<EnergySchedulePoint>>,
 }
