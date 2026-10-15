@@ -5,11 +5,14 @@ impl Operations {
     /// Complete dimensional dependency set, including all operating scenarios and rates.
     pub fn bindings(&self) -> Vec<(&Binding, Unit)> {
         use Unit::*;
-        let mut values = vec![
-            (&self.seats, Ratio),
-            (&self.distance, Meter),
-            (&self.load_factor, Ratio),
-        ];
+        let mut values = vec![(&self.distance, Meter)];
+        values.extend(
+            self.seats
+                .iter()
+                .chain(&self.load_factor)
+                .map(|value| (value, Ratio)),
+        );
+        values.extend(self.payload.iter().map(|value| (value, Kilogram)));
         values.extend(self.block_duration.iter().map(|value| (value, Second)));
         values.extend(self.costs.iter().map(|cost| (&cost.amount, Dollar)));
         values.extend(
