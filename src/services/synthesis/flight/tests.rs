@@ -79,3 +79,34 @@ fn actual_entry_mass_drives_drag_and_invalid_conditions_are_rejected() {
     );
     assert!(integration::evaluate(&model, &invalid, &ace_engine::RunControl::default()).is_err());
 }
+
+#[test]
+fn headwind_reduces_ground_distance_without_changing_air_mass_burn() {
+    let model = parameters::FlightModel::new(&inputs()).unwrap();
+    let calm = integration::evaluate(&model, &state(70_000.0), &ace_engine::RunControl::default())
+        .unwrap();
+    let mut windy_state = state(70_000.0);
+    windy_state.conditions.insert(
+        "headwind".into(),
+        Quantity::new(10.0, Unit::MeterPerSecond).unwrap(),
+    );
+    let windy =
+        integration::evaluate(&model, &windy_state, &ace_engine::RunControl::default()).unwrap();
+    let total = |output: &PhaseOutput, pick: fn(&ace_engine::PhaseIncrement) -> f64| {
+        output.increments.iter().map(pick).sum::<f64>()
+    };
+    let burn = |point: &ace_engine::PhaseIncrement| point.fuel_burn.value;
+    let distance = |point: &ace_engine::PhaseIncrement| point.distance.value;
+    assert!((total(&calm, burn) - total(&windy, burn)).abs() < 1e-9);
+    assert!((total(&windy, distance) - 220.0 * 10_000.0).abs() < 1e-6);
+    assert!(
+        total(&windy, burn) / total(&windy, distance) > total(&calm, burn) / total(&calm, distance)
+    );
+    windy_state.conditions.insert(
+        "headwind".into(),
+        Quantity::new(230.0, Unit::MeterPerSecond).unwrap(),
+    );
+    assert!(
+        integration::evaluate(&model, &windy_state, &ace_engine::RunControl::default()).is_err()
+    );
+}

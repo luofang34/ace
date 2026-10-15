@@ -152,9 +152,10 @@ impl AnalysisPlugin for FlightPhase {
                         - state.distance.to(Unit::Meter)?.value
                         - parameters::positive(&state.conditions, "arrival_distance", Unit::Meter)?;
                 let speed = parameters::positive(&state.conditions, "speed", Unit::MeterPerSecond)?;
+                let ground_speed = parameters::ground_speed(&state.conditions, speed)?;
                 entry.conditions.insert(
                     "duration".into(),
-                    Quantity::new(distance / speed, Unit::Second)?,
+                    Quantity::new(distance / ground_speed, Unit::Second)?,
                 );
                 integration::evaluate(&model, &entry, context.registry.control())
             }
