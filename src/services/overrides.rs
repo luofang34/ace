@@ -170,10 +170,11 @@ fn optional_override_value(raw: &str, path: &str) -> AexResult<Option<Value>> {
         | "mission.field.elevation"
         | "mission.field.takeoff_mass"
         | "mission.field.landing_mass"
-        | "mission.field.obstacle_height" => Ok(Some(Value::String(raw.to_owned()))),
-        "aircraft.geometry.wing.aspect_ratio" | "mission.field.braking_coefficient" => {
-            numeric_override(raw, path).map(Some)
-        }
+        | "mission.field.obstacle_height"
+        | "mission.field.headwind" => Ok(Some(Value::String(raw.to_owned()))),
+        "aircraft.geometry.wing.aspect_ratio"
+        | "mission.field.braking_coefficient"
+        | "mission.field.runway_slope" => numeric_override(raw, path).map(Some),
         _ => Ok(None),
     }
 }

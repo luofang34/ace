@@ -315,6 +315,9 @@ fn resolve_field(raw: RawFieldConditions) -> AexResult<FieldConditions> {
         landing_mass_kg: mass(raw.landing_mass.as_deref(), "mission.field.landing_mass")?,
         obstacle_height_m,
         braking_coefficient,
+        runway_slope: raw.runway_slope.unwrap_or(defaults.runway_slope),
+        headwind_m_s: optional_quantity(raw.headwind.as_deref(), Dimension::Speed)?
+            .unwrap_or(defaults.headwind_m_s),
     })
 }
 

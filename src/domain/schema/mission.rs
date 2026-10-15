@@ -39,6 +39,8 @@ pub(crate) struct RawFieldConditions {
     pub(crate) landing_mass: Option<String>,
     pub(crate) obstacle_height: Option<String>,
     pub(crate) braking_coefficient: Option<f64>,
+    pub(crate) runway_slope: Option<f64>,
+    pub(crate) headwind: Option<String>,
 }
 
 /// Speed chosen from the polar at segment entry instead of a declared speed.
@@ -64,6 +66,10 @@ pub(crate) struct FieldConditions {
     pub(crate) obstacle_height_m: f64,
     /// Mean braking deceleration as a fraction of g.
     pub(crate) braking_coefficient: f64,
+    /// Runway grade along the roll, rise over run; positive is uphill.
+    pub(crate) runway_slope: f64,
+    /// Along-runway wind component; negative is a tailwind.
+    pub(crate) headwind_m_s: f64,
 }
 
 impl Default for FieldConditions {
@@ -74,6 +80,8 @@ impl Default for FieldConditions {
             landing_mass_kg: None,
             obstacle_height_m: 15.24,
             braking_coefficient: 0.30,
+            runway_slope: 0.0,
+            headwind_m_s: 0.0,
         }
     }
 }
