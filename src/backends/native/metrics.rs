@@ -228,8 +228,14 @@ fn insert_performance(
     );
     insert_optional(
         metrics,
-        "performance.operating_ceiling",
-        performance.operating_ceiling_m,
+        "performance.physical_service_ceiling",
+        performance.physical_service_ceiling_m,
+        "m",
+    );
+    insert_optional(
+        metrics,
+        "performance.physical_absolute_ceiling",
+        performance.physical_absolute_ceiling_m,
         "m",
     );
     insert_cruise_metrics(metrics, performance);

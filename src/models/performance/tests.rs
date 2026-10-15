@@ -39,17 +39,17 @@ fn both_reference_aircraft_have_finite_service_ceilings() {
                     ValidityStatus::Valid
                 );
                 // The B777 out-climbs its declared maximum operating altitude, which
-                // then sets the operating ceiling; the C172 is performance-limited.
-                let operating = result.operating_ceiling_m.unwrap_or(f64::NAN);
+                // cuts off the published ceiling; the C172 is performance-limited.
+                let physical = result.physical_service_ceiling_m.unwrap_or(f64::NAN);
                 if name == "b777" {
-                    assert!(operating < service);
+                    assert!(service < physical);
                     assert_eq!(
-                        result.operating_ceiling_limited_by.as_deref(),
+                        result.ceiling_limited_by.as_deref(),
                         Some("aircraft.limits.maximum_operating_altitude")
                     );
                 } else {
-                    assert_eq!(operating, service);
-                    assert_eq!(result.operating_ceiling_limited_by, None);
+                    assert_eq!(physical, service);
+                    assert_eq!(result.ceiling_limited_by, None);
                 }
             }
         }
@@ -144,7 +144,7 @@ fn point_result_uses_configuration_reference_validity_and_legacy_defaults()
 }
 
 #[test]
-fn sr71_solves_its_stratospheric_ceiling_and_reports_the_operating_limit_separately()
+fn sr71_solves_its_stratospheric_ceiling_and_publishes_it_cut_off_at_the_limit()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("sr71")?;
     scenario.aircraft.propulsion.sizing_factor = 2.0;
@@ -155,14 +155,15 @@ fn sr71_solves_its_stratospheric_ceiling_and_reports_the_operating_limit_separat
         .ok_or("SR-71 declares a maximum operating altitude")?;
     let result = summary(scenario)?;
 
-    let service = result
-        .service_ceiling_m
+    let physical = result
+        .physical_service_ceiling_m
         .ok_or("ceiling is solved above 20 km")?;
-    assert!(service > limit, "{service} m");
-    assert!(result.absolute_ceiling_m.unwrap_or(0.0) >= service);
-    assert_eq!(result.operating_ceiling_m, Some(limit));
+    assert!(physical > limit, "{physical} m");
+    assert!(result.physical_absolute_ceiling_m.unwrap_or(0.0) >= physical);
+    assert_eq!(result.service_ceiling_m, Some(limit));
+    assert_eq!(result.absolute_ceiling_m, Some(limit));
     assert_eq!(
-        result.operating_ceiling_limited_by.as_deref(),
+        result.ceiling_limited_by.as_deref(),
         Some("aircraft.limits.maximum_operating_altitude")
     );
     assert_eq!(

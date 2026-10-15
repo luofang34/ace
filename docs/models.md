@@ -123,20 +123,22 @@ Performance results include `metric_validity` for maximum level speed, service
 ceiling, and absolute ceiling. An interior root is `valid`; an interior root
 that uses a model outside its registered envelope is `extrapolated`. A maximum
 speed pinned to a default search cap is `boundary_limited`; explicit aircraft
-speed limits are valid declared limits. Service and absolute ceilings are the
-physical roots of the climb threshold, found by stepping up through the whole
-atmosphere and bisecting the first sign change; declared limits never clamp
-them. A root beyond an engine profile's declared envelope is `extrapolated`.
-`operating_ceiling_m` is the service ceiling bounded by
-`aircraft.limits.maximum_operating_altitude` and the engine's
-`limits.maximum_altitude`, and `operating_ceiling_limited_by` names the limit
-when it binds. When the climb threshold is still met at 86 km, or not met at sea
-level, the ceilings are omitted, their validity is `unsupported`, and
-`CEILING_UNAVAILABLE` explains why. A `performance.service_ceiling` requirement
-judges climb capability (the physical value, `extrapolated` beyond an engine's
-envelope); a `performance.operating_ceiling` requirement judges the altitude the
-aircraft may be operated to, including declared limits. Climb-rate optima at the 1.05 V_stall search floor are
-stall-margin constrained, not boundary-limited.
+speed limits are valid declared limits. Ceilings are solved as physical roots
+of the climb threshold by stepping up through the whole atmosphere and
+bisecting the first sign change; `physical_service_ceiling_m` and
+`physical_absolute_ceiling_m` report them uncut, `extrapolated` where a root
+lies beyond an engine profile's declared envelope. Like POH figures,
+`service_ceiling_m` and `absolute_ceiling_m` are those roots cut off at the
+lowest of `aircraft.limits.maximum_operating_altitude` and the engine's
+`limits.maximum_altitude`; `ceiling_limited_by` names the limit when it binds,
+and a binding declared limit is a valid published value. When the climb
+threshold is still met at 86 km, or not met at sea level, the physical ceilings
+are omitted, their validity is `unsupported`, and `CEILING_UNAVAILABLE`
+explains why; the published ceiling then exists only if a declared limit inside
+the atmosphere cuts it off. `performance.service_ceiling` requirements judge
+the published figure and `performance.physical_service_ceiling` the uncut climb
+capability. Climb-rate optima at the 1.05 V_stall search floor are stall-margin
+constrained, not boundary-limited.
 
 Declared cruise Mach and true airspeed remain inputs for reporting. Achieved
 cruise Mach and true airspeed evaluate installed capability at every cruise

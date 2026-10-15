@@ -42,11 +42,13 @@ impl Unavailable {
     }
 }
 
-/// Service ceiling after declared altitude limits.
+/// A ceiling as published (POH-style): the physical root cut off at the lowest
+/// declared aircraft or engine altitude limit.
 #[derive(Debug)]
-pub(super) struct OperatingCeiling {
+pub(super) struct PublishedCeiling {
     pub(super) value: Option<f64>,
     pub(super) limited_by: Option<String>,
+    pub(super) validity: MetricValidity,
 }
 
 impl CeilingMetric {
@@ -140,7 +142,7 @@ impl PointAnalyzer {
     /// Solves for the lowest altitude where the best climb rate falls to
     /// `threshold_m_s`, stepping up through the whole standard atmosphere and
     /// bisecting the first sign change. Declared altitude limits never clamp this
-    /// physical result; [`Self::operating_ceiling`] applies them separately, and a
+    /// physical result; [`Self::published_ceiling`] applies them separately, and a
     /// root beyond an engine's declared envelope carries extrapolated validity.
     pub(super) fn ceiling_solution(
         &self,
@@ -175,30 +177,32 @@ impl PointAnalyzer {
         }))
     }
 
-    /// The service ceiling bounded by declared aircraft and engine altitude limits,
-    /// naming the limit when it, rather than climb performance, binds.
-    pub(super) fn operating_ceiling(&self, service: &CeilingMetric) -> OperatingCeiling {
+    /// The published ceiling: the physical root cut off at the lowest declared
+    /// aircraft or engine altitude limit, naming the limit when it binds. A binding
+    /// declared limit is authoritative, so the cut value is valid even where the
+    /// physical root lies beyond an engine's envelope.
+    pub(super) fn published_ceiling(&self, physical: &CeilingMetric) -> PublishedCeiling {
         let limit = declared_altitude_limits(&self.scenario)
             .into_iter()
             .min_by(|left, right| left.0.total_cmp(&right.0));
-        match (service.value, limit) {
-            (Some(physical), Some((limit, source))) if limit < physical => OperatingCeiling {
-                value: Some(limit),
-                limited_by: Some(source),
-            },
-            // Climb performance beyond the atmosphere top is still capped by a declared
+        let cut = |limit, source| PublishedCeiling {
+            value: Some(limit),
+            limited_by: Some(source),
+            validity: MetricValidity::default(),
+        };
+        match (physical.value, limit) {
+            (Some(root), Some((limit, source))) if limit < root => cut(limit, source),
+            // Climb performance beyond the atmosphere top is still cut off by a declared
             // limit inside it; a limit above the top cannot be confirmed either way.
             (None, Some((limit, source)))
-                if service.reason_is_above_search() && limit <= MAXIMUM_ALTITUDE_M =>
+                if physical.reason_is_above_search() && limit <= MAXIMUM_ALTITUDE_M =>
             {
-                OperatingCeiling {
-                    value: Some(limit),
-                    limited_by: Some(source),
-                }
+                cut(limit, source)
             }
-            (value, _) => OperatingCeiling {
+            (value, _) => PublishedCeiling {
                 value,
                 limited_by: None,
+                validity: physical.validity.clone(),
             },
         }
     }

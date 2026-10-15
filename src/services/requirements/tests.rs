@@ -11,8 +11,8 @@ use crate::test_support::{
 };
 
 use super::{
-    MetricInput, evaluate_one, evaluate_requirements, failed_hard_requirement_ids,
-    hard_requirement_counts, hard_requirements_passed,
+    evaluate_requirements, failed_hard_requirement_ids, hard_requirement_counts,
+    hard_requirements_passed,
 };
 
 fn declared(id: &str, severity: &str) -> Requirement {
@@ -68,42 +68,6 @@ fn headline_verdict_requires_completion_and_every_hard_requirement() {
         failed_hard_requirement_ids(&declared, &[]),
         ["range".to_owned()]
     );
-}
-
-#[test]
-fn ceiling_requirement_uses_the_physical_ceiling_not_the_operating_limit()
--> Result<(), Box<dyn std::error::Error>> {
-    let mut scenario = example_scenario("sr71")?;
-    scenario.aircraft.propulsion.sizing_factor = 2.0;
-    scenario.aircraft.limits.maximum_operating_altitude_m = Some(15_000.0);
-    let performance = PointAnalyzer::new(scenario.clone()).summary(None)?;
-    let requirement = scenario
-        .requirements
-        .items
-        .iter()
-        .find(|item| item.metric == "performance.service_ceiling")
-        .ok_or("missing SR-71 service-ceiling requirement")?;
-    let actual = performance
-        .service_ceiling_m
-        .ok_or("SR-71 ceiling is solved")?;
-    assert!(actual > 15_000.0);
-    assert_eq!(performance.operating_ceiling_m, Some(15_000.0));
-    let evaluation = evaluate_one(
-        requirement,
-        MetricInput {
-            actual,
-            validity: performance.validity_for("performance.service_ceiling"),
-        },
-    );
-    assert_ne!(
-        evaluation.resolved_status(),
-        RequirementStatus::Indeterminate
-    );
-    assert_eq!(
-        evaluation.passed,
-        Some(actual >= requirement.required - 1.0e-9)
-    );
-    Ok(())
 }
 
 #[test]
@@ -428,7 +392,7 @@ fn c172_static_margin_bounds_are_both_bindable() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
-fn operating_ceiling_requirement_respects_declared_limits_unlike_service_ceiling()
+fn service_ceiling_requirement_judges_the_published_cut_off_and_physical_is_separate()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("sr71")?;
     scenario.aircraft.propulsion.sizing_factor = 2.0;
@@ -442,9 +406,13 @@ fn operating_ceiling_requirement_respects_declared_limits_unlike_service_ceiling
         .find(|item| item.metric == "performance.service_ceiling")
         .ok_or("missing SR-71 service-ceiling requirement")?
         .clone();
+    // Like a POH figure, the service ceiling is cut off at the 15 km declared limit;
+    // the uncut climb capability remains available as its own metric.
+    assert_eq!(performance.service_ceiling_m, Some(15_000.0));
+    assert!(performance.physical_service_ceiling_m.unwrap_or(0.0) > 20_000.0);
     for (metric, passes) in [
-        ("performance.service_ceiling", true),
-        ("performance.operating_ceiling", false),
+        ("performance.service_ceiling", false),
+        ("performance.physical_service_ceiling", true),
     ] {
         let mut requirement = template.clone();
         requirement.metric = metric.to_owned();

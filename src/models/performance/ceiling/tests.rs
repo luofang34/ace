@@ -107,7 +107,8 @@ fn a_ceiling_held_up_by_the_power_floor_is_flagged() -> AexResult<()> {
 }
 
 #[test]
-fn declared_engine_limit_bounds_the_operating_not_the_service_ceiling() -> AexResult<()> {
+fn declared_engine_limit_cuts_off_the_published_ceiling_and_keeps_the_physical_root()
+-> AexResult<()> {
     let mut scenario = isr(turbo(None)?)?;
     let EngineProfile::Piston(engine) = &mut scenario.engine else {
         return Err(AexError::analysis("TEST_FIXTURE", "shaft engine expected"));
@@ -116,19 +117,20 @@ fn declared_engine_limit_bounds_the_operating_not_the_service_ceiling() -> AexRe
     engine.maximum_altitude_m = Some(limit);
     let source = format!("engine.{}.limits.maximum_altitude", engine.id);
     let summary = PointAnalyzer::new(scenario).summary(None)?;
-    // The physical ceiling lies beyond the engine's declared envelope, so it is
-    // reported unclamped and marked extrapolated.
-    let service = summary.service_ceiling_m.unwrap_or(f64::NAN);
-    assert!(service > limit, "{service} m");
+    // The physical root lies beyond the engine's declared envelope: it stays
+    // available uncut and extrapolated, while the published figure is cut off at
+    // the declared limit, as in a POH.
+    let physical = summary.physical_service_ceiling_m.unwrap_or(f64::NAN);
+    assert!(physical > limit, "{physical} m");
     assert_eq!(
-        summary.validity_for("performance.service_ceiling"),
+        summary.validity_for("performance.physical_service_ceiling"),
         MetricValidity::extrapolated()
     );
-    assert_eq!(summary.operating_ceiling_m, Some(limit));
+    assert_eq!(summary.service_ceiling_m, Some(limit));
     assert!((6_000.0..=9_000.0).contains(&limit));
-    assert_eq!(summary.operating_ceiling_limited_by, Some(source));
+    assert_eq!(summary.ceiling_limited_by, Some(source));
     assert_eq!(
-        summary.validity_for("performance.operating_ceiling").status,
+        summary.validity_for("performance.service_ceiling").status,
         ValidityStatus::Valid
     );
     Ok(())
@@ -137,11 +139,12 @@ fn declared_engine_limit_bounds_the_operating_not_the_service_ceiling() -> AexRe
 #[test]
 fn a_ceiling_above_the_standard_atmosphere_is_unavailable_not_a_search_bound() -> AexResult<()> {
     let summary = PointAnalyzer::new(example_scenario("x15")?).summary(None)?;
-    assert_eq!(summary.service_ceiling_m, None);
-    assert_eq!(summary.absolute_ceiling_m, None);
+    assert_eq!(summary.physical_service_ceiling_m, None);
+    assert_eq!(summary.physical_absolute_ceiling_m, None);
     for metric in [
+        "performance.physical_service_ceiling",
+        "performance.physical_absolute_ceiling",
         "performance.service_ceiling",
-        "performance.absolute_ceiling",
     ] {
         assert_eq!(
             summary.validity_for(metric).status,
@@ -153,7 +156,7 @@ fn a_ceiling_above_the_standard_atmosphere_is_unavailable_not_a_search_bound() -
             && warning.message.contains("top of the standard atmosphere")
     }));
     // The X-15's declared limit lies above the modelled atmosphere, so it cannot
-    // be confirmed as the operating ceiling either.
-    assert_eq!(summary.operating_ceiling_m, None);
+    // be confirmed as the published ceiling either.
+    assert_eq!(summary.service_ceiling_m, None);
     Ok(())
 }

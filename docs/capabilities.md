@@ -73,7 +73,7 @@ Transport OEI second-segment gradients are regulatory-derived from [14 CFR 25.12
 | `mission.landing_fuel` | `achieved` | yes | `kg` | — |
 | `mission.reserve_duration` | `achieved` | yes | `s` | — |
 | `performance.service_ceiling` | `achieved` | yes | `m` | — |
-| `performance.operating_ceiling` | `achieved` | yes | `m` | — |
+| `performance.physical_service_ceiling` | `achieved` | yes | `m` | — |
 | `performance.stall_speed_landing` | `achieved` | yes | `m/s` | — |
 | `performance.achieved_cruise_mach` | `achieved` | yes | `1` | — |
 | `performance.minimum_cruise_excess_power` | `achieved` | yes | `W` | — |

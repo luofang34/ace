@@ -131,16 +131,21 @@ pub(crate) struct PerformanceSummary {
     /// Landing distance over the field obstacle at `mission.field` landing mass.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) landing_field_length_m: Option<f64>,
+    /// Published service ceiling: the physical root cut off at declared limits.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) service_ceiling_m: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) absolute_ceiling_m: Option<f64>,
-    /// Service ceiling bounded by declared aircraft and engine altitude limits.
+    /// Declared aircraft or engine altitude limit that cuts off the published
+    /// service or absolute ceiling, when it rather than climb performance binds.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) operating_ceiling_m: Option<f64>,
-    /// Declared limit that sets the operating ceiling, when climb performance does not.
+    pub(crate) ceiling_limited_by: Option<String>,
+    /// Uncut climb-threshold root, possibly beyond declared limits.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) operating_ceiling_limited_by: Option<String>,
+    pub(crate) physical_service_ceiling_m: Option<f64>,
+    /// Uncut zero-climb root, possibly beyond declared limits.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) physical_absolute_ceiling_m: Option<f64>,
     pub(crate) cruise_mach: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) declared_cruise_mach: Option<f64>,

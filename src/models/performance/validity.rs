@@ -7,7 +7,7 @@ use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 
-use super::ceiling::CeilingMetric;
+use super::ceiling::PublishedCeiling;
 use super::cruise::CruisePerformance;
 use super::{
     ABSOLUTE_CEILING_METRIC, ACHIEVED_CRUISE_MACH_METRIC, ACHIEVED_CRUISE_TAS_METRIC,
@@ -171,8 +171,8 @@ pub(super) fn aggregate<'a>(
 
 pub(super) fn summary_metric_validity(
     maximum_speed: &SolvedMetric,
-    service_ceiling: &CeilingMetric,
-    absolute_ceiling: &CeilingMetric,
+    service_ceiling: &PublishedCeiling,
+    absolute_ceiling: &PublishedCeiling,
     cruise: &CruisePerformance,
     reference: &ReferenceMetricValidity,
     takeoff_field: MetricValidity,

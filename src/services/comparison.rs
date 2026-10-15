@@ -137,13 +137,13 @@ fn comparison_metric(
                     "performance.service_ceiling has no root inside the searchable altitude range",
                 )
             }),
-        "performance.operating_ceiling" => performance
-            .operating_ceiling_m
+        "performance.physical_service_ceiling" => performance
+            .physical_service_ceiling_m
             .map(|value| QuantityOutput::si(value, "m"))
             .ok_or_else(|| {
                 AexError::analysis(
                     "CEILING_UNAVAILABLE",
-                    "performance.operating_ceiling has neither a solved ceiling nor a binding declared limit",
+                    "performance.physical_service_ceiling has no root inside the standard atmosphere",
                 )
             }),
         "performance.achieved_cruise_mach" => {
