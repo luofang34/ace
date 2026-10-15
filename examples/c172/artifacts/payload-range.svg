@@ -1,5 +1,5 @@
-<svg width="1100" height="700" viewBox="0 0 1100 700" xmlns="http://www.w3.org/2000/svg">
-<rect x="0" y="0" width="1100" height="700" opacity="1" fill="#FFFFFF" stroke="none"/>
+<svg width="1100" height="815" viewBox="0 0 1100 815" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="1100" height="815" opacity="1" fill="#FFFFFF" stroke="none"/>
 <text x="550" y="25" dy="0.76em" text-anchor="middle" font-family="sans-serif" font-size="24.193548387096776" opacity="1" fill="#000000">
 C172-Class Normal Mission: payload-range
 </text>
@@ -30,7 +30,7 @@ C172-Class Normal Mission: payload-range
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="355" y1="629" x2="355" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="366" y1="629" x2="366" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="377" y1="629" x2="377" y2="54"/>
-<line opacity="0.1" stroke="#000000" stroke-width="1" x1="388" y1="629" x2="388" y2="54"/>
+<line opacity="0.1" stroke="#000000" stroke-width="1" x1="389" y1="629" x2="389" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="400" y1="629" x2="400" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="411" y1="629" x2="411" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="422" y1="629" x2="422" y2="54"/>
@@ -51,8 +51,8 @@ C172-Class Normal Mission: payload-range
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="587" y1="629" x2="587" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="598" y1="629" x2="598" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="609" y1="629" x2="609" y2="54"/>
-<line opacity="0.1" stroke="#000000" stroke-width="1" x1="620" y1="629" x2="620" y2="54"/>
-<line opacity="0.1" stroke="#000000" stroke-width="1" x1="631" y1="629" x2="631" y2="54"/>
+<line opacity="0.1" stroke="#000000" stroke-width="1" x1="621" y1="629" x2="621" y2="54"/>
+<line opacity="0.1" stroke="#000000" stroke-width="1" x1="632" y1="629" x2="632" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="643" y1="629" x2="643" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="654" y1="629" x2="654" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="665" y1="629" x2="665" y2="54"/>
@@ -73,8 +73,8 @@ C172-Class Normal Mission: payload-range
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="830" y1="629" x2="830" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="841" y1="629" x2="841" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="852" y1="629" x2="852" y2="54"/>
-<line opacity="0.1" stroke="#000000" stroke-width="1" x1="863" y1="629" x2="863" y2="54"/>
-<line opacity="0.1" stroke="#000000" stroke-width="1" x1="874" y1="629" x2="874" y2="54"/>
+<line opacity="0.1" stroke="#000000" stroke-width="1" x1="864" y1="629" x2="864" y2="54"/>
+<line opacity="0.1" stroke="#000000" stroke-width="1" x1="875" y1="629" x2="875" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="886" y1="629" x2="886" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="897" y1="629" x2="897" y2="54"/>
 <line opacity="0.1" stroke="#000000" stroke-width="1" x1="908" y1="629" x2="908" y2="54"/>
@@ -268,22 +268,51 @@ Range [nmi]
 800.0
 </text>
 <polyline fill="none" opacity="1" stroke="#000000" stroke-width="1" points="1018,630 1018,635 "/>
-<polyline fill="none" opacity="1" stroke="#E6194B" stroke-width="1" points="134,81 976,325 1005,464 1034,603 "/>
-<circle cx="134" cy="81" r="5" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
-<text x="142" y="73" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
-maximum_payload
+<polyline fill="none" opacity="1" stroke="#E6194B" stroke-width="1" points="797,284 134,81 976,325 1005,464 1034,603 "/>
+<circle cx="797" cy="284" r="4" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
+<polyline fill="none" opacity="0.4" stroke="#000000" stroke-width="1" points="797,284 807,268 "/>
+<rect x="807" y="258" width="17" height="20" opacity="1" fill="#FFFFFF" stroke="none"/>
+<text x="811" y="272" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+1
 </text>
-<circle cx="976" cy="325" r="5" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
-<text x="984" y="317" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
-maximum_fuel_payload
+<circle cx="134" cy="81" r="4" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
+<polyline fill="none" opacity="0.4" stroke="#000000" stroke-width="1" points="134,81 144,66 "/>
+<rect x="144" y="56" width="17" height="20" opacity="1" fill="#FFFFFF" stroke="none"/>
+<text x="148" y="70" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+2
 </text>
-<circle cx="1005" cy="464" r="5" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
-<text x="1013" y="456" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
-maximum_range
+<circle cx="976" cy="325" r="4" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
+<polyline fill="none" opacity="0.4" stroke="#000000" stroke-width="1" points="976,325 986,309 "/>
+<rect x="986" y="299" width="17" height="20" opacity="1" fill="#FFFFFF" stroke="none"/>
+<text x="990" y="313" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+3
 </text>
-<circle cx="1034" cy="603" r="5" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
-<text x="1042" y="595" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
-zero_payload_ferry
+<circle cx="1005" cy="464" r="4" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
+<polyline fill="none" opacity="0.4" stroke="#000000" stroke-width="1" points="1005,464 1015,448 "/>
+<rect x="1015" y="438" width="17" height="20" opacity="1" fill="#FFFFFF" stroke="none"/>
+<text x="1019" y="452" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+4
+</text>
+<circle cx="1034" cy="603" r="4" opacity="1" fill="#000000" stroke="none" stroke-width="1"/>
+<polyline fill="none" opacity="0.4" stroke="#000000" stroke-width="1" points="1034,603 1044,587 "/>
+<rect x="1044" y="577" width="17" height="20" opacity="1" fill="#FFFFFF" stroke="none"/>
+<text x="1048" y="591" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+5
+</text>
+<text x="30" y="718" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+[1] full_payload_mission
+</text>
+<text x="30" y="739" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+[2] maximum_payload
+</text>
+<text x="30" y="760" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+[3] maximum_fuel_payload
+</text>
+<text x="30" y="781" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+[4] maximum_range
+</text>
+<text x="30" y="802" dy="0.76em" text-anchor="start" font-family="sans-serif" font-size="11.290322580645162" opacity="1" fill="#000000">
+[5] zero_payload_ferry
 </text>
 <rect x="991" y="327" width="84" height="29" opacity="0.8" fill="#FFFFFF" stroke="none"/>
 <rect x="991" y="327" width="84" height="29" opacity="1" fill="none" stroke="#000000"/>

@@ -6,6 +6,8 @@
     "assumptions": [
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.id",
@@ -17,6 +19,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.name",
@@ -24,10 +28,12 @@
         "resolved_value": "C172-Class Reference Aircraft",
         "source": "scenario document",
         "supplied_by_default": false,
-        "unit": "Reference Aircraft"
+        "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.category",
@@ -39,6 +45,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.configuration",
@@ -50,6 +58,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.propulsion_architecture",
@@ -61,6 +71,515 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.version",
+        "provenance_kind": "user",
+        "resolved_value": 1,
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.0.id",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.0.kind",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.0.roles.0",
+        "provenance_kind": "user",
+        "resolved_value": "payload_volume",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.0.roles.1",
+        "provenance_kind": "user",
+        "resolved_value": "primary_structure",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.1.id",
+        "provenance_kind": "user",
+        "resolved_value": "wing",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.1.kind",
+        "provenance_kind": "user",
+        "resolved_value": "wing",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.1.roles.0",
+        "provenance_kind": "user",
+        "resolved_value": "lift",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.1.roles.1",
+        "provenance_kind": "user",
+        "resolved_value": "fuel_storage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.2.id",
+        "provenance_kind": "user",
+        "resolved_value": "horizontal_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.2.kind",
+        "provenance_kind": "user",
+        "resolved_value": "horizontal_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.2.roles.0",
+        "provenance_kind": "user",
+        "resolved_value": "pitch_control",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.3.id",
+        "provenance_kind": "user",
+        "resolved_value": "vertical_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.3.kind",
+        "provenance_kind": "user",
+        "resolved_value": "vertical_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.3.roles.0",
+        "provenance_kind": "user",
+        "resolved_value": "directional_control",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.4.id",
+        "provenance_kind": "user",
+        "resolved_value": "powerplant",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.4.kind",
+        "provenance_kind": "user",
+        "resolved_value": "engine",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.4.definition",
+        "provenance_kind": "user",
+        "resolved_value": "engine.lycoming_io360_class",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.5.id",
+        "provenance_kind": "user",
+        "resolved_value": "propeller",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.5.kind",
+        "provenance_kind": "user",
+        "resolved_value": "propeller",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.components.5.definition",
+        "provenance_kind": "user",
+        "resolved_value": "propeller.constant_speed_light_aircraft",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.0.kind",
+        "provenance_kind": "user",
+        "resolved_value": "attached_to",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.0.source",
+        "provenance_kind": "user",
+        "resolved_value": "wing",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.0.target",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.1.kind",
+        "provenance_kind": "user",
+        "resolved_value": "attached_to",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.1.source",
+        "provenance_kind": "user",
+        "resolved_value": "horizontal_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.1.target",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.2.kind",
+        "provenance_kind": "user",
+        "resolved_value": "attached_to",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.2.source",
+        "provenance_kind": "user",
+        "resolved_value": "vertical_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.2.target",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.3.kind",
+        "provenance_kind": "user",
+        "resolved_value": "attached_to",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.3.source",
+        "provenance_kind": "user",
+        "resolved_value": "powerplant",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.3.target",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.4.kind",
+        "provenance_kind": "user",
+        "resolved_value": "attached_to",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.4.source",
+        "provenance_kind": "user",
+        "resolved_value": "propeller",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.4.target",
+        "provenance_kind": "user",
+        "resolved_value": "powerplant",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.5.kind",
+        "provenance_kind": "user",
+        "resolved_value": "carries_load_to",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.5.source",
+        "provenance_kind": "user",
+        "resolved_value": "wing",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.topology.relationships.5.target",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.metadata.purpose",
@@ -68,10 +587,12 @@
         "resolved_value": "software demonstration and model calibration",
         "source": "scenario document",
         "supplied_by_default": false,
-        "unit": "demonstration and model calibration"
+        "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.metadata.certification_use",
@@ -83,6 +604,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.mass.maximum_takeoff_mass",
@@ -94,6 +617,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.mass.operating_empty_mass",
@@ -105,6 +630,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.mass.maximum_payload_mass",
@@ -116,6 +643,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.mass.maximum_fuel_mass",
@@ -127,6 +656,242 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.0.id",
+        "provenance_kind": "user",
+        "resolved_value": "fuselage",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.0.station",
+        "provenance_kind": "user",
+        "resolved_value": "4.15 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.1.id",
+        "provenance_kind": "user",
+        "resolved_value": "wing",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.1.mass",
+        "provenance_kind": "user",
+        "resolved_value": "120 kg",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "kg"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.1.station",
+        "provenance_kind": "user",
+        "resolved_value": "3.20 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.2.id",
+        "provenance_kind": "user",
+        "resolved_value": "horizontal_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.2.mass",
+        "provenance_kind": "user",
+        "resolved_value": "15 kg",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "kg"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.2.station",
+        "provenance_kind": "user",
+        "resolved_value": "6.93 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.3.id",
+        "provenance_kind": "user",
+        "resolved_value": "vertical_tail",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.3.mass",
+        "provenance_kind": "user",
+        "resolved_value": "10 kg",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "kg"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.3.station",
+        "provenance_kind": "user",
+        "resolved_value": "6.90 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.4.id",
+        "provenance_kind": "user",
+        "resolved_value": "powerplant",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.4.station",
+        "provenance_kind": "user",
+        "resolved_value": "0.80 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.5.id",
+        "provenance_kind": "user",
+        "resolved_value": "propeller",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.5.mass",
+        "provenance_kind": "user",
+        "resolved_value": "25 kg",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "kg"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.5.station",
+        "provenance_kind": "user",
+        "resolved_value": "0.15 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.fuel_station",
+        "provenance_kind": "user",
+        "resolved_value": "3.20 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.payload_station",
+        "provenance_kind": "user",
+        "resolved_value": "3.40 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.geometry.wing.area",
@@ -138,6 +903,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.geometry.wing.span",
@@ -149,6 +916,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.geometry.wing.aspect_ratio",
@@ -160,6 +929,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.geometry.wing.sweep_quarter_chord",
@@ -171,6 +942,86 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.geometry.fuselage.length",
+        "provenance_kind": "user",
+        "resolved_value": "8.25 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.geometry.fuselage.diameter",
+        "provenance_kind": "user",
+        "resolved_value": "1.340397 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.geometry.horizontal_tail.area",
+        "provenance_kind": "user",
+        "resolved_value": "3.234 m^2",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m^2"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.geometry.horizontal_tail.arm",
+        "provenance_kind": "user",
+        "resolved_value": "4.125 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.geometry.vertical_tail.area",
+        "provenance_kind": "user",
+        "resolved_value": "1.617 m^2",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m^2"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.geometry.vertical_tail.arm",
+        "provenance_kind": "user",
+        "resolved_value": "4.125 m",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "m"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.model",
@@ -182,6 +1033,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.clean.cd0",
@@ -193,6 +1046,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.clean.additional_cd",
@@ -204,6 +1059,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.clean.oswald_efficiency",
@@ -215,6 +1072,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.clean.cl_max",
@@ -226,6 +1085,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.takeoff.cd0",
@@ -237,6 +1098,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.takeoff.oswald_efficiency",
@@ -248,6 +1111,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.takeoff.cl_max",
@@ -259,6 +1124,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.landing.cd0",
@@ -270,6 +1137,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.landing.oswald_efficiency",
@@ -281,6 +1150,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.aerodynamics.landing.cl_max",
@@ -292,6 +1163,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.propulsion.profile",
@@ -303,6 +1176,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.propulsion.engine_count",
@@ -314,6 +1189,21 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.propulsion.sizing_factor",
+        "provenance_kind": "user",
+        "resolved_value": 1.0,
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.propulsion.propeller_profile",
@@ -325,6 +1215,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.limits.maximum_operating_speed",
@@ -336,6 +1228,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.limits.maximum_load_factor",
@@ -347,6 +1241,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "aircraft.limits.minimum_load_factor",
@@ -358,6 +1254,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.id",
@@ -369,6 +1267,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.name",
@@ -376,10 +1276,12 @@
         "resolved_value": "C172-Class Normal Cruise Mission",
         "source": "scenario document",
         "supplied_by_default": false,
-        "unit": "Normal Cruise Mission"
+        "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.payload.mass",
@@ -391,6 +1293,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.0.id",
@@ -402,6 +1306,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.0.type",
@@ -413,6 +1319,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.0.duration",
@@ -424,6 +1332,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.0.power_fraction",
@@ -435,6 +1345,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.1.id",
@@ -446,6 +1358,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.1.type",
@@ -457,6 +1371,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.1.duration",
@@ -468,6 +1384,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.1.power_fraction",
@@ -479,6 +1397,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.2.id",
@@ -490,6 +1410,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.2.type",
@@ -501,6 +1423,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.2.target_altitude",
@@ -512,6 +1436,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.2.indicated_airspeed",
@@ -523,6 +1449,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.2.power_fraction",
@@ -534,6 +1462,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.3.id",
@@ -545,6 +1475,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.3.type",
@@ -556,6 +1488,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.3.distance",
@@ -567,6 +1501,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.3.altitude",
@@ -578,6 +1514,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.3.true_airspeed",
@@ -589,6 +1527,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.3.power_fraction",
@@ -600,6 +1540,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.4.id",
@@ -611,6 +1553,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.4.type",
@@ -622,6 +1566,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.4.target_altitude",
@@ -633,6 +1579,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.4.indicated_airspeed",
@@ -644,6 +1592,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.4.power_fraction",
@@ -655,6 +1605,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.5.id",
@@ -666,17 +1618,21 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.5.type",
         "provenance_kind": "user",
-        "resolved_value": "loiter",
+        "resolved_value": "reserve",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.5.duration",
@@ -688,6 +1644,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.5.altitude",
@@ -699,6 +1657,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.5.true_airspeed",
@@ -710,6 +1670,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.5.power_fraction",
@@ -721,6 +1683,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.6.id",
@@ -732,6 +1696,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.6.type",
@@ -743,6 +1709,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.6.duration",
@@ -754,6 +1722,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "mission.segments.6.power_fraction",
@@ -765,6 +1735,8 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.id",
@@ -776,50 +1748,60 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "requirements.template.id",
+        "provenance_kind": "user",
+        "resolved_value": "light_aircraft_conceptual",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "requirements.template.version",
+        "provenance_kind": "user",
+        "resolved_value": 1,
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.0.id",
         "provenance_kind": "user",
-        "resolved_value": "payload",
+        "resolved_value": "stall_speed_landing",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
-        "explicitly_provided": true,
-        "inherited_from_profile": false,
-        "parameter_path": "requirements.items.0.metric",
-        "provenance_kind": "user",
-        "resolved_value": "mission.payload_mass",
-        "source": "scenario document",
-        "supplied_by_default": false,
-        "unit": null
-      },
-      {
-        "confidence": "high",
-        "explicitly_provided": true,
-        "inherited_from_profile": false,
-        "parameter_path": "requirements.items.0.operator",
-        "provenance_kind": "user",
-        "resolved_value": "ge",
-        "source": "scenario document",
-        "supplied_by_default": false,
-        "unit": null
-      },
-      {
-        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.0.value",
         "provenance_kind": "user",
-        "resolved_value": "200 kg",
+        "resolved_value": "50 kt",
         "source": "scenario document",
         "supplied_by_default": false,
-        "unit": "kg"
+        "unit": "kt"
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.0.severity",
@@ -831,28 +1813,34 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.1.id",
         "provenance_kind": "user",
-        "resolved_value": "cruise_speed",
+        "resolved_value": "payload",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.1.metric",
         "provenance_kind": "user",
-        "resolved_value": "performance.cruise_true_airspeed",
+        "resolved_value": "mission.payload_mass",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.1.operator",
@@ -864,17 +1852,21 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.1.value",
         "provenance_kind": "user",
-        "resolved_value": "110 kt",
+        "resolved_value": "200 kg",
         "source": "scenario document",
         "supplied_by_default": false,
-        "unit": "kt"
+        "unit": "kg"
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.1.severity",
@@ -886,28 +1878,34 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.2.id",
         "provenance_kind": "user",
-        "resolved_value": "range",
+        "resolved_value": "cruise_speed",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.2.metric",
         "provenance_kind": "user",
-        "resolved_value": "mission.completed_distance",
+        "resolved_value": "performance.achieved_cruise_true_airspeed",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.2.operator",
@@ -919,17 +1917,21 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.2.value",
         "provenance_kind": "user",
-        "resolved_value": "350 nmi",
+        "resolved_value": "110 kt",
         "source": "scenario document",
         "supplied_by_default": false,
-        "unit": "nmi"
+        "unit": "kt"
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.2.severity",
@@ -941,28 +1943,34 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.3.id",
         "provenance_kind": "user",
-        "resolved_value": "service_ceiling",
+        "resolved_value": "range",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.3.metric",
         "provenance_kind": "user",
-        "resolved_value": "performance.service_ceiling",
+        "resolved_value": "mission.completed_distance",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.3.operator",
@@ -974,9 +1982,76 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
         "parameter_path": "requirements.items.3.value",
+        "provenance_kind": "user",
+        "resolved_value": "350 nmi",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": "nmi"
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "requirements.items.3.severity",
+        "provenance_kind": "user",
+        "resolved_value": "hard",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "requirements.items.4.id",
+        "provenance_kind": "user",
+        "resolved_value": "service_ceiling",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "requirements.items.4.metric",
+        "provenance_kind": "user",
+        "resolved_value": "performance.service_ceiling",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "requirements.items.4.operator",
+        "provenance_kind": "user",
+        "resolved_value": "ge",
+        "source": "scenario document",
+        "supplied_by_default": false,
+        "unit": null
+      },
+      {
+        "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": true,
+        "inherited_from_profile": false,
+        "parameter_path": "requirements.items.4.value",
         "provenance_kind": "user",
         "resolved_value": "13000 ft",
         "source": "scenario document",
@@ -985,9 +2060,11 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
-        "parameter_path": "requirements.items.3.severity",
+        "parameter_path": "requirements.items.4.severity",
         "provenance_kind": "user",
         "resolved_value": "soft",
         "source": "scenario document",
@@ -996,9 +2073,11 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
-        "parameter_path": "requirements.items.3.weight",
+        "parameter_path": "requirements.items.4.weight",
         "provenance_kind": "user",
         "resolved_value": 0.4,
         "source": "scenario document",
@@ -1007,53 +2086,63 @@
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
-        "parameter_path": "requirements.items.4.id",
+        "parameter_path": "requirements.items.5.id",
         "provenance_kind": "user",
-        "resolved_value": "stall_speed_landing",
+        "resolved_value": "static_margin",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
-        "parameter_path": "requirements.items.4.metric",
+        "parameter_path": "requirements.items.5.metric",
         "provenance_kind": "user",
-        "resolved_value": "performance.stall_speed_landing",
+        "resolved_value": "stability.minimum_static_margin",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
-        "parameter_path": "requirements.items.4.operator",
+        "parameter_path": "requirements.items.5.operator",
         "provenance_kind": "user",
-        "resolved_value": "le",
+        "resolved_value": "ge",
         "source": "scenario document",
         "supplied_by_default": false,
         "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
-        "parameter_path": "requirements.items.4.value",
+        "parameter_path": "requirements.items.5.value",
         "provenance_kind": "user",
-        "resolved_value": "50 kt",
+        "resolved_value": 0.1,
         "source": "scenario document",
         "supplied_by_default": false,
-        "unit": "kt"
+        "unit": null
       },
       {
         "confidence": "high",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": false,
-        "parameter_path": "requirements.items.4.severity",
+        "parameter_path": "requirements.items.5.severity",
         "provenance_kind": "user",
         "resolved_value": "hard",
         "source": "scenario document",
@@ -1061,7 +2150,35 @@
         "unit": null
       },
       {
+        "confidence": "low",
+        "correlation_id": "mass.component_fraction",
+        "correlation_version": 1,
+        "explicitly_provided": false,
+        "inherited_from_profile": false,
+        "parameter_path": "aircraft.mass.components.fuselage.mass",
+        "provenance_kind": "statistical",
+        "resolved_value": 462.00000000000006,
+        "source": "normalized conceptual component fraction",
+        "supplied_by_default": true,
+        "unit": "kg"
+      },
+      {
         "confidence": "medium",
+        "correlation_id": null,
+        "correlation_version": null,
+        "explicitly_provided": false,
+        "inherited_from_profile": true,
+        "parameter_path": "aircraft.mass.components.powerplant.mass",
+        "provenance_kind": "profile",
+        "resolved_value": 135.0,
+        "source": "engine profile engine.lycoming_io360_class",
+        "supplied_by_default": false,
+        "unit": "kg"
+      },
+      {
+        "confidence": "medium",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": true,
         "parameter_path": "aircraft.propulsion.profile",
@@ -1073,6 +2190,8 @@
       },
       {
         "confidence": "medium",
+        "correlation_id": null,
+        "correlation_version": null,
         "explicitly_provided": true,
         "inherited_from_profile": true,
         "parameter_path": "aircraft.propulsion.propeller_profile",
@@ -1086,12 +2205,31 @@
     "completed": true,
     "failed_segment": null,
     "final_mass_kg": {
-      "display_unit": "kg",
-      "display_value": 1024.6641463973694,
+      "display_unit": "lb",
+      "display_value": 2258.9443238085346,
       "unit": "kg",
-      "value": 1024.6641463973694
+      "value": 1024.6399095343606
+    },
+    "final_payload_mass_kg": {
+      "display_unit": "lb",
+      "display_value": 507.0632030252184,
+      "unit": "kg",
+      "value": 230.0
     },
     "fuel_capacity_violation": false,
+    "fuel_exhausted": false,
+    "initial_takeoff_mass_kg": {
+      "display_unit": "lb",
+      "display_value": 2449.33573287399,
+      "unit": "kg",
+      "value": 1111.0
+    },
+    "landing_fuel": {
+      "display_unit": "lb",
+      "display_value": 60.935569825304796,
+      "unit": "kg",
+      "value": 27.63990953436049
+    },
     "model": {
       "fidelity_level": 1,
       "model_id": "mission.quasi_steady",
@@ -1099,10 +2237,10 @@
       "validity_status": "valid"
     },
     "reserve_fuel_remaining_kg": {
-      "display_unit": "kg",
-      "display_value": 27.664146397369215,
+      "display_unit": "lb",
+      "display_value": 60.935569825304796,
       "unit": "kg",
-      "value": 27.664146397369215
+      "value": 27.63990953436049
     },
     "scenario_id": "c172-normal-mission",
     "segments": [
@@ -1115,33 +2253,39 @@
         },
         "duration_s": 600.0,
         "end_altitude_m": {
-          "display_unit": "m",
+          "display_unit": "ft",
           "display_value": 0.0,
           "unit": "m",
           "value": 0.0
         },
         "end_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1110.3969999910785,
+          "display_unit": "lb",
+          "display_value": 2448.0063454133465,
           "unit": "kg",
           "value": 1110.3969999910785
         },
         "fuel_burn_kg": {
-          "display_unit": "kg",
-          "display_value": 0.6030000089215882,
+          "display_unit": "lb",
+          "display_value": 1.329387460643547,
           "unit": "kg",
           "value": 0.6030000089215882
         },
+        "payload_removed_kg": {
+          "display_unit": "lb",
+          "display_value": 0.0,
+          "unit": "kg",
+          "value": 0.0
+        },
         "segment_id": "taxi_out",
         "start_altitude_m": {
-          "display_unit": "m",
+          "display_unit": "ft",
           "display_value": 0.0,
           "unit": "m",
           "value": 0.0
         },
         "start_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1111.0,
+          "display_unit": "lb",
+          "display_value": 2449.33573287399,
           "unit": "kg",
           "value": 1111.0
         },
@@ -1156,33 +2300,39 @@
         },
         "duration_s": 120.0,
         "end_altitude_m": {
-          "display_unit": "m",
+          "display_unit": "ft",
           "display_value": 0.0,
           "unit": "m",
           "value": 0.0
         },
         "end_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1109.1016666385804,
+          "display_unit": "lb",
+          "display_value": 2445.150624201594,
           "unit": "kg",
           "value": 1109.1016666385804
         },
         "fuel_burn_kg": {
-          "display_unit": "kg",
-          "display_value": 1.2953333524982265,
+          "display_unit": "lb",
+          "display_value": 2.8557212117528046,
           "unit": "kg",
           "value": 1.2953333524982265
         },
+        "payload_removed_kg": {
+          "display_unit": "lb",
+          "display_value": 0.0,
+          "unit": "kg",
+          "value": 0.0
+        },
         "segment_id": "takeoff",
         "start_altitude_m": {
-          "display_unit": "m",
+          "display_unit": "ft",
           "display_value": 0.0,
           "unit": "m",
           "value": 0.0
         },
         "start_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1110.3969999910785,
+          "display_unit": "lb",
+          "display_value": 2448.0063454133465,
           "unit": "kg",
           "value": 1110.3969999910785
         },
@@ -1191,39 +2341,45 @@
       {
         "distance_m": {
           "display_unit": "nmi",
-          "display_value": 25.62316062725776,
+          "display_value": 25.646416601545848,
           "unit": "m",
-          "value": 47454.093481681375
+          "value": 47497.16354606291
         },
-        "duration_s": 1363.6019618119867,
+        "duration_s": 1364.839587904427,
         "end_altitude_m": {
-          "display_unit": "m",
-          "display_value": 2438.4,
+          "display_unit": "ft",
+          "display_value": 8000.0,
           "unit": "m",
           "value": 2438.4
         },
         "end_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1096.6829496114015,
+          "display_unit": "lb",
+          "display_value": 2417.747190485176,
           "unit": "kg",
-          "value": 1096.6829496114015
+          "value": 1096.6716781930124
         },
         "fuel_burn_kg": {
-          "display_unit": "kg",
-          "display_value": 12.418717027178973,
+          "display_unit": "lb",
+          "display_value": 27.40343371641777,
           "unit": "kg",
-          "value": 12.418717027178973
+          "value": 12.429988445567844
+        },
+        "payload_removed_kg": {
+          "display_unit": "lb",
+          "display_value": 0.0,
+          "unit": "kg",
+          "value": 0.0
         },
         "segment_id": "climb",
         "start_altitude_m": {
-          "display_unit": "m",
+          "display_unit": "ft",
           "display_value": 0.0,
           "unit": "m",
           "value": 0.0
         },
         "start_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1109.1016666385804,
+          "display_unit": "lb",
+          "display_value": 2445.150624201594,
           "unit": "kg",
           "value": 1109.1016666385804
         },
@@ -1238,35 +2394,41 @@
         },
         "duration_s": 10956.521739130434,
         "end_altitude_m": {
-          "display_unit": "m",
-          "display_value": 2438.4,
+          "display_unit": "ft",
+          "display_value": 8000.0,
           "unit": "m",
           "value": 2438.4
         },
         "end_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1035.320310266214,
+          "display_unit": "lb",
+          "display_value": 2282.442217698031,
           "unit": "kg",
-          "value": 1035.320310266214
+          "value": 1035.2983749137059
         },
         "fuel_burn_kg": {
-          "display_unit": "kg",
-          "display_value": 61.36263934518762,
+          "display_unit": "lb",
+          "display_value": 135.30497278714492,
           "unit": "kg",
-          "value": 61.36263934518762
+          "value": 61.373303279306576
+        },
+        "payload_removed_kg": {
+          "display_unit": "lb",
+          "display_value": 0.0,
+          "unit": "kg",
+          "value": 0.0
         },
         "segment_id": "cruise",
         "start_altitude_m": {
-          "display_unit": "m",
-          "display_value": 2438.4,
+          "display_unit": "ft",
+          "display_value": 8000.0,
           "unit": "m",
           "value": 2438.4
         },
         "start_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1096.6829496114015,
+          "display_unit": "lb",
+          "display_value": 2417.747190485176,
           "unit": "kg",
-          "value": 1096.6829496114015
+          "value": 1096.6716781930124
         },
         "warnings": []
       },
@@ -1279,35 +2441,41 @@
         },
         "duration_s": 264.16,
         "end_altitude_m": {
-          "display_unit": "m",
-          "display_value": 457.20000000000005,
+          "display_unit": "ft",
+          "display_value": 1500.0,
           "unit": "m",
           "value": 457.20000000000005
         },
         "end_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1034.8400965877372,
+          "display_unit": "lb",
+          "display_value": 2281.3835277591397,
           "unit": "kg",
-          "value": 1034.8400965877372
+          "value": 1034.8181612352291
         },
         "fuel_burn_kg": {
-          "display_unit": "kg",
-          "display_value": 0.48021367847672025,
+          "display_unit": "lb",
+          "display_value": 1.058689938890992,
           "unit": "kg",
           "value": 0.48021367847672025
         },
+        "payload_removed_kg": {
+          "display_unit": "lb",
+          "display_value": 0.0,
+          "unit": "kg",
+          "value": 0.0
+        },
         "segment_id": "descent",
         "start_altitude_m": {
-          "display_unit": "m",
-          "display_value": 2438.4,
+          "display_unit": "ft",
+          "display_value": 8000.0,
           "unit": "m",
           "value": 2438.4
         },
         "start_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1035.320310266214,
+          "display_unit": "lb",
+          "display_value": 2282.442217698031,
           "unit": "kg",
-          "value": 1035.320310266214
+          "value": 1035.2983749137059
         },
         "warnings": []
       },
@@ -1320,35 +2488,41 @@
         },
         "duration_s": 2700.0,
         "end_altitude_m": {
-          "display_unit": "m",
-          "display_value": 914.4000000000001,
+          "display_unit": "ft",
+          "display_value": 3000.0,
           "unit": "m",
           "value": 914.4000000000001
         },
         "end_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1024.8940725914329,
+          "display_unit": "lb",
+          "display_value": 2259.4512242973224,
           "unit": "kg",
-          "value": 1024.8940725914329
+          "value": 1024.869835728424
         },
         "fuel_burn_kg": {
-          "display_unit": "kg",
-          "display_value": 9.946023996304243,
+          "display_unit": "lb",
+          "display_value": 21.93230346181778,
           "unit": "kg",
-          "value": 9.946023996304243
+          "value": 9.948325506805132
+        },
+        "payload_removed_kg": {
+          "display_unit": "lb",
+          "display_value": 0.0,
+          "unit": "kg",
+          "value": 0.0
         },
         "segment_id": "reserve",
         "start_altitude_m": {
-          "display_unit": "m",
-          "display_value": 457.20000000000005,
+          "display_unit": "ft",
+          "display_value": 1500.0,
           "unit": "m",
           "value": 457.20000000000005
         },
         "start_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1034.8400965877372,
+          "display_unit": "lb",
+          "display_value": 2281.3835277591397,
           "unit": "kg",
-          "value": 1034.8400965877372
+          "value": 1034.8181612352291
         },
         "warnings": []
       },
@@ -1361,35 +2535,41 @@
         },
         "duration_s": 300.0,
         "end_altitude_m": {
-          "display_unit": "m",
-          "display_value": 914.4000000000001,
+          "display_unit": "ft",
+          "display_value": 3000.0,
           "unit": "m",
           "value": 914.4000000000001
         },
         "end_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1024.6641463973694,
+          "display_unit": "lb",
+          "display_value": 2258.9443238085346,
           "unit": "kg",
-          "value": 1024.6641463973694
+          "value": 1024.6399095343606
         },
         "fuel_burn_kg": {
-          "display_unit": "kg",
-          "display_value": 0.2299261940634184,
+          "display_unit": "lb",
+          "display_value": 0.5069004887878039,
           "unit": "kg",
           "value": 0.2299261940634184
         },
+        "payload_removed_kg": {
+          "display_unit": "lb",
+          "display_value": 0.0,
+          "unit": "kg",
+          "value": 0.0
+        },
         "segment_id": "taxi_in",
         "start_altitude_m": {
-          "display_unit": "m",
-          "display_value": 914.4000000000001,
+          "display_unit": "ft",
+          "display_value": 3000.0,
           "unit": "m",
           "value": 914.4000000000001
         },
         "start_mass_kg": {
-          "display_unit": "kg",
-          "display_value": 1024.8940725914329,
+          "display_unit": "lb",
+          "display_value": 2259.4512242973224,
           "unit": "kg",
-          "value": 1024.8940725914329
+          "value": 1024.869835728424
         },
         "warnings": []
       }
@@ -1397,16 +2577,16 @@
     "takeoff_mass_violation": false,
     "total_distance": {
       "display_unit": "nmi",
-      "display_value": 383.5778093381634,
+      "display_value": 383.60106531245145,
       "unit": "m",
-      "value": 710386.1028942786
+      "value": 710429.17295866
     },
-    "total_duration_s": 16304.28370094242,
+    "total_duration_s": 16305.521327034861,
     "total_fuel_burn_kg": {
-      "display_unit": "kg",
-      "display_value": 86.33585360263079,
+      "display_unit": "lb",
+      "display_value": 190.3914090654556,
       "unit": "kg",
-      "value": 86.33585360263079
+      "value": 86.3600904656395
     },
     "warnings": [
       {
@@ -1420,30 +2600,151 @@
   },
   "performance": {
     "absolute_ceiling_m": {
-      "display_unit": "m",
-      "display_value": 4822.264099121094,
+      "display_unit": "ft",
+      "display_value": 15806.663693405511,
       "unit": "m",
-      "value": 4822.264099121094
+      "value": 4817.87109375
+    },
+    "achieved_cruise_mach": 0.1788390570482834,
+    "achieved_cruise_true_airspeed_m_s": {
+      "display_unit": "kt",
+      "display_value": 115.0,
+      "unit": "m/s",
+      "value": 59.16111111111112
     },
     "best_glide_speed_m_s": {
-      "display_unit": "m/s",
-      "display_value": 37.35944391552967,
+      "display_unit": "kt",
+      "display_value": 72.63794323385963,
       "unit": "m/s",
-      "value": 37.35944391552967
+      "value": 37.36818635253001
     },
-    "cruise_mach": null,
+    "cruise_conditions": [
+      {
+        "achieved_mach": 0.1788390570482834,
+        "achieved_true_airspeed_m_s": {
+          "display_unit": "kt",
+          "display_value": 115.0,
+          "unit": "m/s",
+          "value": 59.16111111111112
+        },
+        "altitude_m": {
+          "display_unit": "ft",
+          "display_value": 8000.0,
+          "unit": "m",
+          "value": 2438.4
+        },
+        "declared_mach": 0.1788390570482834,
+        "declared_true_airspeed_m_s": {
+          "display_unit": "kt",
+          "display_value": 115.0,
+          "unit": "m/s",
+          "value": 59.16111111111112
+        },
+        "excess_power_w": {
+          "display_unit": "W",
+          "display_value": 17716.6892266762,
+          "unit": "W",
+          "value": 17716.6892266762
+        },
+        "feasible": true,
+        "mass_kg": {
+          "display_unit": "lb",
+          "display_value": 2417.747190485176,
+          "unit": "kg",
+          "value": 1096.6716781930124
+        },
+        "segment_id": "cruise",
+        "validity": {
+          "status": "valid"
+        }
+      }
+    ],
+    "cruise_feasible": true,
+    "cruise_mach": 0.1788390570482834,
+    "declared_cruise_mach": 0.1788390570482834,
+    "declared_cruise_true_airspeed_m_s": {
+      "display_unit": "kt",
+      "display_value": 115.0,
+      "unit": "m/s",
+      "value": 59.16111111111112
+    },
+    "landing_field_length_m": {
+      "display_unit": "ft",
+      "display_value": 1970.6271099744067,
+      "unit": "m",
+      "value": 600.6471431201992
+    },
     "maximum_level_speed_m_s": {
-      "display_unit": "m/s",
-      "display_value": 66.85809105055392,
+      "display_unit": "kt",
+      "display_value": 129.9576405532675,
       "unit": "m/s",
-      "value": 66.85809105055392
+      "value": 66.8559861957365
     },
-    "maximum_lift_to_drag_ratio": 11.941912180111707,
+    "maximum_lift_to_drag_ratio": 11.936325117290478,
+    "metric_validity": {
+      "aerodynamics.maximum_lift_to_drag_ratio": {
+        "status": "valid"
+      },
+      "performance.absolute_ceiling": {
+        "status": "valid"
+      },
+      "performance.achieved_cruise_mach": {
+        "status": "valid"
+      },
+      "performance.achieved_cruise_true_airspeed": {
+        "status": "valid"
+      },
+      "performance.best_glide_speed": {
+        "status": "valid"
+      },
+      "performance.cruise_feasible": {
+        "status": "valid"
+      },
+      "performance.landing_field_length": {
+        "status": "valid"
+      },
+      "performance.maximum_level_speed": {
+        "status": "valid"
+      },
+      "performance.minimum_cruise_excess_power": {
+        "status": "valid"
+      },
+      "performance.minimum_power_speed": {
+        "status": "valid"
+      },
+      "performance.physical_absolute_ceiling": {
+        "status": "valid"
+      },
+      "performance.physical_service_ceiling": {
+        "status": "valid"
+      },
+      "performance.service_ceiling": {
+        "status": "valid"
+      },
+      "performance.stall_speed": {
+        "status": "valid"
+      },
+      "performance.stall_speed_clean": {
+        "status": "valid"
+      },
+      "performance.stall_speed_landing": {
+        "status": "valid"
+      },
+      "performance.takeoff_field_length": {
+        "status": "valid"
+      }
+    },
+    "minimum_cruise_excess_power_w": {
+      "display_unit": "W",
+      "display_value": 17716.6892266762,
+      "unit": "W",
+      "value": 17716.6892266762
+    },
     "minimum_power_speed_m_s": {
-      "display_unit": "m/s",
-      "display_value": 28.387038683118703,
+      "display_unit": "kt",
+      "display_value": 55.192901401421196,
       "unit": "m/s",
-      "value": 28.387038683118703
+      "value": 28.393681498731127
     },
     "model": {
       "fidelity_level": 1,
@@ -1451,25 +2752,50 @@
       "model_version": "1.0.0",
       "validity_status": "valid"
     },
-    "service_ceiling_m": {
-      "display_unit": "m",
-      "display_value": 3814.7537231445312,
+    "physical_absolute_ceiling_m": {
+      "display_unit": "ft",
+      "display_value": 15806.663693405511,
       "unit": "m",
-      "value": 3814.7537231445312
+      "value": 4817.87109375
+    },
+    "physical_service_ceiling_m": {
+      "display_unit": "ft",
+      "display_value": 12500.192236712597,
+      "unit": "m",
+      "value": 3810.05859375
+    },
+    "service_ceiling_m": {
+      "display_unit": "ft",
+      "display_value": 12500.192236712597,
+      "unit": "m",
+      "value": 3810.05859375
     },
     "stall_speed_clean_m_s": {
-      "display_unit": "m/s",
-      "display_value": 27.543891976681895,
+      "display_unit": "kt",
+      "display_value": 53.54104271925206,
       "unit": "m/s",
       "value": 27.543891976681895
     },
     "stall_speed_landing_m_s": {
-      "display_unit": "m/s",
-      "display_value": 23.165003867519808,
+      "display_unit": "kt",
+      "display_value": 45.029165185243684,
       "unit": "m/s",
       "value": 23.165003867519808
     },
+    "takeoff_field_length_m": {
+      "display_unit": "ft",
+      "display_value": 410.58228240408863,
+      "unit": "m",
+      "value": 125.14547967676623
+    },
     "warnings": [
+      {
+        "code": "LOW_FIDELITY_MODEL",
+        "context": {},
+        "message": "Results use conceptual fidelity-level 0 or 1 equations.",
+        "path": "models",
+        "severity": "warning"
+      },
       {
         "code": "LOW_FIDELITY_MODEL",
         "context": {},
@@ -1479,101 +2805,13 @@
       }
     ]
   },
-  "report_markdown": "# C172-Class Normal Mission\n\n- Run ID: `2026-07-23T233304Z-24b8c994`\n- Completion: true\n- Hard requirements passed: true\n- Warnings: 1\n\n> Results are conceptual estimates based on the selected low-fidelity models and are not suitable for certification, operational flight planning, or safety-critical decisions.\n\n## Primary results\n\n- Mission distance: 383.6 nmi\n- Mission fuel: 86.3 kg\n- Service ceiling: 3815 m\n\n## Requirements\n\n- payload: PASS (margin 30.000)\n\n- cruise_speed: PASS (margin 2.572)\n\n- range: PASS (margin 62186.103)\n\n- service_ceiling: FAIL (margin -147.646)\n\n- stall_speed_landing: PASS (margin 2.557)\n\n## Assumptions\n\n98 resolved input and profile entries are recorded in the ledger.\n",
+  "report_markdown": "# C172-Class Normal Mission\n\n- Run ID: `2026-10-15T095242Z-f01aacf7`\n- Completion: true\n- Hard requirements passed: true\n- Warnings: 1\n\n> Results are conceptual estimates based on the selected low-fidelity models and are not suitable for certification, operational flight planning, or safety-critical decisions.\n\n## Primary results\n\n- Mission distance: 383.6 nmi\n- Mission fuel: 86.4 kg\n- Landing fuel: 27.6 kg\n- Service ceiling: 3810 m\n- Achieved cruise Mach: 0.179\n- Minimum cruise excess power: 17717 W\n- All cruise conditions feasible: true\n\n## Requirements\n\n- stall_speed_landing: PASS (margin 2.557)\n\n- takeoff_field_length: PASS (margin 636.855)\n\n- landing_field_length: PASS (margin 161.353)\n\n- all_engine_climb_gradient: PASS (margin 0.128)\n\n- reserve_duration: PASS (margin 0.000)\n\n- payload: PASS (margin 30.000)\n\n- cruise_speed: PASS (margin 2.572)\n\n- range: PASS (margin 62229.173)\n\n- service_ceiling: FAIL (margin -152.341)\n\n- static_margin: PASS (margin 0.100)\n\n## Assumptions\n\n169 resolved input and profile entries are recorded in the ledger.\n",
   "requirements": [
-    {
-      "absolute_margin": 30.0,
-      "actual": {
-        "display_unit": "kg",
-        "display_value": 230.0,
-        "unit": "kg",
-        "value": 230.0
-      },
-      "id": "payload",
-      "metric": "mission.payload_mass",
-      "operator": "ge",
-      "passed": true,
-      "percentage_margin": 15.0,
-      "required": {
-        "display_unit": "kg",
-        "display_value": 200.0,
-        "unit": "kg",
-        "value": 200.0
-      },
-      "severity": "hard",
-      "warning_state": false
-    },
-    {
-      "absolute_margin": 2.572222222222223,
-      "actual": {
-        "display_unit": "m/s",
-        "display_value": 59.16111111111112,
-        "unit": "m/s",
-        "value": 59.16111111111112
-      },
-      "id": "cruise_speed",
-      "metric": "performance.cruise_true_airspeed",
-      "operator": "ge",
-      "passed": true,
-      "percentage_margin": 4.545454545454546,
-      "required": {
-        "display_unit": "m/s",
-        "display_value": 56.588888888888896,
-        "unit": "m/s",
-        "value": 56.588888888888896
-      },
-      "severity": "hard",
-      "warning_state": false
-    },
-    {
-      "absolute_margin": 62186.10289427859,
-      "actual": {
-        "display_unit": "nmi",
-        "display_value": 383.5778093381634,
-        "unit": "m",
-        "value": 710386.1028942786
-      },
-      "id": "range",
-      "metric": "mission.completed_distance",
-      "operator": "ge",
-      "passed": true,
-      "percentage_margin": 9.593659810903825,
-      "required": {
-        "display_unit": "nmi",
-        "display_value": 350.0,
-        "unit": "m",
-        "value": 648200.0
-      },
-      "severity": "hard",
-      "warning_state": false
-    },
-    {
-      "absolute_margin": -147.64627685546884,
-      "actual": {
-        "display_unit": "m",
-        "display_value": 3814.7537231445312,
-        "unit": "m",
-        "value": 3814.7537231445312
-      },
-      "id": "service_ceiling",
-      "metric": "performance.service_ceiling",
-      "operator": "ge",
-      "passed": false,
-      "percentage_margin": -3.7261830419813458,
-      "required": {
-        "display_unit": "m",
-        "display_value": 3962.4,
-        "unit": "m",
-        "value": 3962.4
-      },
-      "severity": "soft",
-      "warning_state": false
-    },
     {
       "absolute_margin": 2.5572183547024174,
       "actual": {
-        "display_unit": "m/s",
-        "display_value": 23.165003867519808,
+        "display_unit": "kt",
+        "display_value": 45.029165185243684,
         "unit": "m/s",
         "value": 23.165003867519808
       },
@@ -1582,17 +2820,315 @@
       "operator": "le",
       "passed": true,
       "percentage_margin": 9.941669629512637,
+      "provenance": {
+        "kind": "designer_default",
+        "non_regulatory": true,
+        "source": "ACE conceptual-design default",
+        "template_id": "light_aircraft_conceptual",
+        "template_version": 1
+      },
       "required": {
-        "display_unit": "m/s",
-        "display_value": 25.722222222222225,
+        "display_unit": "kt",
+        "display_value": 50.0,
         "unit": "m/s",
         "value": 25.722222222222225
       },
       "severity": "hard",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": 636.8545203232338,
+      "actual": {
+        "display_unit": "ft",
+        "display_value": 410.58228240408863,
+        "unit": "m",
+        "value": 125.14547967676623
+      },
+      "id": "takeoff_field_length",
+      "metric": "performance.takeoff_field_length",
+      "operator": "le",
+      "passed": true,
+      "percentage_margin": 83.57670870383646,
+      "provenance": {
+        "kind": "designer_default",
+        "non_regulatory": true,
+        "source": "ACE conceptual-design default",
+        "template_id": "light_aircraft_conceptual",
+        "template_version": 1
+      },
+      "required": {
+        "display_unit": "ft",
+        "display_value": 2500.0,
+        "unit": "m",
+        "value": 762.0
+      },
+      "severity": "soft",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": 161.3528568798008,
+      "actual": {
+        "display_unit": "ft",
+        "display_value": 1970.6271099744067,
+        "unit": "m",
+        "value": 600.6471431201992
+      },
+      "id": "landing_field_length",
+      "metric": "performance.landing_field_length",
+      "operator": "le",
+      "passed": true,
+      "percentage_margin": 21.17491560102373,
+      "provenance": {
+        "kind": "designer_default",
+        "non_regulatory": true,
+        "source": "ACE conceptual-design default",
+        "template_id": "light_aircraft_conceptual",
+        "template_version": 1
+      },
+      "required": {
+        "display_unit": "ft",
+        "display_value": 2500.0,
+        "unit": "m",
+        "value": 762.0
+      },
+      "severity": "soft",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": 0.12785655789157685,
+      "actual": {
+        "display_unit": "1",
+        "display_value": 0.17785655789157684,
+        "unit": "1",
+        "value": 0.17785655789157684
+      },
+      "id": "all_engine_climb_gradient",
+      "metric": "performance.all_engine_climb_gradient",
+      "operator": "ge",
+      "passed": true,
+      "percentage_margin": 255.71311578315368,
+      "provenance": {
+        "kind": "designer_default",
+        "non_regulatory": true,
+        "source": "ACE conceptual-design default",
+        "template_id": "light_aircraft_conceptual",
+        "template_version": 1
+      },
+      "required": {
+        "display_unit": "1",
+        "display_value": 0.05,
+        "unit": "1",
+        "value": 0.05
+      },
+      "severity": "soft",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": 0.0,
+      "actual": {
+        "display_unit": "s",
+        "display_value": 2700.0,
+        "unit": "s",
+        "value": 2700.0
+      },
+      "id": "reserve_duration",
+      "metric": "mission.reserve_duration",
+      "operator": "ge",
+      "passed": true,
+      "percentage_margin": 0.0,
+      "provenance": {
+        "kind": "designer_default",
+        "non_regulatory": true,
+        "source": "ACE conceptual-design default",
+        "template_id": "light_aircraft_conceptual",
+        "template_version": 1
+      },
+      "required": {
+        "display_unit": "s",
+        "display_value": 2700.0,
+        "unit": "s",
+        "value": 2700.0
+      },
+      "severity": "soft",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": true
+    },
+    {
+      "absolute_margin": 30.0,
+      "actual": {
+        "display_unit": "lb",
+        "display_value": 507.0632030252184,
+        "unit": "kg",
+        "value": 230.0
+      },
+      "id": "payload",
+      "metric": "mission.payload_mass",
+      "operator": "ge",
+      "passed": true,
+      "percentage_margin": 15.0,
+      "provenance": {
+        "kind": "user_defined",
+        "non_regulatory": true,
+        "source": "requirements document"
+      },
+      "required": {
+        "display_unit": "lb",
+        "display_value": 440.92452436975515,
+        "unit": "kg",
+        "value": 200.0
+      },
+      "severity": "hard",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": 2.572222222222223,
+      "actual": {
+        "display_unit": "kt",
+        "display_value": 115.0,
+        "unit": "m/s",
+        "value": 59.16111111111112
+      },
+      "id": "cruise_speed",
+      "metric": "performance.achieved_cruise_true_airspeed",
+      "operator": "ge",
+      "passed": true,
+      "percentage_margin": 4.545454545454546,
+      "provenance": {
+        "kind": "user_defined",
+        "non_regulatory": true,
+        "source": "requirements document"
+      },
+      "required": {
+        "display_unit": "kt",
+        "display_value": 110.0,
+        "unit": "m/s",
+        "value": 56.588888888888896
+      },
+      "severity": "hard",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": 62229.172958660056,
+      "actual": {
+        "display_unit": "nmi",
+        "display_value": 383.60106531245145,
+        "unit": "m",
+        "value": 710429.17295866
+      },
+      "id": "range",
+      "metric": "mission.completed_distance",
+      "operator": "ge",
+      "passed": true,
+      "percentage_margin": 9.600304374986123,
+      "provenance": {
+        "kind": "user_defined",
+        "non_regulatory": true,
+        "source": "requirements document"
+      },
+      "required": {
+        "display_unit": "nmi",
+        "display_value": 350.0,
+        "unit": "m",
+        "value": 648200.0
+      },
+      "severity": "hard",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": -152.3414062500001,
+      "actual": {
+        "display_unit": "ft",
+        "display_value": 12500.192236712597,
+        "unit": "m",
+        "value": 3810.05859375
+      },
+      "id": "service_ceiling",
+      "metric": "performance.service_ceiling",
+      "operator": "ge",
+      "passed": false,
+      "percentage_margin": -3.8446751022107835,
+      "provenance": {
+        "kind": "user_defined",
+        "non_regulatory": true,
+        "source": "requirements document"
+      },
+      "required": {
+        "display_unit": "ft",
+        "display_value": 13000.0,
+        "unit": "m",
+        "value": 3962.4
+      },
+      "severity": "soft",
+      "status": "fail",
+      "validity": {
+        "status": "valid"
+      },
+      "warning_state": false
+    },
+    {
+      "absolute_margin": 0.10011620097110896,
+      "actual": {
+        "display_unit": "1",
+        "display_value": 0.20011620097110897,
+        "unit": "1",
+        "value": 0.20011620097110897
+      },
+      "id": "static_margin",
+      "metric": "stability.minimum_static_margin",
+      "operator": "ge",
+      "passed": true,
+      "percentage_margin": 100.11620097110895,
+      "provenance": {
+        "kind": "user_defined",
+        "non_regulatory": true,
+        "source": "requirements document"
+      },
+      "required": {
+        "display_unit": "1",
+        "display_value": 0.1,
+        "unit": "1",
+        "value": 0.1
+      },
+      "severity": "hard",
+      "status": "pass",
+      "validity": {
+        "status": "valid"
+      },
       "warning_state": false
     }
   ],
-  "run_id": "2026-07-23T233304Z-24b8c994",
+  "run_id": "2026-10-15T095242Z-f01aacf7",
   "scenario_name": "C172-Class Normal Mission",
   "warning_count": 1
 }

@@ -3,23 +3,28 @@
   "chart": {
     "annotations": [
       {
+        "label": "full_payload_mission",
+        "x": 599.98930168065,
+        "y": 230.0
+      },
+      {
         "label": "maximum_payload",
         "x": 0.0,
         "y": 376.0
       },
       {
         "label": "maximum_fuel_payload",
-        "x": 761.7524070704324,
+        "x": 761.6202007388447,
         "y": 200.0
       },
       {
         "label": "maximum_range",
-        "x": 788.3919442035464,
+        "x": 788.2761383678418,
         "y": 100.0
       },
       {
         "label": "zero_payload_ferry",
-        "x": 813.9968882570014,
+        "x": 813.8981861553989,
         "y": 0.0
       }
     ],
@@ -30,6 +35,7 @@
         "label": "Payload",
         "unit": "kg",
         "values": [
+          230.0,
           376.0,
           200.0,
           100.0,
@@ -39,6 +45,13 @@
     ],
     "title": "C172-Class Normal Mission: payload-range",
     "warnings": [
+      {
+        "code": "LOW_FIDELITY_MODEL",
+        "context": {},
+        "message": "Results use conceptual fidelity-level 0 or 1 equations.",
+        "path": "models",
+        "severity": "warning"
+      },
       {
         "code": "SIMPLIFIED_PAYLOAD_RANGE",
         "context": {},
@@ -51,10 +64,11 @@
       "label": "Range",
       "unit": "nmi",
       "values": [
+        599.98930168065,
         0.0,
-        761.7524070704324,
-        788.3919442035464,
-        813.9968882570014
+        761.6202007388447,
+        788.2761383678418,
+        813.8981861553989
       ]
     },
     "y": {

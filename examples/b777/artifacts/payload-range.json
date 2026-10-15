@@ -3,23 +3,28 @@
   "chart": {
     "annotations": [
       {
+        "label": "full_payload_mission",
+        "x": 9202.670918917029,
+        "y": 52000.0
+      },
+      {
         "label": "maximum_payload",
-        "x": 7904.236648531703,
+        "x": 7905.1250712386145,
         "y": 68600.0
       },
       {
         "label": "maximum_fuel_payload",
-        "x": 10314.264517769874,
+        "x": 10315.35139800216,
         "y": 38167.0
       },
       {
         "label": "maximum_range",
-        "x": 10757.444695801107,
+        "x": 10758.473729185203,
         "y": 19083.5
       },
       {
         "label": "zero_payload_ferry",
-        "x": 11205.513481371234,
+        "x": 11206.475274704,
         "y": 0.0
       }
     ],
@@ -30,6 +35,7 @@
         "label": "Payload",
         "unit": "kg",
         "values": [
+          52000.0,
           68600.0,
           38167.0,
           19083.5,
@@ -39,6 +45,13 @@
     ],
     "title": "B777-Class Long-Range Mission: payload-range",
     "warnings": [
+      {
+        "code": "LOW_FIDELITY_MODEL",
+        "context": {},
+        "message": "Results use conceptual fidelity-level 0 or 1 equations.",
+        "path": "models",
+        "severity": "warning"
+      },
       {
         "code": "SIMPLIFIED_PAYLOAD_RANGE",
         "context": {},
@@ -51,10 +64,11 @@
       "label": "Range",
       "unit": "nmi",
       "values": [
-        7904.236648531703,
-        10314.264517769874,
-        10757.444695801107,
-        11205.513481371234
+        9202.670918917029,
+        7905.1250712386145,
+        10315.35139800216,
+        10758.473729185203,
+        11206.475274704
       ]
     },
     "y": {
