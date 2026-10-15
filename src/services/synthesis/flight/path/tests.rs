@@ -134,3 +134,62 @@ fn fuel_integral_agrees_with_independent_fine_euler_reference() {
         .sum::<f64>();
     assert!((70_000.0 - mass - burn).abs() < 0.02);
 }
+
+#[test]
+fn declared_idle_floor_burns_idle_fuel_and_reports_drag_device_demand() {
+    let model = FlightModel::new(&inputs()).unwrap();
+    let mut steep = entry(70_000.0, (10_000.0, 230.0), (0.0, 125.0), 100_000.0);
+    assert!(evaluate(&model, &steep, &RunControl::default()).is_err());
+    steep.conditions.insert(
+        "idle_thrust".into(),
+        Quantity::new(4_000.0, Unit::Newton).unwrap(),
+    );
+    let output = evaluate(&model, &steep, &RunControl::default()).unwrap();
+    assert!(output.details["maximum_drag_device_n"].as_f64().unwrap() > 0.0);
+    let mut floored = 0;
+    for point in &output.increments {
+        let required = point.details["required_thrust_n"].as_f64().unwrap();
+        let engine = point.details["engine_thrust_n"].as_f64().unwrap();
+        let device = point.details["drag_device_n"].as_f64().unwrap();
+        assert!((engine - required.max(4_000.0)).abs() < 1e-9);
+        assert!((device - (engine - required)).abs() < 1e-9);
+        if required < 4_000.0 {
+            floored += 1;
+            // Fuel follows the idle setting, not the (negative) path requirement.
+            let idle_burn = 0.000016 * 4_000.0 * point.duration.value;
+            assert!((point.fuel_burn.value - idle_burn).abs() < 1e-6 * idle_burn);
+        }
+        // The path still closes its energy balance with the device drag included.
+        let work = point.details["specific_excess_work_j_kg"].as_f64().unwrap();
+        let energy = point.details["specific_energy_change_j_kg"]
+            .as_f64()
+            .unwrap();
+        assert!((work - energy).abs() < 1e-8);
+    }
+    assert!(floored > 0);
+}
+
+#[test]
+fn idle_floor_does_not_change_paths_that_need_more_than_idle() {
+    let model = FlightModel::new(&inputs()).unwrap();
+    let climb = entry(70_000.0, (35.0, 125.0), (10_000.0, 230.0), 250_000.0);
+    let mut floored = climb.clone();
+    floored.conditions.insert(
+        "idle_thrust".into(),
+        Quantity::new(4_000.0, Unit::Newton).unwrap(),
+    );
+    let burn = |state: &VehicleState| {
+        evaluate(&model, state, &RunControl::default())
+            .unwrap()
+            .increments
+            .iter()
+            .map(|p| p.fuel_burn.value)
+            .sum::<f64>()
+    };
+    assert_eq!(burn(&climb), burn(&floored));
+    floored.conditions.insert(
+        "idle_thrust".into(),
+        Quantity::new(-1.0, Unit::Newton).unwrap(),
+    );
+    assert!(evaluate(&model, &floored, &RunControl::default()).is_err());
+}

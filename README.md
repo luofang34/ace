@@ -72,8 +72,12 @@ above 0.9. Climb, descent and approach integrate mass and fuel along declared st
 with linear true airspeed schedules, including potential and kinetic energy. Cruise
 uses the remaining route distance; reserve descent and loiter retain continuous
 states. Ground phases use declared approximate rates and terminal conditions, not
-runway performance. These clean-polar models exclude wind, speedbrakes, idle-thrust
-floors and propulsion transients; infeasible thrust or lift is rejected.
+runway performance. These clean-polar models exclude wind and propulsion
+transients; infeasible thrust or lift is rejected. A path stage may declare an
+`idle_thrust` input: where the path needs less thrust, fuel burns at idle and
+the surplus appears as `drag_device_n`, an unmodelled drag device. Without it, a
+path needing negative thrust is rejected. Like other stage inputs, `idle_thrust`
+remains in effect for later stages.
 The capacity-bounded fuel search assumes a monotonic fuel balance and feeds
 mission demand into the coupled empty-mass/MTOW closure. It requires usable tank
 capacity and terminal reserve, loads tanks in capacity proportion and checks
