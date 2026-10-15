@@ -34,7 +34,7 @@ pub struct CostItem {
     pub basis: Option<EconomicBasis>,
 }
 
-/// Operating economics with explicit seat-distance and airport assumptions.
+/// Operating economics with optional seat-distance normalization and explicit airport assumptions.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Operations {
@@ -42,10 +42,13 @@ pub struct Operations {
     pub basis: Option<EconomicBasis>,
     /// Optional rate-based calculation and required route cases.
     pub economics: Option<EconomicModel>,
-    /// Seats installed.
+    /// Seats installed; zero declares a non-passenger operation.
     pub seats: Binding,
     /// Revenue distance.
     pub distance: Binding,
+    /// Normal-trip elapsed time for cost per block hour; rate-based scenarios supply their own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block_duration: Option<Binding>,
     /// Occupied fraction.
     pub load_factor: Binding,
     /// Trip cost breakdown.

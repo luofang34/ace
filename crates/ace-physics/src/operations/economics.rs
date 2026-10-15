@@ -17,6 +17,7 @@ pub(super) fn evaluate(
         let mut route = operations.clone();
         route.economics = None;
         route.distance = scenario.distance.clone();
+        route.block_duration = Some(scenario.block_duration.clone());
         if let Some(factor) = &scenario.load_factor {
             route.load_factor = factor.clone();
         }
@@ -53,25 +54,7 @@ fn costs(
     )?;
     let turnaround = read(&scenario.turnaround, values, Unit::Hour)?;
     let fuel = read(&scenario.block_fuel, values, Unit::Kilogram)?;
-    let flight_time = positive(
-        "annual flight time",
-        &model.utilization.flight_time,
-        values,
-        Unit::Hour,
-    )?;
-    let available_time = positive(
-        "annual operating time",
-        &model.utilization.operating_time,
-        values,
-        Unit::Hour,
-    )?;
-    let flights = (flight_time / duration).min(available_time / (duration + turnaround));
-    if !flights.is_finite() || flights <= 0.0 {
-        return Err(PhysicsError::invalid(
-            "annual flights",
-            "utilization must yield a finite positive cycle count",
-        ));
-    }
+    let flights = annual_flights(model, values, duration, turnaround)?;
     let rates = &model.rates;
     let amounts = [
         (
@@ -111,6 +94,34 @@ fn costs(
         })
         .collect::<PhysicsResult<Vec<_>>>()?;
     Ok((costs, flights))
+}
+
+fn annual_flights(
+    model: &EconomicModel,
+    values: &BTreeMap<String, Quantity>,
+    duration: f64,
+    turnaround: f64,
+) -> PhysicsResult<f64> {
+    let block_time = positive(
+        "annual block time",
+        &model.utilization.flight_time,
+        values,
+        Unit::Hour,
+    )?;
+    let available_time = positive(
+        "annual operating time",
+        &model.utilization.operating_time,
+        values,
+        Unit::Hour,
+    )?;
+    let flights = (block_time / duration).min(available_time / (duration + turnaround));
+    if !flights.is_finite() || flights <= 0.0 {
+        return Err(PhysicsError::invalid(
+            "annual flights",
+            "utilization must yield a finite positive cycle count",
+        ));
+    }
+    Ok(flights)
 }
 
 fn read(binding: &Binding, values: &BTreeMap<String, Quantity>, unit: Unit) -> PhysicsResult<f64> {

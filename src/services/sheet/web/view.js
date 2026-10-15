@@ -7,7 +7,7 @@ export function render(publication,{select,commit,preview}){
   const sheet=publication.sheet,model=sheet.model;$('title').textContent=model.name;$('identity').textContent=`${model.domain} · revision ${sheet.revision} · ${model.id}`;
   $('cancel').disabled=publication.job?.state!=='running';$('run').disabled=publication.activity==='computing';$('activity').textContent=publication.activity.toUpperCase();$('activity').className='badge '+publication.activity;
   $('saved').textContent=publication.saved_digest===sheet.snapshot.model_digest?'Saved':'Unsaved';$('save').disabled=publication.activity!=='ready';
-  const geometry=panel(sheet,'vehicle.geometry_envelopes'),mass=panel(sheet,'vehicle.mass_properties'),mission=panel(sheet,'vehicle.mission_sequence'),operations=panel(sheet,'vehicle.operations');
+  const geometry=panel(sheet,'vehicle.geometry_envelopes'),mass=panel(sheet,'vehicle.mass_properties'),mission=panel(sheet,'vehicle.mission_sequence'),operations=panel(sheet,'vehicle.trip_cost')||panel(sheet,'vehicle.operations');
   requirements(sheet,select);statements(sheet,mass,operations,select);plots(geometry,mission,select);massProperties(mass,select,preferredFocus(sheet,'loading'));missionStates(sheet,mission,select,()=>massProperties(mass,select));closures(sheet,select);
   arrangement($('arrangement'),geometry?.details,sheet,select,preview,commit);criticalSections(sheet,geometry,select,preferredFocus(sheet,'sections'));
   for(const [id,results] of [['arrangement',[geometry]],['mass',[mass]],['mission',[mission]],['sections',[geometry]],['statement',[mass,operations]],['plots',[geometry,mission]]]){const stale=results.some(result=>result&&(result.historical||['stale','blocked','unavailable','nonconverged'].includes(result.status)));$(id).classList.toggle('stale-panel',stale);$(id).title=stale?'Historical evidence; current results are unavailable':'';}
@@ -23,7 +23,10 @@ function statements(sheet,mass,operations,select){const node=$('statement');node
     const report=operations.details,scenarios=Object.keys(report.scenarios||{}),choice=element('select'),details=element('div');
     choice.setAttribute('aria-label','Economic scenario');for(const id of scenarios){const option=element('option',id);option.value=id;choice.append(option);}choice.value=report.scenario;
     const update=()=>{const result=report.scenarios[choice.value]||report;details.replaceChildren();
-      details.append(metric('Trip cost',number(result.trip_cost_usd,0),'run:'+operations.run_id,select,'USD'),metric('CASM',number(result.casm_usd_per_nmi,4),'run:'+operations.run_id,select,'USD/(seat·nmi)'));
+      details.append(metric('Trip cost',number(result.trip_cost_usd,0),'run:'+operations.run_id,select,'USD'));
+      if(result.casm_usd_per_nmi!=null)details.append(metric('CASM',number(result.casm_usd_per_nmi,4),'run:'+operations.run_id,select,'USD/(seat·nmi)'));
+      if(result.cost_per_block_hour_usd!=null)details.append(metric('Cost / block hour',number(result.cost_per_block_hour_usd,2),'run:'+operations.run_id,select,'USD/h'));
+      if(result.seats===0)details.append(element('div','Non-passenger operation; seat metrics not applicable','muted'));
       if(result.annual_flights)details.append(metric('Annual flights',number(result.annual_flights,0),'run:'+operations.run_id,select));
       details.append(element('div',result.basis?`${result.basis.currency} ${result.basis.price_year} · ${result.basis.cost_scope}`:'Price basis unavailable','muted'));
       const network=metric('All required airports',report.network_compatible?'Compatible':'INCOMPATIBLE','run:'+operations.run_id,select);if(!report.network_compatible)network.classList.add('FAIL');details.append(network);

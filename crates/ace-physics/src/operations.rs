@@ -20,14 +20,14 @@ pub struct AirportResult {
     pub movement_fee_usd: f64,
 }
 
-/// Trip-cost and seat-distance economics with explicit operating assumptions.
+/// Trip costs and applicable normalizations with explicit operating assumptions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationsReport {
     /// Monetary basis; absence means price-year/scope evidence is unavailable.
     pub basis: Option<ace_model::EconomicBasis>,
     /// Selected rate-based scenario, when supplied.
     pub scenario: Option<String>,
-    /// Achievable cycles per year under flight and turnaround availability.
+    /// Achievable cycles per year under block-time and turnaround availability.
     pub annual_flights: Option<f64>,
     /// Required route scenarios evaluated independently with the same cost basis.
     pub scenarios: BTreeMap<String, OperationsReport>,
@@ -41,9 +41,15 @@ pub struct OperationsReport {
     pub costs_usd: BTreeMap<String, f64>,
     /// Total trip cost.
     pub trip_cost_usd: f64,
-    /// Cost per available seat nautical mile.
-    pub casm_usd_per_nmi: f64,
-    /// Cost per occupied seat nautical mile; undefined at zero load factor.
+    /// Cost per available seat nautical mile; absent for zero seats or zero distance.
+    pub casm_usd_per_nmi: Option<f64>,
+    /// Normal-trip elapsed time, including ground phases, when supplied.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block_duration_h: Option<f64>,
+    /// Total trip cost divided by normal-trip elapsed hours; not airborne-hour cost.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cost_per_block_hour_usd: Option<f64>,
+    /// Cost per occupied seat nautical mile; absent at zero seats, distance or load factor.
     pub passenger_cost_usd_per_nmi: Option<f64>,
     /// Revenue with an explicit per-passenger yield.
     pub revenue_usd: Option<f64>,
@@ -79,35 +85,27 @@ fn evaluate_trip(
             "must be between zero and one",
         ));
     }
-    let distance_m = scalar(&operations.distance, values, Unit::Meter)?;
-    if distance_m <= 0.0 {
-        return Err(PhysicsError::invalid(
-            "operations.distance",
-            "distance must be positive",
-        ));
-    }
+    let distance_m = nonnegative(
+        "operations.distance",
+        scalar(&operations.distance, values, Unit::Meter)?,
+    )?;
     let (costs, airports) = trip_costs(operations, values)?;
     let trip_cost_usd = costs.values().sum::<f64>();
     nonnegative("operations.trip_cost", trip_cost_usd)?;
-    let casm = trip_cost_usd / (seats * distance_m / 1852.0);
-    nonnegative("operations.casm", casm)?;
-    let revenue = operations
-        .revenue_per_passenger
-        .as_ref()
-        .map(|value| {
-            scalar(value, values, Unit::Dollar)
-                .and_then(|yield_| nonnegative("operations.yield", yield_))
+    let casm = (seats > 0.0 && distance_m > 0.0)
+        .then(|| {
+            nonnegative(
+                "operations.casm",
+                trip_cost_usd / (seats * distance_m / 1852.0),
+            )
         })
-        .transpose()?
-        .map(|yield_| yield_ * seats * load_factor);
-    if let Some(value) = revenue {
-        nonnegative("operations.revenue", value)?;
-    }
+        .transpose()?;
+    let (block_duration_h, cost_per_block_hour_usd) =
+        hourly_cost(operations, values, trip_cost_usd)?;
+    let revenue = passenger_revenue(operations, values, seats, load_factor)?;
     let passenger_cost = if load_factor > 0.0 {
-        Some(nonnegative(
-            "operations.passenger_cost",
-            casm / load_factor,
-        )?)
+        casm.map(|cost| nonnegative("operations.passenger_cost", cost / load_factor))
+            .transpose()?
     } else {
         None
     };
@@ -122,12 +120,33 @@ fn evaluate_trip(
         costs_usd: costs,
         trip_cost_usd,
         casm_usd_per_nmi: casm,
+        block_duration_h,
+        cost_per_block_hour_usd,
         passenger_cost_usd_per_nmi: passenger_cost,
         revenue_usd: revenue,
         profit_usd: revenue.map(|value| value - trip_cost_usd),
         network_compatible: airports.iter().all(|airport| airport.compatible),
         airports,
     })
+}
+
+fn passenger_revenue(
+    operations: &Operations,
+    values: &BTreeMap<String, Quantity>,
+    seats: f64,
+    load_factor: f64,
+) -> PhysicsResult<Option<f64>> {
+    let Some(binding) = &operations.revenue_per_passenger else {
+        return Ok(None);
+    };
+    if seats == 0.0 {
+        return Err(PhysicsError::invalid(
+            "operations.revenue_per_passenger",
+            "passenger yield is not applicable to a zero-seat operation",
+        ));
+    }
+    let yield_ = nonnegative("operations.yield", scalar(binding, values, Unit::Dollar)?)?;
+    nonnegative("operations.revenue", yield_ * seats * load_factor).map(Some)
 }
 
 fn airport_results(
@@ -194,11 +213,32 @@ fn trip_costs(
 
 fn seat_count(operations: &Operations, values: &BTreeMap<String, Quantity>) -> PhysicsResult<f64> {
     let seats = scalar(&operations.seats, values, Unit::Ratio)?;
-    if seats < 1.0 || seats > f64::from(u32::MAX) || seats.fract() != 0.0 {
+    if seats < 0.0 || seats > f64::from(u32::MAX) || seats.fract() != 0.0 {
         return Err(PhysicsError::invalid(
             "operations.seats",
-            "seat count must be a positive integer",
+            "seat count must be a nonnegative integer",
         ));
     }
     Ok(seats)
+}
+
+fn hourly_cost(
+    operations: &Operations,
+    values: &BTreeMap<String, Quantity>,
+    cost: f64,
+) -> PhysicsResult<(Option<f64>, Option<f64>)> {
+    let Some(binding) = &operations.block_duration else {
+        return Ok((None, None));
+    };
+    let hours = scalar(binding, values, Unit::Hour)?;
+    if hours <= 0.0 {
+        return Err(PhysicsError::invalid(
+            "operations.block_duration",
+            "must be positive",
+        ));
+    }
+    Ok((
+        Some(hours),
+        Some(nonnegative("operations.hourly_cost", cost / hours)?),
+    ))
 }

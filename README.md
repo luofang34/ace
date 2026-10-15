@@ -47,8 +47,8 @@ with its `expected_revision` token.
 Native plugins include `vehicle.geometry_envelopes`, `vehicle.usable_volume`,
 `vehicle.wetted_area`, `vehicle.mass_properties`, `vehicle.constant_rate_phase`,
 `vehicle.mission_sequence`, `vehicle.mission_fuel_requirement`,
-`vehicle.mission_cg_envelope`, and
-`vehicle.operations`. Envelope clearances and
+`vehicle.mission_cg_envelope`, `vehicle.operations` and `vehicle.trip_cost`.
+Envelope clearances and
 constant-rate phases are explicitly approximate. Volume and wetted-area
 aggregation require explicit measurements for every selected, non-overlapping
 component. Missing inertia remains unknown, including changed loadings without
@@ -85,7 +85,8 @@ Synthesis and Sheet assessments separate execution, mandatory feasibility and
 evidence quality. A completed run can violate constraints. Missing evidence or
 an unmatched hard requirement context is unknown; soft and report-only margins
 do not establish infeasibility. Computed results do not imply calibration.
-Operations retain airport compatibility alongside cost per available seat mile.
+Operations retain airport compatibility alongside trip cost and applicable
+hourly or seat-distance metrics.
 
 Geometry placement composes rigid local frames; mass CG and inertia use the
 same transforms as envelopes, clearances and sections. Embedded artifacts retain
@@ -115,11 +116,29 @@ whole-aircraft interference, trim, stall and transonic shocks remain unverified.
 Use the same model file with `sheet`, `study` or `drawing` to project its results.
 
 Rate-based operations require one currency, price year and cost scope. Native
-rates use USD, flight hours, cycles, turnaround time and annual ownership cost.
-Annual flight/operating time limits determine ownership allocation. Required
-route scenarios retain airport compatibility independently of CASM; load factor
+rates use USD, block hours, cycles, turnaround time and annual ownership cost.
+The `crew_flight_hour`, `maintenance_flight_hour` and annual `flight_time` fields
+are applied to normal-trip block time, including declared ground phases; they
+do not use a separate airborne-time measure. Annual block/operating time limits
+determine ownership allocation. Required route scenarios retain airport
+compatibility independently of CASM; load factor
 does not change its available-seat denominator. Price-year/currency conversion
 and uncertainty propagation are not implemented.
+
+For non-passenger accounting, set `operations.seats` to zero and omit
+`revenue_per_passenger`. `vehicle.trip_cost` version `1` selects
+`resources: {"operations": true}` and publishes `trip_cost` (USD),
+`cost_per_hour` (USD/h) and `network_compatible` (1). Bind a positive
+`operations.block_duration` to normal-trip elapsed time; rate-based cases use
+each scenario's own `block_duration`. Reserve/alternate time and turnaround
+are excluded from this denominator. Zero distance is allowed. CASM and occupied
+seat cost are null when seats or distance are zero; the `vehicle.operations`
+plugin requires both to be positive and fails otherwise. Missing duration leaves
+hourly cost unavailable; neither an artificial seat nor a zero CASM is inserted.
+
+`examples/synthesis/trip-cost.json` is a standalone accounting example with no
+flight-performance assumptions: USD 10,000 over two block hours yields USD 5,000/h.
+Use it with `synthesize` or `sheet` to inspect the cost breakdown and provenance.
 
 Open an interactive synthesis sheet with:
 

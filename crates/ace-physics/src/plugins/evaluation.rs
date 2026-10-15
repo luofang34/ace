@@ -22,7 +22,8 @@ pub(super) fn evaluate(
         Kind::Geometry => geometry(context),
         Kind::Mass => mass(context),
         Kind::Mission => mission(context),
-        Kind::Operations => operations(context),
+        Kind::Operations => operations(context, false),
+        Kind::TripCost => operations(context, true),
         Kind::Phase => phase(inputs),
         Kind::Volume => measurement(context, true),
         Kind::WettedArea => measurement(context, false),
@@ -212,18 +213,36 @@ fn mission(context: &AnalysisContext<'_>) -> PhysicsResult<PluginOutput> {
     )
 }
 
-fn operations(context: &AnalysisContext<'_>) -> PhysicsResult<PluginOutput> {
+fn operations(context: &AnalysisContext<'_>, hourly: bool) -> PhysicsResult<PluginOutput> {
     let operations = context
         .resources
         .operations
         .as_ref()
         .ok_or_else(|| PhysicsError::invalid("operations", "operating case is not selected"))?;
     let report = evaluate_operations(operations, context.values)?;
+    let metric = if hourly {
+        (
+            "cost_per_hour",
+            report.cost_per_block_hour_usd,
+            Unit::DollarPerHour,
+            "cost per block hour requires a positive normal-trip duration",
+        )
+    } else {
+        (
+            "casm",
+            report.casm_usd_per_nmi,
+            Unit::DollarPerNauticalMile,
+            "CASM requires positive seats and distance; use vehicle.trip_cost for hourly accounting",
+        )
+    };
+    let value = metric
+        .1
+        .ok_or_else(|| PhysicsError::invalid(metric.0, metric.3))?;
     result(
         &report,
         &[
             ("trip_cost", report.trip_cost_usd, Unit::Dollar),
-            ("casm", report.casm_usd_per_nmi, Unit::DollarPerNauticalMile),
+            (metric.0, value, metric.2),
             (
                 "network_compatible",
                 if report.network_compatible { 1.0 } else { 0.0 },

@@ -3,6 +3,7 @@ use serde_json::{Value, json};
 use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
+mod accounting;
 
 #[test]
 fn active_constraints_project_current_loading_and_volume_section_witnesses() {

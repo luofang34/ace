@@ -10,6 +10,7 @@ impl Operations {
             (&self.distance, Meter),
             (&self.load_factor, Ratio),
         ];
+        values.extend(self.block_duration.iter().map(|value| (value, Second)));
         values.extend(self.costs.iter().map(|cost| (&cost.amount, Dollar)));
         values.extend(
             self.span

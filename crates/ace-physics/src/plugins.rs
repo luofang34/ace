@@ -1,13 +1,13 @@
 use crate::{PhysicsError, PhysicsResult};
 use ace_engine::{
-    AnalysisContext, AnalysisPlugin, EngineResult, Fidelity, PluginIdentity, PluginOutput,
-    PluginSpec, Registry, SolverError,
+    AnalysisContext, AnalysisPlugin, EngineResult, PluginOutput, PluginSpec, Registry, SolverError,
 };
 use ace_model::{Quantity, Unit};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
 mod evaluation;
+mod specification;
 
 #[derive(Clone, Copy)]
 enum Kind {
@@ -15,6 +15,7 @@ enum Kind {
     Mass,
     Mission,
     Operations,
+    TripCost,
     Phase,
     Volume,
     WettedArea,
@@ -36,6 +37,7 @@ pub fn register(registry: &mut Registry) -> EngineResult<()> {
         Kind::Mass,
         Kind::Mission,
         Kind::Operations,
+        Kind::TripCost,
         Kind::Phase,
         Kind::Volume,
         Kind::WettedArea,
@@ -45,99 +47,10 @@ pub fn register(registry: &mut Registry) -> EngineResult<()> {
     ] {
         registry.register(Arc::new(Native {
             kind,
-            spec: specification(kind, &revision),
+            spec: specification::build(kind, &revision),
         }))?;
     }
     Ok(())
-}
-
-fn specification(kind: Kind, revision: &str) -> PluginSpec {
-    use Unit::*;
-    let (id, inputs, outputs): (&str, &[_], &[_]) = match kind {
-        Kind::ConceptGeometry => (
-            "vehicle.concept_geometry",
-            &[],
-            &[("part_area", SquareMeter)],
-        ),
-        Kind::CgEnvelope => ("vehicle.mission_cg_envelope", &[], &[("margin", Meter)]),
-        Kind::FuelSizing => (
-            "vehicle.mission_fuel_requirement",
-            &[("minimum_remaining", Kilogram), ("tolerance", Kilogram)],
-            &[("required_fuel", Kilogram)],
-        ),
-        Kind::Volume => ("vehicle.usable_volume", &[], &[("volume", CubicMeter)]),
-        Kind::WettedArea => ("vehicle.wetted_area", &[], &[("area", SquareMeter)]),
-        Kind::Geometry => (
-            "vehicle.geometry_envelopes",
-            &[],
-            &[("minimum_clearance", Meter), ("minimum_margin", Meter)],
-        ),
-        Kind::Mass => (
-            "vehicle.mass_properties",
-            &[],
-            &[
-                ("mass", Kilogram),
-                ("cg_x", Meter),
-                ("cg_y", Meter),
-                ("cg_z", Meter),
-                ("minimum_cg_x", Meter),
-                ("maximum_cg_x", Meter),
-            ],
-        ),
-        Kind::Mission => (
-            "vehicle.mission_sequence",
-            &[],
-            &[
-                ("duration", Second),
-                ("distance", Meter),
-                ("block_fuel", Kilogram),
-                ("reserve_fuel", Kilogram),
-                ("remaining_fuel", Kilogram),
-                ("final_mass", Kilogram),
-                ("cost", Dollar),
-            ],
-        ),
-        Kind::Operations => (
-            "vehicle.operations",
-            &[],
-            &[
-                ("trip_cost", Dollar),
-                ("casm", DollarPerNauticalMile),
-                ("network_compatible", Ratio),
-            ],
-        ),
-        Kind::Phase => (
-            "vehicle.constant_rate_phase",
-            &[
-                ("duration", Second),
-                ("speed", MeterPerSecond),
-                ("fuel_flow", KilogramPerSecond),
-                ("cost_rate", DollarPerSecond),
-            ],
-            &[
-                ("duration", Second),
-                ("distance", Meter),
-                ("fuel_burn", Kilogram),
-                ("cost", Dollar),
-            ],
-        ),
-    };
-    let ports = |items: &[(&str, Unit)]| {
-        items
-            .iter()
-            .map(|(name, unit)| ((*name).into(), *unit))
-            .collect()
-    };
-    PluginSpec {
-        identity: PluginIdentity {
-            id: id.into(),
-            version: "1".into(),
-            fidelity: Fidelity::Conceptual,
-            code_revision: revision.into(),
-        },
-        inputs: ports(inputs),
-        outputs: ports(outputs),
-    }
 }
 
 fn source_revision() -> String {

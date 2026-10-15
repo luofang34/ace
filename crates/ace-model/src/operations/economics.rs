@@ -20,9 +20,9 @@ pub struct EconomicBasis {
 pub struct CostRates {
     /// Fuel price per kilogram.
     pub fuel: Binding,
-    /// Crew cost per flight hour.
+    /// Crew cost per normal-trip block hour, including declared ground phases.
     pub crew_flight_hour: Binding,
-    /// Maintenance cost per flight hour.
+    /// Maintenance cost per normal-trip block hour, including declared ground phases.
     pub maintenance_flight_hour: Binding,
     /// Maintenance cost per flight cycle.
     pub maintenance_cycle: Binding,
@@ -36,9 +36,9 @@ pub struct CostRates {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct AnnualUtilization {
-    /// Planned annual flight time.
+    /// Planned annual block time; no separate airborne-time accounting is implied.
     pub flight_time: Binding,
-    /// Available operating time, including flight and turnaround.
+    /// Available operating time, including block time and turnaround.
     pub operating_time: Binding,
 }
 
@@ -48,7 +48,7 @@ pub struct AnnualUtilization {
 pub struct OperatingScenario {
     /// Route stage length.
     pub distance: Binding,
-    /// Normal-trip mission duration; contingency time is excluded.
+    /// Normal-trip elapsed block time; contingency and turnaround time are excluded.
     pub block_duration: Binding,
     /// Normal-trip fuel consumption; contingency fuel is excluded.
     pub block_fuel: Binding,
@@ -64,7 +64,7 @@ pub struct OperatingScenario {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct EconomicModel {
-    /// Scenario supplying the canonical trip-cost and CASM outputs.
+    /// Scenario supplying the canonical trip cost and applicable normalized outputs.
     pub selected: String,
     /// Cost rates shared by the selected fleet.
     pub rates: CostRates,
