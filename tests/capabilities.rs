@@ -44,6 +44,7 @@ fn segment_field_value(name: &str) -> Option<Value> {
         "distance" => Some(json!("1 nmi")),
         "target_altitude" | "altitude" => Some(json!("1000 ft")),
         "indicated_airspeed" | "true_airspeed" => Some(json!("100 kt")),
+        "headwind" => Some(json!("10 kt")),
         "mach" | "power_fraction" | "thrust_fraction" | "fuel_fraction" => Some(json!(0.5)),
         "fuel_mass" | "payload_mass" => Some(json!("1 kg")),
         "schedule" => Some(json!([

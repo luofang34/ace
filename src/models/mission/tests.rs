@@ -301,6 +301,7 @@ fn payload_drop_reduces_mass_without_burning_fuel() {
             fuel_fraction: None,
             fuel_mass_kg: None,
             payload_mass_kg: Some(100.0),
+            headwind_m_s: None,
             energy_schedule: None,
         };
         resolved.mission.segments.insert(1, payload_drop);
@@ -451,5 +452,43 @@ fn cruise_retains_propulsion_deck_diagnostics() -> Result<(), Box<dyn std::error
             && warning.path.as_deref()
                 == Some("mission.segments.high_cruise.aircraft.propulsion.profile")
     }));
+    Ok(())
+}
+
+#[test]
+fn headwind_raises_cruise_fuel_per_ground_distance() -> Result<(), Box<dyn std::error::Error>> {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let resolver = crate::services::resolver::ScenarioResolver::new(std::sync::Arc::new(
+        crate::storage::profile_store::FileProfileStore,
+    ));
+    let resolve = |overrides: &[(&str, &str)]| {
+        resolver.resolve_blocking(
+            &root.join("examples/c172/scenario.yaml"),
+            &overrides
+                .iter()
+                .map(|(path, value)| ((*path).to_owned(), (*value).to_owned()))
+                .collect(),
+        )
+    };
+    let cruise = |scenario| -> Result<(f64, f64), Box<dyn std::error::Error>> {
+        let mission = MissionSimulator::new(scenario).simulate()?;
+        let segment = mission
+            .segments
+            .iter()
+            .find(|segment| segment.segment_id == "cruise")
+            .ok_or("C172 mission has a cruise segment")?;
+        Ok((
+            segment.fuel_burn_kg / segment.distance_m,
+            segment.duration_s,
+        ))
+    };
+    let (calm, calm_time) = cruise(resolve(&[])?)?;
+    let (windy, windy_time) = cruise(resolve(&[("mission.segments.cruise.headwind", "10 m/s")])?)?;
+    assert!(windy > calm);
+    assert!(windy_time > calm_time);
+    let stopped = resolve(&[("mission.segments.cruise.headwind", "100 m/s")])?;
+    assert!(MissionSimulator::new(stopped).simulate().is_err());
+    let unsupported = resolve(&[("mission.segments.climb.headwind", "10 m/s")]);
+    assert!(unsupported.is_err());
     Ok(())
 }
