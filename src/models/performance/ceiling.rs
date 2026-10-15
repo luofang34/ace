@@ -1,6 +1,6 @@
 use super::solver::bounded_root;
 use super::validity::{
-    altitude_upper_bound, from_warnings as validity_from_warnings, speed_upper_bound,
+    declared_altitude_limits, from_warnings as validity_from_warnings, speed_upper_bound,
 };
 use super::{ClimbRateEvaluation, PointAnalyzer, extend_unique_diagnostics};
 use crate::domain::diagnostic::{AexResult, Diagnostic};
@@ -9,30 +9,64 @@ use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::validity::MetricValidity;
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::stall_speed_m_s;
+use crate::models::atmosphere::MAXIMUM_ALTITUDE_M;
 use crate::models::propulsion::{OperatingMode, shaft_power_floored};
 
-/// A solved ceiling, or the reason no ceiling exists inside the searchable range.
+/// Altitude step for bracketing the first ceiling root.
+const CEILING_SEARCH_STEP_M: f64 = 500.0;
+
+/// A solved ceiling, or the reason no ceiling exists inside the atmosphere model.
 #[derive(Debug)]
 pub(super) struct CeilingMetric {
     pub(super) value: Option<f64>,
     pub(super) validity: MetricValidity,
-    pub(super) reason: Option<String>,
+    unavailable: Option<Unavailable>,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Unavailable {
+    NoClimbAtSeaLevel { threshold_m_s: f64 },
+    AboveAtmosphere { threshold_m_s: f64 },
+}
+
+impl Unavailable {
+    fn message(self) -> String {
+        match self {
+            Self::NoClimbAtSeaLevel { threshold_m_s } => format!(
+                "climb rate is below the {threshold_m_s:.3} m/s ceiling threshold at sea level"
+            ),
+            Self::AboveAtmosphere { threshold_m_s } => format!(
+                "climb rate still meets the {threshold_m_s:.3} m/s ceiling threshold at {MAXIMUM_ALTITUDE_M:.0} m, the top of the standard atmosphere"
+            ),
+        }
+    }
+}
+
+/// Service ceiling after declared altitude limits.
+#[derive(Debug)]
+pub(super) struct OperatingCeiling {
+    pub(super) value: Option<f64>,
+    pub(super) limited_by: Option<String>,
 }
 
 impl CeilingMetric {
-    fn unavailable(reason: String) -> Self {
+    fn reason_is_above_search(&self) -> bool {
+        matches!(self.unavailable, Some(Unavailable::AboveAtmosphere { .. }))
+    }
+
+    fn unavailable(reason: Unavailable) -> Self {
         Self {
             value: None,
             validity: MetricValidity::unsupported(),
-            reason: Some(reason),
+            unavailable: Some(reason),
         }
     }
 
     pub(super) fn diagnostic(&self, metric: &str) -> Option<Diagnostic> {
-        self.reason.as_ref().map(|reason| {
+        self.unavailable.map(|reason| {
             Diagnostic::warning_with_context(
                 WarningCode::CeilingUnavailable,
-                format!("{metric} is unavailable: {reason}"),
+                format!("{metric} is unavailable: {}", reason.message()),
                 metric,
                 serde_json::json!({"metric": metric}),
             )
@@ -88,9 +122,9 @@ impl PointAnalyzer {
             }
             extend_unique_diagnostics(&mut warnings, evaluation.warnings);
         }
-        let validity = if best_index == 0 {
-            MetricValidity::boundary_limited("performance.climb_speed_search.minimum")
-        } else if best_index == 99 {
+        // The lower search speed is the 1.05 V_stall margin, a real constraint on the
+        // climb optimum rather than an artificial cap, so it keeps the point's validity.
+        let validity = if best_index == 99 {
             upper.validity()
         } else {
             best_validity
@@ -103,47 +137,70 @@ impl PointAnalyzer {
         })
     }
 
-    /// Solves for the altitude where the best climb rate meets `threshold_m_s`.
-    /// A declared airframe or engine altitude limit clamps the result and is named
-    /// as its boundary; when no root lies between sea level and the atmosphere
-    /// model's top, the ceiling is unavailable rather than a search-bound number.
+    /// Solves for the lowest altitude where the best climb rate falls to
+    /// `threshold_m_s`, stepping up through the whole standard atmosphere and
+    /// bisecting the first sign change. Declared altitude limits never clamp this
+    /// physical result; [`Self::operating_ceiling`] applies them separately, and a
+    /// root beyond an engine's declared envelope carries extrapolated validity.
     pub(super) fn ceiling_solution(
         &self,
         mass_kg: f64,
         threshold_m_s: f64,
     ) -> AexResult<CeilingMetric> {
-        let upper = altitude_upper_bound(&self.scenario);
         let function = |altitude| {
             self.maximum_rate_of_climb(altitude, mass_kg)
                 .map(|(_, rate)| rate - threshold_m_s)
         };
-        let sea_level = function(0.0)?;
-        if sea_level <= 0.0 {
-            return Ok(CeilingMetric::unavailable(format!(
-                "climb rate is below the {threshold_m_s:.3} m/s ceiling threshold at sea level"
-            )));
+        if function(0.0)? <= 0.0 {
+            return Ok(CeilingMetric::unavailable(Unavailable::NoClimbAtSeaLevel {
+                threshold_m_s,
+            }));
         }
-        let top = function(upper.value)?;
-        if top >= 0.0 {
-            if upper.artificial {
-                return Ok(CeilingMetric::unavailable(format!(
-                    "climb rate still meets the {threshold_m_s:.3} m/s ceiling threshold at the {:.0} m {} search limit",
-                    upper.value, upper.source
-                )));
+        let mut lower = 0.0;
+        while lower < MAXIMUM_ALTITUDE_M {
+            let upper = (lower + CEILING_SEARCH_STEP_M).min(MAXIMUM_ALTITUDE_M);
+            if function(upper)? < 0.0 {
+                let value = bounded_root(lower, upper, 1.0, 80, function)?;
+                let evaluation = self.maximum_rate_of_climb_with_diagnostics(value, mass_kg)?;
+                return Ok(CeilingMetric {
+                    value: Some(value),
+                    validity: evaluation.validity,
+                    unavailable: None,
+                });
             }
-            return Ok(CeilingMetric {
-                value: Some(upper.value),
-                validity: MetricValidity::boundary_limited(&upper.source),
-                reason: None,
-            });
+            lower = upper;
         }
-        let value = bounded_root(0.0, upper.value, 1.0, 80, function)?;
-        let evaluation = self.maximum_rate_of_climb_with_diagnostics(value, mass_kg)?;
-        Ok(CeilingMetric {
-            value: Some(value),
-            validity: evaluation.validity,
-            reason: None,
-        })
+        Ok(CeilingMetric::unavailable(Unavailable::AboveAtmosphere {
+            threshold_m_s,
+        }))
+    }
+
+    /// The service ceiling bounded by declared aircraft and engine altitude limits,
+    /// naming the limit when it, rather than climb performance, binds.
+    pub(super) fn operating_ceiling(&self, service: &CeilingMetric) -> OperatingCeiling {
+        let limit = declared_altitude_limits(&self.scenario)
+            .into_iter()
+            .min_by(|left, right| left.0.total_cmp(&right.0));
+        match (service.value, limit) {
+            (Some(physical), Some((limit, source))) if limit < physical => OperatingCeiling {
+                value: Some(limit),
+                limited_by: Some(source),
+            },
+            // Climb performance beyond the atmosphere top is still capped by a declared
+            // limit inside it; a limit above the top cannot be confirmed either way.
+            (None, Some((limit, source)))
+                if service.reason_is_above_search() && limit <= MAXIMUM_ALTITUDE_M =>
+            {
+                OperatingCeiling {
+                    value: Some(limit),
+                    limited_by: Some(source),
+                }
+            }
+            (value, _) => OperatingCeiling {
+                value,
+                limited_by: None,
+            },
+        }
     }
 
     /// A ceiling whose top is held up by a declared power floor is not a property of

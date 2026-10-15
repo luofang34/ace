@@ -66,7 +66,7 @@ failure writes exactly one object to stdout and returns a nonzero status:
 {
   "error": {
     "code": "ATMOSPHERE_OUTSIDE_VALIDITY",
-    "message": "altitude 23774.4 m is outside -2000 to 20000 m",
+    "message": "altitude 90000 m is outside -2000 to 86000 m",
     "path": "analysis",
     "context": {}
   }

@@ -370,8 +370,9 @@ error; it never causes an implicit substitution with native estimates.
 
 ## Model scope
 
-The MVP implements ISA through 20 km, scalar and Mach-tabulated parabolic drag
-polars with explicit transonic behavior, density-lapsed piston power, simple
+The MVP implements the 1976 standard atmosphere through 86 km, scalar and
+Mach-tabulated parabolic drag polars with explicit transonic behavior,
+density-lapsed piston power, simple
 and tabulated turbofan thrust/fuel decks, bounded speed and ceiling solves,
 mission integration, constraint diagrams, payload-range, requirement margins,
 SVG charts, and content-addressed run manifests. Concept-design feasibility

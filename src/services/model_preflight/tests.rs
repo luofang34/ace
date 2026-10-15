@@ -155,7 +155,7 @@ fn initial_altitude_outside_model_domain_is_rejected_before_simulation()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("c172")?;
     scenario.mission.initial_state = Some(MissionInitialState {
-        altitude_m: Some(21_000.0),
+        altitude_m: Some(90_000.0),
         indicated_airspeed_m_s: None,
         true_airspeed_m_s: None,
         mach: None,
@@ -213,7 +213,14 @@ fn inherited_speed_is_recomputed_at_each_segment_altitude() -> Result<(), Box<dy
 
 #[test]
 fn sr71_violations_are_aggregated_and_sorted() -> Result<(), Box<dyn std::error::Error>> {
-    let error = preflight_model_domains(&example_scenario("sr71")?)
+    let mut scenario = example_scenario("sr71")?;
+    // Above the 86 km atmosphere top, alongside the SR-71's structural-screen breach.
+    for segment in &mut scenario.mission.segments {
+        if segment.id == "supersonic_cruise" {
+            segment.altitude_m = Some(90_000.0);
+        }
+    }
+    let error = preflight_model_domains(&scenario)
         .expect_err("SR-71 declarations must exceed registered domains");
     let AexError::ModelDomainUnsupported { violations, .. } = error else {
         panic!("expected model-domain error");
@@ -227,7 +234,7 @@ fn sr71_violations_are_aggregated_and_sorted() -> Result<(), Box<dyn std::error:
     assert!(violations.iter().any(|item| {
         item.path == "mission.segments.supersonic_cruise.altitude"
             && item.model_id == "atmosphere.isa1976"
-            && item.maximum == Some(20_000.0)
+            && item.maximum == Some(86_000.0)
             && item.bound_unit == "m"
     }));
     Ok(())
@@ -265,7 +272,7 @@ fn point_condition_is_preflighted_before_model_evaluation() -> Result<(), Box<dy
     let error = preflight_operating_point(
         &scenario,
         "clean",
-        21_000.0,
+        90_000.0,
         Some(50.0),
         None,
         scenario.aircraft.mass.maximum_takeoff_mass_kg,
@@ -278,7 +285,7 @@ fn point_condition_is_preflighted_before_model_evaluation() -> Result<(), Box<dy
     assert!(violations.iter().any(|item| {
         item.path == "condition.altitude"
             && item.model_id == "atmosphere.isa1976"
-            && item.maximum == Some(20_000.0)
+            && item.maximum == Some(86_000.0)
     }));
     Ok(())
 }

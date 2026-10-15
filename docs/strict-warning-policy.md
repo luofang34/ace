@@ -24,6 +24,7 @@ The wire codes and decisions below are generated from the runtime registry.
 | `NATIVE_STABILITY_NOT_MODELED` | no | The native backend does not estimate stability derivatives. |
 | `PARAMETER_OUTSIDE_TYPICAL` | yes | A resolved profile parameter is outside its registered typical range. |
 | `SIMPLIFIED_PAYLOAD_RANGE` | no | Payload-range values use a representative cruise approximation. |
+| `SPEED_SCHEDULE_STALL_MARGIN` | no | A best-range or best-endurance speed below 1.2 V_stall is flown at the stall margin instead. |
 | `STUDY_CHART_PROJECTED` | no | A higher-dimensional study chart displays a declared two-axis projection. |
 | `TRANSONIC_DRAG_APPROXIMATION` | no | Wave drag uses the documented conceptual power-law correction. |
 | `ZERO_BREGUET_FUEL_BURN` | no | The Breguet estimate is zero because the simulated mission burns no fuel. |

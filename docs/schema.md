@@ -139,8 +139,9 @@ best_range` or `best_endurance` instead of a speed. The speed is chosen from the
 clean polar at segment-entry mass and altitude: shaft engines fly minimum-drag
 speed for range and minimum-power speed for endurance; thrust engines fly
 `3^(1/4)` times minimum-drag speed for range and minimum-drag speed for
-endurance. It is never below 1.2 times clean stall speed and stays constant for
-the segment.
+endurance. It stays constant for the segment; when the optimum is below 1.2
+times clean stall speed, the segment flies at that margin and reports
+`SPEED_SCHEDULE_STALL_MARGIN` with both speeds.
 
 Cruise segments may declare `headwind` (negative for a tailwind). The segment
 `distance` is ground distance flown at true airspeed minus headwind, so a

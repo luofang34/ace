@@ -1,32 +1,31 @@
-use crate::domain::diagnostic::AexResult;
+use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::schema::{
     EnergySchedulePoint, EngineProfile, MissionSegment, ResolvedScenario, SegmentKind,
     SpeedSchedule,
 };
+use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::{
     minimum_drag_speed_m_s, minimum_power_speed_m_s, stall_speed_m_s,
 };
 use crate::models::atmosphere::{Isa1976, scenario_atmosphere};
 
-/// Margin above clean stall that a polar-optimal schedule speed never undercuts.
+/// Margin above clean stall that a scheduled speed never undercuts.
 const SCHEDULE_STALL_MARGIN: f64 = 1.2;
 
 /// Segment speed at entry mass: a declared `speed_schedule` picks the polar optimum,
-/// otherwise the declared or carried-over speed applies.
+/// otherwise the declared or carried-over speed applies. A diagnostic reports when
+/// the stall margin, not the polar optimum, sets a scheduled speed.
 pub(super) fn segment_speed(
     segment: &MissionSegment,
     scenario: &ResolvedScenario,
     altitude_m: f64,
     mass_kg: f64,
     fallback_speed_m_s: Option<f64>,
-) -> AexResult<f64> {
+) -> AexResult<(f64, Option<Diagnostic>)> {
     let Some(schedule) = segment.speed_schedule else {
-        return representative_speed_with_fallback(
-            segment,
-            scenario,
-            altitude_m,
-            fallback_speed_m_s,
-        );
+        let speed =
+            representative_speed_with_fallback(segment, scenario, altitude_m, fallback_speed_m_s)?;
+        return Ok((speed, None));
     };
     let aircraft = &scenario.aircraft;
     let density = scenario_atmosphere(scenario)
@@ -44,7 +43,22 @@ pub(super) fn segment_speed(
         (EngineProfile::Turbofan(_), SpeedSchedule::BestRange) => 3.0_f64.powf(0.25) * minimum_drag,
     };
     let floor = SCHEDULE_STALL_MARGIN * stall_speed_m_s(aircraft, "clean", mass_kg, density)?;
-    Ok(optimum.max(floor))
+    if optimum >= floor {
+        return Ok((optimum, None));
+    }
+    Ok((
+        floor,
+        Some(Diagnostic::warning_with_context(
+            WarningCode::SpeedScheduleStallMargin,
+            format!(
+                "{} speed {optimum:.1} m/s is below {SCHEDULE_STALL_MARGIN} V_stall; flying {floor:.1} m/s",
+                segment.id
+            ),
+            // Mission records scope segment diagnostics under the segment path.
+            "speed_schedule",
+            serde_json::json!({"optimum_speed_m_s": optimum, "flown_speed_m_s": floor}),
+        )),
+    ))
 }
 
 pub(crate) fn representative_speed(

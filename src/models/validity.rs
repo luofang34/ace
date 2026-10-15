@@ -250,8 +250,8 @@ fn atmosphere_domain() -> ModelValidityDomain {
         applicability_path: None,
         bounds: vec![inclusive_bound(
             ValidityVariable::Altitude,
-            Some(-2_000.0),
-            Some(20_000.0),
+            Some(crate::models::atmosphere::MINIMUM_ALTITUDE_M),
+            Some(crate::models::atmosphere::MAXIMUM_ALTITUDE_M),
             ValidityBasis::PublishedSpecification,
         )],
     }

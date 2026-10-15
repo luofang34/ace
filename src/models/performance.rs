@@ -29,6 +29,7 @@ use validity::{
 const MAXIMUM_SPEED_METRIC: &str = "performance.maximum_level_speed";
 const SERVICE_CEILING_METRIC: &str = "performance.service_ceiling";
 const ABSOLUTE_CEILING_METRIC: &str = "performance.absolute_ceiling";
+const OPERATING_CEILING_METRIC: &str = "performance.operating_ceiling";
 const ACHIEVED_CRUISE_MACH_METRIC: &str = "performance.achieved_cruise_mach";
 const ACHIEVED_CRUISE_TAS_METRIC: &str = "performance.achieved_cruise_true_airspeed";
 const MINIMUM_CRUISE_EXCESS_POWER_METRIC: &str = "performance.minimum_cruise_excess_power";
@@ -193,13 +194,14 @@ impl PointAnalyzer {
         let threshold = service_ceiling_threshold(&self.scenario);
         let service_ceiling = self.ceiling_solution(mass, threshold)?;
         let absolute_ceiling = self.ceiling_solution(mass, 0.0)?;
+        let operating_ceiling = self.operating_ceiling(&service_ceiling);
         let cruise = self.cruise_performance(mission)?;
         let reference = reference_metric_validity(&self.scenario.aircraft)?;
         let takeoff_field = estimate_takeoff_distance(&self.scenario)?;
         let landing_field = estimate_landing_distance(&self.scenario)?;
         let (takeoff_distance_m, landing_distance_m) =
             (takeoff_field.distance_m, landing_field.distance_m);
-        let metric_validity = summary_metric_validity(
+        let mut metric_validity = summary_metric_validity(
             &maximum_speed,
             &service_ceiling,
             &absolute_ceiling,
@@ -207,6 +209,14 @@ impl PointAnalyzer {
             &reference,
             takeoff_field.validity,
             landing_field.validity,
+        );
+        metric_validity.insert(
+            OPERATING_CEILING_METRIC.to_owned(),
+            if operating_ceiling.limited_by.is_some() {
+                MetricValidity::default()
+            } else {
+                service_ceiling.validity.clone()
+            },
         );
         let overall_validity = aggregate_validity(metric_validity.values());
         let mut ceiling_warnings = Vec::new();
@@ -244,6 +254,8 @@ impl PointAnalyzer {
             landing_field_length_m: Some(landing_distance_m),
             service_ceiling_m: service_ceiling.value,
             absolute_ceiling_m: absolute_ceiling.value,
+            operating_ceiling_m: operating_ceiling.value,
+            operating_ceiling_limited_by: operating_ceiling.limited_by,
             cruise_mach: cruise.declared_mach,
             declared_cruise_mach: cruise.declared_mach,
             declared_cruise_true_airspeed_m_s: cruise.declared_true_airspeed_m_s,

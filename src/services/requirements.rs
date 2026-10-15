@@ -16,9 +16,6 @@ use crate::models::mass_properties;
 struct MetricInput {
     actual: f64,
     validity: MetricValidity,
-    /// A boundary-limited value that can only understate the true metric, such as a
-    /// ceiling clamped at a declared altitude limit.
-    lower_bound: bool,
 }
 
 impl MetricInput {
@@ -26,7 +23,6 @@ impl MetricInput {
         Self {
             actual,
             validity: MetricValidity::default(),
-            lower_bound: false,
         }
     }
 }
@@ -125,7 +121,6 @@ fn metric_value(
             performance.service_ceiling_m.map(|actual| MetricInput {
                 actual,
                 validity: performance.validity_for("performance.service_ceiling"),
-                lower_bound: true,
             })
         }
         RequirementMetric::StallSpeedLanding => Some(performance_input(
@@ -197,7 +192,6 @@ fn optional_stability_input(value: Option<f64>) -> Option<MetricInput> {
         || MetricInput {
             actual: 0.0,
             validity: MetricValidity::unsupported(),
-            lower_bound: false,
         },
         MetricInput::valid,
     ))
@@ -207,7 +201,6 @@ fn field_distance_input(estimate: FieldPerformanceEstimate) -> MetricInput {
     MetricInput {
         actual: estimate.distance_m,
         validity: estimate.validity,
-        lower_bound: false,
     }
 }
 
@@ -236,7 +229,6 @@ fn climb_gradient_input(
     Ok(MetricInput {
         actual: estimate.gradient,
         validity: estimate.validity,
-        lower_bound: false,
     })
 }
 
@@ -260,7 +252,6 @@ fn performance_input(performance: &PerformanceSummary, metric: &str, actual: f64
     MetricInput {
         actual,
         validity: performance.validity_for(metric),
-        lower_bound: false,
     }
 }
 
@@ -280,13 +271,7 @@ fn evaluate_one(requirement: &Requirement, input: MetricInput) -> RequirementEva
         _ => actual - requirement.required,
     };
     let numerical_pass = margin >= -1.0e-9;
-    let bounded_pass = input.lower_bound
-        && input.validity.status == ValidityStatus::BoundaryLimited
-        && requirement.operator == "ge"
-        && numerical_pass;
-    let (status, passed) = if bounded_pass {
-        (RequirementStatus::Pass, Some(true))
-    } else if matches!(
+    let (status, passed) = if matches!(
         input.validity.status,
         ValidityStatus::BoundaryLimited | ValidityStatus::Unsupported
     ) {

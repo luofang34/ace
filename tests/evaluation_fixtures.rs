@@ -108,7 +108,7 @@ fn typed_fixture_documents_validate_independently() -> Result<(), Box<dyn Error>
 fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     for (name, expected_count, required_path) in [
-        ("sr71", 4, "mission.segments.supersonic_cruise.altitude"),
+        ("sr71", 1, "aircraft.geometry.wing.aspect_ratio"),
         ("x15", 6, "mission.segments.boost_climb.schedule.2.mach"),
     ] {
         let scenario = fixture_path(name, "scenario.yaml");

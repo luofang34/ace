@@ -135,6 +135,12 @@ pub(crate) struct PerformanceSummary {
     pub(crate) service_ceiling_m: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) absolute_ceiling_m: Option<f64>,
+    /// Service ceiling bounded by declared aircraft and engine altitude limits.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) operating_ceiling_m: Option<f64>,
+    /// Declared limit that sets the operating ceiling, when climb performance does not.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) operating_ceiling_limited_by: Option<String>,
     pub(crate) cruise_mach: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) declared_cruise_mach: Option<f64>,

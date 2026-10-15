@@ -138,6 +138,11 @@ warning_registry! {
         false,
         "Payload-range values use a representative cruise approximation."
     ),
+    SpeedScheduleStallMargin => (
+        "SPEED_SCHEDULE_STALL_MARGIN",
+        false,
+        "A best-range or best-endurance speed below 1.2 V_stall is flown at the stall margin instead."
+    ),
     StudyChartProjected => (
         "STUDY_CHART_PROJECTED",
         false,

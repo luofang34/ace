@@ -9,8 +9,9 @@ remaining surrogate:
   32,500 lbf static rating; intermediate off-design cells remain disclosed
   conceptual data. The subsonic required-thrust check is 3–5 t/hr and the
   Mach 3.2 / 78,000 ft point is inside table support.
-- The authentic mission cruises at 78,000 ft, above the atmosphere model's
-  20 km domain, and must fail statically at validate/resolve rather than at
+- The authentic mission cruises at 78,000 ft, inside the 1976 standard
+  atmosphere. The wing aspect ratio lies outside the conventional structural
+  screen, so validate/resolve and analyses fail statically rather than at
   runtime.
 - The clean polar uses separate subsonic, transonic, and supersonic
   breakpoints. Its maximum-L/D guardrails are 8–10 subsonically and 5–6.5 at
