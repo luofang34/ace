@@ -161,7 +161,12 @@ impl PointAnalyzer {
     }
 
     pub(crate) fn summary(&self, mission: Option<&MissionResult>) -> AexResult<PerformanceSummary> {
-        let mass = self.scenario.aircraft.mass.maximum_takeoff_mass_kg;
+        let mass = self
+            .scenario
+            .mission
+            .field
+            .takeoff_mass_kg
+            .unwrap_or(self.scenario.aircraft.mass.maximum_takeoff_mass_kg);
         let sea_level = self.atmosphere.evaluate(0.0)?;
         let stall_clean = stall_speed_m_s(
             &self.scenario.aircraft,
@@ -189,6 +194,8 @@ impl PointAnalyzer {
         let reference = reference_metric_validity(&self.scenario.aircraft)?;
         let takeoff_field = estimate_takeoff_distance(&self.scenario)?;
         let landing_field = estimate_landing_distance(&self.scenario)?;
+        let (takeoff_distance_m, landing_distance_m) =
+            (takeoff_field.distance_m, landing_field.distance_m);
         let metric_validity = summary_metric_validity(
             &maximum_speed,
             &service_ceiling,
@@ -230,6 +237,8 @@ impl PointAnalyzer {
                 "clean",
             )?,
             maximum_level_speed_m_s: maximum_speed.value,
+            takeoff_field_length_m: Some(takeoff_distance_m),
+            landing_field_length_m: Some(landing_distance_m),
             service_ceiling_m: service_ceiling.value,
             absolute_ceiling_m: absolute_ceiling.value,
             cruise_mach: cruise.declared_mach,

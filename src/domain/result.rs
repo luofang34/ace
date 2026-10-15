@@ -125,6 +125,12 @@ pub(crate) struct PerformanceSummary {
     pub(crate) minimum_power_speed_m_s: f64,
     pub(crate) maximum_lift_to_drag_ratio: f64,
     pub(crate) maximum_level_speed_m_s: f64,
+    /// Ground roll at `mission.field` conditions and takeoff mass.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) takeoff_field_length_m: Option<f64>,
+    /// Landing distance over the field obstacle at `mission.field` landing mass.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) landing_field_length_m: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) service_ceiling_m: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

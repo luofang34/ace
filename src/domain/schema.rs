@@ -24,8 +24,9 @@ pub(crate) use mass::{
     MassPropertyValue, RawComponentMass, RawMass,
 };
 pub(crate) use mission::{
-    EnergySchedulePoint, Mission, MissionDocument, MissionInitialState, MissionSegment,
-    RawEnergySchedulePoint, RawMissionInitialState, RawMissionSegment, SegmentKind,
+    EnergySchedulePoint, FieldConditions, Mission, MissionDocument, MissionInitialState,
+    MissionSegment, RawEnergySchedulePoint, RawFieldConditions, RawMissionInitialState,
+    RawMissionSegment, SegmentKind,
 };
 pub(crate) use requirements::{
     RawRequirement, RawRequirementProvenance, Requirement, RequirementProvenance,

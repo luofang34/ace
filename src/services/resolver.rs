@@ -9,8 +9,9 @@ use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{
     AeroConfiguration, Aerodynamics, Aircraft, AircraftDocument, AircraftLimits, ConceptMetadata,
-    EngineProfile, Mission, MissionDocument, PropellerProfile, Propulsion, RawAeroConfiguration,
-    RequirementsDocument, ResolvedScenario, ScenarioDocument,
+    EngineProfile, FieldConditions, Mission, MissionDocument, PropellerProfile, Propulsion,
+    RawAeroConfiguration, RawFieldConditions, RequirementsDocument, ResolvedScenario,
+    ScenarioDocument,
 };
 use crate::domain::topology::AircraftTopology;
 use crate::services::assumptions::collect_all_assumptions;
@@ -275,10 +276,46 @@ pub(crate) fn resolve_mission(document: MissionDocument) -> AexResult<Mission> {
             Dimension::TemperatureDifference,
         )?
         .unwrap_or(0.0),
+        field: resolve_field(raw.field.unwrap_or_default())?,
         segments,
     };
     validate_energy_schedule_transitions(&mission)?;
     Ok(mission)
+}
+
+fn resolve_field(raw: RawFieldConditions) -> AexResult<FieldConditions> {
+    let defaults = FieldConditions::default();
+    let mass = |raw: Option<&str>, path| {
+        raw.map(|value| positive_quantity(value, Dimension::Mass, path))
+            .transpose()
+    };
+    let braking_coefficient = raw
+        .braking_coefficient
+        .unwrap_or(defaults.braking_coefficient);
+    if !(braking_coefficient > 0.0 && braking_coefficient <= 1.0) {
+        return Err(AexError::validation(
+            "INVALID_BRAKING_COEFFICIENT",
+            "mission.field.braking_coefficient",
+            "braking coefficient must be in (0, 1] g",
+        ));
+    }
+    let obstacle_height_m = optional_quantity(raw.obstacle_height.as_deref(), Dimension::Length)?
+        .unwrap_or(defaults.obstacle_height_m);
+    if obstacle_height_m < 0.0 {
+        return Err(AexError::validation(
+            "INVALID_OBSTACLE_HEIGHT",
+            "mission.field.obstacle_height",
+            "obstacle height must be nonnegative",
+        ));
+    }
+    Ok(FieldConditions {
+        elevation_m: optional_quantity(raw.elevation.as_deref(), Dimension::Length)?
+            .unwrap_or(defaults.elevation_m),
+        takeoff_mass_kg: mass(raw.takeoff_mass.as_deref(), "mission.field.takeoff_mass")?,
+        landing_mass_kg: mass(raw.landing_mass.as_deref(), "mission.field.landing_mass")?,
+        obstacle_height_m,
+        braking_coefficient,
+    })
 }
 
 fn validate_payload(aircraft: &Aircraft, mission: &Mission) -> AexResult<()> {

@@ -178,7 +178,7 @@ substantiation remain outside the model.
 
 Native analysis provenance publishes typed validity domains for the atmosphere,
 polar and optional wave-drag increment, resolved propulsion profile,
-sea-level field-performance screen, and selected structural screen. Bounds use
+field-performance screen (0-4.5 km field elevation), and selected structural screen. Bounds use
 canonical SI units and identify whether they come from a published
 specification, the model form, resolved profile data, tabulated data, or a
 screening assumption. Human-readable `validity_range` text remains part of

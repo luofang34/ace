@@ -5,8 +5,8 @@ use serde::Serialize;
 use serde_json::Value;
 
 use crate::cli::{
-    AnalyzeCommand, Command, CompareArgs, ConstraintArgs, McpCommand, PointArgs, ProfileCommand,
-    ReportArgs, ScenarioArgs, SweepArgs,
+    AnalyzeCommand, Command, CompareArgs, ConstraintArgs, McpCommand, PerformanceArgs, PointArgs,
+    ProfileCommand, ReportArgs, ScenarioArgs, SweepArgs,
 };
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
@@ -259,9 +259,17 @@ fn execute_payload_range(service: &ApplicationService, arguments: ScenarioArgs) 
     )
 }
 
-fn execute_performance(service: &ApplicationService, arguments: ScenarioArgs) -> AexResult<()> {
-    let (scenario, result) =
-        service.performance_blocking(&arguments.scenario, &arguments.common.override_map())?;
+fn execute_performance(service: &ApplicationService, arguments: PerformanceArgs) -> AexResult<()> {
+    let mut overrides = arguments.common.override_map();
+    for (path, value) in [
+        ("mission.field.takeoff_mass", &arguments.mass),
+        ("mission.field.landing_mass", &arguments.landing_mass),
+    ] {
+        if let Some(value) = value {
+            overrides.insert(path.to_owned(), value.clone());
+        }
+    }
+    let (scenario, result) = service.performance_blocking(&arguments.scenario, &overrides)?;
     enforce_strict(arguments.common.strict, &result.warnings)?;
     let run = service.persist_blocking(
         &scenario,

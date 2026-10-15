@@ -120,8 +120,10 @@ fn analysis(matches: &ArgMatches) -> Result<AnalyzeCommand, Error> {
             scenario,
             common,
         })),
-        "performance" => Ok(AnalyzeCommand::Performance(ScenarioArgs {
+        "performance" => Ok(AnalyzeCommand::Performance(PerformanceArgs {
             scenario,
+            mass: optional(args, "mass"),
+            landing_mass: optional(args, "landing_mass"),
             common,
         })),
         _ => Err(invalid(format!("unsupported analysis {name}"))),

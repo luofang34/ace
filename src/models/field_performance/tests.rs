@@ -85,3 +85,50 @@ fn field_screen_retains_zero_mach_table_extrapolation() -> Result<(), Box<dyn st
     );
     Ok(())
 }
+
+#[test]
+fn hot_high_field_and_landing_mass_drive_field_lengths_with_validity()
+-> Result<(), Box<dyn std::error::Error>> {
+    use super::estimate_landing_distance;
+    use crate::domain::validity::ValidityStatus;
+
+    let standard = example_scenario("c172")?;
+    let sea_level = estimate_takeoff_distance(&standard)?;
+    let mut hot_high = standard.clone();
+    hot_high.mission.field.elevation_m = 3_000.0;
+    hot_high.mission.isa_offset_k = 20.0;
+    let elevated = estimate_takeoff_distance(&hot_high)?;
+    assert!(elevated.distance_m > sea_level.distance_m);
+    assert_eq!(elevated.validity.status, ValidityStatus::Valid);
+    // Density alone lengthens the roll by at least 1/sigma; lapsed power adds more.
+    let sigma = crate::models::atmosphere::Isa1976::new(20.0)
+        .evaluate(3_000.0)?
+        .density_kg_m3
+        / 1.225;
+    assert!(elevated.distance_m > sea_level.distance_m / sigma);
+
+    let mut light = standard.clone();
+    light.mission.field.landing_mass_kg = Some(800.0);
+    let mut heavy = standard.clone();
+    heavy.mission.field.landing_mass_kg = Some(1_000.0);
+    let (light, heavy) = (
+        estimate_landing_distance(&light)?,
+        estimate_landing_distance(&heavy)?,
+    );
+    assert!(light.distance_m < heavy.distance_m);
+    assert_eq!(light.validity.status, ValidityStatus::Valid);
+
+    let mut outside = standard;
+    outside.mission.field.elevation_m = 5_000.0;
+    assert_eq!(
+        estimate_takeoff_distance(&outside)?.validity.status,
+        ValidityStatus::Extrapolated
+    );
+    outside.mission.field.elevation_m = 0.0;
+    outside.mission.field.landing_mass_kg = Some(2_000.0);
+    assert_eq!(
+        estimate_landing_distance(&outside)?.validity.status,
+        ValidityStatus::Extrapolated
+    );
+    Ok(())
+}
