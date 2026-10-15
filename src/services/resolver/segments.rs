@@ -52,6 +52,7 @@ pub(super) fn resolve_segment(raw: RawMissionSegment, index: usize) -> AexResult
             &format!("{path}.payload_mass"),
         )?,
         headwind_m_s: optional_quantity(raw.headwind.as_deref(), Dimension::Speed)?,
+        speed_schedule: raw.speed_schedule,
         energy_schedule: resolve_energy_schedule(raw.schedule, &path)?,
     })
 }
@@ -128,7 +129,7 @@ fn unsupported_field(segment_type: &str, field: &str, path: &str) -> AexError {
     )
 }
 
-const RAW_SEGMENT_FIELDS: [&str; 14] = [
+const RAW_SEGMENT_FIELDS: [&str; 15] = [
     "duration",
     "distance",
     "target_altitude",
@@ -142,6 +143,7 @@ const RAW_SEGMENT_FIELDS: [&str; 14] = [
     "fuel_mass",
     "payload_mass",
     "headwind",
+    "speed_schedule",
     "schedule",
 ];
 
@@ -160,6 +162,7 @@ fn field_is_present(raw: &RawMissionSegment, field: &str) -> bool {
         "fuel_mass" => raw.fuel_mass.is_some(),
         "payload_mass" => raw.payload_mass.is_some(),
         "headwind" => raw.headwind.is_some(),
+        "speed_schedule" => raw.speed_schedule.is_some(),
         "schedule" => raw.schedule.is_some(),
         _ => false,
     }

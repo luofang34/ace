@@ -134,6 +134,14 @@ Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
 payload-delivery and empty-return mission.
 
+Cruise, loiter and reserve segments may declare `speed_schedule:
+best_range` or `best_endurance` instead of a speed. The speed is chosen from the
+clean polar at segment-entry mass and altitude: shaft engines fly minimum-drag
+speed for range and minimum-power speed for endurance; thrust engines fly
+`3^(1/4)` times minimum-drag speed for range and minimum-drag speed for
+endurance. It is never below 1.2 times clean stall speed and stays constant for
+the segment.
+
 Cruise segments may declare `headwind` (negative for a tailwind). The segment
 `distance` is ground distance flown at true airspeed minus headwind, so a
 headwind lengthens the segment time and fuel; a headwind at or above the true

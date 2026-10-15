@@ -1,8 +1,51 @@
 use crate::domain::diagnostic::AexResult;
 use crate::domain::schema::{
     EnergySchedulePoint, EngineProfile, MissionSegment, ResolvedScenario, SegmentKind,
+    SpeedSchedule,
+};
+use crate::models::aerodynamics::{
+    minimum_drag_speed_m_s, minimum_power_speed_m_s, stall_speed_m_s,
 };
 use crate::models::atmosphere::{Isa1976, scenario_atmosphere};
+
+/// Margin above clean stall that a polar-optimal schedule speed never undercuts.
+const SCHEDULE_STALL_MARGIN: f64 = 1.2;
+
+/// Segment speed at entry mass: a declared `speed_schedule` picks the polar optimum,
+/// otherwise the declared or carried-over speed applies.
+pub(super) fn segment_speed(
+    segment: &MissionSegment,
+    scenario: &ResolvedScenario,
+    altitude_m: f64,
+    mass_kg: f64,
+    fallback_speed_m_s: Option<f64>,
+) -> AexResult<f64> {
+    let Some(schedule) = segment.speed_schedule else {
+        return representative_speed_with_fallback(
+            segment,
+            scenario,
+            altitude_m,
+            fallback_speed_m_s,
+        );
+    };
+    let aircraft = &scenario.aircraft;
+    let density = scenario_atmosphere(scenario)
+        .evaluate(altitude_m)?
+        .density_kg_m3;
+    let minimum_drag = minimum_drag_speed_m_s(aircraft, "clean", mass_kg, density)?;
+    // Shaft engines burn per unit power, jets per unit thrust: range and endurance
+    // optima shift accordingly (Breguet).
+    let optimum = match (&scenario.engine, schedule) {
+        (EngineProfile::Piston(_), SpeedSchedule::BestRange)
+        | (EngineProfile::Turbofan(_), SpeedSchedule::BestEndurance) => minimum_drag,
+        (EngineProfile::Piston(_), SpeedSchedule::BestEndurance) => {
+            minimum_power_speed_m_s(aircraft, "clean", mass_kg, density)?
+        }
+        (EngineProfile::Turbofan(_), SpeedSchedule::BestRange) => 3.0_f64.powf(0.25) * minimum_drag,
+    };
+    let floor = SCHEDULE_STALL_MARGIN * stall_speed_m_s(aircraft, "clean", mass_kg, density)?;
+    Ok(optimum.max(floor))
+}
 
 pub(crate) fn representative_speed(
     segment: &MissionSegment,

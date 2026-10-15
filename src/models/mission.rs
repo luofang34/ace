@@ -17,10 +17,10 @@ mod record;
 #[cfg(test)]
 use initial_state::initial_fuel_load;
 use initial_state::{InitialMissionState, MissionState, initial_mission_state};
-use operating_condition::representative_speed_with_fallback;
 pub(crate) use operating_condition::{
     energy_schedule_speed, representative_speed, segment_end_altitude, segment_operating_altitude,
 };
+use operating_condition::{representative_speed_with_fallback, segment_speed};
 use record::{extend_unique_diagnostics, mission_model, scoped_segment_warnings, segment_result};
 
 #[derive(Debug, Clone)]
@@ -334,8 +334,13 @@ impl MissionSimulator {
             )
         })?;
         let altitude = segment_operating_altitude(segment, state.altitude_m);
-        let speed =
-            representative_speed_with_fallback(segment, &self.scenario, altitude, state.speed_m_s)?;
+        let speed = segment_speed(
+            segment,
+            &self.scenario,
+            altitude,
+            state.mass_kg,
+            state.speed_m_s,
+        )?;
         let ground_speed = speed - segment.headwind_m_s.unwrap_or(0.0);
         if ground_speed <= 0.0 {
             return Err(AexError::analysis(
@@ -381,8 +386,13 @@ impl MissionSimulator {
                 "loiter requires duration",
             )
         })?;
-        let speed =
-            representative_speed_with_fallback(segment, &self.scenario, altitude, state.speed_m_s)?;
+        let speed = segment_speed(
+            segment,
+            &self.scenario,
+            altitude,
+            state.mass_kg,
+            state.speed_m_s,
+        )?;
         let fuel = fuel::integrated(
             self,
             altitude,
