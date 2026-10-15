@@ -125,8 +125,11 @@ compatibility independently of CASM; load factor
 does not change its available-seat denominator. Price-year/currency conversion
 and uncertainty propagation are not implemented.
 
-For non-passenger accounting, set `operations.seats` to zero and omit
-`revenue_per_passenger`. `vehicle.trip_cost` version `1` selects
+For non-passenger (for example UAS) accounting, omit `operations.seats`,
+`load_factor` and `revenue_per_passenger` (or set seats to zero);
+`load_factor` is required only when seats are declared. An optional
+`operations.payload` mass adds `cost_per_payload_kg_block_hour_usd`, the
+block-hour cost per kilogram of payload. `vehicle.trip_cost` version `1` selects
 `resources: {"operations": true}` and publishes `trip_cost` (USD),
 `cost_per_hour` (USD/h) and `network_compatible` (1). Bind a positive
 `operations.block_duration` to normal-trip elapsed time; rate-based cases use
@@ -136,8 +139,9 @@ seat cost are null when seats or distance are zero; the `vehicle.operations`
 plugin requires both to be positive and fails otherwise. Missing duration leaves
 hourly cost unavailable; neither an artificial seat nor a zero CASM is inserted.
 
-`examples/synthesis/trip-cost.json` is a standalone accounting example with no
-flight-performance assumptions: USD 10,000 over two block hours yields USD 5,000/h.
+`examples/synthesis/trip-cost.json` is a standalone seatless accounting example
+with no flight-performance assumptions: USD 10,000 over two block hours yields
+USD 5,000/h, or USD 100/h per kilogram of its 50 kg payload.
 Use it with `synthesize` or `sheet` to inspect the cost breakdown and provenance.
 
 Open an interactive synthesis sheet with:

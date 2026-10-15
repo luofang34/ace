@@ -42,15 +42,20 @@ pub struct Operations {
     pub basis: Option<EconomicBasis>,
     /// Optional rate-based calculation and required route cases.
     pub economics: Option<EconomicModel>,
-    /// Seats installed; zero declares a non-passenger operation.
-    pub seats: Binding,
+    /// Seats installed; zero or absent declares a non-passenger operation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seats: Option<Binding>,
     /// Revenue distance.
     pub distance: Binding,
     /// Normal-trip elapsed time for cost per block hour; rate-based scenarios supply their own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub block_duration: Option<Binding>,
-    /// Occupied fraction.
-    pub load_factor: Binding,
+    /// Occupied fraction; required only when seats are declared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub load_factor: Option<Binding>,
+    /// Mission payload mass used for cost per payload-kilogram block hour.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub payload: Option<Binding>,
     /// Trip cost breakdown.
     pub costs: Vec<CostItem>,
     /// Network endpoints or compatible gates.

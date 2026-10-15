@@ -47,10 +47,9 @@
   },
   "operations": {
     "basis": {"currency": "USD", "price_year": 2025, "cost_scope": "Illustrative invoiced trip cost"},
-    "seats": {"value": 0, "unit": "1"},
     "distance": {"value": 0, "unit": "nmi"},
-    "load_factor": {"value": 0, "unit": "1"},
     "block_duration": "duration",
+    "payload": {"value": 50, "unit": "kg"},
     "costs": [{"id": "invoice", "category": "invoice", "amount": "cost"}]
   }
 }

@@ -49,6 +49,9 @@ pub struct OperationsReport {
     /// Total trip cost divided by normal-trip elapsed hours; not airborne-hour cost.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cost_per_block_hour_usd: Option<f64>,
+    /// Block-hour cost per kilogram of declared payload; absent without payload or duration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cost_per_payload_kg_block_hour_usd: Option<f64>,
     /// Cost per occupied seat nautical mile; absent at zero seats, distance or load factor.
     pub passenger_cost_usd_per_nmi: Option<f64>,
     /// Revenue with an explicit per-passenger yield.
@@ -78,7 +81,16 @@ fn evaluate_trip(
     values: &BTreeMap<String, Quantity>,
 ) -> PhysicsResult<OperationsReport> {
     let seats = seat_count(operations, values)?;
-    let load_factor = scalar(&operations.load_factor, values, Unit::Ratio)?;
+    let load_factor = match &operations.load_factor {
+        Some(binding) => scalar(binding, values, Unit::Ratio)?,
+        None if seats == 0.0 => 0.0,
+        None => {
+            return Err(PhysicsError::invalid(
+                "operations.load_factor",
+                "required when seats are declared",
+            ));
+        }
+    };
     if !(0.0..=1.0).contains(&load_factor) {
         return Err(PhysicsError::invalid(
             "operations.load_factor",
@@ -102,6 +114,8 @@ fn evaluate_trip(
         .transpose()?;
     let (block_duration_h, cost_per_block_hour_usd) =
         hourly_cost(operations, values, trip_cost_usd)?;
+    let cost_per_payload_kg_block_hour_usd =
+        payload_hourly_cost(operations, values, cost_per_block_hour_usd)?;
     let revenue = passenger_revenue(operations, values, seats, load_factor)?;
     let passenger_cost = if load_factor > 0.0 {
         casm.map(|cost| nonnegative("operations.passenger_cost", cost / load_factor))
@@ -122,6 +136,7 @@ fn evaluate_trip(
         casm_usd_per_nmi: casm,
         block_duration_h,
         cost_per_block_hour_usd,
+        cost_per_payload_kg_block_hour_usd,
         passenger_cost_usd_per_nmi: passenger_cost,
         revenue_usd: revenue,
         profit_usd: revenue.map(|value| value - trip_cost_usd),
@@ -212,7 +227,10 @@ fn trip_costs(
 }
 
 fn seat_count(operations: &Operations, values: &BTreeMap<String, Quantity>) -> PhysicsResult<f64> {
-    let seats = scalar(&operations.seats, values, Unit::Ratio)?;
+    let Some(binding) = &operations.seats else {
+        return Ok(0.0);
+    };
+    let seats = scalar(binding, values, Unit::Ratio)?;
     if seats < 0.0 || seats > f64::from(u32::MAX) || seats.fract() != 0.0 {
         return Err(PhysicsError::invalid(
             "operations.seats",
@@ -220,6 +238,24 @@ fn seat_count(operations: &Operations, values: &BTreeMap<String, Quantity>) -> P
         ));
     }
     Ok(seats)
+}
+
+fn payload_hourly_cost(
+    operations: &Operations,
+    values: &BTreeMap<String, Quantity>,
+    cost_per_block_hour_usd: Option<f64>,
+) -> PhysicsResult<Option<f64>> {
+    let Some(binding) = &operations.payload else {
+        return Ok(None);
+    };
+    let payload_kg = scalar(binding, values, Unit::Kilogram)?;
+    if payload_kg <= 0.0 {
+        return Err(PhysicsError::invalid(
+            "operations.payload",
+            "must be positive",
+        ));
+    }
+    Ok(cost_per_block_hour_usd.map(|hourly| hourly / payload_kg))
 }
 
 fn hourly_cost(

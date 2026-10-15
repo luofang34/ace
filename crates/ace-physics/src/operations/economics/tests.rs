@@ -31,7 +31,7 @@ fn flight_cycles_turnaround_and_utilization_match_independent_cost_accounting() 
     assert_eq!(baseline.trip_cost_usd, 3400.0);
     assert_eq!(baseline.costs_usd["rate.ownership"], 1000.0);
     assert_eq!(baseline.casm_usd_per_nmi, Some(0.034));
-    operations.load_factor = Binding::Constant(Quantity::new(0.0, Unit::Ratio).unwrap());
+    operations.load_factor = Some(Binding::Constant(Quantity::new(0.0, Unit::Ratio).unwrap()));
     let empty = crate::evaluate_operations(&operations, &inputs()).unwrap();
     assert_eq!(empty.casm_usd_per_nmi, baseline.casm_usd_per_nmi);
     assert_eq!(empty.passenger_cost_usd_per_nmi, None);
@@ -85,7 +85,7 @@ fn all_route_airports_remain_hard_gates_and_monetary_bases_cannot_be_mixed() {
 #[test]
 fn zero_seat_scenarios_use_their_own_duration_and_preserve_all_airport_gates() {
     let mut operations = fixture();
-    operations.seats = Binding::Constant(Quantity::new(0.0, Unit::Ratio).unwrap());
+    operations.seats = Some(Binding::Constant(Quantity::new(0.0, Unit::Ratio).unwrap()));
     operations.revenue_per_passenger = None;
     operations.block_duration = Some(Binding::Constant(Quantity::new(99.0, Unit::Hour).unwrap()));
     let mut alternate = operations.economics.as_ref().unwrap().scenarios["design"].clone();

@@ -19,7 +19,7 @@ pub(super) fn evaluate(
         route.distance = scenario.distance.clone();
         route.block_duration = Some(scenario.block_duration.clone());
         if let Some(factor) = &scenario.load_factor {
-            route.load_factor = factor.clone();
+            route.load_factor = Some(factor.clone());
         }
         if let Some(airports) = &scenario.airports {
             route.airports = airports.clone();
