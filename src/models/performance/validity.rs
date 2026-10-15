@@ -7,7 +7,7 @@ use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 
-use super::ceiling::CeilingMetric;
+use super::ceiling::PublishedCeiling;
 use super::cruise::CruisePerformance;
 use super::{
     ABSOLUTE_CEILING_METRIC, ACHIEVED_CRUISE_MACH_METRIC, ACHIEVED_CRUISE_TAS_METRIC,
@@ -68,15 +68,9 @@ pub(super) fn speed_upper_bound(
     }
 }
 
-/// The lowest of the declared airframe and engine altitude limits and the
-/// atmosphere model's top; only the last is an artificial search bound.
-pub(super) fn altitude_upper_bound(scenario: &ResolvedScenario) -> SearchBoundary {
-    let mut bound = SearchBoundary {
-        value: 19_900.0,
-        source: "atmosphere.isa1976.maximum_altitude".to_owned(),
-        artificial: true,
-    };
-    let declared = [
+/// Declared airframe and engine altitude limits with their source paths.
+pub(super) fn declared_altitude_limits(scenario: &ResolvedScenario) -> Vec<(f64, String)> {
+    [
         (
             scenario.aircraft.limits.maximum_operating_altitude_m,
             "aircraft.limits.maximum_operating_altitude".to_owned(),
@@ -88,17 +82,10 @@ pub(super) fn altitude_upper_bound(scenario: &ResolvedScenario) -> SearchBoundar
                 scenario.engine.profile_id()
             ),
         ),
-    ];
-    for (limit, source) in declared {
-        if let Some(limit) = limit.filter(|limit| *limit < bound.value) {
-            bound = SearchBoundary {
-                value: limit,
-                source,
-                artificial: false,
-            };
-        }
-    }
-    bound
+    ]
+    .into_iter()
+    .filter_map(|(limit, source)| limit.map(|limit| (limit, source)))
+    .collect()
 }
 
 fn engine_maximum_altitude_m(engine: &EngineProfile) -> Option<f64> {
@@ -184,8 +171,8 @@ pub(super) fn aggregate<'a>(
 
 pub(super) fn summary_metric_validity(
     maximum_speed: &SolvedMetric,
-    service_ceiling: &CeilingMetric,
-    absolute_ceiling: &CeilingMetric,
+    service_ceiling: &PublishedCeiling,
+    absolute_ceiling: &PublishedCeiling,
     cruise: &CruisePerformance,
     reference: &ReferenceMetricValidity,
     takeoff_field: MetricValidity,

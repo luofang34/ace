@@ -103,7 +103,10 @@ fn unit_for_key(key: &str) -> Option<&'static str> {
         | "performance.maximum_level_speed"
         | "performance.declared_cruise_true_airspeed"
         | "performance.achieved_cruise_true_airspeed" => Some("m/s"),
-        "performance.service_ceiling" | "performance.absolute_ceiling" => Some("m"),
+        "performance.service_ceiling"
+        | "performance.absolute_ceiling"
+        | "performance.physical_service_ceiling"
+        | "performance.physical_absolute_ceiling" => Some("m"),
         "performance.minimum_cruise_excess_power" => Some("W"),
         "performance.wing_loading" => Some("N/m^2"),
         "performance.thrust_or_power_loading" => Some("W/kg or N/N"),

@@ -11,8 +11,8 @@ use crate::test_support::{
 };
 
 use super::{
-    MetricInput, evaluate_one, evaluate_requirements, failed_hard_requirement_ids,
-    hard_requirement_counts, hard_requirements_passed,
+    evaluate_requirements, failed_hard_requirement_ids, hard_requirement_counts,
+    hard_requirements_passed,
 };
 
 fn declared(id: &str, severity: &str) -> Requirement {
@@ -68,47 +68,6 @@ fn headline_verdict_requires_completion_and_every_hard_requirement() {
         failed_hard_requirement_ids(&declared, &[]),
         ["range".to_owned()]
     );
-}
-
-#[test]
-fn sr71_boundary_ceiling_requirement_is_indeterminate_and_nullable()
--> Result<(), Box<dyn std::error::Error>> {
-    let mut scenario = example_scenario("sr71")?;
-    scenario.aircraft.propulsion.sizing_factor = 2.0;
-    scenario.aircraft.limits.maximum_operating_altitude_m = Some(15_000.0);
-    let performance = PointAnalyzer::new(scenario.clone()).summary(None)?;
-    let requirement = scenario
-        .requirements
-        .items
-        .iter()
-        .find(|item| item.metric == "performance.service_ceiling")
-        .ok_or("missing SR-71 service-ceiling requirement")?;
-    let evaluation = evaluate_one(
-        requirement,
-        MetricInput {
-            actual: performance
-                .service_ceiling_m
-                .ok_or("declared limit clamps the SR-71 ceiling")?,
-            validity: performance.validity_for("performance.service_ceiling"),
-            lower_bound: true,
-        },
-    );
-
-    assert_eq!(
-        evaluation.resolved_status(),
-        RequirementStatus::Indeterminate
-    );
-    assert_eq!(evaluation.passed, None);
-    assert_eq!(evaluation.validity.status, ValidityStatus::BoundaryLimited);
-    let stored = serde_json::to_value(&evaluation)?;
-    assert_eq!(stored["status"], "indeterminate");
-    assert!(stored["passed"].is_null());
-    assert!(!hard_requirements_passed(
-        true,
-        &scenario.requirements.items,
-        &[evaluation]
-    ));
-    Ok(())
 }
 
 #[test]
@@ -433,33 +392,36 @@ fn c172_static_margin_bounds_are_both_bindable() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
-fn ceiling_clamped_at_declared_limit_passes_ge_requirements_below_the_clamp()
+fn service_ceiling_requirement_judges_the_published_cut_off_and_physical_is_separate()
 -> Result<(), Box<dyn std::error::Error>> {
-    let scenario = example_scenario("b777")?;
-    let performance = PointAnalyzer::new(scenario.clone()).summary(None)?;
-    assert_eq!(
-        performance.validity_for("performance.service_ceiling"),
-        crate::domain::validity::MetricValidity::boundary_limited(
-            "aircraft.limits.maximum_operating_altitude"
-        )
-    );
-    let requirement = scenario
+    let mut scenario = example_scenario("sr71")?;
+    scenario.aircraft.propulsion.sizing_factor = 2.0;
+    scenario.aircraft.limits.maximum_operating_altitude_m = Some(15_000.0);
+    let mission = crate::models::mission::MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let template = scenario
         .requirements
         .items
         .iter()
         .find(|item| item.metric == "performance.service_ceiling")
-        .ok_or("missing B777 service-ceiling requirement")?;
-    let evaluation = evaluate_one(
-        requirement,
-        MetricInput {
-            actual: performance
-                .service_ceiling_m
-                .ok_or("B777 ceiling is clamped, not unavailable")?,
-            validity: performance.validity_for("performance.service_ceiling"),
-            lower_bound: true,
-        },
-    );
-    assert_eq!(evaluation.resolved_status(), RequirementStatus::Pass);
-    assert_eq!(evaluation.passed, Some(true));
+        .ok_or("missing SR-71 service-ceiling requirement")?
+        .clone();
+    // Like a POH figure, the service ceiling is cut off at the 15 km declared limit;
+    // the uncut climb capability remains available as its own metric.
+    assert_eq!(performance.service_ceiling_m, Some(15_000.0));
+    assert!(performance.physical_service_ceiling_m.unwrap_or(0.0) > 20_000.0);
+    for (metric, passes) in [
+        ("performance.service_ceiling", false),
+        ("performance.physical_service_ceiling", true),
+    ] {
+        let mut requirement = template.clone();
+        requirement.metric = metric.to_owned();
+        requirement.operator = "ge".to_owned();
+        requirement.required = 20_000.0;
+        scenario.requirements.items = vec![requirement];
+        let evaluation = evaluate_requirements(&scenario, &mission, &performance, None)?;
+        assert_eq!(evaluation.len(), 1, "{metric}");
+        assert_eq!(evaluation[0].passed, Some(passes), "{metric}");
+    }
     Ok(())
 }

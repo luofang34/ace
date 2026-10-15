@@ -29,6 +29,8 @@ use validity::{
 const MAXIMUM_SPEED_METRIC: &str = "performance.maximum_level_speed";
 const SERVICE_CEILING_METRIC: &str = "performance.service_ceiling";
 const ABSOLUTE_CEILING_METRIC: &str = "performance.absolute_ceiling";
+const PHYSICAL_SERVICE_CEILING_METRIC: &str = "performance.physical_service_ceiling";
+const PHYSICAL_ABSOLUTE_CEILING_METRIC: &str = "performance.physical_absolute_ceiling";
 const ACHIEVED_CRUISE_MACH_METRIC: &str = "performance.achieved_cruise_mach";
 const ACHIEVED_CRUISE_TAS_METRIC: &str = "performance.achieved_cruise_true_airspeed";
 const MINIMUM_CRUISE_EXCESS_POWER_METRIC: &str = "performance.minimum_cruise_excess_power";
@@ -191,15 +193,17 @@ impl PointAnalyzer {
         )?;
         let maximum_speed = self.maximum_level_speed_solution(0.0, mass)?;
         let threshold = service_ceiling_threshold(&self.scenario);
-        let service_ceiling = self.ceiling_solution(mass, threshold)?;
-        let absolute_ceiling = self.ceiling_solution(mass, 0.0)?;
+        let physical_service = self.ceiling_solution(mass, threshold)?;
+        let physical_absolute = self.ceiling_solution(mass, 0.0)?;
+        let service_ceiling = self.published_ceiling(&physical_service);
+        let absolute_ceiling = self.published_ceiling(&physical_absolute);
         let cruise = self.cruise_performance(mission)?;
         let reference = reference_metric_validity(&self.scenario.aircraft)?;
         let takeoff_field = estimate_takeoff_distance(&self.scenario)?;
         let landing_field = estimate_landing_distance(&self.scenario)?;
         let (takeoff_distance_m, landing_distance_m) =
             (takeoff_field.distance_m, landing_field.distance_m);
-        let metric_validity = summary_metric_validity(
+        let mut metric_validity = summary_metric_validity(
             &maximum_speed,
             &service_ceiling,
             &absolute_ceiling,
@@ -208,11 +212,21 @@ impl PointAnalyzer {
             takeoff_field.validity,
             landing_field.validity,
         );
+        // The headline aggregate follows the published figures; the physical roots
+        // keep their own (possibly extrapolated) validity for analysis.
         let overall_validity = aggregate_validity(metric_validity.values());
+        metric_validity.insert(
+            PHYSICAL_SERVICE_CEILING_METRIC.to_owned(),
+            physical_service.validity.clone(),
+        );
+        metric_validity.insert(
+            PHYSICAL_ABSOLUTE_CEILING_METRIC.to_owned(),
+            physical_absolute.validity.clone(),
+        );
         let mut ceiling_warnings = Vec::new();
         for (metric, ceiling) in [
-            (SERVICE_CEILING_METRIC, &service_ceiling),
-            (ABSOLUTE_CEILING_METRIC, &absolute_ceiling),
+            (PHYSICAL_SERVICE_CEILING_METRIC, &physical_service),
+            (PHYSICAL_ABSOLUTE_CEILING_METRIC, &physical_absolute),
         ] {
             ceiling_warnings.extend(ceiling.diagnostic(metric));
             ceiling_warnings.extend(self.power_floor_warning(metric, ceiling)?);
@@ -244,6 +258,9 @@ impl PointAnalyzer {
             landing_field_length_m: Some(landing_distance_m),
             service_ceiling_m: service_ceiling.value,
             absolute_ceiling_m: absolute_ceiling.value,
+            ceiling_limited_by: service_ceiling.limited_by.or(absolute_ceiling.limited_by),
+            physical_service_ceiling_m: physical_service.value,
+            physical_absolute_ceiling_m: physical_absolute.value,
             cruise_mach: cruise.declared_mach,
             declared_cruise_mach: cruise.declared_mach,
             declared_cruise_true_airspeed_m_s: cruise.declared_true_airspeed_m_s,

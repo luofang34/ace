@@ -5,6 +5,10 @@ const STANDARD_GRAVITY: f64 = 9.806_65;
 const SPECIFIC_GAS_CONSTANT: f64 = 287.052_87;
 const HEAT_CAPACITY_RATIO: f64 = 1.4;
 const EARTH_RADIUS_M: f64 = 6_356_766.0;
+/// Lowest geometric altitude of the model.
+pub(crate) const MINIMUM_ALTITUDE_M: f64 = -2_000.0;
+/// Geometric top of the 1976 standard's hydrostatic layers (84 852 m geopotential).
+pub(crate) const MAXIMUM_ALTITUDE_M: f64 = 86_000.0;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Isa1976 {
@@ -25,10 +29,12 @@ impl Isa1976 {
     }
 
     pub(crate) fn evaluate(&self, geometric_altitude_m: f64) -> AexResult<AtmosphereState> {
-        if !(-2000.0..=20_000.0).contains(&geometric_altitude_m) {
+        if !(MINIMUM_ALTITUDE_M..=MAXIMUM_ALTITUDE_M).contains(&geometric_altitude_m) {
             return Err(AexError::analysis(
                 "ATMOSPHERE_OUTSIDE_VALIDITY",
-                format!("altitude {geometric_altitude_m} m is outside -2000 to 20000 m"),
+                format!(
+                    "altitude {geometric_altitude_m} m is outside {MINIMUM_ALTITUDE_M} to {MAXIMUM_ALTITUDE_M} m"
+                ),
             ));
         }
         let geopotential_altitude =
@@ -63,22 +69,42 @@ impl Isa1976 {
     }
 }
 
+/// US Standard Atmosphere 1976 layers: geopotential base height (m), tabulated base
+/// temperature (K) and pressure (Pa), and lapse rate (K/m).
+const LAYERS: [(f64, f64, f64, f64); 7] = [
+    (0.0, 288.15, 101_325.0, -0.0065),
+    (11_000.0, 216.65, 22_632.06, 0.0),
+    (20_000.0, 216.65, 5_474.889, 0.001),
+    (32_000.0, 228.65, 868.0187, 0.0028),
+    (47_000.0, 270.65, 110.9063, 0.0),
+    (51_000.0, 270.65, 66.93887, -0.0028),
+    (71_000.0, 214.65, 3.956_420, -0.002),
+];
+
+/// Temperature and pressure at a geopotential altitude from the containing layer's
+/// tabulated base state; altitudes below sea level extend the first layer.
 fn pressure_temperature(altitude_m: f64) -> (f64, f64) {
-    let sea_level_temperature = 288.15;
-    let sea_level_pressure = 101_325.0;
-    let lapse = -0.0065;
-    if altitude_m <= 11_000.0 {
-        let temperature = sea_level_temperature + lapse * altitude_m;
-        let exponent = -STANDARD_GRAVITY / (lapse * SPECIFIC_GAS_CONSTANT);
-        let pressure = sea_level_pressure * (temperature / sea_level_temperature).powf(exponent);
-        (temperature, pressure)
-    } else {
-        let tropopause_temperature = 216.65;
-        let tropopause_pressure = 22_632.06;
-        let exponent = -STANDARD_GRAVITY * (altitude_m - 11_000.0)
-            / (SPECIFIC_GAS_CONSTANT * tropopause_temperature);
-        (tropopause_temperature, tropopause_pressure * exponent.exp())
+    let (base, temperature, pressure, lapse) = LAYERS
+        .iter()
+        .rev()
+        .find(|(base, ..)| altitude_m >= *base)
+        .or_else(|| LAYERS.first())
+        .copied()
+        .unwrap_or((0.0, 288.15, 101_325.0, -0.0065));
+    layer(temperature, pressure, lapse, altitude_m - base)
+}
+
+fn layer(base_temperature: f64, base_pressure: f64, lapse: f64, height_m: f64) -> (f64, f64) {
+    if lapse == 0.0 {
+        let exponent = -STANDARD_GRAVITY * height_m / (SPECIFIC_GAS_CONSTANT * base_temperature);
+        return (base_temperature, base_pressure * exponent.exp());
     }
+    let temperature = base_temperature + lapse * height_m;
+    let exponent = -STANDARD_GRAVITY / (lapse * SPECIFIC_GAS_CONSTANT);
+    (
+        temperature,
+        base_pressure * (temperature / base_temperature).powf(exponent),
+    )
 }
 
 fn sutherland_viscosity(temperature_k: f64) -> f64 {

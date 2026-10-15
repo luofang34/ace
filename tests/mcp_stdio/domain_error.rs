@@ -9,7 +9,7 @@ use serde_json::json;
 use super::{arguments, scenario};
 
 #[test]
-fn sr71_domain_failure_is_an_actionable_tool_result() -> Result<(), Box<dyn Error>> {
+fn x15_domain_failure_is_an_actionable_tool_result() -> Result<(), Box<dyn Error>> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
@@ -21,7 +21,7 @@ fn sr71_domain_failure_is_an_actionable_tool_result() -> Result<(), Box<dyn Erro
                 .call_tool(CallToolRequestParams {
                     meta: None,
                     name: "simulate_mission".into(),
-                    arguments: Some(arguments(json!({"scenario_path": scenario("sr71")}))?),
+                    arguments: Some(arguments(json!({"scenario_path": scenario("x15")}))?),
                     task: None,
                 })
                 .await?;
@@ -38,12 +38,12 @@ fn sr71_domain_failure_is_an_actionable_tool_result() -> Result<(), Box<dyn Erro
                     diagnostics.iter().find(|diagnostic| {
                         diagnostic["valid_range"]["model_id"] == "atmosphere.isa1976"
                             && diagnostic["violating_path"]
-                                == "mission.segments.supersonic_cruise.altitude"
+                                == "aircraft.limits.maximum_operating_altitude"
                     })
                 })
                 .ok_or_else(|| io::Error::other("missing atmosphere diagnostic"))?;
-            assert_eq!(atmosphere["valid_range"]["maximum"], 20_000.0);
-            assert_eq!(atmosphere["suggested_override"]["value"], "20000 m");
+            assert_eq!(atmosphere["valid_range"]["maximum"], 86_000.0);
+            assert_eq!(atmosphere["suggested_override"]["value"], "86000 m");
             client.cancel().await?;
             Ok(())
         })

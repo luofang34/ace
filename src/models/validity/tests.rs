@@ -153,7 +153,7 @@ fn validity_domain_serialization_is_stable_and_round_trips()
             "bounds": [{
                 "variable": "altitude",
                 "minimum": -2000.0,
-                "maximum": 20000.0,
+                "maximum": 86000.0,
                 "minimum_inclusive": true,
                 "maximum_inclusive": true,
                 "unit": "m",

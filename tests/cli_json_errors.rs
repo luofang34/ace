@@ -39,7 +39,7 @@ fn failed_json(arguments: &[&str]) -> Result<Value, Box<dyn Error>> {
 
 #[test]
 fn analysis_failure_is_one_structured_json_object() -> Result<(), Box<dyn Error>> {
-    let scenario = repository_path("examples/sr71/scenario.yaml");
+    let scenario = repository_path("examples/x15/scenario.yaml");
     let result = failed_json(&[
         "analyze",
         "mission",

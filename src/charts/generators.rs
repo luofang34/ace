@@ -177,7 +177,7 @@ pub(crate) fn climb_envelope(scenario: &ResolvedScenario) -> AexResult<ChartSpec
         .limits
         .maximum_operating_altitude_m
         .unwrap_or(15_000.0)
-        .min(19_900.0);
+        .min(crate::models::atmosphere::MAXIMUM_ALTITUDE_M);
     let altitudes: Vec<f64> = (0..60)
         .map(|index| f64::from(index) * maximum_altitude / 59.0)
         .collect();

@@ -34,17 +34,23 @@ fn both_reference_aircraft_have_finite_service_ceilings() {
                 assert!(service.is_finite());
                 assert!(service > 0.0);
                 assert!(result.absolute_ceiling_m.unwrap_or(f64::NAN) >= service);
-                // The B777 reaches its declared maximum operating altitude, which
-                // clamps and names the ceiling; the C172 ceiling is a solved root.
-                let expected = if name == "b777" {
-                    ValidityStatus::BoundaryLimited
-                } else {
-                    ValidityStatus::Valid
-                };
                 assert_eq!(
                     result.validity_for("performance.service_ceiling").status,
-                    expected
+                    ValidityStatus::Valid
                 );
+                // The B777 out-climbs its declared maximum operating altitude, which
+                // cuts off the published ceiling; the C172 is performance-limited.
+                let physical = result.physical_service_ceiling_m.unwrap_or(f64::NAN);
+                if name == "b777" {
+                    assert!(service < physical);
+                    assert_eq!(
+                        result.ceiling_limited_by.as_deref(),
+                        Some("aircraft.limits.maximum_operating_altitude")
+                    );
+                } else {
+                    assert_eq!(physical, service);
+                    assert_eq!(result.ceiling_limited_by, None);
+                }
             }
         }
     }
@@ -138,40 +144,46 @@ fn point_result_uses_configuration_reference_validity_and_legacy_defaults()
 }
 
 #[test]
-fn sr71_reports_unbracketed_ceiling_as_unavailable_and_keeps_table_speed()
+fn sr71_solves_its_stratospheric_ceiling_and_publishes_it_cut_off_at_the_limit()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("sr71")?;
     scenario.aircraft.propulsion.sizing_factor = 2.0;
+    let limit = scenario
+        .aircraft
+        .limits
+        .maximum_operating_altitude_m
+        .ok_or("SR-71 declares a maximum operating altitude")?;
     let result = summary(scenario)?;
 
-    assert_eq!(result.service_ceiling_m, None);
-    assert_eq!(result.absolute_ceiling_m, None);
+    let physical = result
+        .physical_service_ceiling_m
+        .ok_or("ceiling is solved above 20 km")?;
+    assert!(physical > limit, "{physical} m");
+    assert!(result.physical_absolute_ceiling_m.unwrap_or(0.0) >= physical);
+    assert_eq!(result.service_ceiling_m, Some(limit));
+    assert_eq!(result.absolute_ceiling_m, Some(limit));
     assert_eq!(
-        result.validity_for("performance.service_ceiling").status,
-        ValidityStatus::Unsupported
+        result.ceiling_limited_by.as_deref(),
+        Some("aircraft.limits.maximum_operating_altitude")
     );
-    assert!(result.warnings.iter().any(|warning| {
-        warning.code == "CEILING_UNAVAILABLE"
-            && warning
-                .message
-                .contains("atmosphere.isa1976.maximum_altitude")
-    }));
     assert_eq!(
         result
             .validity_for("performance.maximum_level_speed")
             .status,
         ValidityStatus::Valid
     );
-    assert_eq!(result.model.validity_status, "unsupported");
     assert_eq!(result.cruise_mach, Some(3.2));
     assert_eq!(result.declared_cruise_mach, Some(3.2));
-    assert_eq!(result.achieved_cruise_mach, None);
-    assert_eq!(result.minimum_cruise_excess_power_w, None);
-    assert_eq!(result.cruise_feasible, Some(false));
-    assert!(result.warnings.iter().any(|warning| {
-        warning.code == "CRUISE_CONDITION_UNSUPPORTED"
-            && warning.path.as_deref() == Some("mission.segments.supersonic_cruise")
-    }));
+    // The stratospheric Mach 3.2 cruise is evaluated inside the 1976 atmosphere.
+    let supersonic = result
+        .cruise_conditions
+        .iter()
+        .find(|condition| condition.segment_id == "supersonic_cruise")
+        .ok_or("supersonic cruise is evaluated")?;
+    assert!(supersonic.altitude_m > 20_000.0);
+    assert_eq!(supersonic.achieved_mach, Some(3.2));
+    assert!(supersonic.feasible);
+    assert_eq!(result.cruise_feasible, Some(true));
     Ok(())
 }
 

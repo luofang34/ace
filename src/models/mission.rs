@@ -334,7 +334,7 @@ impl MissionSimulator {
             )
         })?;
         let altitude = segment_operating_altitude(segment, state.altitude_m);
-        let speed = segment_speed(
+        let (speed, speed_warning) = segment_speed(
             segment,
             &self.scenario,
             altitude,
@@ -369,7 +369,7 @@ impl MissionSimulator {
             end_altitude_m: altitude,
             end_speed_m_s: state.speed_m_s.map(|_| speed),
             operating_speed_m_s: Some(speed),
-            warnings: fuel.warnings,
+            warnings: fuel.warnings.into_iter().chain(speed_warning).collect(),
         })
     }
 
@@ -386,7 +386,7 @@ impl MissionSimulator {
                 "loiter requires duration",
             )
         })?;
-        let speed = segment_speed(
+        let (speed, speed_warning) = segment_speed(
             segment,
             &self.scenario,
             altitude,
@@ -410,7 +410,7 @@ impl MissionSimulator {
             end_altitude_m: altitude,
             end_speed_m_s: state.speed_m_s.map(|_| speed),
             operating_speed_m_s: Some(speed),
-            warnings: fuel.warnings,
+            warnings: fuel.warnings.into_iter().chain(speed_warning).collect(),
         })
     }
 }

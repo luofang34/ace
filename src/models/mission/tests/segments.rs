@@ -87,3 +87,27 @@ fn speed_schedules_select_polar_optima_and_save_fuel() -> Result<(), Box<dyn std
     assert!(endurance.fuel_burn_kg / endurance.duration_s <= range.fuel_burn_kg / range.duration_s);
     Ok(())
 }
+
+#[test]
+fn a_scheduled_speed_below_the_stall_margin_is_flown_at_the_margin_and_reported()
+-> Result<(), Box<dyn std::error::Error>> {
+    use crate::domain::schema::SpeedSchedule;
+
+    let mut scenario = example_scenario("c172")?;
+    // A draggy airframe pulls minimum-power speed below 1.2 V_stall.
+    scenario.aircraft.aerodynamics.clean.cd0 = 0.2;
+    let segment = scenario
+        .mission
+        .segments
+        .iter_mut()
+        .find(|segment| segment.id == "cruise")
+        .ok_or("C172 mission has a cruise segment")?;
+    segment.true_airspeed_m_s = None;
+    segment.speed_schedule = Some(SpeedSchedule::BestEndurance);
+    let mission = MissionSimulator::new(scenario).simulate()?;
+    assert!(mission.warnings.iter().any(|warning| {
+        warning.code == "SPEED_SCHEDULE_STALL_MARGIN"
+            && warning.path.as_deref() == Some("mission.segments.cruise.speed_schedule")
+    }));
+    Ok(())
+}

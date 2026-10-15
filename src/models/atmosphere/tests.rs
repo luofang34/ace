@@ -16,6 +16,25 @@ fn sea_level_matches_isa_reference() {
 #[test]
 fn model_covers_required_altitude_range() {
     assert!(Isa1976::new(0.0).evaluate(-2000.0).is_ok());
-    assert!(Isa1976::new(0.0).evaluate(20_000.0).is_ok());
-    assert!(Isa1976::new(0.0).evaluate(20_001.0).is_err());
+    assert!(Isa1976::new(0.0).evaluate(86_000.0).is_ok());
+    assert!(Isa1976::new(0.0).evaluate(86_001.0).is_err());
+}
+
+#[test]
+fn upper_layers_match_the_1976_standard_tables() {
+    // (geopotential m, temperature K, pressure Pa) from the published 1976 tables.
+    for (geopotential, temperature, pressure) in [
+        (11_000.0, 216.65, 22_632.06),
+        (20_000.0, 216.65, 5_474.889),
+        (32_000.0, 228.65, 868.0187),
+        (47_000.0, 270.65, 110.9063),
+        (51_000.0, 270.65, 66.93887),
+        (71_000.0, 214.65, 3.956420),
+    ] {
+        let radius = 6_356_766.0;
+        let geometric = radius * geopotential / (radius - geopotential);
+        let state = Isa1976::new(0.0).evaluate(geometric).unwrap();
+        assert_relative_eq!(state.temperature_k, temperature, max_relative = 1e-6);
+        assert_relative_eq!(state.pressure_pa, pressure, max_relative = 2e-4);
+    }
 }

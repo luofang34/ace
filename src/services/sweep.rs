@@ -218,6 +218,14 @@ impl SweepMetricContext<'_> {
                     )
                 })?
             }
+            "performance.physical_service_ceiling" => {
+                self.performance.physical_service_ceiling_m.ok_or_else(|| {
+                    AexError::analysis(
+                        "CEILING_UNAVAILABLE",
+                        "performance.physical_service_ceiling has no root inside the standard atmosphere",
+                    )
+                })?
+            }
             "performance.maximum_level_speed" => self.performance.maximum_level_speed_m_s,
             "performance.achieved_cruise_mach" => {
                 optional_performance_metric(metric, self.performance.achieved_cruise_mach)?
