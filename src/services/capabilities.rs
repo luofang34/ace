@@ -39,6 +39,7 @@ pub(crate) struct CapabilitiesManifest {
     pub(crate) backends: Vec<BackendDescriptor>,
     pub(crate) model_domains: Vec<ModelValidityDomain>,
     pub(crate) strict_warning_policy: Vec<WarningCapability>,
+    pub(crate) synthesis_phase_adapters: Vec<String>,
 }
 
 impl ApplicationService {
@@ -71,6 +72,7 @@ fn manifest(backends: Vec<BackendDescriptor>) -> AexResult<CapabilitiesManifest>
         backends,
         model_domains: registered_model_domains()?,
         strict_warning_policy,
+        synthesis_phase_adapters: crate::services::synthesis::flight_phase_ids(),
     })
 }
 
@@ -116,6 +118,11 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
         .iter()
         .map(|backend| format!("- `{}`\n", backend.id))
         .collect::<String>();
+    let phase_adapters = manifest
+        .synthesis_phase_adapters
+        .iter()
+        .map(|id| format!("- `{id}`\n"))
+        .collect::<String>();
     let (operators, severities) = requirement_lists(manifest);
     let mission_notes = mission_notes();
     format!(
@@ -146,6 +153,9 @@ pub(super) fn reference_markdown(manifest: &CapabilitiesManifest) -> String {
          | Metric | Source | Bindable | Unit | Replacement |\n\
          | --- | --- | --- | --- | --- |\n{metrics}\n\
          Operators: {operators}. Severities: {severities}.\n\n\
+         ## Synthesis flight-phase adapters\n\n\
+         A synthesis mission stage's `kind` is free text (for example `loiter` or \
+         `patrol`); the stage's selected analysis defines its physics.\n\n{phase_adapters}\n\
          ## Backends\n\n{backends}\n\
          ## Registered model domains\n\n{domains}\n\
          Strict-warning decisions are listed in [the generated warning policy](strict-warning-policy.md).\n"
