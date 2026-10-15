@@ -11,7 +11,7 @@ values.
 
 ## ADR-002 — Rust implementation
 
-The independent implementation targets Rust 1.88+ and forbids unsafe code.
+The independent implementation targets current stable Rust and forbids unsafe code.
 Serde provides interface schemas, `uom` normalizes physical quantities, Rayon
 orders local sweeps, Plotters renders SVG, and the official `rmcp` SDK serves
 MCP over stdio.
