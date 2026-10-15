@@ -1,8 +1,11 @@
-use crate::domain::diagnostic::{AexResult, Diagnostic};
+use serde_json::json;
+
+use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::GRAVITY_M_S2;
 use crate::domain::result::AtmosphereState;
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::validity::MetricValidity;
+use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::{
     FlightCondition, coefficient_evaluation_at_mach, evaluate as evaluate_aerodynamics,
     stall_speed_m_s,
@@ -23,6 +26,14 @@ pub(crate) struct ClimbGradientEstimate {
 
 /// Highest field elevation the screening estimate is registered for.
 pub(crate) const MAXIMUM_FIELD_ELEVATION_M: f64 = 4_500.0;
+/// Runway grade magnitude beyond which the screening estimate is extrapolated.
+const MAXIMUM_RUNWAY_SLOPE: f64 = 0.02;
+/// Tailwind beyond which the screening estimate is extrapolated (10 kt).
+const MAXIMUM_TAILWIND_M_S: f64 = 5.144;
+/// Rolling resistance plus aerodynamic drag share during the takeoff roll, in g.
+const ROLLING_RESISTANCE: f64 = 0.04;
+/// Smallest net takeoff acceleration the screening form evaluates, in g.
+const MINIMUM_NET_ACCELERATION: f64 = 0.03;
 
 pub(crate) fn estimate_takeoff_distance(
     scenario: &ResolvedScenario,
@@ -55,11 +66,30 @@ pub(crate) fn estimate_takeoff_distance(
         };
     let mut warnings = evaluation.warnings;
     warnings.extend(lapse.warnings);
+    // Net longitudinal acceleration in g: thrust less rolling resistance and the
+    // uphill grade. The screening form is not credible near zero, so a floor keeps the
+    // estimate finite and is reported rather than applied silently.
+    let net_acceleration = thrust_to_weight - ROLLING_RESISTANCE - field.runway_slope;
+    let floored = net_acceleration < MINIMUM_NET_ACCELERATION;
+    if floored {
+        warnings.push(Diagnostic::warning_with_context(
+            WarningCode::ModelExtrapolation,
+            format!(
+                "takeoff net acceleration {net_acceleration:.3} g is below the {MINIMUM_NET_ACCELERATION} g screening floor"
+            ),
+            "performance.takeoff_field_length",
+            json!({"net_acceleration_g": net_acceleration, "floor_g": MINIMUM_NET_ACCELERATION}),
+        ));
+    }
+    // The ground roll covers the change in ground speed, so headwind shortens it.
+    let lift_off_ground_speed = (lift_off - field.headwind_m_s).max(0.0);
     Ok(FieldPerformanceEstimate {
-        distance_m: lift_off.powi(2) / (2.0 * GRAVITY_M_S2 * (thrust_to_weight - 0.04).max(0.03)),
+        distance_m: lift_off_ground_speed.powi(2)
+            / (2.0 * GRAVITY_M_S2 * net_acceleration.max(MINIMUM_NET_ACCELERATION)),
         validity: field_validity(
             evaluation.coefficients.extrapolated
                 || lapse.extrapolated
+                || floored
                 || outside_field_domain(scenario, mass),
         ),
         warnings,
@@ -80,8 +110,21 @@ pub(crate) fn estimate_landing_distance(
         atmosphere.density_kg_m3 * scenario.aircraft.wing.area_m2 * evaluation.coefficients.cl_max;
     let stall = (numerator / denominator).sqrt();
     let approach_speed = 1.3 * stall;
-    let ground_roll = approach_speed.powi(2) / (2.0 * GRAVITY_M_S2 * field.braking_coefficient);
-    let obstacle_allowance = field.obstacle_height_m / 3.0_f64.to_radians().tan();
+    let approach_ground_speed = (approach_speed - field.headwind_m_s).max(0.0);
+    // Braking plus the uphill grade decelerate the ground roll.
+    let deceleration = field.braking_coefficient + field.runway_slope;
+    if deceleration <= 0.0 {
+        return Err(AexError::validation(
+            "LANDING_DECELERATION_NONPOSITIVE",
+            "mission.field.runway_slope",
+            "the downhill grade exceeds the braking coefficient",
+        ));
+    }
+    let ground_roll = approach_ground_speed.powi(2) / (2.0 * GRAVITY_M_S2 * deceleration);
+    // A 3 degree air segment covers less ground in a headwind.
+    let obstacle_allowance = field.obstacle_height_m / 3.0_f64.to_radians().tan()
+        * approach_ground_speed
+        / approach_speed;
     Ok(FieldPerformanceEstimate {
         distance_m: 1.35 * (ground_roll + obstacle_allowance),
         validity: field_validity(
@@ -142,8 +185,11 @@ fn takeoff_propulsion_lapse(
 }
 
 fn outside_field_domain(scenario: &ResolvedScenario, mass_kg: f64) -> bool {
-    !(0.0..=MAXIMUM_FIELD_ELEVATION_M).contains(&scenario.mission.field.elevation_m)
+    let field = &scenario.mission.field;
+    !(0.0..=MAXIMUM_FIELD_ELEVATION_M).contains(&field.elevation_m)
         || mass_kg > scenario.aircraft.mass.maximum_takeoff_mass_kg
+        || field.runway_slope.abs() > MAXIMUM_RUNWAY_SLOPE
+        || field.headwind_m_s < -MAXIMUM_TAILWIND_M_S
 }
 
 pub(crate) fn estimate_second_segment_climb_gradient(

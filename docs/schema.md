@@ -162,8 +162,16 @@ performance summary is evaluated at `takeoff_mass`), `obstacle_height` (default
 `50 ft`) and `braking_coefficient`, the mean braking deceleration in g (default
 `0.30`). Density comes from the scenario atmosphere at the field elevation, and
 takeoff thrust or power is scaled by the installed propulsion's own lapse
-relative to sea level. Field lengths are `extrapolated` above 4.5 km elevation
-or above maximum takeoff mass.
+relative to sea level. `runway_slope` (rise over run, uphill positive, default
+0) adds to the takeoff resistance and to the landing deceleration, and
+`headwind` (negative for tailwind, default `0 m/s`) sets the ground-speed change
+of both rolls and the ground length of the 3 degree landing air segment; wind is
+unfactored, so operational headwind/tailwind factors remain the user's. Field
+lengths are `extrapolated` above 4.5 km elevation, above maximum takeoff mass,
+beyond a 2% grade, or with more than 10 kt tailwind. A takeoff whose net
+acceleration falls below the 0.03 g screening floor is evaluated at the floor
+and reported as `MODEL_EXTRAPOLATION`; a downhill grade steeper than the
+braking coefficient is rejected.
 
 Missions may declare an additive schema-version-1 `initial_state`:
 

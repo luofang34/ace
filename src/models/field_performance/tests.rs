@@ -132,3 +132,45 @@ fn hot_high_field_and_landing_mass_drive_field_lengths_with_validity()
     );
     Ok(())
 }
+
+#[test]
+fn runway_slope_and_wind_shift_field_lengths_and_floors_are_reported()
+-> Result<(), Box<dyn std::error::Error>> {
+    use super::estimate_landing_distance;
+    use crate::domain::validity::ValidityStatus;
+
+    let level = example_scenario("c172")?;
+    let with = |slope: f64, headwind: f64| {
+        let mut scenario = level.clone();
+        scenario.mission.field.runway_slope = slope;
+        scenario.mission.field.headwind_m_s = headwind;
+        scenario
+    };
+    let takeoff = |scenario| estimate_takeoff_distance(&scenario).map(|e| e.distance_m);
+    let landing = |scenario| estimate_landing_distance(&scenario).map(|e| e.distance_m);
+    let (base_takeoff, base_landing) = (takeoff(level.clone())?, landing(level.clone())?);
+    // Uphill lengthens the takeoff roll and shortens the landing roll.
+    assert!(takeoff(with(0.02, 0.0))? > base_takeoff);
+    assert!(landing(with(0.02, 0.0))? < base_landing);
+    // A headwind shortens both; a tailwind lengthens both.
+    assert!(takeoff(with(0.0, 5.0))? < base_takeoff);
+    assert!(landing(with(0.0, 5.0))? < base_landing);
+    assert!(takeoff(with(0.0, -3.0))? > base_takeoff);
+    assert!(landing(with(0.0, -3.0))? > base_landing);
+    // Strong tailwinds leave the screening domain.
+    assert_eq!(
+        estimate_takeoff_distance(&with(0.0, -8.0))?.validity.status,
+        ValidityStatus::Extrapolated
+    );
+    // A grade steeper than the available acceleration is floored and reported.
+    let steep = estimate_takeoff_distance(&with(0.5, 0.0))?;
+    assert_eq!(steep.validity.status, ValidityStatus::Extrapolated);
+    assert!(
+        steep
+            .warnings
+            .iter()
+            .any(|warning| warning.message.contains("screening floor"))
+    );
+    assert!(estimate_landing_distance(&with(-0.5, 0.0)).is_err());
+    Ok(())
+}
