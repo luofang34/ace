@@ -20,6 +20,8 @@ pub(crate) struct RawMission {
     pub(crate) initial_state: Option<RawMissionInitialState>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) atmosphere: Option<RawMissionAtmosphere>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) field: Option<RawFieldConditions>,
     pub(crate) segments: Vec<RawMissionSegment>,
 }
 
@@ -27,6 +29,43 @@ pub(crate) struct RawMission {
 #[serde(deny_unknown_fields)]
 pub(crate) struct RawMissionAtmosphere {
     pub(crate) isa_offset: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RawFieldConditions {
+    pub(crate) elevation: Option<String>,
+    pub(crate) takeoff_mass: Option<String>,
+    pub(crate) landing_mass: Option<String>,
+    pub(crate) obstacle_height: Option<String>,
+    pub(crate) braking_coefficient: Option<f64>,
+}
+
+/// Runway conditions for takeoff and landing field-length estimates.
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct FieldConditions {
+    pub(crate) elevation_m: f64,
+    /// Absent means maximum takeoff mass.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) takeoff_mass_kg: Option<f64>,
+    /// Absent means maximum takeoff mass.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) landing_mass_kg: Option<f64>,
+    pub(crate) obstacle_height_m: f64,
+    /// Mean braking deceleration as a fraction of g.
+    pub(crate) braking_coefficient: f64,
+}
+
+impl Default for FieldConditions {
+    fn default() -> Self {
+        Self {
+            elevation_m: 0.0,
+            takeoff_mass_kg: None,
+            landing_mass_kg: None,
+            obstacle_height_m: 15.24,
+            braking_coefficient: 0.30,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -92,6 +131,7 @@ pub(crate) struct Mission {
     pub(crate) initial_state: Option<MissionInitialState>,
     /// ISA temperature deviation applied to every native atmosphere evaluation.
     pub(crate) isa_offset_k: f64,
+    pub(crate) field: FieldConditions,
     pub(crate) segments: Vec<MissionSegment>,
 }
 

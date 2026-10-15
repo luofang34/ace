@@ -413,7 +413,7 @@ fn field_performance_domain() -> ModelValidityDomain {
             inclusive_bound(
                 ValidityVariable::Altitude,
                 Some(0.0),
-                Some(0.0),
+                Some(crate::models::field_performance::MAXIMUM_FIELD_ELEVATION_M),
                 ValidityBasis::ScreeningAssumption,
             ),
             lower_exclusive_bound(ValidityVariable::Mass, 0.0, ValidityBasis::ModelForm),

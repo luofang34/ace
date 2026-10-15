@@ -120,7 +120,20 @@ fn analysis() -> Command {
         ))
         .subcommand(common(Command::new("mission").arg(path("scenario"))))
         .subcommand(common(Command::new("payload-range").arg(path("scenario"))))
-        .subcommand(common(Command::new("performance").arg(path("scenario"))))
+        .subcommand(common(
+            Command::new("performance")
+                .arg(path("scenario"))
+                .arg(
+                    Arg::new("mass")
+                        .long("mass")
+                        .help("Takeoff mass for the summary and field lengths"),
+                )
+                .arg(
+                    Arg::new("landing_mass")
+                        .long("landing-mass")
+                        .help("Landing mass for the landing field length"),
+                ),
+        ))
         .subcommand(common(
             Command::new("constraints")
                 .arg(path("scenario"))

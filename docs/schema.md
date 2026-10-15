@@ -140,6 +140,16 @@ constraint and mission evaluation of that scenario uses ISA shifted by it, and
 indicated or Mach speeds convert to true airspeed through that atmosphere. It
 can be set with `--set mission.atmosphere.isa_offset=20 degC`.
 
+An optional `mission.field` block sets the runway conditions for field
+lengths and second-segment climb: `elevation` (default `0 m`),
+`takeoff_mass` and `landing_mass` (default maximum takeoff mass; the
+performance summary is evaluated at `takeoff_mass`), `obstacle_height` (default
+`50 ft`) and `braking_coefficient`, the mean braking deceleration in g (default
+`0.30`). Density comes from the scenario atmosphere at the field elevation, and
+takeoff thrust or power is scaled by the installed propulsion's own lapse
+relative to sea level. Field lengths are `extrapolated` above 4.5 km elevation
+or above maximum takeoff mass.
+
 Missions may declare an additive schema-version-1 `initial_state`:
 
 ```yaml

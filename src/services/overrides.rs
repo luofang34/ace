@@ -84,7 +84,7 @@ fn is_optional_mapping(full_path: &str, remaining: &[&str]) -> bool {
             remaining[0],
             "fuselage" | "horizontal_tail" | "vertical_tail"
         ) && full_path.starts_with("aircraft.geometry.")
-            || remaining[0] == "atmosphere" && full_path.starts_with("mission."))
+            || matches!(remaining[0], "atmosphere" | "field") && full_path.starts_with("mission."))
 }
 
 fn set_sequence_path(
@@ -163,8 +163,14 @@ fn optional_override_value(raw: &str, path: &str) -> AexResult<Option<Value>> {
         | "aircraft.geometry.horizontal_tail.arm"
         | "aircraft.geometry.vertical_tail.area"
         | "aircraft.geometry.vertical_tail.arm"
-        | "mission.atmosphere.isa_offset" => Ok(Some(Value::String(raw.to_owned()))),
-        "aircraft.geometry.wing.aspect_ratio" => numeric_override(raw, path).map(Some),
+        | "mission.atmosphere.isa_offset"
+        | "mission.field.elevation"
+        | "mission.field.takeoff_mass"
+        | "mission.field.landing_mass"
+        | "mission.field.obstacle_height" => Ok(Some(Value::String(raw.to_owned()))),
+        "aircraft.geometry.wing.aspect_ratio" | "mission.field.braking_coefficient" => {
+            numeric_override(raw, path).map(Some)
+        }
         _ => Ok(None),
     }
 }

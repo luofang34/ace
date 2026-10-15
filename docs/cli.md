@@ -13,8 +13,8 @@ Primary commands:
 aex capabilities
 aex validate DOCUMENT
 aex resolve SCENARIO
-aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE)
-aex analyze performance SCENARIO
+aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE) [--mass VALUE]
+aex analyze performance SCENARIO [--mass VALUE] [--landing-mass VALUE]
 aex analyze mission SCENARIO
 aex analyze constraints SCENARIO
 aex analyze payload-range SCENARIO
@@ -47,6 +47,14 @@ response separately. Strict mode promotes model extrapolation,
 agent-assumption, and profile `PARAMETER_OUTSIDE_TYPICAL` warnings. Comparison
 accepts `--strict` as well. The exhaustive decisions for every shipped warning
 code are generated in [the strict warning policy](strict-warning-policy.md).
+
+`analyze point --mass` sets the point's mass (default maximum takeoff mass).
+`analyze performance --mass` sets `mission.field.takeoff_mass`, the mass of the
+whole performance summary including ceilings and takeoff field length;
+`--landing-mass` sets `mission.field.landing_mass` for the landing field
+length. Field elevation, obstacle height, braking coefficient and the ISA
+offset are set with `--set mission.field.*` and
+`--set mission.atmosphere.isa_offset`; see [the schema](schema.md).
 
 ## Error responses
 

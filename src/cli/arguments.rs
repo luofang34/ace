@@ -62,7 +62,7 @@ pub(super) enum AnalyzeCommand {
     Mission(ScenarioArgs),
     Constraints(ConstraintArgs),
     PayloadRange(ScenarioArgs),
-    Performance(ScenarioArgs),
+    Performance(PerformanceArgs),
 }
 
 #[derive(Debug)]
@@ -73,6 +73,16 @@ pub(super) struct PointArgs {
     pub(super) mach: Option<f64>,
     pub(super) mass: Option<String>,
     pub(super) configuration: String,
+    pub(super) common: CommonArgs,
+}
+
+#[derive(Debug)]
+pub(super) struct PerformanceArgs {
+    pub(super) scenario: PathBuf,
+    /// Takeoff mass for the summary and field lengths (`mission.field.takeoff_mass`).
+    pub(super) mass: Option<String>,
+    /// Landing mass for the landing field length (`mission.field.landing_mass`).
+    pub(super) landing_mass: Option<String>,
     pub(super) common: CommonArgs,
 }
 
