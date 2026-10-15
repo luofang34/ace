@@ -1,7 +1,7 @@
 use super::*;
 use crate::models::atmosphere::Isa1976;
 
-fn inputs() -> BTreeMap<String, Quantity> {
+pub(super) fn inputs() -> BTreeMap<String, Quantity> {
     use Unit::*;
     [
         ("area", 100.0, SquareMeter),
@@ -19,7 +19,7 @@ fn inputs() -> BTreeMap<String, Quantity> {
     .collect()
 }
 
-fn state(mass: f64) -> VehicleState {
+pub(super) fn state(mass: f64) -> VehicleState {
     VehicleState {
         time: Quantity::new(0.0, Unit::Second).unwrap(),
         distance: Quantity::new(0.0, Unit::Meter).unwrap(),

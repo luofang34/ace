@@ -618,369 +618,12 @@
       "owner": "concept_design",
       "revision": 0
     },
-    "phase.takeoff.cost_rate": {
-      "unit": "USD/s",
-      "value": null,
-      "expression": {
-        "op": "multiply",
-        "left": {
-          "op": "reference",
-          "parameter": "phase.takeoff.fuel_flow"
-        },
-        "right": {
-          "op": "reference",
-          "parameter": "economics.fuel_price"
-        }
-      },
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.takeoff.duration": {
-      "unit": "s",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.takeoff.distance": {
-      "unit": "m",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.takeoff.fuel_burn": {
-      "unit": "kg",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.takeoff.cost": {
-      "unit": "USD",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.duration_input": {
-      "unit": "s",
-      "value": {
-        "value": 1200,
-        "unit": "s"
-      },
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.speed": {
-      "unit": "m/s",
-      "value": {
-        "value": 160,
-        "unit": "m/s"
-      },
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.fuel_flow": {
-      "unit": "kg/s",
-      "value": {
-        "value": 1,
-        "unit": "kg/s"
-      },
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.cost_rate": {
-      "unit": "USD/s",
-      "value": null,
-      "expression": {
-        "op": "multiply",
-        "left": {
-          "op": "reference",
-          "parameter": "phase.climb.fuel_flow"
-        },
-        "right": {
-          "op": "reference",
-          "parameter": "economics.fuel_price"
-        }
-      },
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.duration": {
-      "unit": "s",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.distance": {
-      "unit": "m",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.fuel_burn": {
-      "unit": "kg",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.climb.cost": {
-      "unit": "USD",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.cruise.duration_input": {
-      "unit": "s",
-      "value": null,
-      "expression": {
-        "op": "divide",
-        "left": {
-          "op": "subtract",
-          "left": {
-            "op": "reference",
-            "parameter": "mission.distance"
-          },
-          "right": {
-            "op": "add",
-            "left": {
-              "op": "add",
-              "left": {
-                "op": "add",
-                "left": {
-                  "op": "add",
-                  "left": {
-                    "op": "reference",
-                    "parameter": "phase.taxi.distance"
-                  },
-                  "right": {
-                    "op": "reference",
-                    "parameter": "phase.takeoff.distance"
-                  }
-                },
-                "right": {
-                  "op": "reference",
-                  "parameter": "phase.climb.distance"
-                }
-              },
-              "right": {
-                "op": "reference",
-                "parameter": "phase.descent.distance"
-              }
-            },
-            "right": {
-              "op": "reference",
-              "parameter": "phase.landing.distance"
-            }
-          }
-        },
-        "right": {
-          "op": "reference",
-          "parameter": "phase.cruise.speed"
-        }
-      },
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
     "phase.cruise.speed": {
       "unit": "m/s",
       "value": {
         "value": 230,
         "unit": "m/s"
       },
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.duration_input": {
-      "unit": "s",
-      "value": {
-        "value": 900,
-        "unit": "s"
-      },
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.speed": {
-      "unit": "m/s",
-      "value": {
-        "value": 180,
-        "unit": "m/s"
-      },
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.fuel_flow": {
-      "unit": "kg/s",
-      "value": {
-        "value": 0.25,
-        "unit": "kg/s"
-      },
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.cost_rate": {
-      "unit": "USD/s",
-      "value": null,
-      "expression": {
-        "op": "multiply",
-        "left": {
-          "op": "reference",
-          "parameter": "phase.descent.fuel_flow"
-        },
-        "right": {
-          "op": "reference",
-          "parameter": "economics.fuel_price"
-        }
-      },
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.duration": {
-      "unit": "s",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.distance": {
-      "unit": "m",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.fuel_burn": {
-      "unit": "kg",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.descent.cost": {
-      "unit": "USD",
-      "value": null,
       "expression": null,
       "source": {
         "kind": "estimated",
@@ -1035,76 +678,6 @@
       "owner": "concept_design",
       "revision": 0
     },
-    "phase.landing.cost_rate": {
-      "unit": "USD/s",
-      "value": null,
-      "expression": {
-        "op": "multiply",
-        "left": {
-          "op": "reference",
-          "parameter": "phase.landing.fuel_flow"
-        },
-        "right": {
-          "op": "reference",
-          "parameter": "economics.fuel_price"
-        }
-      },
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.landing.duration": {
-      "unit": "s",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.landing.distance": {
-      "unit": "m",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.landing.fuel_burn": {
-      "unit": "kg",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
-    "phase.landing.cost": {
-      "unit": "USD",
-      "value": null,
-      "expression": null,
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
     "phase.reserve.duration_input": {
       "unit": "s",
       "value": {
@@ -1123,13 +696,13 @@
     "phase.reserve.speed": {
       "unit": "m/s",
       "value": {
-        "value": 120,
+        "value": 125,
         "unit": "m/s"
       },
       "expression": null,
       "source": {
         "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
         "revision": null
       },
       "owner": "concept_design",
@@ -1427,7 +1000,7 @@
       "expression": null,
       "source": {
         "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
         "revision": null
       },
       "owner": "concept_design",
@@ -1613,63 +1186,6 @@
       "owner": "concept_design",
       "revision": 0
     },
-    "phase.regional.duration_input": {
-      "unit": "s",
-      "value": null,
-      "expression": {
-        "op": "divide",
-        "left": {
-          "op": "subtract",
-          "left": {
-            "op": "reference",
-            "parameter": "mission.regional_distance"
-          },
-          "right": {
-            "op": "add",
-            "left": {
-              "op": "add",
-              "left": {
-                "op": "add",
-                "left": {
-                  "op": "add",
-                  "left": {
-                    "op": "reference",
-                    "parameter": "phase.taxi.distance"
-                  },
-                  "right": {
-                    "op": "reference",
-                    "parameter": "phase.takeoff.distance"
-                  }
-                },
-                "right": {
-                  "op": "reference",
-                  "parameter": "phase.climb.distance"
-                }
-              },
-              "right": {
-                "op": "reference",
-                "parameter": "phase.descent.distance"
-              }
-            },
-            "right": {
-              "op": "reference",
-              "parameter": "phase.landing.distance"
-            }
-          }
-        },
-        "right": {
-          "op": "reference",
-          "parameter": "phase.cruise.speed"
-        }
-      },
-      "source": {
-        "kind": "estimated",
-        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
-        "revision": null
-      },
-      "owner": "concept_design",
-      "revision": 0
-    },
     "mission.regional.duration": {
       "unit": "s",
       "value": null,
@@ -1771,6 +1287,177 @@
       },
       "owner": "synthesis",
       "revision": 0
+    },
+    "phase.takeoff.end_altitude": {
+      "unit": "m",
+      "value": {
+        "value": 35,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.end_speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 125,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.end_altitude": {
+      "unit": "m",
+      "value": {
+        "value": 0,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.end_speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.path_distance": {
+      "unit": "m",
+      "value": {
+        "value": 250000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.path_distance": {
+      "unit": "m",
+      "value": {
+        "value": 300000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.approach.path_distance": {
+      "unit": "m",
+      "value": {
+        "value": 50000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.approach.end_speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 100,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.arrival.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": {
+        "op": "add",
+        "left": {
+          "op": "add",
+          "left": {
+            "op": "reference",
+            "parameter": "phase.descent.path_distance"
+          },
+          "right": {
+            "op": "reference",
+            "parameter": "phase.approach.path_distance"
+          }
+        },
+        "right": {
+          "op": "multiply",
+          "left": {
+            "op": "reference",
+            "parameter": "phase.landing.speed"
+          },
+          "right": {
+            "op": "reference",
+            "parameter": "phase.landing.duration_input"
+          }
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.path.maximum_step": {
+      "unit": "s",
+      "value": {
+        "value": 60,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
     }
   },
   "analyses": {
@@ -1853,39 +1540,34 @@
       }
     },
     "takeoff": {
-      "plugin": "vehicle.constant_rate_phase",
+      "plugin": "aircraft.ground_estimate_phase",
       "version": "1",
+      "mode": "phase",
       "inputs": {
-        "duration": "phase.takeoff.duration_input",
-        "speed": "phase.takeoff.speed",
         "fuel_flow": "phase.takeoff.fuel_flow",
-        "cost_rate": "phase.takeoff.cost_rate"
+        "fuel_price": "economics.fuel_price"
       },
-      "outputs": {
-        "duration": "phase.takeoff.duration",
-        "distance": "phase.takeoff.distance",
-        "fuel_burn": "phase.takeoff.fuel_burn",
-        "cost": "phase.takeoff.cost"
-      }
+      "outputs": {}
     },
     "climb": {
-      "plugin": "vehicle.constant_rate_phase",
+      "plugin": "aircraft.energy_path_phase",
       "version": "1",
+      "mode": "phase",
       "inputs": {
-        "duration": "phase.climb.duration_input",
-        "speed": "phase.climb.speed",
-        "fuel_flow": "phase.climb.fuel_flow",
-        "cost_rate": "phase.climb.cost_rate"
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
       },
-      "outputs": {
-        "duration": "phase.climb.duration",
-        "distance": "phase.climb.distance",
-        "fuel_burn": "phase.climb.fuel_burn",
-        "cost": "phase.climb.cost"
-      }
+      "outputs": {}
     },
     "cruise": {
-      "plugin": "aircraft.level_flight_phase",
+      "plugin": "aircraft.route_cruise_phase",
       "version": "1",
       "mode": "phase",
       "inputs": {
@@ -1902,36 +1584,31 @@
       "outputs": {}
     },
     "descent": {
-      "plugin": "vehicle.constant_rate_phase",
+      "plugin": "aircraft.energy_path_phase",
       "version": "1",
+      "mode": "phase",
       "inputs": {
-        "duration": "phase.descent.duration_input",
-        "speed": "phase.descent.speed",
-        "fuel_flow": "phase.descent.fuel_flow",
-        "cost_rate": "phase.descent.cost_rate"
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
       },
-      "outputs": {
-        "duration": "phase.descent.duration",
-        "distance": "phase.descent.distance",
-        "fuel_burn": "phase.descent.fuel_burn",
-        "cost": "phase.descent.cost"
-      }
+      "outputs": {}
     },
     "landing": {
-      "plugin": "vehicle.constant_rate_phase",
+      "plugin": "aircraft.ground_estimate_phase",
       "version": "1",
+      "mode": "phase",
       "inputs": {
-        "duration": "phase.landing.duration_input",
-        "speed": "phase.landing.speed",
         "fuel_flow": "phase.landing.fuel_flow",
-        "cost_rate": "phase.landing.cost_rate"
+        "fuel_price": "economics.fuel_price"
       },
-      "outputs": {
-        "duration": "phase.landing.duration",
-        "distance": "phase.landing.distance",
-        "fuel_burn": "phase.landing.fuel_burn",
-        "cost": "phase.landing.cost"
-      }
+      "outputs": {}
     },
     "reserve": {
       "plugin": "aircraft.level_flight_phase",
@@ -2053,6 +1730,23 @@
           "regional"
         ]
       }
+    },
+    "approach": {
+      "plugin": "aircraft.energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {}
     }
   },
   "closures": {
@@ -2747,7 +2441,13 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
         },
         {
           "id": "climb",
@@ -2756,7 +2456,12 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise.altitude",
+            "target_speed": "phase.cruise.speed",
+            "path_distance": "phase.climb.path_distance"
+          }
         },
         {
           "id": "cruise",
@@ -2767,9 +2472,8 @@
           ],
           "reserve": false,
           "inputs": {
-            "speed": "phase.cruise.speed",
-            "altitude": "phase.cruise.altitude",
-            "duration": "phase.cruise.duration_input"
+            "route_distance": "mission.distance",
+            "arrival_distance": "phase.arrival.distance"
           }
         },
         {
@@ -2779,7 +2483,26 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.reserve.altitude",
+            "target_speed": "phase.reserve.speed",
+            "path_distance": "phase.descent.path_distance"
+          }
+        },
+        {
+          "id": "approach",
+          "kind": "approach",
+          "analysis": "approach",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.approach.end_speed",
+            "path_distance": "phase.approach.path_distance"
+          }
         },
         {
           "id": "landing",
@@ -2788,13 +2511,33 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.landing.duration_input",
+            "mean_speed": "phase.landing.speed",
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.landing.end_speed"
+          }
         }
       ],
       "branches": {
         "reserve": {
           "from_stage": "cruise",
           "stages": [
+            {
+              "id": "reserve_descent",
+              "kind": "descent",
+              "analysis": "descent",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.reserve.altitude",
+                "target_speed": "phase.reserve.speed",
+                "path_distance": "phase.descent.path_distance"
+              }
+            },
             {
               "id": "reserve",
               "kind": "reserve",
@@ -2804,19 +2547,22 @@
               ],
               "reserve": true,
               "inputs": {
-                "speed": "phase.reserve.speed",
-                "altitude": "phase.reserve.altitude",
                 "duration": "phase.reserve.duration_input"
               }
             },
             {
-              "id": "reserve_descent",
-              "kind": "descent",
-              "analysis": "descent",
+              "id": "reserve_approach",
+              "kind": "approach",
+              "analysis": "approach",
               "fuel_sequence": [
                 "fuel"
               ],
-              "reserve": true
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.approach.end_speed",
+                "path_distance": "phase.approach.path_distance"
+              }
             },
             {
               "id": "reserve_landing",
@@ -2825,7 +2571,13 @@
               "fuel_sequence": [
                 "fuel"
               ],
-              "reserve": true
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.landing.duration_input",
+                "mean_speed": "phase.landing.speed",
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.landing.end_speed"
+              }
             }
           ]
         }
@@ -2859,7 +2611,17 @@
             "unit": "m"
           }
         }
-      ]
+      ],
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
     },
     "regional": {
       "name": "Regional route at design dispatch loading",
@@ -2880,7 +2642,13 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
         },
         {
           "id": "climb",
@@ -2889,7 +2657,12 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise.altitude",
+            "target_speed": "phase.cruise.speed",
+            "path_distance": "phase.climb.path_distance"
+          }
         },
         {
           "id": "cruise",
@@ -2900,9 +2673,8 @@
           ],
           "reserve": false,
           "inputs": {
-            "speed": "phase.cruise.speed",
-            "altitude": "phase.cruise.altitude",
-            "duration": "phase.regional.duration_input"
+            "route_distance": "mission.regional_distance",
+            "arrival_distance": "phase.arrival.distance"
           }
         },
         {
@@ -2912,7 +2684,26 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.reserve.altitude",
+            "target_speed": "phase.reserve.speed",
+            "path_distance": "phase.descent.path_distance"
+          }
+        },
+        {
+          "id": "approach",
+          "kind": "approach",
+          "analysis": "approach",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.approach.end_speed",
+            "path_distance": "phase.approach.path_distance"
+          }
         },
         {
           "id": "landing",
@@ -2921,13 +2712,33 @@
           "fuel_sequence": [
             "fuel"
           ],
-          "reserve": false
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.landing.duration_input",
+            "mean_speed": "phase.landing.speed",
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.landing.end_speed"
+          }
         }
       ],
       "branches": {
         "reserve": {
           "from_stage": "cruise",
           "stages": [
+            {
+              "id": "reserve_descent",
+              "kind": "descent",
+              "analysis": "descent",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.reserve.altitude",
+                "target_speed": "phase.reserve.speed",
+                "path_distance": "phase.descent.path_distance"
+              }
+            },
             {
               "id": "reserve",
               "kind": "reserve",
@@ -2937,19 +2748,22 @@
               ],
               "reserve": true,
               "inputs": {
-                "speed": "phase.reserve.speed",
-                "altitude": "phase.reserve.altitude",
                 "duration": "phase.reserve.duration_input"
               }
             },
             {
-              "id": "reserve_descent",
-              "kind": "descent",
-              "analysis": "descent",
+              "id": "reserve_approach",
+              "kind": "approach",
+              "analysis": "approach",
               "fuel_sequence": [
                 "fuel"
               ],
-              "reserve": true
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.approach.end_speed",
+                "path_distance": "phase.approach.path_distance"
+              }
             },
             {
               "id": "reserve_landing",
@@ -2958,7 +2772,13 @@
               "fuel_sequence": [
                 "fuel"
               ],
-              "reserve": true
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.landing.duration_input",
+                "mean_speed": "phase.landing.speed",
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.landing.end_speed"
+              }
             }
           ]
         }
@@ -2992,7 +2812,17 @@
             "unit": "m"
           }
         }
-      ]
+      ],
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
     }
   }
 }

@@ -61,6 +61,13 @@ pub(crate) fn create_session_blocking(
     ace_physics::register(&mut registry)?;
     registry.register(Arc::new(weight::WeightPlugin::new()))?;
     registry.register(Arc::new(flight::FlightPhase::new()))?;
+    for kind in [
+        flight::PhaseKind::RouteCruise,
+        flight::PhaseKind::EnergyPath,
+        flight::PhaseKind::GroundEstimate,
+    ] {
+        registry.register(Arc::new(flight::FlightPhase::with_kind(kind)))?;
+    }
     geometry::register_blocking(&model, &mut registry)?;
     let mut session = Session::new(model, registry)?;
     let updates = overrides

@@ -278,13 +278,23 @@ fn notes(scene: &mut Scene, sheet: &Sheet) {
         "07 / ASSUMPTIONS + EVIDENCE",
         "layout",
     );
+    let flight = if sheet
+        .model
+        .analyses
+        .values()
+        .any(|a| a.plugin == "aircraft.energy_path_phase")
+    {
+        "Energy paths declared; ground estimated."
+    } else {
+        "Flight phases: inspect solver evidence."
+    };
     let notes = [
         "Twinjet concept family; supplied assumptions.",
         "Demand does not uniquely specify shape.",
         "Native body / diamond wing sections.",
         "No pylons, structure or hidden-line solution.",
         "Cruise: mass-driven polar + fixed TSFC.",
-        "Climb/descent/ground: fixed-rate estimates.",
+        flight,
         "Field length, loads, noise: NOT CALCULATED.",
         "No validated airfoils or uncertainty propagation.",
     ];

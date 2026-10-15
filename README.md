@@ -64,10 +64,16 @@ Failed transitions retain the last valid stage and revoke downstream results.
 Mission `branches` start independently at a nominal stage boundary; their
 reserve/alternate consumption and expense do not accumulate into normal trip cost.
 
-The example uses `aircraft.level_flight_phase` for cruise and reserve: constant
+The example uses `aircraft.route_cruise_phase` and `aircraft.level_flight_phase`
+for cruise and reserve: constant
 speed/altitude, parabolic drag, lift equal to weight, thrust equal to drag and
 declared installed TSFC/thrust. It rejects exceeded lift/thrust limits and Mach
-above 0.9; ground, climb and descent phases use declared approximate rates.
+above 0.9. Climb, descent and approach integrate mass and fuel along declared straight paths
+with linear true airspeed schedules, including potential and kinetic energy. Cruise
+uses the remaining route distance; reserve descent and loiter retain continuous
+states. Ground phases use declared approximate rates and terminal conditions, not
+runway performance. These clean-polar models exclude wind, speedbrakes, idle-thrust
+floors and propulsion transients; infeasible thrust or lift is rejected.
 The capacity-bounded fuel search assumes a monotonic fuel balance and feeds
 mission demand into the coupled empty-mass/MTOW closure. It requires usable tank
 capacity and terminal reserve, loads tanks in capacity proportion and checks

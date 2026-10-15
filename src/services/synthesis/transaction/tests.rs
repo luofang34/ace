@@ -168,11 +168,22 @@ fn installing_a_missing_phase_adapter_retries_its_mission_and_sizing_consumers()
     registry
         .register(Arc::new(weight::WeightPlugin::new()))
         .unwrap();
+    for kind in [
+        flight::PhaseKind::Level,
+        flight::PhaseKind::RouteCruise,
+        flight::PhaseKind::GroundEstimate,
+    ] {
+        registry
+            .register(Arc::new(flight::FlightPhase::with_kind(kind)))
+            .unwrap();
+    }
     let mut session = Session::new(model, registry).unwrap();
     let unavailable = session.run().unwrap();
     assert!(!unavailable.complete());
     session
-        .register(Arc::new(flight::FlightPhase::new()))
+        .register(Arc::new(flight::FlightPhase::with_kind(
+            flight::PhaseKind::EnergyPath,
+        )))
         .unwrap();
     let available = session.run().unwrap();
     assert!(available.complete());

@@ -125,7 +125,7 @@ fn synthesis_projects_domain_evidence_from_the_same_authoritative_graph()
             .as_array()
             .ok_or("missing stages")?
             .len(),
-        6
+        7
     );
     assert_eq!(mission["details"]["branches"]["reserve"]["completed"], true);
     assert_eq!(
@@ -154,6 +154,7 @@ fn range_payload_and_span_drive_stateful_fuel_closure_and_trip_cost() -> Result<
     };
     for result in [&base, &short, &long, &payload, &span] {
         assert_eq!(result["completed"], true);
+        verify_trajectory(result)?;
         let loaded = value(result, "fuel.loaded");
         let consumed = value(result, "mission.block_fuel") + value(result, "mission.reserve_fuel");
         assert!((loaded - consumed - value(result, "mission.remaining_fuel")).abs() < 1e-7);
@@ -223,4 +224,78 @@ fn mcp_exposes_the_same_synthesis_service() -> Result<(), Box<dyn Error>> {
         client.cancel().await?;
         Ok(())
     })
+}
+
+fn verify_trajectory(result: &Value) -> Result<(), Box<dyn Error>> {
+    let run = result["snapshot"]["runs"]
+        .as_array()
+        .ok_or("missing runs")?
+        .iter()
+        .rev()
+        .find(|r| r["node"] == "analysis:mission")
+        .ok_or("missing mission")?;
+    let mission: ace_physics::MissionReport = serde_json::from_value(run["details"].clone())?;
+    let target = result["snapshot"]["values"]["mission.distance"]["quantity"]["value"]
+        .as_f64()
+        .ok_or("missing range")?;
+    assert!(
+        (mission
+            .final_state
+            .state
+            .distance
+            .to(ace_model::Unit::NauticalMile)?
+            .value
+            - target)
+            .abs()
+            < 1e-8
+    );
+    for path in std::iter::once(&mission).chain(mission.branches.values()) {
+        let mut previous = &path.initial;
+        for stage in &path.stages {
+            assert_eq!(
+                serde_json::to_value(&stage.start)?,
+                serde_json::to_value(previous)?
+            );
+            for point in &stage.trajectory {
+                let sum: f64 = point.mass.items.values().map(|i| i.mass_kg).sum();
+                let moment: f64 = point
+                    .mass
+                    .items
+                    .values()
+                    .map(|i| i.mass_kg * i.cg_m[0])
+                    .sum();
+                assert!((sum - point.mass.total_mass_kg).abs() < 1e-8);
+                assert!((moment / sum - point.mass.cg_m[0]).abs() < 1e-10);
+            }
+            assert!(
+                (stage.start.mass.total_mass_kg
+                    - stage.end.mass.total_mass_kg
+                    - stage.fuel_burn_kg)
+                    .abs()
+                    < 1e-7
+            );
+            if let Some(phase) = &stage.phase {
+                for key in ["altitude", "speed"] {
+                    assert_eq!(
+                        phase.initial_state.conditions[key],
+                        stage.start.state.conditions[key]
+                    );
+                }
+                if ["climb", "descent", "approach"].contains(&stage.kind.as_str()) {
+                    assert_eq!(phase.plugin.id, "aircraft.energy_path_phase");
+                }
+            }
+            previous = &stage.end;
+        }
+        assert_eq!(path.final_state.state.conditions["altitude"].value, 0.0);
+        assert_eq!(path.final_state.state.conditions["speed"].value, 0.0);
+    }
+    let climb = mission
+        .stages
+        .iter()
+        .find(|s| s.id == "climb")
+        .ok_or("missing climb")?;
+    assert_eq!(climb.end.state.conditions["altitude"].value, 10000.0);
+    assert_eq!(climb.end.state.conditions["speed"].value, 230.0);
+    Ok(())
 }
