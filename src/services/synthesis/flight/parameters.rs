@@ -48,6 +48,25 @@ impl FlightModel {
     }
 }
 
+/// Optional along-track headwind stage input; negative is a tailwind.
+pub(super) fn ground_speed(
+    values: &BTreeMap<String, Quantity>,
+    airspeed: f64,
+) -> Result<f64, SolverError> {
+    let headwind = values
+        .get("headwind")
+        .map(|value| value.to(Unit::MeterPerSecond).map(|value| value.value))
+        .transpose()?
+        .unwrap_or(0.0);
+    let ground = airspeed - headwind;
+    if ground <= 0.0 {
+        return Err(SolverError::Failed(format!(
+            "headwind {headwind} m/s leaves no ground speed at {airspeed} m/s TAS"
+        )));
+    }
+    Ok(ground)
+}
+
 pub(super) fn read(
     values: &BTreeMap<String, Quantity>,
     key: &str,

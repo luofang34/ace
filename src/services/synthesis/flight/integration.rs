@@ -1,6 +1,6 @@
 use super::{
     external,
-    parameters::{FlightModel, positive, read},
+    parameters::{FlightModel, ground_speed, positive, read},
     powerplant::Operating,
 };
 use crate::domain::result::{AerodynamicState, AtmosphereState};
@@ -21,6 +21,7 @@ pub(super) fn evaluate(
     let speed = positive(&state.conditions, "speed", Unit::MeterPerSecond)?;
     let duration = read(&state.conditions, "duration", Unit::Second)?;
     let altitude = read(&state.conditions, "altitude", Unit::Meter)?;
+    let ground_speed = ground_speed(&state.conditions, speed)?;
     let steps = (duration / model.maximum_step).ceil().max(1.0);
     if duration < 0.0 || steps > 100_000.0 || !(0.0..=20_000.0).contains(&altitude) {
         return Err(SolverError::Failed(
@@ -51,7 +52,7 @@ pub(super) fn evaluate(
         let burn = dt * (flow + 2.0 * midpoint + 2.0 * midpoint2 + end) / 6.0;
         increments.push(PhaseIncrement {
             duration: Quantity::new(dt, Unit::Second)?,
-            distance: Quantity::new(speed * dt, Unit::Meter)?,
+            distance: Quantity::new(ground_speed * dt, Unit::Meter)?,
             fuel_burn: Quantity::new(burn, Unit::Kilogram)?,
             cost: Quantity::new(burn * model.fuel_price, Unit::Dollar)?,
             conditions: BTreeMap::new(),
@@ -65,7 +66,7 @@ pub(super) fn evaluate(
         approximate: true,
         artifacts: Vec::new(),
         details: serde_json::json!({"method":"rk4_level_flight", "force_balance":"lift=weight; thrust=drag",
-            "validity":"parabolic or tabulated induced drag; constant flight condition; CL and powerplant thrust within limit; tabulated polars follow polar_basis", "powerplant":model.powerplant.basis(), "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis, "maximum_step_s":model.maximum_step}),
+            "validity":"parabolic or tabulated induced drag; constant flight condition; distance at TAS minus declared headwind; CL and powerplant thrust within limit; tabulated polars follow polar_basis", "powerplant":model.powerplant.basis(), "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis, "maximum_step_s":model.maximum_step}),
     })
 }
 

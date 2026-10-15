@@ -81,8 +81,10 @@ Paths stay within 0-20 km altitude and a +/-10 deg flight-path angle, so
 (about 5.7 times it; 25.5 km for a 4500 m climb). Cruise
 uses the remaining route distance; reserve descent and loiter retain continuous
 states. Ground phases use declared approximate rates and terminal conditions, not
-runway performance. These clean-polar models exclude wind and propulsion
-transients; infeasible thrust or lift is rejected. A path stage may declare an
+runway performance. Level and route-cruise stages accept an optional
+`headwind` input (negative for tailwind): fuel follows airspeed while distance
+and route time use ground speed. Climb and descent paths and propulsion
+transients ignore wind; infeasible thrust or lift is rejected. A path stage may declare an
 `idle_thrust` input: where the path needs less thrust, fuel burns at idle and
 the surplus appears as `drag_device_n`, an unmodelled drag device. Without it, a
 path needing negative thrust is rejected. Like other stage inputs, `idle_thrust`
