@@ -61,33 +61,11 @@ pub(crate) fn create_session_blocking(
     let mut registry = Registry::default();
     ace_physics::register(&mut registry)?;
     registry.register(Arc::new(weight::WeightPlugin::new()))?;
-    registry.register(Arc::new(flight::FlightPhase::new()))?;
-    for kind in [
-        flight::PhaseKind::RouteCruise,
-        flight::PhaseKind::EnergyPath,
-        flight::PhaseKind::GroundEstimate,
-    ] {
-        registry.register(Arc::new(flight::FlightPhase::with_kind(kind)))?;
-    }
-    for kind in [
-        flight::PhaseKind::Level,
-        flight::PhaseKind::RouteCruise,
-        flight::PhaseKind::EnergyPath,
-    ] {
-        registry.register(Arc::new(flight::FlightPhase::with_kind(kind).propeller()))?;
-        registry.register(Arc::new(
-            flight::FlightPhase::with_kind(kind).propeller().vspaero(),
-        ))?;
+    for phase in flight_phases() {
+        registry.register(Arc::new(phase))?;
     }
     geometry::register_blocking(&model, &mut registry)?;
     vspaero::register_blocking(&model, &mut registry)?;
-    for kind in [
-        flight::PhaseKind::Level,
-        flight::PhaseKind::RouteCruise,
-        flight::PhaseKind::EnergyPath,
-    ] {
-        registry.register(Arc::new(flight::FlightPhase::with_vspaero(kind)))?;
-    }
     let mut session = Session::new(model, registry)?;
     let updates = overrides
         .iter()
@@ -102,6 +80,34 @@ pub(crate) fn create_session_blocking(
         },
     )?;
     Ok(session)
+}
+
+/// Every state-driven flight-phase adapter a synthesis session registers.
+fn flight_phases() -> Vec<flight::FlightPhase> {
+    use flight::{FlightPhase, PhaseKind};
+    let mut phases = vec![FlightPhase::with_kind(PhaseKind::GroundEstimate)];
+    for kind in [
+        PhaseKind::Level,
+        PhaseKind::RouteCruise,
+        PhaseKind::EnergyPath,
+    ] {
+        phases.extend([
+            FlightPhase::with_kind(kind),
+            FlightPhase::with_vspaero(kind),
+            FlightPhase::with_kind(kind).propeller(),
+            FlightPhase::with_kind(kind).propeller().vspaero(),
+        ]);
+    }
+    phases
+}
+
+/// Registered flight-phase adapter identifiers, as advertised by the capability manifest.
+pub(crate) fn flight_phase_ids() -> Vec<String> {
+    use ace_engine::AnalysisPlugin;
+    flight_phases()
+        .iter()
+        .map(|phase| phase.spec().identity.id.clone())
+        .collect()
 }
 
 fn parse_quantity(name: &str, raw: &str) -> AexResult<Quantity> {

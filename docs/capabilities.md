@@ -93,6 +93,24 @@ Transport OEI second-segment gradients are regulatory-derived from [14 CFR 25.12
 
 Operators: `ge`, `le`, `eq`. Severities: `hard`, `soft`, `report_only`.
 
+## Synthesis flight-phase adapters
+
+A synthesis mission stage's `kind` is free text (for example `loiter` or `patrol`); the stage's selected analysis defines its physics.
+
+- `aircraft.ground_estimate_phase`
+- `aircraft.level_flight_phase`
+- `aircraft.vspaero_level_flight_phase`
+- `aircraft.propeller_level_flight_phase`
+- `aircraft.vspaero_propeller_level_flight_phase`
+- `aircraft.route_cruise_phase`
+- `aircraft.vspaero_route_cruise_phase`
+- `aircraft.propeller_route_cruise_phase`
+- `aircraft.vspaero_propeller_route_cruise_phase`
+- `aircraft.energy_path_phase`
+- `aircraft.vspaero_energy_path_phase`
+- `aircraft.propeller_energy_path_phase`
+- `aircraft.vspaero_propeller_energy_path_phase`
+
 ## Backends
 
 - `native`

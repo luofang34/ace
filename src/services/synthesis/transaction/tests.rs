@@ -197,3 +197,22 @@ fn installing_a_missing_phase_adapter_retries_its_mission_and_sizing_consumers()
         unavailable.values["phase.taxi.fuel_burn"].run_id
     );
 }
+
+#[test]
+fn advertised_flight_phase_ids_are_the_registered_unique_variants() {
+    let ids = flight_phase_ids();
+    let unique = ids.iter().collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(unique.len(), ids.len());
+    assert_eq!(ids.len(), 13);
+    for id in [
+        "aircraft.ground_estimate_phase",
+        "aircraft.level_flight_phase",
+        "aircraft.vspaero_route_cruise_phase",
+        "aircraft.propeller_energy_path_phase",
+        "aircraft.vspaero_propeller_level_flight_phase",
+    ] {
+        assert!(ids.iter().any(|item| item == id), "{id}");
+    }
+    // A session registers exactly this list; duplicates would fail registration.
+    session();
+}

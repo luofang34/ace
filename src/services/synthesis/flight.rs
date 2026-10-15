@@ -27,10 +27,6 @@ pub(super) struct FlightPhase {
 }
 
 impl FlightPhase {
-    pub fn new() -> Self {
-        Self::with_kind(PhaseKind::Level)
-    }
-
     pub fn with_kind(kind: PhaseKind) -> Self {
         use Unit::*;
         let mut ports = vec![
