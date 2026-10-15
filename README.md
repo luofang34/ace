@@ -69,7 +69,10 @@ for cruise and reserve: constant
 speed/altitude, parabolic drag, lift equal to weight, thrust equal to drag and
 declared installed TSFC/thrust. It rejects exceeded lift/thrust limits and Mach
 above 0.9. Climb, descent and approach integrate mass and fuel along declared straight paths
-with linear true airspeed schedules, including potential and kinetic energy. Cruise
+with linear true airspeed schedules, including potential and kinetic energy.
+Paths stay within 0-20 km altitude and a +/-10 deg flight-path angle, so
+`path_distance` must be at least the altitude change divided by tan 10 deg
+(about 5.7 times it; 25.5 km for a 4500 m climb). Cruise
 uses the remaining route distance; reserve descent and loiter retain continuous
 states. Ground phases use declared approximate rates and terminal conditions, not
 runway performance. These clean-polar models exclude wind and propulsion

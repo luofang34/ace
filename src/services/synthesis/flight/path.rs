@@ -14,6 +14,8 @@ use ace_engine::{PhaseIncrement, PhaseOutput, RunControl, SolverError};
 use ace_model::{Quantity, Unit, VehicleState};
 use std::collections::BTreeMap;
 
+const MAXIMUM_PATH_ANGLE_DEG: f64 = 10.0;
+
 struct Path {
     altitude: f64,
     speed: f64,
@@ -38,12 +40,13 @@ impl Path {
         let length = horizontal.hypot(dh);
         if !(0.0..=20_000.0).contains(&altitude)
             || !(0.0..=20_000.0).contains(&target_altitude)
-            || dh.atan2(horizontal).abs() > 10.0_f64.to_radians()
+            || dh.atan2(horizontal).abs() > MAXIMUM_PATH_ANGLE_DEG.to_radians()
         {
-            return Err(SolverError::Failed(
-                "energy path requires altitude 0..20000 m and flight-path angle within +/-10 deg"
-                    .into(),
-            ));
+            return Err(SolverError::Failed(format!(
+                "energy path requires altitude 0..20000 m and flight-path angle within +/-{MAXIMUM_PATH_ANGLE_DEG} deg; a {:.0} m altitude change needs path_distance >= {:.0} m",
+                dh.abs(),
+                dh.abs() / MAXIMUM_PATH_ANGLE_DEG.to_radians().tan()
+            )));
         }
         let idle_thrust = values
             .contains_key("idle_thrust")
