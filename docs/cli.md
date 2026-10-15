@@ -81,6 +81,11 @@ without combining streams. Human-format failures write a concise tracing
 diagnostic to stderr and no stdout. Help and version requests remain successful
 and keep their normal text output.
 
+A point speed below stall returns `SPEED_BELOW_STALL` with
+`context.minimum_flyable_speed_m_s` for the requested altitude, mass and
+configuration, so sweep scripts can read the per-altitude minimum speed instead
+of searching for it.
+
 Scenario validation and every analysis entry point run the same registered
 model-domain preflight. Unsupported declarations return
 `MODEL_DOMAIN_UNSUPPORTED`; `context.violations` contains every breach in

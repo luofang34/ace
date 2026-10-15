@@ -85,10 +85,13 @@ impl PointAnalyzer {
             atmosphere.density_kg_m3,
         )?;
         if speed_m_s < stall_speed {
-            return Err(AexError::analysis(
-                "SPEED_BELOW_STALL",
-                format!("{speed_m_s:.2} m/s is below stall speed {stall_speed:.2} m/s"),
-            ));
+            return Err(AexError::SpeedBelowStall {
+                speed_m_s,
+                minimum_flyable_speed_m_s: stall_speed,
+                altitude_m,
+                mass_kg,
+                configuration: configuration.to_owned(),
+            });
         }
         let aerodynamics = evaluate_aerodynamics(
             &self.scenario.aircraft,

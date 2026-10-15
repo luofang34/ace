@@ -63,3 +63,31 @@ fn performance_mass_flags_reach_field_lengths() -> Result<(), Box<dyn Error>> {
     assert!(hot_takeoff > takeoff);
     Ok(())
 }
+
+#[test]
+fn point_below_stall_reports_minimum_flyable_speed() -> Result<(), Box<dyn Error>> {
+    let temporary = TempDir::new()?;
+    let path = scenario("c172");
+    let output = command(temporary.path())
+        .args([
+            "analyze",
+            "point",
+            &path.to_string_lossy(),
+            "--altitude",
+            "3000 m",
+            "--speed",
+            "10 m/s",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .failure();
+    let error: Value = serde_json::from_slice(&output.get_output().stdout)?;
+    assert_eq!(error["error"]["code"], "SPEED_BELOW_STALL");
+    let minimum = error["error"]["context"]["minimum_flyable_speed_m_s"]
+        .as_f64()
+        .ok_or("missing minimum flyable speed")?;
+    assert!(minimum > 10.0);
+    assert_eq!(error["error"]["context"]["altitude_m"], 3000.0);
+    Ok(())
+}
