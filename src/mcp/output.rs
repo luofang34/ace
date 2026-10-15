@@ -22,6 +22,14 @@ pub(super) fn json_output<T: Serialize>(value: T) -> Result<Json<ObjectOutput>, 
     json_output_with_system(value, DisplayUnitSystem::Si)
 }
 
+pub(super) fn canonical_json_output<T: Serialize>(
+    value: T,
+) -> Result<Json<ObjectOutput>, ErrorData> {
+    Ok(object_output(
+        serde_json::to_value(value).map_err(mcp_serialization_error)?,
+    ))
+}
+
 pub(super) fn json_output_for_scenario<T: Serialize>(
     value: T,
     scenario_path: &Path,
@@ -49,9 +57,13 @@ pub(super) fn json_output_with_system<T: Serialize>(
 ) -> Result<Json<ObjectOutput>, ErrorData> {
     let serialized = serde_json::to_value(value).map_err(mcp_serialization_error)?;
     let interface_value = serialization::attach_units_for(serialized, system);
-    let fields = match interface_value {
+    Ok(object_output(interface_value))
+}
+
+fn object_output(value: Value) -> Json<ObjectOutput> {
+    let fields = match value {
         Value::Object(mapping) => mapping.into_iter().collect(),
         scalar => BTreeMap::from([("result".to_owned(), scalar)]),
     };
-    Ok(Json(ObjectOutput { fields }))
+    Json(ObjectOutput { fields })
 }

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "trip-cost",
+  "name": "Non-passenger trip accounting",
+  "domain": "accounting",
+  "parameters": {
+    "cost": {
+      "unit": "USD",
+      "value": {"value": 10000, "unit": "USD"},
+      "owner": "operations",
+      "source": {"kind": "assumption", "reference": "Illustrative trip invoice"}
+    },
+    "duration": {
+      "unit": "h",
+      "value": {"value": 2, "unit": "h"},
+      "owner": "operations",
+      "source": {"kind": "assumption", "reference": "Illustrative elapsed block time"}
+    },
+    "trip_cost": {
+      "unit": "USD",
+      "owner": "operations",
+      "source": {"kind": "analysis", "reference": "Cost accounting"}
+    },
+    "cost_per_hour": {
+      "unit": "USD/h",
+      "owner": "operations",
+      "source": {"kind": "analysis", "reference": "Cost accounting"}
+    },
+    "network_compatible": {
+      "unit": "1",
+      "owner": "operations",
+      "source": {"kind": "analysis", "reference": "Declared endpoint compatibility"}
+    }
+  },
+  "analyses": {
+    "accounting": {
+      "plugin": "vehicle.trip_cost",
+      "version": "1",
+      "inputs": {},
+      "resources": {"operations": true},
+      "outputs": {
+        "trip_cost": "trip_cost",
+        "cost_per_hour": "cost_per_hour",
+        "network_compatible": "network_compatible"
+      }
+    }
+  },
+  "operations": {
+    "basis": {"currency": "USD", "price_year": 2025, "cost_scope": "Illustrative invoiced trip cost"},
+    "seats": {"value": 0, "unit": "1"},
+    "distance": {"value": 0, "unit": "nmi"},
+    "load_factor": {"value": 0, "unit": "1"},
+    "block_duration": "duration",
+    "costs": [{"id": "invoice", "category": "invoice", "amount": "cost"}]
+  }
+}

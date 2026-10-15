@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use std::collections::BTreeSet;
 
 use crate::domain::diagnostic::{Diagnostic, Severity};

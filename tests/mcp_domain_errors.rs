@@ -1,6 +1,6 @@
 //! MCP model-domain failures are structured tool results, not protocol errors.
 
-#![allow(clippy::expect_used, clippy::panic)]
+#![cfg(test)]
 
 use std::error::Error;
 use std::io;
@@ -44,64 +44,68 @@ async fn domain_error(
         .ok_or_else(|| io::Error::other("tool error omitted structured content").into())
 }
 
-#[tokio::test]
-async fn resolve_point_and_mission_preserve_model_domain_violations() -> Result<(), Box<dyn Error>>
-{
-    let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
-    command.args(["mcp", "serve"]);
-    let client = ().serve(TokioChildProcess::new(command)?).await?;
-    let scenario_path = scenario();
-    let requests = [
-        (
-            "resolve_scenario",
-            json!({
-                "scenario_path": scenario_path,
-                "overrides": {"mission.segments.cruise.true_airspeed": "400 m/s"}
-            }),
-        ),
-        (
-            "calculate_point_performance",
-            json!({
-                "scenario_path": scenario_path,
-                "condition": {"altitude": "0 m", "true_airspeed": "400 m/s"}
-            }),
-        ),
-        (
-            "simulate_mission",
-            json!({
-                "scenario_path": scenario_path,
-                "overrides": {"mission.segments.cruise.true_airspeed": "400 m/s"}
-            }),
-        ),
-    ];
+#[test]
+fn resolve_point_and_mission_preserve_model_domain_violations() -> Result<(), Box<dyn Error>> {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(async {
+            let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
+            command.args(["mcp", "serve"]);
+            let client = ().serve(TokioChildProcess::new(command)?).await?;
+            let scenario_path = scenario();
+            let requests = [
+                (
+                    "resolve_scenario",
+                    json!({
+                        "scenario_path": scenario_path,
+                        "overrides": {"mission.segments.cruise.true_airspeed": "400 m/s"}
+                    }),
+                ),
+                (
+                    "calculate_point_performance",
+                    json!({
+                        "scenario_path": scenario_path,
+                        "condition": {"altitude": "0 m", "true_airspeed": "400 m/s"}
+                    }),
+                ),
+                (
+                    "simulate_mission",
+                    json!({
+                        "scenario_path": scenario_path,
+                        "overrides": {"mission.segments.cruise.true_airspeed": "400 m/s"}
+                    }),
+                ),
+            ];
 
-    for (name, request) in requests {
-        let detail = domain_error(&client, name, request).await?;
-        assert_eq!(detail["status"], "error");
-        assert_eq!(detail["code"], "MODEL_DOMAIN_UNSUPPORTED");
-        assert!(detail["violating_path"].is_string());
-        assert!(detail["valid_range"].is_object());
-        assert!(detail["diagnostics"].as_array().is_some_and(|diagnostics| {
-            diagnostics.iter().all(|diagnostic| {
-                diagnostic["violating_path"].is_string()
-                    && diagnostic["valid_range"]["model_id"].is_string()
-                    && diagnostic["valid_range"]["minimum"].is_number()
-                    && diagnostic["valid_range"]["maximum"].is_number()
-                    && diagnostic["valid_range"]["unit"].is_string()
-                    && diagnostic["valid_range"]["basis"].is_string()
-            })
-        }));
-    }
+            for (name, request) in requests {
+                let detail = domain_error(&client, name, request).await?;
+                assert_eq!(detail["status"], "error");
+                assert_eq!(detail["code"], "MODEL_DOMAIN_UNSUPPORTED");
+                assert!(detail["violating_path"].is_string());
+                assert!(detail["valid_range"].is_object());
+                assert!(detail["diagnostics"].as_array().is_some_and(|diagnostics| {
+                    diagnostics.iter().all(|diagnostic| {
+                        diagnostic["violating_path"].is_string()
+                            && diagnostic["valid_range"]["model_id"].is_string()
+                            && diagnostic["valid_range"]["minimum"].is_number()
+                            && diagnostic["valid_range"]["maximum"].is_number()
+                            && diagnostic["valid_range"]["unit"].is_string()
+                            && diagnostic["valid_range"]["basis"].is_string()
+                    })
+                }));
+            }
 
-    let malformed = client
-        .call_tool(CallToolRequestParams {
-            meta: None,
-            name: "calculate_point_performance".into(),
-            arguments: Some(arguments(json!({"scenario_path": scenario_path}))?),
-            task: None,
+            let malformed = client
+                .call_tool(CallToolRequestParams {
+                    meta: None,
+                    name: "calculate_point_performance".into(),
+                    arguments: Some(arguments(json!({"scenario_path": scenario_path}))?),
+                    task: None,
+                })
+                .await;
+            assert!(matches!(malformed, Err(ServiceError::McpError(_))));
+            client.cancel().await?;
+            Ok(())
         })
-        .await;
-    assert!(matches!(malformed, Err(ServiceError::McpError(_))));
-    client.cancel().await?;
-    Ok(())
 }

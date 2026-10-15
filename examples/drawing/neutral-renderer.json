@@ -1,0 +1,138 @@
+{
+  "document_reference": "Neutral renderer test; no aircraft structural claim",
+  "evidence": {
+    "fixture": {
+      "reference": "Synthetic renderer fixture only",
+      "result_id": "fixture-rectangle",
+      "kind": "definition",
+      "maturity": "unknown",
+      "scope": {
+        "kind": "current_model"
+      },
+      "scenario": "renderer fixture",
+      "state": null,
+      "load_case": null
+    }
+  },
+  "geometry": {
+    "paths": [
+      {
+        "id": "fixture-frame",
+        "label": "Synthetic test rectangle",
+        "role": "section_material",
+        "closed": true,
+        "points": [
+          [
+            "wing.span",
+            {
+              "value": -1,
+              "unit": "m"
+            },
+            {
+              "value": -1,
+              "unit": "m"
+            }
+          ],
+          [
+            "wing.span",
+            {
+              "value": 1,
+              "unit": "m"
+            },
+            {
+              "value": -1,
+              "unit": "m"
+            }
+          ],
+          [
+            "wing.span",
+            {
+              "value": 1,
+              "unit": "m"
+            },
+            {
+              "value": 1,
+              "unit": "m"
+            }
+          ],
+          [
+            "wing.span",
+            {
+              "value": -1,
+              "unit": "m"
+            },
+            {
+              "value": 1,
+              "unit": "m"
+            }
+          ]
+        ],
+        "evidence": "fixture"
+      }
+    ],
+    "sections": [
+      {
+        "id": "T",
+        "station": "wing.span",
+        "objects": [],
+        "evidence": "fixture"
+      }
+    ]
+  },
+  "results": {
+    "statements": [
+      {
+        "label": "Input span",
+        "value": "wing.span",
+        "unit": "m",
+        "check": null,
+        "equation": null,
+        "evidence": "fixture"
+      }
+    ]
+  },
+  "facts": [
+    {
+      "id": "mass-basis",
+      "label": "Declared MTOW",
+      "value": null,
+      "evidence": "fixture"
+    }
+  ],
+  "figures": [
+    {
+      "id": "GA-example",
+      "title": "Neutral general arrangement",
+      "width_px": 1100,
+      "height_px": 560,
+      "reference": "Renderer fixture",
+      "content": {
+        "kind": "general_arrangement"
+      }
+    },
+    {
+      "id": "facts-example",
+      "title": "Supplied documentary facts",
+      "width_px": 374,
+      "height_px": 282,
+      "reference": "Renderer fixture",
+      "content": {
+        "kind": "facts",
+        "ids": [
+          "mass-basis"
+        ]
+      }
+    },
+    {
+      "id": "performance-example",
+      "title": "Supplied performance",
+      "width_px": 552,
+      "height_px": 172,
+      "reference": "Renderer fixture",
+      "content": {
+        "kind": "curves",
+        "ids": []
+      }
+    }
+  ]
+}

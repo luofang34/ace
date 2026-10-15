@@ -20,6 +20,8 @@ use crate::models::blended_wing::is_blended_wing_body;
 
 mod geometry;
 mod parsing;
+pub(crate) mod polar;
+mod synthesis;
 
 use geometry::{blended_wing_center_of_gravity_x, geometry_script};
 use parsing::{
@@ -146,6 +148,23 @@ impl OpenVspBackend {
         operation: &str,
         success_marker: &str,
     ) -> AexResult<String> {
+        self.run_script_controlled_blocking(
+            directory,
+            script,
+            operation,
+            success_marker,
+            &ace_engine::RunControl::bounded(std::time::Duration::from_secs(300)),
+        )
+    }
+
+    fn run_script_controlled_blocking(
+        &self,
+        directory: &Path,
+        script: &str,
+        operation: &str,
+        success_marker: &str,
+        control: &ace_engine::RunControl,
+    ) -> AexResult<String> {
         let mut script_file =
             NamedTempFile::new_in(directory).map_err(|source| AexError::Write {
                 path: directory.to_path_buf(),
@@ -158,16 +177,18 @@ impl OpenVspBackend {
                 path: script_file.path().to_path_buf(),
                 source,
             })?;
-        let result = Command::new(&self.executable)
+        let mut command = Command::new(&self.executable);
+        command
             .args(["-script"])
             .arg(script_file.path())
             .current_dir(directory)
-            .env("PATH", &self.search_path)
-            .output()
-            .map_err(|source| AexError::BackendLaunch {
-                executable: self.executable.clone(),
-                source,
-            })?;
+            .env("PATH", &self.search_path);
+        let result = super::process::output_blocking(command, control).map_err(|source| {
+            AexError::Service {
+                operation: "OpenVSP process",
+                source: Box::new(source),
+            }
+        })?;
         let mut output = String::from_utf8_lossy(&result.stdout).into_owned();
         output.push_str(&String::from_utf8_lossy(&result.stderr));
         if let Some(error) = output
@@ -180,7 +201,7 @@ impl OpenVspBackend {
         let lines = output.lines().map(str::trim).collect::<Vec<_>>();
         let protocol_complete = lines.iter().any(|line| line.starts_with(success_marker))
             && lines.contains(&"ACE_COMPLETE=1");
-        if !protocol_complete {
+        if !result.status.success() || !protocol_complete {
             return Err(backend_failure(operation, &output, result.status.code()));
         }
         Ok(output)

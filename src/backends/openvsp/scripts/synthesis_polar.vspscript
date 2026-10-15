@@ -1,0 +1,41 @@
+int main() {
+    ReadVSPFile("wing.vsp3");
+    string geometry="VSPAEROComputeGeometry";
+    SetAnalysisInputDefaults(geometry);
+    array<int> none={SET_NONE}; array<int> all={SET_ALL};
+    SetIntAnalysisInput(geometry,"GeomSet",none);
+    SetIntAnalysisInput(geometry,"ThinGeomSet",all);
+    ExecAnalysis(geometry);
+    string analysis="VSPAEROSweep";
+    SetAnalysisInputDefaults(analysis);
+    array<int> manual={0}; array<int> cpu={1};
+    array<double> area={__AREA__}; array<double> span={__SPAN__}; array<double> chord={__CHORD__};
+    SetIntAnalysisInput(analysis,"RefFlag",manual);
+    SetIntAnalysisInput(analysis,"NCPU",cpu);
+    SetDoubleAnalysisInput(analysis,"Sref",area);
+    SetDoubleAnalysisInput(analysis,"bref",span);
+    SetDoubleAnalysisInput(analysis,"cref",chord);
+    array<double> alpha_start={0}; array<double> alpha_end={10}; array<int> alpha_count={6};
+    SetDoubleAnalysisInput(analysis,"AlphaStart",alpha_start);
+    SetDoubleAnalysisInput(analysis,"AlphaEnd",alpha_end);
+    SetIntAnalysisInput(analysis,"AlphaNpts",alpha_count);
+    array<double> mach_start={0.2}; array<double> mach_end={0.8}; array<int> mach_count={3};
+    SetDoubleAnalysisInput(analysis,"MachStart",mach_start);
+    SetDoubleAnalysisInput(analysis,"MachEnd",mach_end);
+    SetIntAnalysisInput(analysis,"MachNpts",mach_count);
+    ExecAnalysis(analysis);
+    string result=FindLatestResultsID("VSPAERO_Polar");
+    array<double> mach=GetDoubleResults(result,"Mach");
+    array<double> alpha=GetDoubleResults(result,"Alpha");
+    array<double> lift=GetDoubleResults(result,"CLtot");
+    array<double> drag=GetDoubleResults(result,"CDi");
+    if (mach.size()!=18 || alpha.size()!=18 || lift.size()!=18 || drag.size()!=18) {
+        Print("ACE_ERROR=incomplete VSPAERO Mach/alpha grid"); return 1;
+    }
+    for(uint i=0;i<mach.size();i++) {
+        Print("ACE_POLAR=",false); Print(mach[i],false); Print(",",false);
+        Print(alpha[i],false); Print(",",false); Print(lift[i],false); Print(",",false); Print(drag[i]);
+    }
+    while(GetNumTotalErrors()>0){ErrorObj err=PopLastError();Print("ACE_ERROR="+err.GetErrorString());}
+    Print("ACE_COMPLETE=1"); return 0;
+}

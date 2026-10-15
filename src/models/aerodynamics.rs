@@ -36,6 +36,22 @@ pub(crate) fn evaluate(
                 configuration,
             )
         })?;
+    evaluate_configuration(
+        coefficients,
+        configuration,
+        aircraft.wing.area_m2,
+        aircraft.wing.aspect_ratio,
+        condition,
+    )
+}
+
+pub(crate) fn evaluate_configuration(
+    coefficients: &AeroConfiguration,
+    configuration: &str,
+    area_m2: f64,
+    aspect_ratio: f64,
+    condition: FlightCondition,
+) -> AexResult<AerodynamicState> {
     if condition.true_airspeed_m_s <= 0.0 {
         return Err(AexError::analysis(
             "INVALID_AIRSPEED",
@@ -44,15 +60,15 @@ pub(crate) fn evaluate(
     }
     let dynamic_pressure = 0.5 * condition.density_kg_m3 * condition.true_airspeed_m_s.powi(2);
     let weight = condition.mass_kg * GRAVITY_M_S2;
-    let lift_coefficient = weight / (dynamic_pressure * aircraft.wing.area_m2);
+    let lift_coefficient = weight / (dynamic_pressure * area_m2);
     let mach = condition.true_airspeed_m_s / condition.speed_of_sound_m_s;
-    let polar_evaluation = coefficient_evaluation_at_mach(aircraft, configuration, mach)?;
+    let polar_evaluation = coefficient_evaluation(coefficients, configuration, aspect_ratio, mach)?;
     let polar = polar_evaluation.coefficients;
     let induced_drag = polar.induced_drag_factor * lift_coefficient.powi(2);
     let (wave_drag, mut warnings) = wave_drag(coefficients, configuration, mach);
     warnings.extend(polar_evaluation.warnings);
     let drag_coefficient = polar.cd0 + coefficients.additional_cd + induced_drag + wave_drag;
-    let drag = dynamic_pressure * aircraft.wing.area_m2 * drag_coefficient;
+    let drag = dynamic_pressure * area_m2 * drag_coefficient;
     Ok(AerodynamicState {
         dynamic_pressure_pa: dynamic_pressure,
         lift_coefficient,
@@ -173,7 +189,21 @@ pub(crate) fn coefficient_evaluation_at_mach(
                 configuration,
             )
         })?;
-    let polar = coefficients.polar_coefficients(mach, aircraft.wing.aspect_ratio);
+    coefficient_evaluation(
+        coefficients,
+        configuration,
+        aircraft.wing.aspect_ratio,
+        mach,
+    )
+}
+
+fn coefficient_evaluation(
+    coefficients: &AeroConfiguration,
+    configuration: &str,
+    aspect_ratio: f64,
+    mach: f64,
+) -> AexResult<PolarEvaluation> {
+    let polar = coefficients.polar_coefficients(mach, aspect_ratio);
     if polar.cd0.is_finite()
         && polar.cd0 > 0.0
         && polar.cl_max.is_finite()

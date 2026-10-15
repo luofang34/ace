@@ -68,6 +68,29 @@ pub(crate) enum Severity {
 /// Typed failure returned by public CLI and analysis entry points.
 #[derive(Debug, Error)]
 pub enum AexError {
+    /// A generic vehicle study has invalid inputs or unavailable execution evidence.
+    #[error("vehicle study failed: {source}")]
+    VehicleStudy {
+        /// Original study, model, or engine error.
+        #[source]
+        source: ace_study::StudyError,
+    },
+    /// A local application service failed while performing a named operation.
+    #[error("{operation}: {source}")]
+    Service {
+        /// Operation that failed.
+        operation: &'static str,
+        /// Underlying operating-system or task error.
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
+    /// Vehicle synthesis schema or execution failed.
+    #[error("vehicle synthesis failed: {source}")]
+    Synthesis {
+        /// Original model or graph error.
+        #[source]
+        source: ace_engine::EngineError,
+    },
     /// A source document could not be read.
     #[error("failed to read {path}: {source}")]
     Read {
@@ -215,6 +238,9 @@ impl AexError {
 
     pub(crate) fn detail(&self) -> ErrorDetail {
         match self {
+            Self::VehicleStudy { source } => source_detail("VEHICLE_STUDY_ERROR", source, "study"),
+            Self::Service { operation, .. } => service_detail(self, operation),
+            Self::Synthesis { source } => source_detail("SYNTHESIS_ERROR", source, "vehicle"),
             Self::Read { path, source } => io_detail("FILE_READ_FAILED", self, path, source),
             Self::Write { path, source } => io_detail("FILE_WRITE_FAILED", self, path, source),
             Self::Yaml { path, source } => error_detail(
@@ -290,6 +316,12 @@ impl AexError {
     }
 }
 
+impl From<ace_study::StudyError> for AexError {
+    fn from(source: ace_study::StudyError) -> Self {
+        Self::VehicleStudy { source }
+    }
+}
+
 fn error_detail(code: &str, message: String, path: Option<String>, context: Value) -> ErrorDetail {
     ErrorDetail {
         code: code.to_owned(),
@@ -297,6 +329,19 @@ fn error_detail(code: &str, message: String, path: Option<String>, context: Valu
         path,
         context,
     }
+}
+
+fn service_detail(error: &AexError, operation: &str) -> ErrorDetail {
+    error_detail(
+        "SERVICE_ERROR",
+        error.to_string(),
+        None,
+        json!({"operation":operation}),
+    )
+}
+
+fn source_detail(code: &str, source: &dyn std::fmt::Display, path: &str) -> ErrorDetail {
+    error_detail(code, source.to_string(), Some(path.into()), empty_context())
 }
 
 fn io_detail(
@@ -367,3 +412,9 @@ fn yaml_context(source: &serde_yaml::Error) -> Value {
 
 #[cfg(test)]
 mod tests;
+
+impl From<ace_engine::EngineError> for AexError {
+    fn from(source: ace_engine::EngineError) -> Self {
+        Self::Synthesis { source }
+    }
+}

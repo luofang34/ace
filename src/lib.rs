@@ -1,7 +1,5 @@
 //! Deterministic low-fidelity aircraft concept analysis with CLI and MCP adapters.
 
-#![forbid(unsafe_code)]
-
 mod backends;
 mod charts;
 mod cli;

@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use crate::domain::diagnostic::AexError;
 use crate::domain::schema::{EngineProfile, MissionInitialState};
 use crate::test_support::example_scenario;

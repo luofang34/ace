@@ -1,10 +1,6 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use std::ffi::OsString;
 
-use clap::Parser;
-
-use crate::cli::Cli;
+use crate::cli::grammar::command;
 
 use super::{clap_detail, json_requested};
 
@@ -28,7 +24,8 @@ fn detects_both_json_format_spellings() {
 
 #[test]
 fn clap_failures_have_stable_codes_and_shape() {
-    let error = Cli::try_parse_from(["aex", "analyze", "point", "--format", "json"])
+    let error = command()
+        .try_get_matches_from(["aex", "analyze", "point", "--format", "json"])
         .expect_err("point arguments must be required");
     let detail = clap_detail(&error);
 

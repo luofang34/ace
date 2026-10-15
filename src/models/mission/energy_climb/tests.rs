@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use crate::test_support::example_scenario;
 
 use super::super::MissionSimulator;

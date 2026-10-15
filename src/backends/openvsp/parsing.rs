@@ -1,7 +1,7 @@
 use crate::backends::contracts::{PolarPoint, StabilitySummary};
 use crate::domain::diagnostic::{AexError, AexResult};
 
-pub(super) fn positive_marker_number(output: &str, marker: &str) -> AexResult<f64> {
+pub(super) fn marker_number(output: &str, marker: &str) -> AexResult<f64> {
     let raw = output
         .lines()
         .map(str::trim)
@@ -11,9 +11,19 @@ pub(super) fn positive_marker_number(output: &str, marker: &str) -> AexResult<f6
         .trim()
         .parse::<f64>()
         .map_err(|source| parse_failure(format!("invalid {marker} value: {source}")))?;
-    if !value.is_finite() || value <= 0.0 {
+    if !value.is_finite() {
         return Err(parse_failure(format!(
-            "{marker} must be finite and positive, got {value}"
+            "{marker} must be finite, got {value}"
+        )));
+    }
+    Ok(value)
+}
+
+pub(super) fn positive_marker_number(output: &str, marker: &str) -> AexResult<f64> {
+    let value = marker_number(output, marker)?;
+    if value <= 0.0 {
+        return Err(parse_failure(format!(
+            "{marker} must be positive, got {value}"
         )));
     }
     Ok(value)

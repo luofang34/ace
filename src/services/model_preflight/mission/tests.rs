@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use crate::domain::diagnostic::AexError;
 use crate::domain::validity::ValidityVariable;
 use crate::services::model_preflight::preflight_model_domains;

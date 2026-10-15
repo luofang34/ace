@@ -15,11 +15,7 @@ fn entry<'a>(entries: &'a [AssumptionEntry], path: &str) -> Result<&'a Assumptio
         .ok_or_else(|| io::Error::other(format!("missing ledger entry {path}")))
 }
 
-#[test]
-fn ledger_assigns_units_only_to_registered_quantity_paths() -> Result<(), Box<dyn std::error::Error>>
-{
-    let document: Value = serde_yaml::from_str(
-        r#"
+const QUANTITY_DOCUMENT: &str = r#"
 aircraft:
   id: C172 reference identity
   name: C172-Class Reference Aircraft
@@ -59,8 +55,12 @@ requirements:
       operator: le
       value: 50 kt
       severity: hard
-"#,
-    )?;
+"#;
+
+#[test]
+fn ledger_assigns_units_only_to_registered_quantity_paths() -> Result<(), Box<dyn std::error::Error>>
+{
+    let document: Value = serde_yaml::from_str(QUANTITY_DOCUMENT)?;
     let mut entries = Vec::new();
     for root in ["aircraft", "mission", "requirements"] {
         collect_assumptions(root, document.get(root), false, &mut entries);

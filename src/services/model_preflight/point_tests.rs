@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use crate::domain::aerodynamics::PolarTable;
 use crate::domain::diagnostic::AexError;
 use crate::test_support::example_scenario;

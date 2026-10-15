@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ACE · Synthesis Sheet</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<header><div class="brand">ACE<span>VEHICLE SYNTHESIS</span></div><div class="identity"><h1 id="title">Loading design…</h1><div id="identity">Authoritative model · live computation</div></div><div class="toolbar"><span id="activity" class="badge">CONNECTING</span><span id="saved"></span><button id="run">Run</button><button id="cancel" disabled>Cancel run</button><button id="save">Save model</button><button id="export">Export model</button><button id="print">Print sheet</button></div></header>
+<div id="notice" role="alert" hidden></div>
+<main id="sheet">
+<section class="card requirements"><h2><span>01</span> Requirements <small>signed margins</small></h2><div id="requirements" class="body"></div></section>
+<section class="card plots"><h2><span>02</span> Synthesis plots <small>model-derived evidence</small></h2><div id="plots" class="body"></div></section>
+<section class="card configuration"><h2><span>03</span> Configuration <small>canonical inputs</small></h2><div class="body"><label class="search">Find a parameter<input id="parameter-search" type="search" placeholder="wing, fuel, cabin…"></label><div id="configuration"></div></div></section>
+<section class="card statement"><h2><span>04</span> Mass / cost statement</h2><div id="statement" class="body"></div></section>
+<section class="card arrangement"><h2><span>05</span> Master arrangement <small>double-click a component to edit</small></h2><div id="arrangement" class="body"></div><div class="legend">Semantic envelopes · vehicle frame in metres <span>Drag the wingtip to preview</span></div></section>
+<section class="card mass"><h2><span>06</span> Mass properties <small>loading explorer</small></h2><div id="mass" class="body"></div></section>
+<section class="card sections"><h2><span>07</span> Critical sections <small>ranked by clearance</small></h2><div id="sections" class="body"></div></section>
+<section class="card mission"><h2><span>08</span> Mission / state <small>fuel, mass, time and CG</small></h2><div id="mission" class="body"></div></section>
+<section class="card closure"><h2><span>09</span> Closure / active constraints</h2><div id="closure" class="body"></div></section>
+</main>
+<details id="study-panel" class="study-panel"><summary>Design studies · payload, fuel and cost versus stage length</summary>
+<p>Import a calculated study archive from <code>aex study</code>. The model revision, implementation build and content hashes must match this sheet.</p>
+<label>Study archive <input id="study-file" type="file" accept=".json,application/json"></label><span id="study-status" role="status">No study loaded.</span>
+<div><label>Horizontal <select id="study-x" aria-label="Study horizontal metric"></select></label> <label>Vertical <select id="study-y" aria-label="Study vertical metric"></select></label></div>
+<div id="study-chart"></div><div id="study-count" class="muted"></div><div id="study-evidence"></div>
+</details>
+<footer><span id="execution">Waiting for analysis</span><span>Click any value to inspect its inputs, source and geometry.</span></footer>
+<aside id="inspector" hidden aria-label="Provenance inspector"><div class="inspector-top"><button id="back" aria-label="Previous object">← Back</button><button id="close" aria-label="Close inspector">✕</button></div><div id="inspection"></div></aside>
+<aside id="preview" hidden aria-live="polite"><h3>Fast preview <span class="badge approximate">PROVISIONAL</span></h3><div id="preview-values"></div><small>Release to run the selected analysis graph. Preview does not change the design.</small></aside>
+<script type="module" src="/app.js"></script>
+</body></html>

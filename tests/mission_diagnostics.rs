@@ -1,6 +1,6 @@
 //! Cross-path mission diagnostic propagation tests.
 
-#![allow(clippy::expect_used, clippy::panic)]
+#![cfg(test)]
 
 use std::error::Error;
 use std::fs;

@@ -19,6 +19,20 @@ pub(super) fn emit_blocking<T: Serialize>(value: &T, output: &OutputArgs) -> Aex
     emit_with_system_blocking(value, output, system)
 }
 
+pub(super) fn emit_canonical_blocking<T: Serialize>(
+    value: &T,
+    output: &OutputArgs,
+) -> AexResult<()> {
+    if output.units.is_some() {
+        return Err(AexError::validation(
+            "CANONICAL_UNITS",
+            "units",
+            "synthesize preserves declared units and evidence hashes; omit --units",
+        ));
+    }
+    write_blocking(&serialize(value, output.format)?, output)
+}
+
 pub(super) fn emit_scenario_blocking<T: Serialize>(
     value: &T,
     output: &OutputArgs,
@@ -36,6 +50,10 @@ fn emit_with_system_blocking<T: Serialize>(
     let raw = serde_json::to_value(value).map_err(|source| AexError::Json { source })?;
     let interface_value = crate::mcp::serialization::attach_units_for(raw, system);
     let bytes = serialize(&interface_value, output.format)?;
+    write_blocking(&bytes, output)
+}
+
+fn write_blocking(bytes: &[u8], output: &OutputArgs) -> AexResult<()> {
     match &output.output {
         Some(path) => fs::write(path, bytes).map_err(|source| AexError::Write {
             path: path.clone(),
@@ -44,7 +62,7 @@ fn emit_with_system_blocking<T: Serialize>(
         None => {
             let stdout = io::stdout();
             let mut handle = stdout.lock();
-            handle.write_all(&bytes).map_err(|source| AexError::Write {
+            handle.write_all(bytes).map_err(|source| AexError::Write {
                 path: Path::new("<stdout>").to_path_buf(),
                 source,
             })?;

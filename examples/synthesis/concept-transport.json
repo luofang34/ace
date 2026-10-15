@@ -1,0 +1,4167 @@
+{
+  "schema_version": 1,
+  "id": "concept_twinjet",
+  "name": "Concept twinjet / 180 seats",
+  "domain": "fixed_wing",
+  "revision": 0,
+  "parameters": {
+    "wing.span": {
+      "unit": "m",
+      "value": {
+        "value": 35,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.area": {
+      "unit": "m^2",
+      "value": {
+        "value": 140,
+        "unit": "m^2"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.aspect_ratio": {
+      "unit": "1",
+      "value": null,
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "power",
+          "base": {
+            "op": "reference",
+            "parameter": "wing.span"
+          },
+          "exponent": 2
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "wing.area"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "payload.mass": {
+      "unit": "kg",
+      "value": {
+        "value": 18000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.required": {
+      "unit": "kg",
+      "value": {
+        "value": 20000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.mtow": {
+      "unit": "kg",
+      "value": {
+        "value": 90000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.residual": {
+      "unit": "kg",
+      "value": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.empty_coefficient": {
+      "unit": "1",
+      "value": {
+        "value": 0.5,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.empty_exponent": {
+      "unit": "1",
+      "value": {
+        "value": 1,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.lower": {
+      "unit": "kg",
+      "value": {
+        "value": 1,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.upper": {
+      "unit": "kg",
+      "value": {
+        "value": 200000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.oew": {
+      "unit": "kg",
+      "value": {
+        "value": 45000,
+        "unit": "kg"
+      },
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "weight.mtow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "weight.empty_coefficient"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "airport.maximum_span": {
+      "unit": "m",
+      "value": {
+        "value": 36,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "cabin.seats": {
+      "unit": "1",
+      "value": {
+        "value": 180,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.distance": {
+      "unit": "nmi",
+      "value": {
+        "value": 2000,
+        "unit": "nmi"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.fuel_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": {
+        "op": "reference",
+        "parameter": "mission.fuel_cost"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.trip_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.casm": {
+      "unit": "USD/nmi",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.left": {
+      "unit": "m",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "wing.span"
+        },
+        "right": {
+          "op": "constant",
+          "value": {
+            "value": -0.5,
+            "unit": "1"
+          }
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.right": {
+      "unit": "m",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "wing.span"
+        },
+        "right": {
+          "op": "constant",
+          "value": {
+            "value": 0.5,
+            "unit": "1"
+          }
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "packing.minimum_clearance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "packing.minimum_margin": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.capacity": {
+      "unit": "kg",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "fuel.available_volume"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "fuel.density"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.mass": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.cg_x": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.cg_y": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.cg_z": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.minimum_cg_x": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.maximum_cg_x": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 600,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 0.1,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.cost_rate": {
+      "unit": "USD/s",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.taxi.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.fuel_burn": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 90,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 80,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 1.2,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.cruise.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 230,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 120,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 60,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 0.2,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.reserve.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 1800,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.reserve.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 125,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.flown_distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.block_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.reserve_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.remaining_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.final_mass": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.fuel_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.network_compatible": {
+      "unit": "1",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.available_volume": {
+      "unit": "m^3",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.density": {
+      "unit": "kg/m^3",
+      "value": {
+        "value": 800,
+        "unit": "kg/m^3"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.capacity_margin": {
+      "unit": "kg",
+      "value": null,
+      "expression": {
+        "op": "subtract",
+        "left": {
+          "op": "reference",
+          "parameter": "fuel.capacity"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "fuel.required"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.loaded": {
+      "unit": "kg",
+      "value": {
+        "value": 20000,
+        "unit": "kg"
+      },
+      "expression": {
+        "op": "reference",
+        "parameter": "fuel.required"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.minimum_remaining": {
+      "unit": "kg",
+      "value": {
+        "value": 1000.01,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.sizing_tolerance": {
+      "unit": "kg",
+      "value": {
+        "value": 0.0001,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "aero.cd0": {
+      "unit": "1",
+      "value": {
+        "value": 0.02,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "aero.oswald": {
+      "unit": "1",
+      "value": {
+        "value": 0.8,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "aero.cl_max": {
+      "unit": "1",
+      "value": {
+        "value": 1.5,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "engine.tsfc": {
+      "unit": "kg/(N*s)",
+      "value": {
+        "value": 1.6e-05,
+        "unit": "kg/(N*s)"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "engine.available_thrust": {
+      "unit": "N",
+      "value": {
+        "value": 100000,
+        "unit": "N"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.fuel_price": {
+      "unit": "USD/kg",
+      "value": {
+        "value": 1.2,
+        "unit": "USD/kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.maximum_step": {
+      "unit": "s",
+      "value": {
+        "value": 300,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.cruise.altitude": {
+      "unit": "m",
+      "value": {
+        "value": 10000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.reserve.altitude": {
+      "unit": "m",
+      "value": {
+        "value": 1500,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "tank.offset_x": {
+      "unit": "m",
+      "value": {
+        "value": 0,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.crew_rate": {
+      "unit": "USD/h",
+      "value": {
+        "value": 600,
+        "unit": "USD/h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.maintenance_rate": {
+      "unit": "USD/h",
+      "value": {
+        "value": 350,
+        "unit": "USD/h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.maintenance_cycle": {
+      "unit": "USD",
+      "value": {
+        "value": 500,
+        "unit": "USD"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.turnaround_rate": {
+      "unit": "USD/h",
+      "value": {
+        "value": 200,
+        "unit": "USD/h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.annual_ownership": {
+      "unit": "USD",
+      "value": {
+        "value": 2000000,
+        "unit": "USD"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.annual_flight_time": {
+      "unit": "h",
+      "value": {
+        "value": 4000,
+        "unit": "h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.annual_operating_time": {
+      "unit": "h",
+      "value": {
+        "value": 6000,
+        "unit": "h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.turnaround": {
+      "unit": "h",
+      "value": {
+        "value": 0.75,
+        "unit": "h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional_distance": {
+      "unit": "nmi",
+      "value": {
+        "value": 1500,
+        "unit": "nmi"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.flown_distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.block_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.reserve_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.remaining_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.final_mass": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.fuel_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.cg_margin": {
+      "unit": "m",
+      "source": {
+        "kind": "analysis",
+        "reference": "Declared demonstration CG envelope; sampled mission trajectory"
+      },
+      "owner": "synthesis",
+      "revision": 0
+    },
+    "mission.regional.cg_margin": {
+      "unit": "m",
+      "source": {
+        "kind": "analysis",
+        "reference": "Declared demonstration CG envelope; sampled mission trajectory"
+      },
+      "owner": "synthesis",
+      "revision": 0
+    },
+    "fuselage.length": {
+      "unit": "m",
+      "value": {
+        "value": 38,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fuselage.diameter": {
+      "unit": "m",
+      "value": {
+        "value": 4.2,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fuselage.nose": {
+      "unit": "m",
+      "value": {
+        "value": 4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fuselage.tail": {
+      "unit": "m",
+      "value": {
+        "value": 7,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "wing.root_x": {
+      "unit": "m",
+      "value": {
+        "value": 14,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "wing.root_z": {
+      "unit": "m",
+      "value": {
+        "value": -0.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "drawing.cabin_station": {
+      "unit": "m",
+      "value": {
+        "value": 8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.root_x": {
+      "unit": "m",
+      "value": {
+        "value": 31,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.root_z": {
+      "unit": "m",
+      "value": {
+        "value": 0.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tank.volume": {
+      "unit": "m^3",
+      "value": {
+        "value": 20,
+        "unit": "m^3"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "empty.cg_x": {
+      "unit": "m",
+      "value": {
+        "value": 16,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "payload.cg_x": {
+      "unit": "m",
+      "value": {
+        "value": 17.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "wing.taper": {
+      "unit": "1",
+      "value": {
+        "value": 0.4,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "wing.sweep": {
+      "unit": "deg",
+      "value": {
+        "value": 25,
+        "unit": "deg"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "wing.dihedral": {
+      "unit": "deg",
+      "value": {
+        "value": 5,
+        "unit": "deg"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "wing.thickness": {
+      "unit": "1",
+      "value": {
+        "value": 0.12,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.span": {
+      "unit": "m",
+      "value": {
+        "value": 12,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.area": {
+      "unit": "m^2",
+      "value": {
+        "value": 25,
+        "unit": "m^2"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.taper": {
+      "unit": "1",
+      "value": {
+        "value": 0.4,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.sweep": {
+      "unit": "deg",
+      "value": {
+        "value": 30,
+        "unit": "deg"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.dihedral": {
+      "unit": "deg",
+      "value": {
+        "value": 5,
+        "unit": "deg"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tail.thickness": {
+      "unit": "1",
+      "value": {
+        "value": 0.08,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fin.span": {
+      "unit": "m",
+      "value": {
+        "value": 5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fin.area": {
+      "unit": "m^2",
+      "value": {
+        "value": 12,
+        "unit": "m^2"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fin.taper": {
+      "unit": "1",
+      "value": {
+        "value": 0.4,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fin.sweep": {
+      "unit": "deg",
+      "value": {
+        "value": 35,
+        "unit": "deg"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fin.dihedral": {
+      "unit": "deg",
+      "value": {
+        "value": 0,
+        "unit": "deg"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "fin.thickness": {
+      "unit": "1",
+      "value": {
+        "value": 0.1,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nacelle.length": {
+      "unit": "m",
+      "value": {
+        "value": 4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nacelle.diameter": {
+      "unit": "m",
+      "value": {
+        "value": 1.8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nacelle.nose": {
+      "unit": "m",
+      "value": {
+        "value": 0.7,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nacelle.tail": {
+      "unit": "m",
+      "value": {
+        "value": 1.2,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nacelle.x": {
+      "unit": "m",
+      "value": {
+        "value": 12,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nacelle.y": {
+      "unit": "m",
+      "value": {
+        "value": 5.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nacelle.z": {
+      "unit": "m",
+      "value": {
+        "value": -1.2,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "engine_left.y": {
+      "unit": "m",
+      "value": {
+        "value": -5.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "engine_right.y": {
+      "unit": "m",
+      "value": {
+        "value": 5.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cabin.minimum_x": {
+      "unit": "m",
+      "value": {
+        "value": 4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cabin.minimum_y": {
+      "unit": "m",
+      "value": {
+        "value": -1.7,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cabin.minimum_z": {
+      "unit": "m",
+      "value": {
+        "value": -0.8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cabin.maximum_x": {
+      "unit": "m",
+      "value": {
+        "value": 30,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cabin.maximum_y": {
+      "unit": "m",
+      "value": {
+        "value": 1.7,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cabin.maximum_z": {
+      "unit": "m",
+      "value": {
+        "value": 1.1,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cargo.minimum_x": {
+      "unit": "m",
+      "value": {
+        "value": 6,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cargo.minimum_y": {
+      "unit": "m",
+      "value": {
+        "value": -0.9,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cargo.minimum_z": {
+      "unit": "m",
+      "value": {
+        "value": -1.8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cargo.maximum_x": {
+      "unit": "m",
+      "value": {
+        "value": 10,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cargo.maximum_y": {
+      "unit": "m",
+      "value": {
+        "value": 0.9,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "cargo.maximum_z": {
+      "unit": "m",
+      "value": {
+        "value": -0.9,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tank.minimum_x": {
+      "unit": "m",
+      "value": {
+        "value": 11,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tank.minimum_y": {
+      "unit": "m",
+      "value": {
+        "value": -1.3,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tank.minimum_z": {
+      "unit": "m",
+      "value": {
+        "value": -1.6,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tank.maximum_x": {
+      "unit": "m",
+      "value": {
+        "value": 24,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tank.maximum_y": {
+      "unit": "m",
+      "value": {
+        "value": 1.3,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "tank.maximum_z": {
+      "unit": "m",
+      "value": {
+        "value": -0.9,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "rear_spar.minimum_x": {
+      "unit": "m",
+      "value": {
+        "value": 24.4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "rear_spar.minimum_y": {
+      "unit": "m",
+      "value": {
+        "value": -1.4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "rear_spar.minimum_z": {
+      "unit": "m",
+      "value": {
+        "value": -1.7,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "rear_spar.maximum_x": {
+      "unit": "m",
+      "value": {
+        "value": 24.8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "rear_spar.maximum_y": {
+      "unit": "m",
+      "value": {
+        "value": 1.4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "rear_spar.maximum_z": {
+      "unit": "m",
+      "value": {
+        "value": -0.8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "gear_bay.minimum_x": {
+      "unit": "m",
+      "value": {
+        "value": 25,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "gear_bay.minimum_y": {
+      "unit": "m",
+      "value": {
+        "value": -1,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "gear_bay.minimum_z": {
+      "unit": "m",
+      "value": {
+        "value": -3.8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "gear_bay.maximum_x": {
+      "unit": "m",
+      "value": {
+        "value": 26.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "gear_bay.maximum_y": {
+      "unit": "m",
+      "value": {
+        "value": 1,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "gear_bay.maximum_z": {
+      "unit": "m",
+      "value": {
+        "value": -0.7,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nose_gear.minimum_x": {
+      "unit": "m",
+      "value": {
+        "value": 4.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nose_gear.minimum_y": {
+      "unit": "m",
+      "value": {
+        "value": -0.4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nose_gear.minimum_z": {
+      "unit": "m",
+      "value": {
+        "value": -3.8,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nose_gear.maximum_x": {
+      "unit": "m",
+      "value": {
+        "value": 5.5,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nose_gear.maximum_y": {
+      "unit": "m",
+      "value": {
+        "value": 0.4,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "nose_gear.maximum_z": {
+      "unit": "m",
+      "value": {
+        "value": -1.2,
+        "unit": "m"
+      },
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "geometry.part_area": {
+      "unit": "m^2",
+      "value": null,
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "owner": "concept_configuration",
+      "revision": 0
+    },
+    "phase.takeoff.end_altitude": {
+      "unit": "m",
+      "value": {
+        "value": 35,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.end_speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 125,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.end_altitude": {
+      "unit": "m",
+      "value": {
+        "value": 0,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.end_speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.path_distance": {
+      "unit": "m",
+      "value": {
+        "value": 250000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.path_distance": {
+      "unit": "m",
+      "value": {
+        "value": 300000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.approach.path_distance": {
+      "unit": "m",
+      "value": {
+        "value": 50000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.approach.end_speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 100,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.arrival.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": {
+        "op": "add",
+        "left": {
+          "op": "add",
+          "left": {
+            "op": "reference",
+            "parameter": "phase.descent.path_distance"
+          },
+          "right": {
+            "op": "reference",
+            "parameter": "phase.approach.path_distance"
+          }
+        },
+        "right": {
+          "op": "multiply",
+          "left": {
+            "op": "reference",
+            "parameter": "phase.landing.speed"
+          },
+          "right": {
+            "op": "reference",
+            "parameter": "phase.landing.duration_input"
+          }
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.path.maximum_step": {
+      "unit": "s",
+      "value": {
+        "value": 60,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Concept flight schedule: prescribed straight path and linear TAS; uncalibrated clean polar and constant installed thrust/TSFC",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    }
+  },
+  "analyses": {
+    "weight": {
+      "plugin": "aircraft.weight_closure",
+      "version": "1",
+      "inputs": {
+        "payload": "payload.mass",
+        "fuel": "fuel.required",
+        "empty_coefficient": "weight.empty_coefficient",
+        "empty_exponent": "weight.empty_exponent",
+        "lower_mass": "weight.lower",
+        "upper_mass": "weight.upper"
+      },
+      "outputs": {
+        "mtow": "weight.mtow",
+        "residual": "weight.residual"
+      }
+    },
+    "packing": {
+      "plugin": "vehicle.geometry_envelopes",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "minimum_clearance": "packing.minimum_clearance",
+        "minimum_margin": "packing.minimum_margin"
+      },
+      "resources": {
+        "clearances": [
+          "tank_spar",
+          "gear_spar"
+        ]
+      },
+      "geometry": [
+        "wing",
+        "fuselage",
+        "tank",
+        "rear_spar",
+        "gear_bay",
+        "tail",
+        "fin",
+        "engine_left",
+        "engine_right",
+        "cabin",
+        "cargo",
+        "nose_gear"
+      ]
+    },
+    "loading": {
+      "plugin": "vehicle.mass_properties",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "mass": "loading.mass",
+        "cg_x": "loading.cg_x",
+        "cg_y": "loading.cg_y",
+        "cg_z": "loading.cg_z",
+        "minimum_cg_x": "loading.minimum_cg_x",
+        "maximum_cg_x": "loading.maximum_cg_x"
+      },
+      "resources": {
+        "mass_items": [
+          "empty",
+          "payload",
+          "fuel"
+        ],
+        "loading_cases": [
+          "empty_tanks",
+          "no_payload"
+        ]
+      }
+    },
+    "taxi": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.taxi.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.taxi.fuel_flow",
+        "cost_rate": "phase.taxi.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.taxi.duration",
+        "distance": "phase.taxi.distance",
+        "fuel_burn": "phase.taxi.fuel_burn",
+        "cost": "phase.taxi.cost"
+      }
+    },
+    "takeoff": {
+      "plugin": "aircraft.ground_estimate_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "fuel_flow": "phase.takeoff.fuel_flow",
+        "fuel_price": "economics.fuel_price"
+      },
+      "outputs": {}
+    },
+    "climb": {
+      "plugin": "aircraft.energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {}
+    },
+    "cruise": {
+      "plugin": "aircraft.route_cruise_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {}
+    },
+    "descent": {
+      "plugin": "aircraft.energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {}
+    },
+    "landing": {
+      "plugin": "aircraft.ground_estimate_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "fuel_flow": "phase.landing.fuel_flow",
+        "fuel_price": "economics.fuel_price"
+      },
+      "outputs": {}
+    },
+    "reserve": {
+      "plugin": "aircraft.level_flight_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {}
+    },
+    "mission": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.duration",
+        "distance": "mission.flown_distance",
+        "block_fuel": "mission.block_fuel",
+        "reserve_fuel": "mission.reserve_fuel",
+        "remaining_fuel": "mission.remaining_fuel",
+        "final_mass": "mission.final_mass",
+        "cost": "mission.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "design"
+        ]
+      }
+    },
+    "economics": {
+      "plugin": "vehicle.operations",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "trip_cost": "economics.trip_cost",
+        "casm": "economics.casm",
+        "network_compatible": "economics.network_compatible"
+      },
+      "resources": {
+        "operations": true
+      }
+    },
+    "fuel_volume": {
+      "plugin": "vehicle.usable_volume",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "volume": "fuel.available_volume"
+      },
+      "geometry": [
+        "tank"
+      ]
+    },
+    "fuel_requirement": {
+      "plugin": "vehicle.mission_fuel_requirement",
+      "version": "1",
+      "inputs": {
+        "minimum_remaining": "fuel.minimum_remaining",
+        "tolerance": "fuel.sizing_tolerance"
+      },
+      "outputs": {
+        "required_fuel": "fuel.required"
+      },
+      "resources": {
+        "missions": [
+          "design"
+        ]
+      }
+    },
+    "mission_regional": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.regional.duration",
+        "distance": "mission.regional.flown_distance",
+        "block_fuel": "mission.regional.block_fuel",
+        "reserve_fuel": "mission.regional.reserve_fuel",
+        "remaining_fuel": "mission.regional.remaining_fuel",
+        "final_mass": "mission.regional.final_mass",
+        "cost": "mission.regional.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "regional"
+        ]
+      }
+    },
+    "cg_design": {
+      "plugin": "vehicle.mission_cg_envelope",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "margin": "mission.cg_margin"
+      },
+      "resources": {
+        "missions": [
+          "design"
+        ]
+      }
+    },
+    "cg_regional": {
+      "plugin": "vehicle.mission_cg_envelope",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "margin": "mission.regional.cg_margin"
+      },
+      "resources": {
+        "missions": [
+          "regional"
+        ]
+      }
+    },
+    "concept_geometry": {
+      "plugin": "vehicle.concept_geometry",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "part_area": "geometry.part_area"
+      },
+      "geometry": [
+        "wing",
+        "fuselage",
+        "tank",
+        "rear_spar",
+        "gear_bay",
+        "tail",
+        "fin",
+        "engine_left",
+        "engine_right",
+        "cabin",
+        "cargo",
+        "nose_gear"
+      ]
+    },
+    "approach": {
+      "plugin": "aircraft.energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {}
+    }
+  },
+  "closures": {
+    "mass_fuel": {
+      "tolerances": {
+        "weight.mtow": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "weight.residual": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "fuel.required": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "fuel.loaded": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "weight.oew": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        }
+      },
+      "max_iterations": 100,
+      "relaxation": 1.0
+    }
+  },
+  "requirements": {
+    "gate_span": {
+      "name": "Gate span limit",
+      "metric": "wing.span",
+      "relation": "le",
+      "target": {
+        "value": 36,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-AIRPORT-1"
+      }
+    },
+    "mtow": {
+      "name": "Takeoff mass limit",
+      "metric": "weight.mtow",
+      "relation": "le",
+      "target": {
+        "value": 100000,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-MASS-1"
+      }
+    },
+    "cost": {
+      "name": "Cost per seat nautical mile",
+      "metric": "economics.casm",
+      "relation": "le",
+      "target": {
+        "value": 0.07,
+        "unit": "USD/nmi"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-COST-1"
+      }
+    },
+    "packing_margin": {
+      "name": "packing margin",
+      "metric": "packing.minimum_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-PACKING_MARGIN"
+      }
+    },
+    "remaining_fuel": {
+      "name": "remaining fuel",
+      "metric": "mission.remaining_fuel",
+      "relation": "ge",
+      "target": {
+        "value": 1000,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-REMAINING_FUEL"
+      }
+    },
+    "airport_network": {
+      "name": "airport network",
+      "metric": "economics.network_compatible",
+      "relation": "ge",
+      "target": {
+        "value": 1,
+        "unit": "1"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-AIRPORT_NETWORK"
+      }
+    },
+    "aft_cg": {
+      "name": "aft cg",
+      "metric": "loading.maximum_cg_x",
+      "relation": "le",
+      "target": {
+        "value": 19,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-AFT_CG"
+      }
+    },
+    "fuel_volume": {
+      "name": "Usable fuel volume capacity",
+      "metric": "fuel.capacity_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "geometry": [
+        "tank"
+      ],
+      "source": {
+        "kind": "user",
+        "reference": "SRD-FUEL-VOLUME"
+      }
+    },
+    "cg_design": {
+      "name": "design mission CG envelope",
+      "metric": "mission.cg_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "Demonstration envelope in vehicle x coordinates; not certification limits"
+      }
+    },
+    "cg_regional": {
+      "name": "regional mission CG envelope",
+      "metric": "mission.regional.cg_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "Demonstration envelope in vehicle x coordinates; not certification limits"
+      }
+    }
+  },
+  "geometry": {
+    "wing": {
+      "name": "wing",
+      "role": "wing",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": {
+        "kind": "wing",
+        "span": "wing.span",
+        "area": "wing.area",
+        "taper": "wing.taper",
+        "sweep": "wing.sweep",
+        "dihedral": "wing.dihedral",
+        "thickness": "wing.thickness",
+        "symmetric": true
+      },
+      "placement": {
+        "translation": [
+          "wing.root_x",
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          "wing.root_z"
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "fuselage": {
+      "name": "fuselage",
+      "role": "pressure_vessel",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": {
+        "kind": "body",
+        "length": "fuselage.length",
+        "width": "fuselage.diameter",
+        "height": "fuselage.diameter",
+        "nose": "fuselage.nose",
+        "tail": "fuselage.tail"
+      },
+      "placement": {
+        "translation": [
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "tank": {
+      "name": "tank",
+      "role": "fuel_tank",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": null,
+      "placement": {
+        "translation": [
+          "tank.offset_x",
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "bounds": {
+        "minimum": [
+          "tank.minimum_x",
+          "tank.minimum_y",
+          "tank.minimum_z"
+        ],
+        "maximum": [
+          "tank.maximum_x",
+          "tank.maximum_y",
+          "tank.maximum_z"
+        ]
+      },
+      "volume": "tank.volume"
+    },
+    "rear_spar": {
+      "name": "rear_spar",
+      "role": "structure",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": null,
+      "placement": {
+        "translation": [
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "bounds": {
+        "minimum": [
+          "rear_spar.minimum_x",
+          "rear_spar.minimum_y",
+          "rear_spar.minimum_z"
+        ],
+        "maximum": [
+          "rear_spar.maximum_x",
+          "rear_spar.maximum_y",
+          "rear_spar.maximum_z"
+        ]
+      }
+    },
+    "gear_bay": {
+      "name": "gear_bay",
+      "role": "landing_gear",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": null,
+      "placement": {
+        "translation": [
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "bounds": {
+        "minimum": [
+          "gear_bay.minimum_x",
+          "gear_bay.minimum_y",
+          "gear_bay.minimum_z"
+        ],
+        "maximum": [
+          "gear_bay.maximum_x",
+          "gear_bay.maximum_y",
+          "gear_bay.maximum_z"
+        ]
+      }
+    },
+    "tail": {
+      "name": "tail",
+      "role": "wing",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": {
+        "kind": "wing",
+        "span": "tail.span",
+        "area": "tail.area",
+        "taper": "tail.taper",
+        "sweep": "tail.sweep",
+        "dihedral": "tail.dihedral",
+        "thickness": "tail.thickness",
+        "symmetric": true
+      },
+      "placement": {
+        "translation": [
+          "tail.root_x",
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          "tail.root_z"
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "fin": {
+      "name": "fin",
+      "role": "wing",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": {
+        "kind": "wing",
+        "span": "fin.span",
+        "area": "fin.area",
+        "taper": "fin.taper",
+        "sweep": "fin.sweep",
+        "dihedral": "fin.dihedral",
+        "thickness": "fin.thickness",
+        "symmetric": false
+      },
+      "placement": {
+        "translation": [
+          "tail.root_x",
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          "tail.root_z"
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      }
+    },
+    "engine_left": {
+      "name": "engine_left",
+      "role": "engine",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": {
+        "kind": "body",
+        "length": "nacelle.length",
+        "width": "nacelle.diameter",
+        "height": "nacelle.diameter",
+        "nose": "nacelle.nose",
+        "tail": "nacelle.tail"
+      },
+      "placement": {
+        "translation": [
+          "nacelle.x",
+          "engine_left.y",
+          "nacelle.z"
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "engine_right": {
+      "name": "engine_right",
+      "role": "engine",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": {
+        "kind": "body",
+        "length": "nacelle.length",
+        "width": "nacelle.diameter",
+        "height": "nacelle.diameter",
+        "nose": "nacelle.nose",
+        "tail": "nacelle.tail"
+      },
+      "placement": {
+        "translation": [
+          "nacelle.x",
+          "engine_right.y",
+          "nacelle.z"
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "cabin": {
+      "name": "cabin",
+      "role": "cabin",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": null,
+      "placement": {
+        "translation": [
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "bounds": {
+        "minimum": [
+          "cabin.minimum_x",
+          "cabin.minimum_y",
+          "cabin.minimum_z"
+        ],
+        "maximum": [
+          "cabin.maximum_x",
+          "cabin.maximum_y",
+          "cabin.maximum_z"
+        ]
+      }
+    },
+    "cargo": {
+      "name": "cargo",
+      "role": "cargo_bay",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": null,
+      "placement": {
+        "translation": [
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "bounds": {
+        "minimum": [
+          "cargo.minimum_x",
+          "cargo.minimum_y",
+          "cargo.minimum_z"
+        ],
+        "maximum": [
+          "cargo.maximum_x",
+          "cargo.maximum_y",
+          "cargo.maximum_z"
+        ]
+      }
+    },
+    "nose_gear": {
+      "name": "nose_gear",
+      "role": "landing_gear",
+      "source": {
+        "kind": "assumption",
+        "reference": "Concept twinjet: illustrative geometry and packaging assumptions; no certification or calibrated structure"
+      },
+      "shape": null,
+      "placement": {
+        "translation": [
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "bounds": {
+        "minimum": [
+          "nose_gear.minimum_x",
+          "nose_gear.minimum_y",
+          "nose_gear.minimum_z"
+        ],
+        "maximum": [
+          "nose_gear.maximum_x",
+          "nose_gear.maximum_y",
+          "nose_gear.maximum_z"
+        ]
+      }
+    }
+  },
+  "mass_items": {
+    "empty": {
+      "kind": "empty",
+      "mass": "weight.oew",
+      "cg": [
+        "empty.cg_x",
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      }
+    },
+    "payload": {
+      "kind": "payload",
+      "mass": "payload.mass",
+      "cg": [
+        "payload.cg_x",
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      }
+    },
+    "fuel": {
+      "kind": "fuel",
+      "mass": "fuel.loaded",
+      "cg": [
+        {
+          "value": 17.5,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": -1.2,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "capacity": "fuel.capacity",
+      "geometry": "tank",
+      "fill_curve": [
+        {
+          "fraction": 0,
+          "cg": [
+            {
+              "value": 17.5,
+              "unit": "m"
+            },
+            {
+              "value": 0,
+              "unit": "m"
+            },
+            {
+              "value": -1.6,
+              "unit": "m"
+            }
+          ]
+        },
+        {
+          "fraction": 1,
+          "cg": [
+            {
+              "value": 17.5,
+              "unit": "m"
+            },
+            {
+              "value": 0,
+              "unit": "m"
+            },
+            {
+              "value": -0.9000000000000001,
+              "unit": "m"
+            }
+          ]
+        }
+      ],
+      "frame": "tank"
+    }
+  },
+  "operations": {
+    "seats": "cabin.seats",
+    "distance": "mission.distance",
+    "load_factor": {
+      "value": 0.85,
+      "unit": "1"
+    },
+    "costs": [],
+    "span": "wing.span",
+    "required_runway": {
+      "value": 1800,
+      "unit": "m"
+    },
+    "revenue_per_passenger": {
+      "value": 250,
+      "unit": "USD"
+    },
+    "airports": [
+      {
+        "id": "design_gate",
+        "maximum_span": "airport.maximum_span",
+        "runway": {
+          "value": 2200,
+          "unit": "m"
+        },
+        "movement_fee": {
+          "value": 1500,
+          "unit": "USD"
+        }
+      }
+    ],
+    "basis": {
+      "currency": "USD",
+      "price_year": 2026,
+      "cost_scope": "declared fuel, crew, maintenance, ground, airport and ownership costs"
+    },
+    "economics": {
+      "selected": "design",
+      "rates": {
+        "fuel": "economics.fuel_price",
+        "crew_flight_hour": "economics.crew_rate",
+        "maintenance_flight_hour": "economics.maintenance_rate",
+        "maintenance_cycle": "economics.maintenance_cycle",
+        "turnaround_hour": "economics.turnaround_rate",
+        "annual_ownership": "economics.annual_ownership"
+      },
+      "utilization": {
+        "flight_time": "economics.annual_flight_time",
+        "operating_time": "economics.annual_operating_time"
+      },
+      "scenarios": {
+        "design": {
+          "distance": "mission.distance",
+          "block_duration": "mission.duration",
+          "block_fuel": "mission.block_fuel",
+          "turnaround": "economics.turnaround"
+        },
+        "regional": {
+          "distance": "mission.regional_distance",
+          "block_duration": "mission.regional.duration",
+          "block_fuel": "mission.regional.block_fuel",
+          "turnaround": "economics.turnaround"
+        }
+      }
+    }
+  },
+  "objectives": {
+    "casm": {
+      "metric": "economics.casm",
+      "direction": "min"
+    }
+  },
+  "design_variables": [
+    {
+      "parameter": "wing.span",
+      "lower": {
+        "value": 30,
+        "unit": "m"
+      },
+      "upper": {
+        "value": 40,
+        "unit": "m"
+      }
+    },
+    {
+      "parameter": "mission.distance",
+      "lower": {
+        "value": 1500,
+        "unit": "nmi"
+      },
+      "upper": {
+        "value": 3500,
+        "unit": "nmi"
+      }
+    },
+    {
+      "parameter": "payload.mass",
+      "lower": {
+        "value": 16000,
+        "unit": "kg"
+      },
+      "upper": {
+        "value": 26000,
+        "unit": "kg"
+      }
+    }
+  ],
+  "clearances": {
+    "tank_spar": {
+      "first": "tank",
+      "second": "rear_spar",
+      "minimum": {
+        "value": 0.2,
+        "unit": "m"
+      }
+    },
+    "gear_spar": {
+      "first": "gear_bay",
+      "second": "rear_spar",
+      "minimum": {
+        "value": 0.15,
+        "unit": "m"
+      }
+    }
+  },
+  "loading_cases": {
+    "empty_tanks": {
+      "masses": {
+        "fuel": {
+          "value": 0,
+          "unit": "kg"
+        }
+      }
+    },
+    "no_payload": {
+      "masses": {
+        "payload": {
+          "value": 0,
+          "unit": "kg"
+        }
+      }
+    }
+  },
+  "missions": {
+    "design": {
+      "name": "Illustrative transport design mission",
+      "stages": [
+        {
+          "id": "taxi",
+          "kind": "taxi",
+          "analysis": "taxi",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
+        },
+        {
+          "id": "climb",
+          "kind": "climb",
+          "analysis": "climb",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise.altitude",
+            "target_speed": "phase.cruise.speed",
+            "path_distance": "phase.climb.path_distance"
+          }
+        },
+        {
+          "id": "cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "descent",
+          "kind": "descent",
+          "analysis": "descent",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.reserve.altitude",
+            "target_speed": "phase.reserve.speed",
+            "path_distance": "phase.descent.path_distance"
+          }
+        },
+        {
+          "id": "approach",
+          "kind": "approach",
+          "analysis": "approach",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.approach.end_speed",
+            "path_distance": "phase.approach.path_distance"
+          }
+        },
+        {
+          "id": "landing",
+          "kind": "landing",
+          "analysis": "landing",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.landing.duration_input",
+            "mean_speed": "phase.landing.speed",
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.landing.end_speed"
+          }
+        }
+      ],
+      "branches": {
+        "reserve": {
+          "from_stage": "cruise",
+          "stages": [
+            {
+              "id": "reserve_descent",
+              "kind": "descent",
+              "analysis": "descent",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.reserve.altitude",
+                "target_speed": "phase.reserve.speed",
+                "path_distance": "phase.descent.path_distance"
+              }
+            },
+            {
+              "id": "reserve",
+              "kind": "reserve",
+              "analysis": "reserve",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.reserve.duration_input"
+              }
+            },
+            {
+              "id": "reserve_approach",
+              "kind": "approach",
+              "analysis": "approach",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.approach.end_speed",
+                "path_distance": "phase.approach.path_distance"
+              }
+            },
+            {
+              "id": "reserve_landing",
+              "kind": "landing",
+              "analysis": "landing",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.landing.duration_input",
+                "mean_speed": "phase.landing.speed",
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.landing.end_speed"
+              }
+            }
+          ]
+        }
+      },
+      "cg_envelope": [
+        {
+          "mass": {
+            "value": 20000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 15,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 19,
+            "unit": "m"
+          }
+        },
+        {
+          "mass": {
+            "value": 200000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 15,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 19,
+            "unit": "m"
+          }
+        }
+      ],
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
+    },
+    "regional": {
+      "name": "Regional route at design dispatch loading",
+      "stages": [
+        {
+          "id": "taxi",
+          "kind": "taxi",
+          "analysis": "taxi",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
+        },
+        {
+          "id": "climb",
+          "kind": "climb",
+          "analysis": "climb",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise.altitude",
+            "target_speed": "phase.cruise.speed",
+            "path_distance": "phase.climb.path_distance"
+          }
+        },
+        {
+          "id": "cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.regional_distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "descent",
+          "kind": "descent",
+          "analysis": "descent",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.reserve.altitude",
+            "target_speed": "phase.reserve.speed",
+            "path_distance": "phase.descent.path_distance"
+          }
+        },
+        {
+          "id": "approach",
+          "kind": "approach",
+          "analysis": "approach",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.approach.end_speed",
+            "path_distance": "phase.approach.path_distance"
+          }
+        },
+        {
+          "id": "landing",
+          "kind": "landing",
+          "analysis": "landing",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.landing.duration_input",
+            "mean_speed": "phase.landing.speed",
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.landing.end_speed"
+          }
+        }
+      ],
+      "branches": {
+        "reserve": {
+          "from_stage": "cruise",
+          "stages": [
+            {
+              "id": "reserve_descent",
+              "kind": "descent",
+              "analysis": "descent",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.reserve.altitude",
+                "target_speed": "phase.reserve.speed",
+                "path_distance": "phase.descent.path_distance"
+              }
+            },
+            {
+              "id": "reserve",
+              "kind": "reserve",
+              "analysis": "reserve",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.reserve.duration_input"
+              }
+            },
+            {
+              "id": "reserve_approach",
+              "kind": "approach",
+              "analysis": "approach",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.approach.end_speed",
+                "path_distance": "phase.approach.path_distance"
+              }
+            },
+            {
+              "id": "reserve_landing",
+              "kind": "landing",
+              "analysis": "landing",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.landing.duration_input",
+                "mean_speed": "phase.landing.speed",
+                "target_altitude": "phase.landing.end_altitude",
+                "target_speed": "phase.landing.end_speed"
+              }
+            }
+          ]
+        }
+      },
+      "cg_envelope": [
+        {
+          "mass": {
+            "value": 20000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 15,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 19,
+            "unit": "m"
+          }
+        },
+        {
+          "mass": {
+            "value": 200000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 15,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 19,
+            "unit": "m"
+          }
+        }
+      ],
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
+    }
+  }
+}

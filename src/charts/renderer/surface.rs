@@ -91,7 +91,7 @@ pub(super) fn contours(
                     intersections.push(point);
                 }
             }
-            for pair in intersections.chunks_exact(2) {
+            for pair in intersections.as_chunks::<2>().0 {
                 segments.push(ContourSegment {
                     start: pair[0],
                     end: pair[1],

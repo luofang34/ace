@@ -39,7 +39,7 @@ void AddPropeller()
     SetSetFlag( propeller, SET_FIRST_USER, false );
 }
 
-void main()
+int main()
 {
     ClearVSPModel();
     SetSetName( SET_FIRST_USER, "ACE_VSPAERO_LIFTING" );
@@ -131,4 +131,5 @@ void main()
     Print( wetted_area );
     PrintErrors();
     Print( "ACE_COMPLETE=1" );
+    return 0;
 }

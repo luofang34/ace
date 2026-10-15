@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "max_evaluations": 4,
+  "method": {
+    "kind": "grid",
+    "axes": {
+      "wing.span": [
+        { "value": 34, "unit": "m" },
+        { "value": 35, "unit": "m" },
+        { "value": 36, "unit": "m" },
+        { "value": 37, "unit": "m" }
+      ]
+    }
+  }
+}

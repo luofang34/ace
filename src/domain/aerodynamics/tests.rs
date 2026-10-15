@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used)]
-
 use std::f64::consts::PI;
 
 use super::PolarTable;

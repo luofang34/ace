@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use crate::domain::schema::MissionDocument;
 use crate::test_support::example_scenario;
 
