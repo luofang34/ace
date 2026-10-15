@@ -1,12 +1,13 @@
 use super::{
     external,
     parameters::{FlightModel, positive, read},
+    powerplant::Operating,
 };
 use crate::domain::result::{AerodynamicState, AtmosphereState};
 use crate::models::{
     aerodynamics::{self, FlightCondition},
     atmosphere::Isa1976,
-    propulsion,
+    propulsion::OperatingMode,
 };
 use ace_engine::{PhaseIncrement, PhaseOutput, SolverError};
 use ace_model::{Quantity, Unit, VehicleState};
@@ -64,7 +65,7 @@ pub(super) fn evaluate(
         approximate: true,
         artifacts: Vec::new(),
         details: serde_json::json!({"method":"rk4_level_flight", "force_balance":"lift=weight; thrust=drag",
-            "validity":"parabolic or tabulated induced drag; constant flight condition and declared installed thrust/TSFC; CL within limit; tabulated polars follow polar_basis", "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis, "maximum_step_s":model.maximum_step}),
+            "validity":"parabolic or tabulated induced drag; constant flight condition; CL and powerplant thrust within limit; tabulated polars follow polar_basis", "powerplant":model.powerplant.basis(), "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis, "maximum_step_s":model.maximum_step}),
     })
 }
 
@@ -91,22 +92,26 @@ fn rate(
         },
     )
     .map_err(external)?;
+    let available = model
+        .powerplant
+        .available_thrust(atmosphere.density_kg_m3, speed);
     if aero.lift_coefficient > model.aero.cl_max
-        || aero.drag_n > model.available_thrust
+        || aero.drag_n > available
         || aero.model.validity_status != "valid"
     {
         return Err(SolverError::Failed(format!(
-            "level-flight envelope exceeded: CL {}, drag {} N, available {} N, validity {}",
-            aero.lift_coefficient, aero.drag_n, model.available_thrust, aero.model.validity_status
+            "level-flight envelope exceeded: CL {}, drag {} N, available {available} N, validity {}",
+            aero.lift_coefficient, aero.drag_n, aero.model.validity_status
         )));
     }
-    let flow = propulsion::fuel_flow_for_required_thrust(
-        &model.engine,
-        altitude,
-        speed / atmosphere.speed_of_sound_m_s,
-        propulsion::OperatingMode::Cruise,
+    let flow = model.powerplant.fuel_flow(
         aero.drag_n,
-    )
-    .map_err(external)?;
-    Ok((flow.flow_kg_s, aero))
+        &Operating {
+            altitude,
+            speed,
+            mach: speed / atmosphere.speed_of_sound_m_s,
+            mode: OperatingMode::Cruise,
+        },
+    )?;
+    Ok((flow, aero))
 }

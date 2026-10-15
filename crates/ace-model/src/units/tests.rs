@@ -30,3 +30,17 @@ fn singular_and_overflowing_expressions_are_errors() -> ModelResult<()> {
     assert!(one.power(17).is_err());
     Ok(())
 }
+
+#[test]
+fn power_specific_fuel_consumption_matches_shaft_work_dimensions() -> ModelResult<()> {
+    let bsfc = Quantity::new(0.27, Unit::KilogramPerKilowattHour)?;
+    assert!((bsfc.to(Unit::KilogramPerJoule)?.value - 0.27 / 3.6e6).abs() < 1e-20);
+    let power = Quantity::new(100_000.0, Unit::Watt)?.dimensional()?;
+    let flow = bsfc
+        .dimensional()?
+        .multiply(power, false)?
+        .to(Unit::KilogramPerSecond)?;
+    assert!((flow.value - 0.0075).abs() < 1e-15);
+    assert!(bsfc.to(Unit::KilogramPerNewtonSecond).is_err());
+    Ok(())
+}

@@ -69,6 +69,16 @@ pub(crate) fn create_session_blocking(
     ] {
         registry.register(Arc::new(flight::FlightPhase::with_kind(kind)))?;
     }
+    for kind in [
+        flight::PhaseKind::Level,
+        flight::PhaseKind::RouteCruise,
+        flight::PhaseKind::EnergyPath,
+    ] {
+        registry.register(Arc::new(flight::FlightPhase::with_kind(kind).propeller()))?;
+        registry.register(Arc::new(
+            flight::FlightPhase::with_kind(kind).propeller().vspaero(),
+        ))?;
+    }
     geometry::register_blocking(&model, &mut registry)?;
     vspaero::register_blocking(&model, &mut registry)?;
     for kind in [

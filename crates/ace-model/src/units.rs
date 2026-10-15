@@ -95,6 +95,12 @@ pub enum Unit {
     /// Thrust-specific fuel consumption in kilograms per newton second.
     #[serde(rename = "kg/(N*s)")]
     KilogramPerNewtonSecond,
+    /// Power-specific fuel consumption in kilograms per joule of shaft work.
+    #[serde(rename = "kg/J")]
+    KilogramPerJoule,
+    /// Power-specific fuel consumption in kilograms per kilowatt hour of shaft work.
+    #[serde(rename = "kg/kWh")]
+    KilogramPerKilowattHour,
 }
 
 impl Unit {
@@ -130,6 +136,8 @@ impl Unit {
             Self::DollarPerHour => (1.0 / 3600.0, [0, 0, -1, 0, 1]),
             Self::DollarPerKilogram => (1.0, [-1, 0, 0, 0, 1]),
             Self::KilogramPerNewtonSecond => (1.0, [0, -1, 1, 0, 0]),
+            Self::KilogramPerJoule => (1.0, [0, -2, 2, 0, 0]),
+            Self::KilogramPerKilowattHour => (1.0 / 3.6e6, [0, -2, 2, 0, 0]),
         }
     }
 

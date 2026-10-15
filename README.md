@@ -68,7 +68,13 @@ The example uses `aircraft.route_cruise_phase` and `aircraft.level_flight_phase`
 for cruise and reserve: constant
 speed/altitude, parabolic drag, lift equal to weight, thrust equal to drag and
 declared installed TSFC/thrust. It rejects exceeded lift/thrust limits and Mach
-above 0.9. Climb, descent and approach integrate mass and fuel along declared straight paths
+above 0.9. The `aircraft.propeller_*` and `aircraft.vspaero_propeller_*` level,
+route-cruise and energy-path variants replace `tsfc` and `available_thrust` with
+`shaft_power` (sea-level maximum), `propeller_efficiency`, `bsfc` (`kg/kWh` or
+`kg/J`) and `power_lapse_exponent` n: available thrust is
+`efficiency * shaft_power * (rho/rho0)^n / V` and fuel flow is
+`bsfc * thrust * V / efficiency`. Efficiency and BSFC stay constant; there is no
+propeller map or static-thrust model. Climb, descent and approach integrate mass and fuel along declared straight paths
 with linear true airspeed schedules, including potential and kinetic energy.
 Paths stay within 0-20 km altitude and a +/-10 deg flight-path angle, so
 `path_distance` must be at least the altitude change divided by tan 10 deg
