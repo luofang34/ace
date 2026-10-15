@@ -41,6 +41,16 @@ pub(crate) struct RawFieldConditions {
     pub(crate) braking_coefficient: Option<f64>,
 }
 
+/// Speed chosen from the polar at segment entry instead of a declared speed.
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum SpeedSchedule {
+    /// Maximum specific range.
+    BestRange,
+    /// Minimum fuel flow.
+    BestEndurance,
+}
+
 /// Runway conditions for takeoff and landing field-length estimates.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct FieldConditions {
@@ -104,6 +114,8 @@ pub(crate) struct RawMissionSegment {
     pub(crate) payload_mass: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) headwind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) speed_schedule: Option<SpeedSchedule>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) schedule: Option<Vec<RawEnergySchedulePoint>>,
     #[serde(flatten, default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -172,6 +184,8 @@ pub(crate) struct MissionSegment {
     /// Along-track wind against the aircraft; negative is a tailwind.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) headwind_m_s: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) speed_schedule: Option<SpeedSchedule>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) energy_schedule: Option<Vec<EnergySchedulePoint>>,
 }

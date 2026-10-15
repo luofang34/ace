@@ -93,6 +93,7 @@ const CRUISE_FIELDS: &[SegmentFieldCapability] = &[
     at_most_one("indicated_airspeed", "speed"),
     at_most_one("true_airspeed", "speed"),
     at_most_one("mach", "speed"),
+    at_most_one("speed_schedule", "speed"),
     at_most_one("power_fraction", "throttle"),
     at_most_one("thrust_fraction", "throttle"),
 ];
@@ -103,6 +104,7 @@ const LOITER_FIELDS: &[SegmentFieldCapability] = &[
     at_most_one("indicated_airspeed", "speed"),
     at_most_one("true_airspeed", "speed"),
     at_most_one("mach", "speed"),
+    at_most_one("speed_schedule", "speed"),
     at_most_one("power_fraction", "throttle"),
     at_most_one("thrust_fraction", "throttle"),
 ];
