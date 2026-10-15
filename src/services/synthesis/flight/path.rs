@@ -204,8 +204,13 @@ fn rate(model: &FlightModel, path: &Path, mass: f64, fraction: f64) -> Result<Ra
         || aero.model.validity_status != "valid"
         || !(0.0..=available).contains(&engine_thrust)
     {
+        let hint = if engine_thrust < 0.0 {
+            "; thrust below zero needs a stage idle_thrust or a shallower path"
+        } else {
+            ""
+        };
         return Err(SolverError::Failed(format!(
-            "energy-path envelope exceeded at {altitude} m: CL {}, required thrust {thrust} N, available {available} N, validity {}; thrust below zero needs a stage idle_thrust or a shallower path",
+            "energy-path envelope exceeded at {altitude} m: CL {}, required thrust {thrust} N, engine thrust {engine_thrust} N, available {available} N, validity {}{hint}",
             aero.lift_coefficient, aero.model.validity_status
         )));
     }

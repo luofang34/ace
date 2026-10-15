@@ -172,6 +172,15 @@ fn declared_idle_floor_burns_idle_fuel_and_reports_drag_device_demand() {
         assert!((work - energy).abs() < 1e-8);
     }
     assert!(floored > 0);
+    steep.conditions.insert(
+        "idle_thrust".into(),
+        Quantity::new(200_000.0, Unit::Newton).unwrap(),
+    );
+    let Err(SolverError::Failed(message)) = evaluate(&model, &steep, &RunControl::default()) else {
+        panic!("an idle floor above available thrust must be rejected");
+    };
+    assert!(message.contains("engine thrust 200000 N"));
+    assert!(!message.contains("below zero"));
 }
 
 #[test]
