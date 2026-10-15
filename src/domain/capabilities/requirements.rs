@@ -59,6 +59,7 @@ pub(crate) enum RequirementMetric {
     MissionLandingFuel,
     MissionReserveDuration,
     ServiceCeiling,
+    OperatingCeiling,
     StallSpeedLanding,
     AchievedCruiseMach,
     MinimumCruiseExcessPower,
@@ -146,7 +147,7 @@ pub(crate) struct RequirementTemplateCapability {
     pub(crate) items: &'static [RequirementTemplateItemCapability],
 }
 
-const REQUIREMENT_METRICS: [RequirementMetricCapability; 22] = [
+const REQUIREMENT_METRICS: [RequirementMetricCapability; 23] = [
     metric(
         "mission.payload_mass",
         RequirementMetric::MissionPayloadMass,
@@ -190,6 +191,14 @@ const REQUIREMENT_METRICS: [RequirementMetricCapability; 22] = [
     metric(
         "performance.service_ceiling",
         RequirementMetric::ServiceCeiling,
+        MetricSource::Achieved,
+        true,
+        RequirementValueKind::Length,
+        None,
+    ),
+    metric(
+        "performance.operating_ceiling",
+        RequirementMetric::OperatingCeiling,
         MetricSource::Achieved,
         true,
         RequirementValueKind::Length,

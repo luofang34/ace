@@ -132,8 +132,10 @@ them. A root beyond an engine profile's declared envelope is `extrapolated`.
 `limits.maximum_altitude`, and `operating_ceiling_limited_by` names the limit
 when it binds. When the climb threshold is still met at 86 km, or not met at sea
 level, the ceilings are omitted, their validity is `unsupported`, and
-`CEILING_UNAVAILABLE` explains why. Requirements on the service ceiling use the
-physical value. Climb-rate optima at the 1.05 V_stall search floor are
+`CEILING_UNAVAILABLE` explains why. A `performance.service_ceiling` requirement
+judges climb capability (the physical value, `extrapolated` beyond an engine's
+envelope); a `performance.operating_ceiling` requirement judges the altitude the
+aircraft may be operated to, including declared limits. Climb-rate optima at the 1.05 V_stall search floor are
 stall-margin constrained, not boundary-limited.
 
 Declared cruise Mach and true airspeed remain inputs for reporting. Achieved

@@ -218,6 +218,14 @@ impl SweepMetricContext<'_> {
                     )
                 })?
             }
+            "performance.operating_ceiling" => {
+                self.performance.operating_ceiling_m.ok_or_else(|| {
+                    AexError::analysis(
+                        "CEILING_UNAVAILABLE",
+                        "performance.operating_ceiling has neither a solved ceiling nor a binding declared limit",
+                    )
+                })?
+            }
             "performance.maximum_level_speed" => self.performance.maximum_level_speed_m_s,
             "performance.achieved_cruise_mach" => {
                 optional_performance_metric(metric, self.performance.achieved_cruise_mach)?

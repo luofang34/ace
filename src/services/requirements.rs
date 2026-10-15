@@ -117,6 +117,12 @@ fn metric_value(
         RequirementMetric::MissionReserveDuration => {
             valid_input(reserve_duration_s(scenario, mission))
         }
+        RequirementMetric::OperatingCeiling => {
+            performance.operating_ceiling_m.map(|actual| MetricInput {
+                actual,
+                validity: performance.validity_for("performance.operating_ceiling"),
+            })
+        }
         RequirementMetric::ServiceCeiling => {
             performance.service_ceiling_m.map(|actual| MetricInput {
                 actual,

@@ -226,6 +226,12 @@ fn insert_performance(
         performance.absolute_ceiling_m,
         "m",
     );
+    insert_optional(
+        metrics,
+        "performance.operating_ceiling",
+        performance.operating_ceiling_m,
+        "m",
+    );
     insert_cruise_metrics(metrics, performance);
     insert(
         metrics,

@@ -426,3 +426,34 @@ fn c172_static_margin_bounds_are_both_bindable() -> Result<(), Box<dyn std::erro
     }
     Ok(())
 }
+
+#[test]
+fn operating_ceiling_requirement_respects_declared_limits_unlike_service_ceiling()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut scenario = example_scenario("sr71")?;
+    scenario.aircraft.propulsion.sizing_factor = 2.0;
+    scenario.aircraft.limits.maximum_operating_altitude_m = Some(15_000.0);
+    let mission = crate::models::mission::MissionSimulator::new(scenario.clone()).simulate()?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(Some(&mission))?;
+    let template = scenario
+        .requirements
+        .items
+        .iter()
+        .find(|item| item.metric == "performance.service_ceiling")
+        .ok_or("missing SR-71 service-ceiling requirement")?
+        .clone();
+    for (metric, passes) in [
+        ("performance.service_ceiling", true),
+        ("performance.operating_ceiling", false),
+    ] {
+        let mut requirement = template.clone();
+        requirement.metric = metric.to_owned();
+        requirement.operator = "ge".to_owned();
+        requirement.required = 20_000.0;
+        scenario.requirements.items = vec![requirement];
+        let evaluation = evaluate_requirements(&scenario, &mission, &performance, None)?;
+        assert_eq!(evaluation.len(), 1, "{metric}");
+        assert_eq!(evaluation[0].passed, Some(passes), "{metric}");
+    }
+    Ok(())
+}
