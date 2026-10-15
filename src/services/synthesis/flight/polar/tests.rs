@@ -38,12 +38,45 @@ fn interpolated_solver_drag_drives_mass_ode_without_extrapolation() {
         output.increments[0].details["aerodynamics"]["model"]["model_id"],
         "aero.polar_table"
     );
-    for mach in [0.19, 0.81] {
+    state.conditions.insert(
+        "speed".into(),
+        Quantity::new(0.81 * air.speed_of_sound_m_s, Unit::MeterPerSecond).unwrap(),
+    );
+    assert!(integration::evaluate(&model, &state, &ace_engine::RunControl::default()).is_err());
+}
+
+#[test]
+fn low_mach_holds_lowest_sampled_polar_and_reports_basis() {
+    let model = model(&inputs()).unwrap();
+    let air = Isa1976::new(0.0).evaluate(1_000.0).unwrap();
+    for mach in [0.10, 0.19, 0.2] {
+        let mut state = tests::state(3_000.0);
+        state.conditions.insert(
+            "altitude".into(),
+            Quantity::new(1_000.0, Unit::Meter).unwrap(),
+        );
         state.conditions.insert(
             "speed".into(),
             Quantity::new(mach * air.speed_of_sound_m_s, Unit::MeterPerSecond).unwrap(),
         );
-        assert!(integration::evaluate(&model, &state, &ace_engine::RunControl::default()).is_err());
+        state.conditions.insert(
+            "duration".into(),
+            Quantity::new(60.0, Unit::Second).unwrap(),
+        );
+        let output =
+            integration::evaluate(&model, &state, &ace_engine::RunControl::default()).unwrap();
+        let aero = &output.increments[0].details["aerodynamics"];
+        assert_eq!(aero["model"]["validity_status"], "valid");
+        let cl = aero["lift_coefficient"].as_f64().unwrap();
+        let induced = aero["induced_drag_coefficient"].as_f64().unwrap();
+        // k_020 from the fixture; the lower sample is held, not extrapolated.
+        assert!((induced - 0.02 * cl * cl).abs() < 1e-12);
+        assert!(
+            output.details["polar_basis"]
+                .as_str()
+                .unwrap()
+                .contains("held at the lowest sampled Mach")
+        );
     }
 }
 
