@@ -7,6 +7,7 @@ use plotters::prelude::*;
 use crate::charts::spec::ChartSpec;
 use crate::domain::diagnostic::{AexError, AexResult};
 
+mod annotations;
 mod surface;
 
 pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<()> {
@@ -17,7 +18,14 @@ pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<
             source,
         })?;
     }
-    let x_range = numeric_range(&spec.x.values)?;
+    let all_x: Vec<_> = spec
+        .x
+        .values
+        .iter()
+        .copied()
+        .chain(spec.annotations.iter().map(|a| a.x))
+        .collect();
+    let x_range = numeric_range(&all_x)?;
     let all_y: Vec<f64> = spec
         .y
         .values
@@ -31,10 +39,12 @@ pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<
         .chain(spec.annotations.iter().map(|annotation| annotation.y))
         .collect();
     let y_range = numeric_range(&all_y)?;
-    let backend = SVGBackend::new(output, (1100, 700));
+    let labels = annotations::rows(spec);
+    let backend = SVGBackend::new(output, (1100, 700 + labels.len() as u32 * 21 + 10));
     let root = backend.into_drawing_area();
     root.fill(&WHITE).map_err(plot_error)?;
-    let mut chart = ChartBuilder::on(&root)
+    let (plot, legend) = root.split_vertically(700);
+    let mut chart = ChartBuilder::on(&plot)
         .caption(&spec.title, ("sans-serif", 30))
         .margin(20)
         .x_label_area_size(50)
@@ -49,7 +59,8 @@ pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<
         .map_err(plot_error)?;
     draw_surface(&mut chart, spec)?;
     draw_series(&mut chart, spec)?;
-    draw_annotations(&mut chart, spec)?;
+    annotations::draw(&mut chart, spec)?;
+    annotations::legend(&legend, &labels)?;
     draw_legend(&mut chart, spec)?;
     root.present().map_err(plot_error)
 }
@@ -79,27 +90,6 @@ fn draw_series<DB: DrawingBackend>(
                 .label(series.label.clone())
                 .legend(move |(x, y)| PathElement::new([(x, y), (x + 20, y)], &color));
         }
-    }
-    Ok(())
-}
-
-fn draw_annotations<DB: DrawingBackend>(
-    chart: &mut ChartContext<'_, DB, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
-    spec: &ChartSpec,
-) -> AexResult<()> {
-    for annotation in &spec.annotations {
-        chart
-            .draw_series(PointSeries::of_element(
-                [(annotation.x, annotation.y)],
-                5,
-                &BLACK,
-                &|coordinate, size, style| {
-                    EmptyElement::at(coordinate)
-                        + Circle::new((0, 0), size, style.filled())
-                        + Text::new(annotation.label.clone(), (8, -8), ("sans-serif", 14))
-                },
-            ))
-            .map_err(plot_error)?;
     }
     Ok(())
 }
