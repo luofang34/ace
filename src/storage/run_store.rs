@@ -92,14 +92,20 @@ impl FileRunStore {
     }
 }
 
-impl RunRepository for FileRunStore {
-    fn persist_blocking(&self, request: PersistRunRequest<'_>) -> AexResult<RunRecord> {
+impl FileRunStore {
+    /// Identical content persisted within one timestamp second maps to the same run
+    /// directory; returning the stored run keeps repeated sweeps idempotent while a
+    /// different hash under that id is still a collision.
+    fn persist_at_blocking(
+        &self,
+        request: PersistRunRequest<'_>,
+        timestamp: chrono::DateTime<Utc>,
+    ) -> AexResult<RunRecord> {
         fs::create_dir_all(&self.root).map_err(|source| AexError::Write {
             path: self.root.clone(),
             source,
         })?;
         let content_hash = content_hash(&request)?;
-        let timestamp = Utc::now();
         let run_id = format!(
             "{}-{}",
             timestamp.format("%Y-%m-%dT%H%M%SZ"),
@@ -107,13 +113,7 @@ impl RunRepository for FileRunStore {
         );
         let target = self.root.join(&run_id);
         if target.exists() {
-            return Err(AexError::analysis(
-                "RUN_ID_COLLISION",
-                format!(
-                    "immutable run directory {} already exists",
-                    target.display()
-                ),
-            ));
+            return existing_run_blocking(target, run_id, &content_hash);
         }
         let temporary = self.root.join(format!(".{run_id}.tmp"));
         fs::create_dir(&temporary).map_err(|source| AexError::Write {
@@ -122,15 +122,53 @@ impl RunRepository for FileRunStore {
         })?;
         let manifest = manifest(&request, &run_id, &content_hash, timestamp.to_rfc3339());
         write_run_files(&temporary, &request, &manifest)?;
-        fs::rename(&temporary, &target).map_err(|source| AexError::Write {
-            path: target.clone(),
-            source,
-        })?;
+        if let Err(source) = fs::rename(&temporary, &target) {
+            if target.exists() {
+                fs::remove_dir_all(&temporary).map_err(|source| AexError::Write {
+                    path: temporary.clone(),
+                    source,
+                })?;
+                return existing_run_blocking(target, run_id, &content_hash);
+            }
+            return Err(AexError::Write {
+                path: target,
+                source,
+            });
+        }
         Ok(RunRecord {
             run_id,
             directory: target,
             manifest,
         })
+    }
+}
+
+fn existing_run_blocking(
+    directory: PathBuf,
+    run_id: String,
+    content_hash: &str,
+) -> AexResult<RunRecord> {
+    let manifest: RunManifest = read_json_blocking(&directory.join("manifest.json"))?;
+    if manifest.content_hash != content_hash {
+        return Err(AexError::analysis(
+            "RUN_ID_COLLISION",
+            format!(
+                "immutable run directory {} already holds content {}, not {content_hash}",
+                directory.display(),
+                manifest.content_hash
+            ),
+        ));
+    }
+    Ok(RunRecord {
+        run_id,
+        directory,
+        manifest,
+    })
+}
+
+impl RunRepository for FileRunStore {
+    fn persist_blocking(&self, request: PersistRunRequest<'_>) -> AexResult<RunRecord> {
+        self.persist_at_blocking(request, Utc::now())
     }
 
     fn load_result_blocking(&self, run_id: &str) -> AexResult<(RunManifest, Value)> {
