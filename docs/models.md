@@ -160,6 +160,12 @@ power and nonmonotonic schedules. Legacy `climb` uses an explicitly
 low-fidelity constant rate capped at 50 m/s; descent retains a simplified
 rate.
 
+Synthesis `energy_path` phases integrate a straight prescribed path with exact
+`sin(gamma)`/`cos(gamma)` force balance, but are registered only for flight-path
+angles within +/-10 deg and altitudes 0-20 km, so `path_distance` must be at
+least the altitude change divided by tan 10 deg (about 5.7 times it). Steeper
+paths are rejected rather than integrated outside that domain.
+
 Completed missions publish `mission.landing_fuel`. Landing fuel below 5% of
 the aircraft's maximum fuel capacity emits the advisory
 `LOW_LANDING_FUEL`; incomplete missions publish neither the achieved metric
