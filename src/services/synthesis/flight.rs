@@ -10,6 +10,7 @@ mod integration;
 mod parameters;
 mod path;
 mod polar;
+mod powerplant;
 
 #[derive(Clone, Copy)]
 pub(super) enum PhaseKind {
@@ -75,7 +76,32 @@ impl FlightPhase {
     }
 
     pub fn with_vspaero(kind: PhaseKind) -> Self {
-        let mut phase = Self::with_kind(kind);
+        Self::with_kind(kind).vspaero()
+    }
+
+    /// Replaces the thrust/TSFC ports with shaft power, propeller efficiency and BSFC.
+    pub fn propeller(mut self) -> Self {
+        self.spec.identity.id = self
+            .spec
+            .identity
+            .id
+            .replace("aircraft.", "aircraft.propeller_");
+        for port in ["tsfc", "available_thrust"] {
+            self.spec.inputs.remove(port);
+        }
+        for (port, unit) in [
+            ("shaft_power", Unit::Watt),
+            ("propeller_efficiency", Unit::Ratio),
+            ("bsfc", Unit::KilogramPerKilowattHour),
+            ("power_lapse_exponent", Unit::Ratio),
+        ] {
+            self.spec.inputs.insert(port.into(), unit);
+        }
+        self
+    }
+
+    pub fn vspaero(self) -> Self {
+        let mut phase = self;
         phase.vspaero = true;
         phase.spec.identity.id = phase
             .spec

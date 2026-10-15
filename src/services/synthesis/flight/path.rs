@@ -1,13 +1,14 @@
 use super::{
     external,
     parameters::{FlightModel, positive, read},
+    powerplant::Operating,
 };
 use crate::{
     domain::{quantity::GRAVITY_M_S2, result::AerodynamicState},
     models::{
         aerodynamics::{self, FlightCondition},
         atmosphere::Isa1976,
-        propulsion,
+        propulsion::OperatingMode,
     },
 };
 use ace_engine::{PhaseIncrement, PhaseOutput, RunControl, SolverError};
@@ -134,8 +135,8 @@ pub(super) fn evaluate(
         approximate: true,
         artifacts: Vec::new(),
         details: serde_json::json!({"method":"rk4_energy_path", "force_balance":"L=mg*cos(gamma); T=D+mg*sin(gamma)+m*V*dV/ds",
-            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; constant installed thrust and TSFC; no wind, turns or engine transients; below a declared idle_thrust the engine burns at idle and the surplus is drag_device_n, an unmodelled drag device; CL limit; tabulated polars follow polar_basis",
-            "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis,
+            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; powerplant per its basis; no wind, turns or engine transients; below a declared idle_thrust the engine burns at idle and the surplus is drag_device_n, an unmodelled drag device; CL limit; tabulated polars follow polar_basis",
+            "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis, "powerplant":model.powerplant.basis(),
             "path_angle_deg":path.sin_gamma.asin().to_degrees(), "idle_thrust_n":path.idle_thrust, "maximum_drag_device_n":maximum_drag_device, "maximum_step_s":model.maximum_step}),
     })
 }
@@ -196,29 +197,38 @@ fn rate(model: &FlightModel, path: &Path, mass: f64, fraction: f64) -> Result<Ra
     let acceleration = speed * (path.target_speed - path.speed) / path.length;
     let thrust = aero.drag_n + mass * (GRAVITY_M_S2 * path.sin_gamma + acceleration);
     let engine_thrust = path.idle_thrust.map_or(thrust, |idle| thrust.max(idle));
+    let available = model
+        .powerplant
+        .available_thrust(atmosphere.density_kg_m3, speed);
     if aero.lift_coefficient > model.aero.cl_max
         || aero.model.validity_status != "valid"
-        || !(0.0..=model.available_thrust).contains(&engine_thrust)
+        || !(0.0..=available).contains(&engine_thrust)
     {
+        let hint = if engine_thrust < 0.0 {
+            "; thrust below zero needs a stage idle_thrust or a shallower path"
+        } else {
+            ""
+        };
         return Err(SolverError::Failed(format!(
-            "energy-path envelope exceeded at {altitude} m: CL {}, required thrust {thrust} N, available {} N, validity {}; thrust below zero needs a stage idle_thrust or a shallower path",
-            aero.lift_coefficient, model.available_thrust, aero.model.validity_status
+            "energy-path envelope exceeded at {altitude} m: CL {}, required thrust {thrust} N, engine thrust {engine_thrust} N, available {available} N, validity {}{hint}",
+            aero.lift_coefficient, aero.model.validity_status
         )));
     }
-    let flow = propulsion::fuel_flow_for_required_thrust(
-        &model.engine,
-        altitude,
-        speed / atmosphere.speed_of_sound_m_s,
-        if path.sin_gamma > 0.0 {
-            propulsion::OperatingMode::Climb
-        } else {
-            propulsion::OperatingMode::Cruise
-        },
+    let flow = model.powerplant.fuel_flow(
         engine_thrust,
-    )
-    .map_err(external)?;
+        &Operating {
+            altitude,
+            speed,
+            mach: speed / atmosphere.speed_of_sound_m_s,
+            mode: if path.sin_gamma > 0.0 {
+                OperatingMode::Climb
+            } else {
+                OperatingMode::Cruise
+            },
+        },
+    )?;
     Ok(Rate {
-        burn_per_meter: flow.flow_kg_s / speed,
+        burn_per_meter: flow / speed,
         thrust,
         engine_thrust,
         aero,

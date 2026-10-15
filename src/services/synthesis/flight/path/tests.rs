@@ -96,11 +96,16 @@ fn climb_first_point_matches_independent_force_balance_and_mass_drives_burn() {
 
 #[test]
 fn impossible_path_and_insufficient_thrust_are_rejected_without_clamping() {
-    let mut model = FlightModel::new(&inputs()).unwrap();
+    let model = FlightModel::new(&inputs()).unwrap();
     let steep = entry(70_000.0, (10_000.0, 230.0), (0.0, 125.0), 100_000.0);
     assert!(evaluate(&model, &steep, &RunControl::default()).is_err());
     let climb = entry(70_000.0, (35.0, 125.0), (10_000.0, 230.0), 250_000.0);
-    model.available_thrust = 1000.0;
+    let mut weak = inputs();
+    weak.insert(
+        "available_thrust".into(),
+        Quantity::new(1000.0, Unit::Newton).unwrap(),
+    );
+    let model = FlightModel::new(&weak).unwrap();
     assert!(evaluate(&model, &climb, &RunControl::default()).is_err());
 }
 
@@ -167,6 +172,15 @@ fn declared_idle_floor_burns_idle_fuel_and_reports_drag_device_demand() {
         assert!((work - energy).abs() < 1e-8);
     }
     assert!(floored > 0);
+    steep.conditions.insert(
+        "idle_thrust".into(),
+        Quantity::new(200_000.0, Unit::Newton).unwrap(),
+    );
+    let Err(SolverError::Failed(message)) = evaluate(&model, &steep, &RunControl::default()) else {
+        panic!("an idle floor above available thrust must be rejected");
+    };
+    assert!(message.contains("engine thrust 200000 N"));
+    assert!(!message.contains("below zero"));
 }
 
 #[test]
