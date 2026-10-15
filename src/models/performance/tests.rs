@@ -30,12 +30,20 @@ fn both_reference_aircraft_have_finite_service_ceilings() {
             let summary = summary(resolved);
             assert!(summary.is_ok());
             if let Ok(result) = summary {
-                assert!(result.service_ceiling_m.is_finite());
-                assert!(result.service_ceiling_m > 0.0);
-                assert!(result.absolute_ceiling_m >= result.service_ceiling_m);
+                let service = result.service_ceiling_m.unwrap_or(f64::NAN);
+                assert!(service.is_finite());
+                assert!(service > 0.0);
+                assert!(result.absolute_ceiling_m.unwrap_or(f64::NAN) >= service);
+                // The B777 reaches its declared maximum operating altitude, which
+                // clamps and names the ceiling; the C172 ceiling is a solved root.
+                let expected = if name == "b777" {
+                    ValidityStatus::BoundaryLimited
+                } else {
+                    ValidityStatus::Valid
+                };
                 assert_eq!(
                     result.validity_for("performance.service_ceiling").status,
-                    ValidityStatus::Valid
+                    expected
                 );
             }
         }
@@ -130,24 +138,31 @@ fn point_result_uses_configuration_reference_validity_and_legacy_defaults()
 }
 
 #[test]
-fn sr71_distinguishes_boundary_ceiling_from_table_supported_speed()
+fn sr71_reports_unbracketed_ceiling_as_unavailable_and_keeps_table_speed()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("sr71")?;
     scenario.aircraft.propulsion.sizing_factor = 2.0;
     let result = summary(scenario)?;
 
-    assert_eq!(result.service_ceiling_m, 19_900.0);
+    assert_eq!(result.service_ceiling_m, None);
+    assert_eq!(result.absolute_ceiling_m, None);
     assert_eq!(
         result.validity_for("performance.service_ceiling").status,
-        ValidityStatus::BoundaryLimited
+        ValidityStatus::Unsupported
     );
+    assert!(result.warnings.iter().any(|warning| {
+        warning.code == "CEILING_UNAVAILABLE"
+            && warning
+                .message
+                .contains("atmosphere.isa1976.maximum_altitude")
+    }));
     assert_eq!(
         result
             .validity_for("performance.maximum_level_speed")
             .status,
         ValidityStatus::Valid
     );
-    assert_eq!(result.model.validity_status, "boundary_limited");
+    assert_eq!(result.model.validity_status, "unsupported");
     assert_eq!(result.cruise_mach, Some(3.2));
     assert_eq!(result.declared_cruise_mach, Some(3.2));
     assert_eq!(result.achieved_cruise_mach, None);

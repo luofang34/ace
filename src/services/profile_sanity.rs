@@ -1,6 +1,7 @@
 use serde_json::json;
 
 use crate::domain::diagnostic::Diagnostic;
+use crate::domain::propulsion::PowerLapse;
 use crate::domain::schema::{EngineProfile, PistonProfile, PropellerProfile, TurbofanProfile};
 use crate::domain::warning::WarningCode;
 
@@ -18,10 +19,14 @@ const PISTON_RANGES: &[TypicalRange] = &[
     range("rated_speed", 52.0, 628.0, "rad/s"),
     range("dry_mass", 20.0, 5_000.0, "kg"),
     range("power_lapse.exponent", 0.3, 2.0, "1"),
+    range("power_lapse.critical_altitude", 0.0, 12_000.0, "m"),
+    range("power_lapse.exponent_below", 0.0, 1.2, "1"),
+    range("power_lapse.exponent_above", 0.5, 2.0, "1"),
     range("power_lapse.minimum_power_fraction", 0.05, 0.8, "1"),
     range("bsfc.takeoff", 0.12, 0.8, "kg/kWh"),
     range("bsfc.cruise", 0.12, 0.8, "kg/kWh"),
     range("bsfc.economy", 0.12, 0.8, "kg/kWh"),
+    range("bsfc.altitude_slope", -0.05, 0.05, "1"),
     range("limits.maximum_altitude", 0.0, 20_000.0, "m"),
 ];
 
@@ -133,11 +138,39 @@ fn piston_value(profile: &PistonProfile, path: &str) -> Option<f64> {
         "rated_altitude" => Some(profile.rated_altitude_m),
         "rated_speed" => Some(profile.rated_speed_rad_s),
         "dry_mass" => Some(profile.dry_mass_kg),
-        "power_lapse.exponent" => Some(profile.lapse_exponent),
-        "power_lapse.minimum_power_fraction" => Some(profile.minimum_power_fraction),
-        "bsfc.takeoff" => Some(profile.bsfc_takeoff_kg_kwh),
-        "bsfc.cruise" => Some(profile.bsfc_cruise_kg_kwh),
-        "bsfc.economy" => Some(profile.bsfc_economy_kg_kwh),
+        "power_lapse.exponent" => match profile.power_lapse {
+            PowerLapse::DensityPower { exponent, .. } => Some(exponent),
+            PowerLapse::CriticalAltitude { .. } => None,
+        },
+        "power_lapse.critical_altitude" => match profile.power_lapse {
+            PowerLapse::CriticalAltitude {
+                critical_altitude_m,
+                ..
+            } => Some(critical_altitude_m),
+            PowerLapse::DensityPower { .. } => None,
+        },
+        "power_lapse.exponent_below" => match profile.power_lapse {
+            PowerLapse::CriticalAltitude { exponent_below, .. } => Some(exponent_below),
+            PowerLapse::DensityPower { .. } => None,
+        },
+        "power_lapse.exponent_above" => match profile.power_lapse {
+            PowerLapse::CriticalAltitude { exponent_above, .. } => Some(exponent_above),
+            PowerLapse::DensityPower { .. } => None,
+        },
+        "power_lapse.minimum_power_fraction" => match profile.power_lapse {
+            PowerLapse::DensityPower {
+                minimum_power_fraction,
+                ..
+            }
+            | PowerLapse::CriticalAltitude {
+                minimum_power_fraction,
+                ..
+            } => minimum_power_fraction,
+        },
+        "bsfc.takeoff" => Some(profile.bsfc.takeoff_kg_kwh),
+        "bsfc.cruise" => Some(profile.bsfc.cruise_kg_kwh),
+        "bsfc.economy" => Some(profile.bsfc.economy_kg_kwh),
+        "bsfc.altitude_slope" => profile.bsfc.altitude_slope_per_km,
         "limits.maximum_altitude" => profile.maximum_altitude_m,
         _ => None,
     }

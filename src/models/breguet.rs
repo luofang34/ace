@@ -29,7 +29,7 @@ pub(crate) fn estimate(
                 .propeller
                 .as_ref()
                 .map_or(0.78, |propeller| propeller.cruise_efficiency);
-            let bsfc_kg_j = engine.bsfc_cruise_kg_kwh / 3_600_000.0;
+            let bsfc_kg_j = engine.bsfc.at(OperatingMode::Cruise, altitude_m) / 3_600_000.0;
             (
                 propeller_efficiency / (GRAVITY_M_S2 * bsfc_kg_j) * lift_to_drag_ratio * mass_ratio,
                 "propeller Breguet range with cruise BSFC",

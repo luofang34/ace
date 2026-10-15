@@ -69,8 +69,9 @@ const DOCUMENT_TYPES: [DocumentTypeCapability; 6] = [
     document("study", DocumentKind::Study),
 ];
 
-const PROFILE_TYPES: [ProfileTypeCapability; 5] = [
+const PROFILE_TYPES: [ProfileTypeCapability; 6] = [
     profile("piston_engine", ProfileRole::Engine),
+    profile("turboprop_engine", ProfileRole::Engine),
     profile("turbofan_engine", ProfileRole::Engine),
     profile("turbojet_engine", ProfileRole::Engine),
     profile("rocket_engine", ProfileRole::Engine),

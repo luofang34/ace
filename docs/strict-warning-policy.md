@@ -7,6 +7,8 @@ The wire codes and decisions below are generated from the runtime registry.
 | --- | --- | --- |
 | `AGENT_ASSUMPTION` | yes | A value was supplied by an agent assumption rather than declared source data. |
 | `APPROXIMATE_TAKEOFF_DISTANCE` | no | Takeoff distance uses the documented conceptual energy approximation. |
+| `CEILING_RELIES_ON_POWER_FLOOR` | yes | A ceiling exists only because a declared minimum shaft-power fraction exceeds the lapsed power. |
+| `CEILING_UNAVAILABLE` | no | No ceiling root lies inside the searchable altitude range, so the ceiling is reported as unavailable. |
 | `CERTIFICATION_USE_NOT_PROHIBITED` | no | Example metadata does not explicitly prohibit certification use. |
 | `CROSS_CLASS_COMPARISON` | no | A comparison mixes propulsion classes with non-equivalent loading metrics. |
 | `CRUISE_ALTITUDE_LIMIT_EXCEEDED` | no | A declared cruise condition exceeds an aircraft operating limit. |

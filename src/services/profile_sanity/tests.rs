@@ -10,16 +10,20 @@ use super::{
     propeller_value, turbofan_value,
 };
 
-const PISTON_PATHS: [&str; 10] = [
+const PISTON_PATHS: [&str; 14] = [
     "rated_power",
     "rated_altitude",
     "rated_speed",
     "dry_mass",
     "power_lapse.exponent",
+    "power_lapse.critical_altitude",
+    "power_lapse.exponent_below",
+    "power_lapse.exponent_above",
     "power_lapse.minimum_power_fraction",
     "bsfc.takeoff",
     "bsfc.cruise",
     "bsfc.economy",
+    "bsfc.altitude_slope",
     "limits.maximum_altitude",
 ];
 const TURBOFAN_PATHS: [&str; 16] = [
@@ -90,6 +94,7 @@ fn stock_profiles_are_inside_registered_typical_ranges() -> Result<(), Box<dyn s
         "profiles/engines/ge90.yaml",
         "profiles/engines/htf7700l.yaml",
         "profiles/engines/lycoming.yaml",
+        "profiles/engines/turboprop.yaml",
         "examples/b777/profiles/engine.yaml",
         "examples/c172/profiles/engine.yaml",
         "examples/designs/model501/baseline/profiles/passport.yaml",
@@ -128,6 +133,9 @@ fn every_registered_path_maps_to_a_finite_resolved_value() -> Result<(), Box<dyn
     let EngineProfile::Piston(piston) = engine("profiles/engines/lycoming.yaml")? else {
         return Err(io::Error::other("expected piston profile").into());
     };
+    let EngineProfile::Piston(turboprop) = engine("profiles/engines/turboprop.yaml")? else {
+        return Err(io::Error::other("expected shaft-engine profile").into());
+    };
     let EngineProfile::Turbofan(turbofan) = engine("profiles/engines/htf7700l.yaml")? else {
         return Err(io::Error::other("expected turbofan profile").into());
     };
@@ -154,11 +162,12 @@ fn every_registered_path_maps_to_a_finite_resolved_value() -> Result<(), Box<dyn
             .collect::<Vec<_>>(),
         PROPELLER_PATHS
     );
-    assert!(
-        PISTON_RANGES
-            .iter()
-            .all(|range| piston_value(&piston, range.path).is_some_and(f64::is_finite))
-    );
+    // The two lapse models declare disjoint parameters; together they cover every path.
+    assert!(PISTON_RANGES.iter().all(|range| {
+        [&piston, &turboprop]
+            .into_iter()
+            .any(|profile| piston_value(profile, range.path).is_some_and(f64::is_finite))
+    }));
     assert!(
         TURBOFAN_RANGES
             .iter()
@@ -169,10 +178,20 @@ fn every_registered_path_maps_to_a_finite_resolved_value() -> Result<(), Box<dyn
             .iter()
             .all(|range| propeller_value(&propeller, range.path).is_some_and(f64::is_finite))
     );
-    assert_eq!(
-        numeric_leaf_count(&serde_json::to_value(&piston)?),
-        PISTON_RANGES.len() + 1
-    );
+    // Every declared number has a range; the version and the derived critical
+    // density ratio are the only unranged numeric leaves.
+    for (profile, derived) in [(&piston, 0), (&turboprop, 1)] {
+        let applicable = PISTON_RANGES
+            .iter()
+            .filter(|range| piston_value(profile, range.path).is_some())
+            .count();
+        assert_eq!(
+            numeric_leaf_count(&serde_json::to_value(profile)?),
+            applicable + 1 + derived,
+            "{}",
+            profile.id
+        );
+    }
     assert_eq!(
         numeric_leaf_count(&serde_json::to_value(&turbofan)?),
         TURBOFAN_RANGES.len() + 1

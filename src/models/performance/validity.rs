@@ -2,11 +2,12 @@ use std::collections::BTreeMap;
 
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::result::AtmosphereState;
-use crate::domain::schema::{Aircraft, ResolvedScenario};
+use crate::domain::schema::{Aircraft, EngineProfile, ResolvedScenario};
 use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 
+use super::ceiling::CeilingMetric;
 use super::cruise::CruisePerformance;
 use super::{
     ABSOLUTE_CEILING_METRIC, ACHIEVED_CRUISE_MACH_METRIC, ACHIEVED_CRUISE_TAS_METRIC,
@@ -14,11 +15,11 @@ use super::{
     SERVICE_CEILING_METRIC, SolvedMetric,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub(super) struct SearchBoundary {
     pub(super) value: f64,
-    pub(super) source: &'static str,
-    artificial: bool,
+    pub(super) source: String,
+    pub(super) artificial: bool,
 }
 
 pub(super) struct ReferenceMetricValidity {
@@ -33,9 +34,9 @@ pub(super) struct PointReferenceValidity {
 }
 
 impl SearchBoundary {
-    pub(super) fn validity(self) -> MetricValidity {
+    pub(super) fn validity(&self) -> MetricValidity {
         if self.artificial {
-            MetricValidity::boundary_limited(self.source)
+            MetricValidity::boundary_limited(&self.source)
         } else {
             MetricValidity::default()
         }
@@ -51,7 +52,7 @@ pub(super) fn speed_upper_bound(
     match scenario.aircraft.limits.maximum_operating_speed_m_s {
         Some(speed_limit) if speed_limit <= mach_limit => SearchBoundary {
             value: speed_limit,
-            source: "aircraft.limits.maximum_operating_speed",
+            source: "aircraft.limits.maximum_operating_speed".to_owned(),
             artificial: false,
         },
         _ => SearchBoundary {
@@ -60,24 +61,53 @@ pub(super) fn speed_upper_bound(
                 "aircraft.limits.maximum_operating_mach"
             } else {
                 "performance.maximum_speed_search.default_mach"
-            },
+            }
+            .to_owned(),
             artificial: declared_mach.is_none(),
         },
     }
 }
 
+/// The lowest of the declared airframe and engine altitude limits and the
+/// atmosphere model's top; only the last is an artificial search bound.
 pub(super) fn altitude_upper_bound(scenario: &ResolvedScenario) -> SearchBoundary {
-    match scenario.aircraft.limits.maximum_operating_altitude_m {
-        Some(limit) if limit < 19_900.0 => SearchBoundary {
-            value: limit,
-            source: "aircraft.limits.maximum_operating_altitude",
-            artificial: false,
-        },
-        _ => SearchBoundary {
-            value: 19_900.0,
-            source: "atmosphere.isa1976.maximum_altitude",
-            artificial: true,
-        },
+    let mut bound = SearchBoundary {
+        value: 19_900.0,
+        source: "atmosphere.isa1976.maximum_altitude".to_owned(),
+        artificial: true,
+    };
+    let declared = [
+        (
+            scenario.aircraft.limits.maximum_operating_altitude_m,
+            "aircraft.limits.maximum_operating_altitude".to_owned(),
+        ),
+        (
+            engine_maximum_altitude_m(&scenario.engine),
+            format!(
+                "engine.{}.limits.maximum_altitude",
+                scenario.engine.profile_id()
+            ),
+        ),
+    ];
+    for (limit, source) in declared {
+        if let Some(limit) = limit.filter(|limit| *limit < bound.value) {
+            bound = SearchBoundary {
+                value: limit,
+                source,
+                artificial: false,
+            };
+        }
+    }
+    bound
+}
+
+fn engine_maximum_altitude_m(engine: &EngineProfile) -> Option<f64> {
+    match engine {
+        EngineProfile::Piston(profile) => profile.maximum_altitude_m,
+        EngineProfile::Turbofan(profile) => profile
+            .simple_deck
+            .as_ref()
+            .map(|deck| deck.maximum_altitude_m),
     }
 }
 
@@ -154,8 +184,8 @@ pub(super) fn aggregate<'a>(
 
 pub(super) fn summary_metric_validity(
     maximum_speed: &SolvedMetric,
-    service_ceiling: &SolvedMetric,
-    absolute_ceiling: &SolvedMetric,
+    service_ceiling: &CeilingMetric,
+    absolute_ceiling: &CeilingMetric,
     cruise: &CruisePerformance,
     reference: &ReferenceMetricValidity,
     takeoff_field: MetricValidity,

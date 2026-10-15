@@ -17,6 +17,7 @@ pub(crate) enum RegisteredModel {
     TablePolar,
     WaveDrag,
     PistonPropulsion,
+    TurbopropPropulsion,
     TurbofanPropulsion,
     TablePropulsion,
     FieldPerformance,
@@ -41,12 +42,13 @@ pub(crate) struct ScenarioDomainRegistration {
 }
 
 impl RegisteredModel {
-    pub(crate) const ALL: [Self; 10] = [
+    pub(crate) const ALL: [Self; 11] = [
         Self::Atmosphere,
         Self::ParabolicPolar,
         Self::TablePolar,
         Self::WaveDrag,
         Self::PistonPropulsion,
+        Self::TurbopropPropulsion,
         Self::TurbofanPropulsion,
         Self::TablePropulsion,
         Self::FieldPerformance,
@@ -61,6 +63,7 @@ impl RegisteredModel {
             Self::TablePolar => TABLE_POLAR_MODEL_ID,
             Self::WaveDrag => "aero.wave_drag_power_law",
             Self::PistonPropulsion => "propulsion.piston_prop_simple",
+            Self::TurbopropPropulsion => "propulsion.turboprop_simple",
             Self::TurbofanPropulsion => "propulsion.turbofan_simple_deck",
             Self::TablePropulsion => TABLE_PROPULSION_MODEL_ID,
             Self::FieldPerformance => "performance.field_length_simple",
@@ -77,7 +80,9 @@ impl ValidityDomainProvider for RegisteredModel {
             Self::ParabolicPolar => polar_domain(),
             Self::TablePolar => generic_table_polar_domain(),
             Self::WaveDrag => wave_drag_domain(0.0),
-            Self::PistonPropulsion => generic_propulsion_domain(self.model_id(), None),
+            Self::PistonPropulsion | Self::TurbopropPropulsion => {
+                generic_propulsion_domain(self.model_id(), None)
+            }
             Self::TurbofanPropulsion => generic_turbofan_domain(self.model_id(), None, None),
             Self::TablePropulsion => generic_turbofan_domain(self.model_id(), None, None),
             Self::FieldPerformance => field_performance_domain(),

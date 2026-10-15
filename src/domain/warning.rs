@@ -53,6 +53,16 @@ warning_registry! {
         false,
         "Takeoff distance uses the documented conceptual energy approximation."
     ),
+    CeilingReliesOnPowerFloor => (
+        "CEILING_RELIES_ON_POWER_FLOOR",
+        true,
+        "A ceiling exists only because a declared minimum shaft-power fraction exceeds the lapsed power."
+    ),
+    CeilingUnavailable => (
+        "CEILING_UNAVAILABLE",
+        false,
+        "No ceiling root lies inside the searchable altitude range, so the ceiling is reported as unavailable."
+    ),
     CertificationUseNotProhibited => (
         "CERTIFICATION_USE_NOT_PROHIBITED",
         false,

@@ -34,8 +34,17 @@ configuration, while best-glide speed and maximum L/D use clean.
 
 ## Propulsion
 
-`propulsion.piston_prop_simple` applies density-ratio power lapse, throttle,
-speed-dependent propeller efficiency, bounded static thrust, and profile BSFC.
+`propulsion.piston_prop_simple` (`piston_engine`) and
+`propulsion.turboprop_simple` (`turboprop_engine`) are shaft engines paired with
+a propeller profile. They apply power lapse, throttle, speed-dependent propeller
+efficiency, bounded static thrust, and mode BSFC. `power_lapse.model:
+density_power` uses `sigma^exponent` for naturally aspirated engines.
+`critical_altitude` holds `sigma^exponent_below` (0 for flat rating) up to the
+standard-day `critical_altitude`, then continues as
+`(sigma / sigma_critical)^exponent_above`. `minimum_power_fraction` is optional
+for both. A service or absolute ceiling that exists only because that floor
+exceeds the lapsed power emits `CEILING_RELIES_ON_POWER_FLOOR`. Optional
+`bsfc.altitude_slope` scales BSFC by `1 + slope * altitude / 1000 m`.
 
 `propulsion.turbofan_simple_deck` applies density/Mach thrust lapse,
 installation loss, throttle, and mode-specific TSFC. Profiles warn outside
@@ -107,11 +116,17 @@ against configurable class thresholds.
 
 Performance results include `metric_validity` for maximum level speed, service
 ceiling, and absolute ceiling. An interior root is `valid`; an interior root
-that uses a model outside its registered envelope is `extrapolated`; a result
-pinned to the atmosphere or a default search cap is `boundary_limited`.
-Explicit aircraft operating limits are treated as valid declared limits rather
-than artificial solver caps. A boundary-limited value is not evidence that the
-physical threshold occurs at that value.
+that uses a model outside its registered envelope is `extrapolated`. A maximum
+speed pinned to a default search cap is `boundary_limited`; explicit aircraft
+speed limits are valid declared limits. Ceilings search up to the lowest of
+`aircraft.limits.maximum_operating_altitude`, the engine profile's
+`limits.maximum_altitude` and the 19.9 km atmosphere top. A ceiling clamped at a
+declared limit is `boundary_limited` with that limit as its `boundary`, and a
+`ge` requirement it already meets passes because the true ceiling can only be
+higher. When the climb threshold is still met at the atmosphere top, or not met
+at sea level, the ceiling is omitted, its validity is `unsupported`, and
+`CEILING_UNAVAILABLE` explains why. A boundary-limited value is not evidence
+that the physical threshold occurs at that value.
 
 Declared cruise Mach and true airspeed remain inputs for reporting. Achieved
 cruise Mach and true airspeed evaluate installed capability at every cruise

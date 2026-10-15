@@ -1,19 +1,23 @@
 use serde_yaml::Value;
 
+use crate::models::atmosphere::Isa1976;
+
 use crate::domain::capabilities::{ProfileRole, profile_type};
 use crate::domain::diagnostic::{AexError, AexResult};
-use crate::domain::propulsion::TABLE_PROPULSION_MODEL_ID;
+use crate::domain::propulsion::{PowerLapse, ShaftBsfc, TABLE_PROPULSION_MODEL_ID};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{
     EngineProfile, PistonProfile, PropellerProfile, RawProfile, SimpleTurbofanDeck, TurbofanProfile,
 };
+
+const SEA_LEVEL_DENSITY_KG_M3: f64 = 1.225;
 
 mod table_deck;
 
 pub(crate) fn parse_engine_profile(raw: RawProfile) -> AexResult<EngineProfile> {
     let profile = profile_type(&raw.kind);
     match profile.map(|item| (item.id, item.role)) {
-        Some(("piston_engine", ProfileRole::Engine)) => {
+        Some(("piston_engine" | "turboprop_engine", ProfileRole::Engine)) => {
             Ok(EngineProfile::Piston(parse_piston_profile(raw)?))
         }
         Some(("turbofan_engine", ProfileRole::Engine)) => {
@@ -72,20 +76,68 @@ fn parse_piston_profile(raw: RawProfile) -> AexResult<PistonProfile> {
             Dimension::RotationSpeed,
         )?,
         dry_mass_kg: profile_quantity(&raw.parameters, "dry_mass", Dimension::Mass)?,
-        lapse_exponent: profile_number(&raw.parameters, "power_lapse.exponent")?,
-        minimum_power_fraction: profile_number(
-            &raw.parameters,
-            "power_lapse.minimum_power_fraction",
-        )?,
-        bsfc_takeoff_kg_kwh: profile_number_with_unit(&raw.parameters, "bsfc.takeoff", "kg/kWh")?,
-        bsfc_cruise_kg_kwh: profile_number_with_unit(&raw.parameters, "bsfc.cruise", "kg/kWh")?,
-        bsfc_economy_kg_kwh: profile_number_with_unit(&raw.parameters, "bsfc.economy", "kg/kWh")?,
+        power_lapse: parse_power_lapse(&raw.parameters)?,
+        bsfc: ShaftBsfc {
+            takeoff_kg_kwh: profile_number_with_unit(&raw.parameters, "bsfc.takeoff", "kg/kWh")?,
+            cruise_kg_kwh: profile_number_with_unit(&raw.parameters, "bsfc.cruise", "kg/kWh")?,
+            economy_kg_kwh: profile_number_with_unit(&raw.parameters, "bsfc.economy", "kg/kWh")?,
+            altitude_slope_per_km: profile_optional_number(&raw.parameters, "bsfc.altitude_slope")?,
+        },
         maximum_altitude_m: profile_optional_quantity(
             &raw.parameters,
             "limits.maximum_altitude",
             Dimension::Length,
         )?,
     })
+}
+
+fn parse_power_lapse(parameters: &Value) -> AexResult<PowerLapse> {
+    let model = match profile_value(parameters, "power_lapse.model") {
+        Ok(value) => value.as_str().ok_or_else(|| {
+            AexError::validation(
+                "INVALID_PROFILE_PARAMETER",
+                "power_lapse.model",
+                "expected string",
+            )
+        })?,
+        Err(AexError::Validation {
+            code: "MISSING_PROFILE_PARAMETER",
+            ..
+        }) => "density_power",
+        Err(error) => return Err(error),
+    };
+    let floor = profile_optional_number(parameters, "power_lapse.minimum_power_fraction")?;
+    match model {
+        "density_power" => Ok(PowerLapse::DensityPower {
+            exponent: profile_number(parameters, "power_lapse.exponent")?,
+            minimum_power_fraction: floor,
+        }),
+        "critical_altitude" => {
+            let critical_altitude_m = profile_quantity(
+                parameters,
+                "power_lapse.critical_altitude",
+                Dimension::Length,
+            )?;
+            // The flat rating is defined against the standard day, independent of a
+            // scenario temperature offset.
+            let critical_density_ratio = Isa1976::new(0.0)
+                .evaluate(critical_altitude_m)?
+                .density_kg_m3
+                / SEA_LEVEL_DENSITY_KG_M3;
+            Ok(PowerLapse::CriticalAltitude {
+                critical_altitude_m,
+                critical_density_ratio,
+                exponent_below: profile_number(parameters, "power_lapse.exponent_below")?,
+                exponent_above: profile_number(parameters, "power_lapse.exponent_above")?,
+                minimum_power_fraction: floor,
+            })
+        }
+        other => Err(AexError::validation(
+            "UNSUPPORTED_POWER_LAPSE_MODEL",
+            "power_lapse.model",
+            format!("expected density_power or critical_altitude, got {other}"),
+        )),
+    }
 }
 
 fn parse_turbofan_profile(raw: RawProfile) -> AexResult<TurbofanProfile> {

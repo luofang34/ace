@@ -128,7 +128,15 @@ fn comparison_metric(
                 EngineProfile::Turbofan(_) => "N/N",
             },
         )),
-        "performance.service_ceiling" => Ok(QuantityOutput::si(performance.service_ceiling_m, "m")),
+        "performance.service_ceiling" => performance
+            .service_ceiling_m
+            .map(|value| QuantityOutput::si(value, "m"))
+            .ok_or_else(|| {
+                AexError::analysis(
+                    "CEILING_UNAVAILABLE",
+                    "performance.service_ceiling has no root inside the searchable altitude range",
+                )
+            }),
         "performance.achieved_cruise_mach" => {
             optional_performance_metric(metric, performance.achieved_cruise_mach, "1")
         }

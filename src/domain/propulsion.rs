@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+mod shaft;
+pub(crate) use shaft::{PowerLapse, ShaftBsfc};
+
 pub(crate) const TABLE_PROPULSION_MODEL_ID: &str = "propulsion.table_deck";
 
 #[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq, Serialize)]

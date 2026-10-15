@@ -285,6 +285,7 @@ impl EngineProfile {
     }
 }
 
+/// Shaft-power engine driving a propeller: `piston_engine` or `turboprop_engine`.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct PistonProfile {
     pub(crate) id: String,
@@ -296,11 +297,8 @@ pub(crate) struct PistonProfile {
     pub(crate) rated_altitude_m: f64,
     pub(crate) rated_speed_rad_s: f64,
     pub(crate) dry_mass_kg: f64,
-    pub(crate) lapse_exponent: f64,
-    pub(crate) minimum_power_fraction: f64,
-    pub(crate) bsfc_takeoff_kg_kwh: f64,
-    pub(crate) bsfc_cruise_kg_kwh: f64,
-    pub(crate) bsfc_economy_kg_kwh: f64,
+    pub(crate) power_lapse: crate::domain::propulsion::PowerLapse,
+    pub(crate) bsfc: crate::domain::propulsion::ShaftBsfc,
     pub(crate) maximum_altitude_m: Option<f64>,
 }
 
