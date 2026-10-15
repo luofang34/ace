@@ -8,6 +8,8 @@ use crate::domain::schema::{
 };
 use crate::domain::warning::WarningCode;
 
+const SEA_LEVEL_DENSITY_KG_M3: f64 = 1.225;
+
 mod table_deck;
 
 #[derive(Debug, Clone, Copy)]
@@ -65,22 +67,15 @@ fn evaluate_piston(
             "piston-propeller model requires a propeller profile",
         )
     })?;
-    let sea_level_density = 1.225;
-    let density_ratio = (atmosphere.density_kg_m3 / sea_level_density).max(0.0);
-    let lapse = density_ratio
-        .powf(profile.lapse_exponent)
-        .max(profile.minimum_power_fraction);
+    let density_ratio = (atmosphere.density_kg_m3 / SEA_LEVEL_DENSITY_KG_M3).max(0.0);
+    let lapse = profile.power_lapse.fraction(density_ratio).fraction;
     let shaft_power =
         profile.rated_power_w * f64::from(engine_count) * sizing_factor * lapse * query.throttle;
     let efficiency = propeller_efficiency(propeller, query.true_airspeed_m_s, query.mode);
     let propulsive_power = shaft_power * efficiency;
     let static_reference_speed = 15.0;
     let thrust = propulsive_power / query.true_airspeed_m_s.max(static_reference_speed);
-    let bsfc = match query.mode {
-        OperatingMode::Takeoff | OperatingMode::Climb => profile.bsfc_takeoff_kg_kwh,
-        OperatingMode::Cruise => profile.bsfc_cruise_kg_kwh,
-        OperatingMode::Economy => profile.bsfc_economy_kg_kwh,
-    };
+    let bsfc = profile.bsfc.at(query.mode, query.altitude_m);
     let fuel_flow = bsfc * shaft_power / 1000.0 / 3600.0;
     let mut warnings = Vec::new();
     let validity = if profile
@@ -89,7 +84,7 @@ fn evaluate_piston(
     {
         warnings.push(Diagnostic::warning(
             WarningCode::ModelExtrapolation,
-            "Piston-engine profile evaluated above its maximum altitude.",
+            "Shaft-engine profile evaluated above its maximum altitude.",
             "aircraft.propulsion.profile",
         ));
         "extrapolated"
@@ -104,6 +99,19 @@ fn evaluate_piston(
         model: metadata(&profile.model, profile.version, validity),
         warnings,
     })
+}
+
+/// Whether a declared minimum power fraction, not the lapse law, sets shaft power.
+pub(crate) fn shaft_power_floored(scenario: &ResolvedScenario, density_kg_m3: f64) -> bool {
+    match &scenario.engine {
+        EngineProfile::Piston(profile) => {
+            profile
+                .power_lapse
+                .fraction(density_kg_m3 / SEA_LEVEL_DENSITY_KG_M3)
+                .floored
+        }
+        EngineProfile::Turbofan(_) => false,
+    }
 }
 
 fn propeller_efficiency(profile: &PropellerProfile, speed_m_s: f64, mode: OperatingMode) -> f64 {

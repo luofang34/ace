@@ -53,6 +53,11 @@ warning_registry! {
         false,
         "Takeoff distance uses the documented conceptual energy approximation."
     ),
+    CeilingReliesOnPowerFloor => (
+        "CEILING_RELIES_ON_POWER_FLOOR",
+        true,
+        "A ceiling exists only because a declared minimum shaft-power fraction exceeds the lapsed power."
+    ),
     CertificationUseNotProhibited => (
         "CERTIFICATION_USE_NOT_PROHIBITED",
         false,

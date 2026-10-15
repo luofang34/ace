@@ -11,6 +11,7 @@ The CLI command `aex capabilities --format json` and MCP tool `get_capabilities`
 | Type | Role |
 | --- | --- |
 | `piston_engine` | `engine` |
+| `turboprop_engine` | `engine` |
 | `turbofan_engine` | `engine` |
 | `turbojet_engine` | `engine` |
 | `rocket_engine` | `engine` |
@@ -103,6 +104,7 @@ Operators: `ge`, `le`, `eq`. Severities: `hard`, `soft`, `report_only`.
 - `aero.polar_table`
 - `aero.wave_drag_power_law`
 - `propulsion.piston_prop_simple`
+- `propulsion.turboprop_simple`
 - `propulsion.turbofan_simple_deck`
 - `propulsion.table_deck`
 - `performance.field_length_simple`

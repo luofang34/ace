@@ -3,12 +3,13 @@ use super::validity::{
     altitude_upper_bound, from_warnings as validity_from_warnings, speed_upper_bound,
 };
 use super::{ClimbRateEvaluation, PointAnalyzer, SolvedMetric, extend_unique_diagnostics};
-use crate::domain::diagnostic::AexResult;
+use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::{FOOT_M, GRAVITY_M_S2};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::validity::MetricValidity;
+use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::stall_speed_m_s;
-use crate::models::propulsion::OperatingMode;
+use crate::models::propulsion::{OperatingMode, shaft_power_floored};
 
 impl PointAnalyzer {
     pub(crate) fn maximum_rate_of_climb(
@@ -106,6 +107,31 @@ impl PointAnalyzer {
             validity: evaluation.validity,
         })
     }
+
+    /// A ceiling whose top is held up by a declared power floor is not a property of
+    /// the engine's lapse law; flag it rather than report it as physical.
+    pub(super) fn power_floor_warning(
+        &self,
+        metric: &str,
+        ceiling: &SolvedMetric,
+    ) -> AexResult<Option<Diagnostic>> {
+        let density = self.atmosphere.evaluate(ceiling.value)?.density_kg_m3;
+        if !shaft_power_floored(&self.scenario, density) {
+            return Ok(None);
+        }
+        Ok(Some(Diagnostic::warning_with_context(
+            WarningCode::CeilingReliesOnPowerFloor,
+            format!(
+                "{metric} at {:.0} m relies on the declared minimum power fraction, not the lapse law",
+                ceiling.value
+            ),
+            format!(
+                "engine.{}.power_lapse.minimum_power_fraction",
+                self.scenario.engine.profile_id()
+            ),
+            serde_json::json!({"metric": metric, "altitude_m": ceiling.value}),
+        )))
+    }
 }
 
 pub(super) fn service_ceiling_threshold(scenario: &ResolvedScenario) -> f64 {
@@ -114,3 +140,6 @@ pub(super) fn service_ceiling_threshold(scenario: &ResolvedScenario) -> f64 {
         EngineProfile::Turbofan(_) => 500.0 * FOOT_M / 60.0,
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -34,8 +34,17 @@ configuration, while best-glide speed and maximum L/D use clean.
 
 ## Propulsion
 
-`propulsion.piston_prop_simple` applies density-ratio power lapse, throttle,
-speed-dependent propeller efficiency, bounded static thrust, and profile BSFC.
+`propulsion.piston_prop_simple` (`piston_engine`) and
+`propulsion.turboprop_simple` (`turboprop_engine`) are shaft engines paired with
+a propeller profile. They apply power lapse, throttle, speed-dependent propeller
+efficiency, bounded static thrust, and mode BSFC. `power_lapse.model:
+density_power` uses `sigma^exponent` for naturally aspirated engines.
+`critical_altitude` holds `sigma^exponent_below` (0 for flat rating) up to the
+standard-day `critical_altitude`, then continues as
+`(sigma / sigma_critical)^exponent_above`. `minimum_power_fraction` is optional
+for both. A service or absolute ceiling that exists only because that floor
+exceeds the lapsed power emits `CEILING_RELIES_ON_POWER_FLOOR`. Optional
+`bsfc.altitude_slope` scales BSFC by `1 + slope * altitude / 1000 m`.
 
 `propulsion.turbofan_simple_deck` applies density/Mach thrust lapse,
 installation loss, throttle, and mode-specific TSFC. Profiles warn outside

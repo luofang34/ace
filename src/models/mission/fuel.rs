@@ -107,10 +107,13 @@ fn required_flow(
                 .as_ref()
                 .map_or(0.75, |propeller| propeller.cruise_efficiency);
             let shaft_power_kw = aero.power_required_w / efficiency / 1000.0;
-            let bsfc = match mode {
-                OperatingMode::Economy => profile.bsfc_economy_kg_kwh,
-                _ => profile.bsfc_cruise_kg_kwh,
-            };
+            let bsfc = profile.bsfc.at(
+                match mode {
+                    OperatingMode::Economy => OperatingMode::Economy,
+                    _ => OperatingMode::Cruise,
+                },
+                altitude_m,
+            );
             Ok(FuelFlowEvaluation {
                 flow_kg_s: bsfc * shaft_power_kw / 3600.0,
                 warnings: Vec::new(),

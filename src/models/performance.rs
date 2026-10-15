@@ -186,8 +186,17 @@ impl PointAnalyzer {
             landing_field.validity,
         );
         let overall_validity = aggregate_validity(metric_validity.values());
+        let mut ceiling_warnings = Vec::new();
+        for (metric, ceiling) in [
+            (SERVICE_CEILING_METRIC, &service_ceiling),
+            (ABSOLUTE_CEILING_METRIC, &absolute_ceiling),
+        ] {
+            ceiling_warnings.extend(self.power_floor_warning(metric, ceiling)?);
+        }
+        let mut cruise_warnings = cruise.warnings;
+        extend_unique_diagnostics(&mut cruise_warnings, ceiling_warnings);
         let warnings = summary_warnings(
-            cruise.warnings,
+            cruise_warnings,
             reference.warnings,
             takeoff_field.warnings,
             landing_field.warnings,

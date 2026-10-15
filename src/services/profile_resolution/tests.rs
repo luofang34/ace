@@ -235,3 +235,63 @@ fn b777_source() -> Result<String, Box<dyn std::error::Error>> {
 fn repository_path(relative: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(relative)
 }
+
+#[test]
+fn shaft_engines_parse_lapse_models_floors_and_bsfc_slope() -> Result<(), Box<dyn std::error::Error>>
+{
+    let document = profile_document("profiles/engines/turboprop.yaml")?;
+    assert_eq!(document.profile.kind, "turboprop_engine");
+    let crate::domain::schema::EngineProfile::Piston(turboprop) =
+        parse_engine_profile(document.profile)?
+    else {
+        return Err("turboprop must parse as a shaft engine".into());
+    };
+    let crate::domain::propulsion::PowerLapse::CriticalAltitude {
+        critical_altitude_m,
+        critical_density_ratio,
+        minimum_power_fraction,
+        ..
+    } = turboprop.power_lapse
+    else {
+        return Err("turboprop must be flat-rated".into());
+    };
+    assert_eq!(critical_altitude_m, 4500.0);
+    assert!((critical_density_ratio - 0.6341).abs() < 1e-3);
+    assert_eq!(minimum_power_fraction, None);
+    assert_eq!(turboprop.bsfc.altitude_slope_per_km, Some(-0.01));
+
+    let mut aspirated = profile_document("profiles/engines/lycoming.yaml")?.profile;
+    let lapse = aspirated
+        .parameters
+        .get_mut("power_lapse")
+        .and_then(serde_yaml::Value::as_mapping_mut)
+        .ok_or("lycoming declares power_lapse")?;
+    lapse.remove("minimum_power_fraction");
+    lapse.remove("model");
+    let crate::domain::schema::EngineProfile::Piston(piston) =
+        parse_engine_profile(aspirated.clone())?
+    else {
+        return Err("lycoming must parse as a shaft engine".into());
+    };
+    assert_eq!(
+        piston.power_lapse,
+        crate::domain::propulsion::PowerLapse::DensityPower {
+            exponent: 1.0,
+            minimum_power_fraction: None
+        }
+    );
+    let lapse = aspirated
+        .parameters
+        .get_mut("power_lapse")
+        .and_then(serde_yaml::Value::as_mapping_mut)
+        .ok_or("lycoming declares power_lapse")?;
+    lapse.insert("model".into(), "supercharged_magic".into());
+    assert!(matches!(
+        parse_engine_profile(aspirated),
+        Err(AexError::Validation {
+            code: "UNSUPPORTED_POWER_LAPSE_MODEL",
+            ..
+        })
+    ));
+    Ok(())
+}

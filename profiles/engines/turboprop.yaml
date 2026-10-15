@@ -1,0 +1,29 @@
+schema_version: 1
+profile:
+  id: engine.turboprop_500kw_class
+  version: 1
+  type: turboprop_engine
+  model: propulsion.turboprop_simple
+  metadata:
+    display_name: 500-kW-Class Flat-Rated Turboprop
+    source: representative conceptual profile
+    confidence: low
+  parameters:
+    rated_power: 500 kW
+    rated_altitude: 0 ft
+    rated_speed: 2000 rpm
+    dry_mass: 150 kg
+    power_lapse:
+      model: critical_altitude
+      critical_altitude: 4500 m
+      exponent_below: 0.0
+      exponent_above: 1.0
+    bsfc:
+      takeoff: 0.360 kg/kWh
+      cruise: 0.330 kg/kWh
+      economy: 0.320 kg/kWh
+      altitude_slope: -0.01
+    limits:
+      maximum_continuous_power_fraction: 0.90
+      takeoff_power_time_limit: 5 min
+      maximum_altitude: 30000 ft

@@ -161,7 +161,7 @@ fn representative_cruise_fuel_flow(
                 .map_or(0.75, |item| item.cruise_efficiency);
             let shaft_power_kw = aero.power_required_w / efficiency / 1000.0;
             Ok((
-                profile.bsfc_cruise_kg_kwh * shaft_power_kw / 3600.0,
+                profile.bsfc.at(OperatingMode::Cruise, altitude_m) * shaft_power_kw / 3600.0,
                 Vec::new(),
             ))
         }
