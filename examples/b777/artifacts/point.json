@@ -2,12 +2,12 @@
   "completion_status": "completed",
   "result": {
     "aerodynamics": {
-      "drag_coefficient": 0.03814199844584213,
+      "drag_coefficient": 0.038136159752476646,
       "drag_n": {
         "display_unit": "N",
-        "display_value": 196744.209977107,
+        "display_value": 196714.09280547738,
         "unit": "N",
-        "value": 196744.209977107
+        "value": 196714.09280547738
       },
       "dynamic_pressure_pa": {
         "display_unit": "Pa",
@@ -15,9 +15,9 @@
         "unit": "Pa",
         "value": 11809.075153144371
       },
-      "induced_drag_coefficient": 0.017612720538369573,
+      "induced_drag_coefficient": 0.01760688184500409,
       "lift_coefficient": 0.6683277518931693,
-      "lift_to_drag_ratio": 17.522095829407803,
+      "lift_to_drag_ratio": 17.524778484015204,
       "model": {
         "fidelity_level": 1,
         "model_id": "aero.parabolic_polar",
@@ -26,9 +26,9 @@
       },
       "power_required_w": {
         "display_unit": "W",
-        "display_value": 49019973.5240607,
+        "display_value": 49012469.654157355,
         "unit": "W",
-        "value": 49019973.5240607
+        "value": 49012469.654157355
       },
       "warnings": [
         {
@@ -42,99 +42,129 @@
       "wave_drag_coefficient": 0.000029277907472555723
     },
     "altitude_m": {
-      "display_unit": "m",
-      "display_value": 10668.0,
+      "display_unit": "ft",
+      "display_value": 35000.0,
       "unit": "m",
       "value": 10668.0
     },
     "best_glide_speed_m_s": {
-      "display_unit": "m/s",
-      "display_value": 239.8773585307185,
+      "display_unit": "kt",
+      "display_value": 466.24563361997787,
       "unit": "m/s",
-      "value": 239.8773585307185
+      "value": 239.85747596227753
     },
-    "climb_gradient": 0.03597426388987249,
+    "climb_gradient": 0.035983000162443386,
     "configuration": "clean",
     "excess_power_w": {
       "display_unit": "W",
-      "display_value": 30899470.66528949,
+      "display_value": 30906974.53524649,
       "unit": "W",
-      "value": 30899470.66528949
+      "value": 30906974.53524649
     },
     "excess_thrust_n": {
       "display_unit": "N",
-      "display_value": 124016.6305224389,
+      "display_value": 124046.7476942839,
       "unit": "N",
-      "value": 124016.6305224389
+      "value": 124046.7476942839
+    },
+    "fuel_flow_max_power_kg_s": {
+      "display_unit": "kg/s",
+      "display_value": 3.3145286851641993,
+      "unit": "kg/s",
+      "value": 3.3145286851641993
+    },
+    "fuel_flow_required_kg_s": {
+      "display_unit": "kg/s",
+      "display_value": 2.032712292323266,
+      "unit": "kg/s",
+      "value": 2.032712292323266
     },
     "mach": 0.84,
     "mass_kg": {
-      "display_unit": "kg",
-      "display_value": 351534.0,
+      "display_unit": "lb",
+      "display_value": 774999.8087489875,
       "unit": "kg",
       "value": 351534.0
     },
-    "maximum_lift_to_drag_ratio": 17.586092251923088,
+    "maximum_lift_to_drag_ratio": 17.589007909844497,
+    "metric_validity": {
+      "aerodynamics.maximum_lift_to_drag_ratio": {
+        "status": "valid"
+      },
+      "performance.best_glide_speed": {
+        "status": "valid"
+      },
+      "performance.stall_speed": {
+        "status": "valid"
+      }
+    },
     "power_required_w": {
       "display_unit": "W",
-      "display_value": 49019973.5240607,
+      "display_value": 49012469.654157355,
       "unit": "W",
-      "value": 49019973.5240607
+      "value": 49012469.654157355
     },
     "propulsion": {
       "fuel_flow_kg_s": {
         "display_unit": "kg/s",
-        "display_value": 3.314528685161974,
+        "display_value": 3.3145286851641993,
         "unit": "kg/s",
-        "value": 3.314528685161974
+        "value": 3.3145286851641993
       },
       "model": {
         "fidelity_level": 1,
-        "model_id": "propulsion.turbofan_simple_deck",
-        "model_version": "1",
+        "model_id": "propulsion.table_deck",
+        "model_version": "2",
         "validity_status": "valid"
       },
       "propulsive_power_available_w": {
         "display_unit": "W",
-        "display_value": 79919444.18935019,
+        "display_value": 79919444.18940385,
         "unit": "W",
-        "value": 79919444.18935019
+        "value": 79919444.18940385
       },
       "shaft_power_available_w": null,
       "thrust_available_n": {
         "display_unit": "N",
-        "display_value": 320760.8404995459,
+        "display_value": 320760.8404997613,
         "unit": "N",
-        "value": 320760.8404995459
+        "value": 320760.8404997613
       },
       "warnings": []
     },
     "rate_of_climb_m_s": {
-      "display_unit": "m/s",
-      "display_value": 8.963198783000104,
+      "display_unit": "kt",
+      "display_value": 17.427295742726983,
       "unit": "m/s",
-      "value": 8.963198783000104
+      "value": 8.965375476536215
     },
     "scenario_id": "b777-long-range",
     "stall_speed_m_s": {
-      "display_unit": "m/s",
-      "display_value": 169.1538389672871,
+      "display_unit": "kt",
+      "display_value": 328.808758251746,
       "unit": "m/s",
       "value": 169.1538389672871
     },
     "thrust_required_n": {
       "display_unit": "N",
-      "display_value": 196744.209977107,
+      "display_value": 196714.09280547738,
       "unit": "N",
-      "value": 196744.209977107
+      "value": 196714.09280547738
     },
     "true_airspeed_m_s": {
-      "display_unit": "m/s",
-      "display_value": 249.1558634928297,
+      "display_unit": "kt",
+      "display_value": 484.32025300982014,
       "unit": "m/s",
       "value": 249.1558634928297
     },
     "warnings": [
+      {
+        "code": "LOW_FIDELITY_MODEL",
+        "context": {},
+        "message": "Results use conceptual fidelity-level 0 or 1 equations.",
+        "path": "models",
+        "severity": "warning"
+      },
       {
         "code": "TRANSONIC_DRAG_APPROXIMATION",
         "context": {},
@@ -144,7 +174,7 @@
       }
     ]
   },
-  "run_id": "2026-07-23T233308Z-975f7553",
+  "run_id": "2026-10-15T095242Z-5c2a516b",
   "scenario_name": "B777-Class Long-Range Mission",
-  "warning_count": 1
+  "warning_count": 2
 }
