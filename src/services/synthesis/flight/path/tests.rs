@@ -193,3 +193,16 @@ fn idle_floor_does_not_change_paths_that_need_more_than_idle() {
     );
     assert!(evaluate(&model, &floored, &RunControl::default()).is_err());
 }
+
+#[test]
+fn path_angle_limit_rejects_short_paths_and_names_the_minimum_distance() {
+    let model = FlightModel::new(&inputs()).unwrap();
+    let minimum = 4_500.0 / 10.0_f64.to_radians().tan();
+    let short = entry(9_000.0, (0.0, 60.0), (4_500.0, 60.0), minimum * 0.99);
+    let Err(SolverError::Failed(message)) = evaluate(&model, &short, &RunControl::default()) else {
+        panic!("a path steeper than 10 deg must be rejected");
+    };
+    assert!(message.contains(&format!("path_distance >= {minimum:.0} m")));
+    let long = entry(9_000.0, (0.0, 60.0), (4_500.0, 60.0), minimum * 1.01);
+    assert!(Path::new(&long).is_ok());
+}
