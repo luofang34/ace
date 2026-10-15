@@ -71,7 +71,7 @@ impl Wing {
         inputs: &BTreeMap<String, Quantity>,
         control: &ace_engine::RunControl,
     ) -> Result<PluginOutput, SolverError> {
-        let mut values: BTreeMap<_, _> = inputs
+        let values: BTreeMap<_, _> = inputs
             .iter()
             .map(|(id, value)| (id.clone(), value.value))
             .collect();
@@ -99,13 +99,12 @@ impl Wing {
                 "OpenVSP executable changed; reopen the model to bind its new identity".into(),
             ));
         }
-        values.insert("aspect_ratio".into(), span * span / area);
-        let (content, wetted) = self
+        let geometry = self
             .backend
             .generate_synthesis_wing_blocking(&values, control)
             .map_err(external)?;
         let artifact = Artifact::from_text(
-            content,
+            geometry.content,
             "application/xml",
             "openvsp.vsp3/1",
             self.spec.identity.generator(),
@@ -113,12 +112,12 @@ impl Wing {
         Ok(PluginOutput {
             values: BTreeMap::from([(
                 "wetted_area".into(),
-                Quantity::new(wetted, Unit::SquareMeter)?,
+                Quantity::new(geometry.wetted_area, Unit::SquareMeter)?,
             )]),
             approximate: true,
             artifacts: vec![artifact],
             failure: None,
-            details: serde_json::json!({"backend":self.binary,"assumptions":"isolated symmetric wing in local axes; OpenVSP default airfoil sections; conceptual surface area","inputs":inputs}),
+            details: serde_json::json!({"backend":self.binary,"assumptions":"isolated symmetric wing; horizontal span, untwisted projected reference area and leading-edge sweep in local axes; default airfoils; conceptual surface area","inputs":inputs,"readback":geometry.measured}),
         })
     }
 }
