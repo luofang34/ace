@@ -83,7 +83,10 @@ fn verify_polar(snapshot: &Snapshot) {
     }
     let evidence: serde_json::Value =
         serde_json::from_str(run.artifacts[1].text.as_deref().unwrap()).unwrap();
-    assert_eq!(evidence["points"].as_array().unwrap().len(), 18);
+    assert_eq!(
+        evidence["points"].as_array().unwrap().len(),
+        6 * crate::backends::openvsp::polar::MACH.len()
+    );
     for field in ["RootThickness", "TipThickness"] {
         assert_eq!(evidence["readback"][field], 0.12);
     }

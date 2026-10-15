@@ -122,7 +122,7 @@ impl PolarPlugin {
                 ),
             ],
             details: serde_json::json!({"backend":self.binary,"fits":polar.fits,
-                "readback":polar.readback,"mach_interpolation":"linear between samples at Mach 0.2, 0.5 and 0.8",
+                "readback":polar.readback,"mach_interpolation":"linear between samples at Mach 0, 0.2, 0.4, 0.6 and 0.8; no extrapolation",
                 "drag":"CD = user parasite CD0 + k(Mach) * CL^2; VSPAERO CDi only, excluding its CDo",
                 "fit_tolerance":"absolute CDi 0.00002 + relative 5% at every sampled alpha",
                 "validity":"isolated untwisted symmetric NACA 0012 wing; attached flow alpha 0..10 deg; CL <= minimum sampled upper CL across Mach; reference area and span use canonical horizontal projection",

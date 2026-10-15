@@ -135,8 +135,8 @@ pub(super) fn evaluate(
         approximate: true,
         artifacts: Vec::new(),
         details: serde_json::json!({"method":"rk4_energy_path", "force_balance":"L=mg*cos(gamma); T=D+mg*sin(gamma)+m*V*dV/ds",
-            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; powerplant per its basis; no wind, turns or engine transients; below a declared idle_thrust the engine burns at idle and the surplus is drag_device_n, an unmodelled drag device; CL limit; tabulated polars follow polar_basis",
-            "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis, "powerplant":model.powerplant.basis(),
+            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; powerplant per its basis; no wind, turns or engine transients; below a declared idle_thrust the engine burns at idle and the surplus is drag_device_n, an unmodelled drag device; CL limit; no table extrapolation",
+            "polar_table":model.aero.polar_table, "powerplant":model.powerplant.basis(),
             "path_angle_deg":path.sin_gamma.asin().to_degrees(), "idle_thrust_n":path.idle_thrust, "maximum_drag_device_n":maximum_drag_device, "maximum_step_s":model.maximum_step}),
     })
 }

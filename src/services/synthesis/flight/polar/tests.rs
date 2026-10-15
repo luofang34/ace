@@ -6,8 +6,10 @@ fn inputs() -> BTreeMap<String, Quantity> {
     let mut inputs = tests::inputs();
     inputs.remove("oswald");
     for (key, value) in [
+        ("k_000", 0.018),
         ("k_020", 0.02),
-        ("k_050", 0.03),
+        ("k_040", 0.025),
+        ("k_060", 0.03),
         ("k_080", 0.04),
         ("cl_limit", 1.0),
     ] {
@@ -29,7 +31,8 @@ fn interpolated_solver_drag_drives_mass_ode_without_extrapolation() {
     let output = integration::evaluate(&model, &state, &ace_engine::RunControl::default()).unwrap();
     let q_area = 0.5 * air.density_kg_m3 * speed * speed * 100.0;
     let a = 0.000016 * q_area * 0.02;
-    let b = 0.000016 * 0.035 * 9.80665_f64.powi(2) / q_area;
+    // Mach 0.65 interpolates a quarter of the way from k_060 to k_080.
+    let b = 0.000016 * 0.0325 * 9.80665_f64.powi(2) / q_area;
     let final_mass =
         (a / b).sqrt() * ((70_000.0 * (b / a).sqrt()).atan() - (a * b).sqrt() * 10_000.0).tan();
     let burn: f64 = output.increments.iter().map(|p| p.fuel_burn.value).sum();
@@ -46,37 +49,27 @@ fn interpolated_solver_drag_drives_mass_ode_without_extrapolation() {
 }
 
 #[test]
-fn low_mach_holds_lowest_sampled_polar_and_reports_basis() {
+fn low_mach_interpolates_from_the_incompressible_sample() {
     let model = model(&inputs()).unwrap();
     let air = Isa1976::new(0.0).evaluate(1_000.0).unwrap();
-    for mach in [0.10, 0.19, 0.2] {
+    for (mach, k) in [(0.10, 0.019), (0.15, 0.0195), (0.2, 0.02)] {
         let mut state = tests::state(3_000.0);
-        state.conditions.insert(
-            "altitude".into(),
-            Quantity::new(1_000.0, Unit::Meter).unwrap(),
-        );
-        state.conditions.insert(
-            "speed".into(),
-            Quantity::new(mach * air.speed_of_sound_m_s, Unit::MeterPerSecond).unwrap(),
-        );
-        state.conditions.insert(
-            "duration".into(),
-            Quantity::new(60.0, Unit::Second).unwrap(),
-        );
+        for (key, value, unit) in [
+            ("altitude", 1_000.0, Unit::Meter),
+            ("speed", mach * air.speed_of_sound_m_s, Unit::MeterPerSecond),
+            ("duration", 60.0, Unit::Second),
+        ] {
+            state
+                .conditions
+                .insert(key.into(), Quantity::new(value, unit).unwrap());
+        }
         let output =
             integration::evaluate(&model, &state, &ace_engine::RunControl::default()).unwrap();
         let aero = &output.increments[0].details["aerodynamics"];
         assert_eq!(aero["model"]["validity_status"], "valid");
         let cl = aero["lift_coefficient"].as_f64().unwrap();
         let induced = aero["induced_drag_coefficient"].as_f64().unwrap();
-        // k_020 from the fixture; the lower sample is held, not extrapolated.
-        assert!((induced - 0.02 * cl * cl).abs() < 1e-12);
-        assert!(
-            output.details["polar_basis"]
-                .as_str()
-                .unwrap()
-                .contains("held at the lowest sampled Mach")
-        );
+        assert!((induced - k * cl * cl).abs() < 1e-9, "Mach {mach}");
     }
 }
 
