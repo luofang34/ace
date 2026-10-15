@@ -334,3 +334,20 @@ margin are bindable requirements. A nonpositive native static margin fails the
 conceptual screen. Tailless topology retains mass and CG results, but its
 neutral point is explicitly unsupported; static-margin requirements and study
 objectives are therefore unavailable rather than numeric passes.
+
+## ADR-030 — Trade surfaces are explicit row-major evidence
+
+Chart specifications may add a surface whose scalar values and feasibility
+mask use y-row/x-column order over the chart axes. The surface declares its
+quantity label, unit, and contour levels. Shape, finite values, and strictly
+increasing axes are validated before an artifact path is created. Existing
+line, bar, and scatter specifications omit the additive field.
+
+Constraint carpet plots consume the native constraint result rather than
+recomputing aircraft physics in the renderer. Boundary series remain the exact
+analyzer curves, while each surface cell records loading margin and feasibility
+against the analyzer stall limit. Complete two-variable Cartesian sweeps and
+grid-study archives use the same representation. Evolutionary,
+higher-dimensional, conditional, or incomplete study spaces remain Pareto
+scatter and carry `IRREGULAR_TRADE_SPACE`; the chart layer never invents
+missing grid cells.

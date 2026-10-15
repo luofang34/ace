@@ -1,24 +1,33 @@
 use std::fs;
 use std::path::Path;
 
+use plotters::coord::types::RangedCoordf64;
 use plotters::prelude::*;
 
 use crate::charts::spec::ChartSpec;
 use crate::domain::diagnostic::{AexError, AexResult};
 
+mod surface;
+
 pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<()> {
+    validate_spec(spec)?;
     if let Some(parent) = output.parent().filter(|path| !path.as_os_str().is_empty()) {
         fs::create_dir_all(parent).map_err(|source| AexError::Write {
             path: parent.to_path_buf(),
             source,
         })?;
     }
-    validate_spec(spec)?;
     let x_range = numeric_range(&spec.x.values)?;
     let all_y: Vec<f64> = spec
-        .series
+        .y
+        .values
         .iter()
-        .flat_map(|series| series.values.iter().copied())
+        .copied()
+        .chain(
+            spec.series
+                .iter()
+                .flat_map(|series| series.values.iter().copied()),
+        )
         .chain(spec.annotations.iter().map(|annotation| annotation.y))
         .collect();
     let y_range = numeric_range(&all_y)?;
@@ -38,6 +47,17 @@ pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<
         .y_desc(format!("{} [{}]", spec.y.label, spec.y.unit))
         .draw()
         .map_err(plot_error)?;
+    draw_surface(&mut chart, spec)?;
+    draw_series(&mut chart, spec)?;
+    draw_annotations(&mut chart, spec)?;
+    draw_legend(&mut chart, spec)?;
+    root.present().map_err(plot_error)
+}
+
+fn draw_series<DB: DrawingBackend>(
+    chart: &mut ChartContext<'_, DB, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
+    spec: &ChartSpec,
+) -> AexResult<()> {
     for (index, series) in spec.series.iter().enumerate() {
         let color = Palette99::pick(index);
         let points = spec
@@ -60,6 +80,13 @@ pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<
                 .legend(move |(x, y)| PathElement::new([(x, y), (x + 20, y)], &color));
         }
     }
+    Ok(())
+}
+
+fn draw_annotations<DB: DrawingBackend>(
+    chart: &mut ChartContext<'_, DB, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
+    spec: &ChartSpec,
+) -> AexResult<()> {
     for annotation in &spec.annotations {
         chart
             .draw_series(PointSeries::of_element(
@@ -74,20 +101,63 @@ pub(crate) fn render_svg_blocking(spec: &ChartSpec, output: &Path) -> AexResult<
             ))
             .map_err(plot_error)?;
     }
+    Ok(())
+}
+
+fn draw_legend<'a, DB: DrawingBackend + 'a>(
+    chart: &mut ChartContext<'a, DB, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
+    spec: &ChartSpec,
+) -> AexResult<()> {
+    if !spec.series.is_empty() {
+        chart
+            .configure_series_labels()
+            .background_style(WHITE.mix(0.8))
+            .border_style(BLACK)
+            .draw()
+            .map_err(plot_error)?;
+    }
+    Ok(())
+}
+
+fn draw_surface<DB: DrawingBackend>(
+    chart: &mut ChartContext<'_, DB, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
+    spec: &ChartSpec,
+) -> AexResult<()> {
+    let Some(surface) = &spec.surface else {
+        return Ok(());
+    };
+    let cells = surface::cells(&spec.x.values, &spec.y.values, surface);
     chart
-        .configure_series_labels()
-        .background_style(WHITE.mix(0.8))
-        .border_style(BLACK)
-        .draw()
+        .draw_series(cells.into_iter().map(|cell| {
+            let color = if cell.feasible {
+                RGBColor(50, 150, 85).mix(0.25 + 0.25 * cell.intensity)
+            } else {
+                RGBColor(120, 140, 170).mix(0.08 + 0.12 * cell.intensity)
+            };
+            Rectangle::new(
+                [(cell.x_min, cell.y_min), (cell.x_max, cell.y_max)],
+                color.filled(),
+            )
+        }))
         .map_err(plot_error)?;
-    root.present().map_err(plot_error)
+    for level in &surface.contour_levels {
+        let segments = surface::contours(&spec.x.values, &spec.y.values, surface, *level);
+        chart
+            .draw_series(
+                segments
+                    .into_iter()
+                    .map(|segment| PathElement::new([segment.start, segment.end], BLACK.mix(0.65))),
+            )
+            .map_err(plot_error)?;
+    }
+    Ok(())
 }
 
 fn validate_spec(spec: &ChartSpec) -> AexResult<()> {
-    if spec.x.values.is_empty() || spec.series.is_empty() {
+    if spec.x.values.is_empty() || (spec.series.is_empty() && spec.surface.is_none()) {
         return Err(AexError::analysis(
             "EMPTY_CHART_SPEC",
-            "chart requires x values and at least one series",
+            "chart requires x values and either a series or surface",
         ));
     }
     if spec
@@ -99,6 +169,9 @@ fn validate_spec(spec: &ChartSpec) -> AexResult<()> {
             "INVALID_CHART_SPEC",
             "each series must match the x-axis length",
         ));
+    }
+    if let Some(surface) = &spec.surface {
+        surface::validate(&spec.x.values, &spec.y.values, surface)?;
     }
     Ok(())
 }
@@ -127,3 +200,6 @@ fn numeric_range(values: &[f64]) -> AexResult<(f64, f64)> {
 fn plot_error<E: std::fmt::Display>(source: E) -> AexError {
     AexError::analysis("CHART_RENDER_ERROR", source.to_string())
 }
+
+#[cfg(test)]
+mod tests;

@@ -1,9 +1,8 @@
 use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec};
-use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
+use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::KNOT_M_S;
 use crate::domain::result::{
-    ConstraintResult, MissionResult, PayloadRangeResult, RequirementEvaluation, RequirementStatus,
-    SweepResult,
+    MissionResult, PayloadRangeResult, RequirementEvaluation, RequirementStatus,
 };
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::warning::WarningCode;
@@ -11,6 +10,12 @@ use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 use crate::models::aerodynamics::stall_speed_m_s;
 use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
+
+mod constraints;
+mod sweep;
+
+pub(crate) use constraints::constraints;
+pub(crate) use sweep::sweep;
 
 pub(crate) fn drag_polar(scenario: &ResolvedScenario) -> AexResult<ChartSpec> {
     let config = &scenario.aircraft.aerodynamics.clean;
@@ -38,6 +43,7 @@ pub(crate) fn drag_polar(scenario: &ResolvedScenario) -> AexResult<ChartSpec> {
             unit: "1".to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![SeriesSpec {
             id: "drag_coefficient".to_owned(),
             label: "CD".to_owned(),
@@ -90,6 +96,7 @@ pub(crate) fn performance_curves(
             unit: curve.y_unit.to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![
             SeriesSpec {
                 id: "required".to_owned(),
@@ -200,6 +207,7 @@ pub(crate) fn climb_envelope(scenario: &ResolvedScenario) -> AexResult<ChartSpec
             unit: "m/s".to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![SeriesSpec {
             id: "maximum_rate_of_climb".to_owned(),
             label: "Maximum rate of climb".to_owned(),
@@ -231,6 +239,7 @@ pub(crate) fn payload_range(scenario: &ResolvedScenario, result: &PayloadRangeRe
             unit: "kg".to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![SeriesSpec {
             id: "payload".to_owned(),
             label: "Payload".to_owned(),
@@ -246,39 +255,6 @@ pub(crate) fn payload_range(scenario: &ResolvedScenario, result: &PayloadRangeRe
                 label: point.id.clone(),
             })
             .collect(),
-        warnings: result.warnings.clone(),
-    }
-}
-
-pub(crate) fn constraints(scenario: &ResolvedScenario, result: &ConstraintResult) -> ChartSpec {
-    ChartSpec {
-        chart_type: "line".to_owned(),
-        title: format!("{}: constraint diagram", scenario.name),
-        x: AxisSpec {
-            label: "Wing loading".to_owned(),
-            unit: "N/m^2".to_owned(),
-            values: result.wing_loading_n_m2.clone(),
-        },
-        y: AxisSpec {
-            label: result.y_axis.clone(),
-            unit: result.y_axis.clone(),
-            values: Vec::new(),
-        },
-        series: result
-            .constraints
-            .iter()
-            .map(|(id, values)| SeriesSpec {
-                id: id.clone(),
-                label: id.replace('_', " "),
-                unit: result.y_axis.clone(),
-                values: values.clone(),
-            })
-            .collect(),
-        annotations: vec![Annotation {
-            x: result.selected_wing_loading_n_m2,
-            y: result.selected_loading,
-            label: "selected design".to_owned(),
-        }],
         warnings: result.warnings.clone(),
     }
 }
@@ -305,6 +281,7 @@ pub(crate) fn mission_mass(scenario: &ResolvedScenario, result: &MissionResult) 
             unit: "kg".to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![SeriesSpec {
             id: "mass".to_owned(),
             label: "Aircraft mass".to_owned(),
@@ -314,67 +291,6 @@ pub(crate) fn mission_mass(scenario: &ResolvedScenario, result: &MissionResult) 
         annotations: Vec::new(),
         warnings: result.warnings.clone(),
     }
-}
-
-pub(crate) fn sweep(result: &SweepResult, metric: &str) -> AexResult<ChartSpec> {
-    let first_path = result
-        .rows
-        .first()
-        .and_then(|row| row.variables.keys().next())
-        .ok_or_else(|| AexError::analysis("EMPTY_SWEEP", "sweep has no rows"))?
-        .clone();
-    let x_values = result
-        .rows
-        .iter()
-        .map(|row| {
-            row.variables
-                .get(&first_path)
-                .and_then(serde_json::Value::as_str)
-                .and_then(|value| value.split_whitespace().next())
-                .and_then(|number| number.parse::<f64>().ok())
-                .ok_or_else(|| AexError::analysis("INVALID_SWEEP_ROW", "variable is not numeric"))
-        })
-        .collect::<AexResult<Vec<_>>>()?;
-    let y_values = result
-        .rows
-        .iter()
-        .map(|row| {
-            row.metrics.get(metric).copied().ok_or_else(|| {
-                AexError::validation("MISSING_SWEEP_METRIC", metric, "metric not present")
-            })
-        })
-        .collect::<AexResult<Vec<_>>>()?;
-    Ok(ChartSpec {
-        chart_type: if result
-            .rows
-            .first()
-            .is_some_and(|row| row.variables.len() == 2)
-        {
-            "heatmap"
-        } else {
-            "line"
-        }
-        .to_owned(),
-        title: format!("Parameter sweep: {metric}"),
-        x: AxisSpec {
-            label: first_path,
-            unit: "input".to_owned(),
-            values: x_values,
-        },
-        y: AxisSpec {
-            label: metric.to_owned(),
-            unit: "SI".to_owned(),
-            values: Vec::new(),
-        },
-        series: vec![SeriesSpec {
-            id: metric.to_owned(),
-            label: metric.to_owned(),
-            unit: "SI".to_owned(),
-            values: y_values,
-        }],
-        annotations: Vec::new(),
-        warnings: result.warnings.clone(),
-    })
 }
 
 pub(crate) fn requirement_margins(
@@ -405,6 +321,7 @@ pub(crate) fn requirement_margins(
             unit: "%".to_owned(),
             values: Vec::new(),
         },
+        surface: None,
         series: vec![SeriesSpec {
             id: "margin".to_owned(),
             label: "Requirement margin".to_owned(),

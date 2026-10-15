@@ -2,7 +2,9 @@
 
 use std::collections::BTreeMap;
 
-use crate::domain::evidence::{CandidateDescriptor, CandidateSummary, StudyRunResult};
+use crate::domain::evidence::{
+    CandidateDescriptor, CandidateSummary, StudyRunResult, StudyTradeSurface,
+};
 
 use super::trade_space;
 
@@ -38,6 +40,8 @@ fn duplicate_trade_points_are_coalesced() {
         selected_candidates: Vec::new(),
         archive_path: "archive.json".to_owned(),
         complete: true,
+        trade_surface: None,
+        irregular_trade_space: true,
     };
 
     let chart = trade_space(&result).expect("two objectives produce a chart");
@@ -45,6 +49,48 @@ fn duplicate_trade_points_are_coalesced() {
     assert_eq!(chart.x.values, [10.0]);
     assert_eq!(chart.series[0].values, [20.0]);
     assert!(chart.annotations[0].label.ends_with("×2"));
+    assert!(
+        chart
+            .warnings
+            .iter()
+            .any(|warning| warning.code == "IRREGULAR_TRADE_SPACE")
+    );
+}
+
+#[test]
+fn rectangular_grid_uses_variable_surface_instead_of_pareto_projection() {
+    let result = StudyRunResult {
+        study_id: "rectangular".to_owned(),
+        study_digest: "a".repeat(64),
+        archive_id: "archive_test".to_owned(),
+        evaluated_candidates: 4,
+        feasible_candidates: 3,
+        reused_evaluations: 0,
+        pareto_candidates: Vec::new(),
+        selected_candidates: Vec::new(),
+        archive_path: "archive.json".to_owned(),
+        complete: true,
+        trade_surface: Some(StudyTradeSurface {
+            x_path: "wing_loading".to_owned(),
+            x_unit: "N/m^2".to_owned(),
+            x_values: vec![1.0, 2.0],
+            y_path: "thrust_loading".to_owned(),
+            y_unit: "1".to_owned(),
+            y_values: vec![0.2, 0.3],
+            objective_id: "fuel".to_owned(),
+            values: vec![4.0, 3.0, 2.0, 1.0],
+            feasible_mask: vec![true, true, false, true],
+        }),
+        irregular_trade_space: false,
+    };
+
+    let chart = trade_space(&result).expect("rectangular grid produces a surface");
+    let surface = chart.surface.expect("surface data");
+
+    assert_eq!(chart.chart_type, "carpet");
+    assert_eq!(surface.values, [4.0, 3.0, 2.0, 1.0]);
+    assert_eq!(surface.feasible_mask, [true, true, false, true]);
+    assert!(chart.warnings.is_empty());
 }
 
 #[test]
@@ -60,6 +106,8 @@ fn infeasible_selection_chart_does_not_claim_a_pareto_set() {
         selected_candidates: vec![candidate("candidate_one")],
         archive_path: "archive.json".to_owned(),
         complete: true,
+        trade_surface: None,
+        irregular_trade_space: true,
     };
 
     let chart = trade_space(&result).expect("two objectives produce a chart");
@@ -83,6 +131,8 @@ fn higher_dimensional_chart_declares_its_projection() {
         selected_candidates: Vec::new(),
         archive_path: "archive.json".to_owned(),
         complete: true,
+        trade_surface: None,
+        irregular_trade_space: true,
     };
 
     let chart = trade_space(&result).expect("three objectives produce a projected chart");

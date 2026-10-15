@@ -8,6 +8,8 @@ pub(crate) struct ChartSpec {
     pub(crate) title: String,
     pub(crate) x: AxisSpec,
     pub(crate) y: AxisSpec,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) surface: Option<SurfaceSpec>,
     pub(crate) series: Vec<SeriesSpec>,
     pub(crate) annotations: Vec<Annotation>,
     pub(crate) warnings: Vec<Diagnostic>,
@@ -26,6 +28,16 @@ pub(crate) struct SeriesSpec {
     pub(crate) label: String,
     pub(crate) unit: String,
     pub(crate) values: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct SurfaceSpec {
+    pub(crate) label: String,
+    pub(crate) unit: String,
+    pub(crate) values: Vec<f64>,
+    pub(crate) feasible_mask: Vec<bool>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) contour_levels: Vec<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

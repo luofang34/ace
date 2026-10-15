@@ -15,6 +15,7 @@ The wire codes and decisions below are generated from the runtime registry.
 | `FUEL_CAPACITY_EXCEEDED` | no | The requested initial fuel load exceeds tank capacity. |
 | `FUEL_EXHAUSTED` | no | Usable fuel is depleted before the mission completes. |
 | `INDETERMINATE_REQUIREMENT` | no | A boundary-limited requirement margin cannot be plotted as pass or fail. |
+| `IRREGULAR_TRADE_SPACE` | no | A nonrectangular study trade space remains a Pareto scatter without a fabricated surface. |
 | `LOW_LANDING_FUEL` | no | A completed mission lands with less than 5% of maximum fuel capacity. |
 | `LOW_FIDELITY_MODEL` | no | The result uses a documented conceptual-fidelity model. |
 | `MODEL_EXTRAPOLATION` | yes | A model is evaluated outside its calibrated or declared range. |

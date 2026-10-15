@@ -17,7 +17,7 @@ pub(crate) use archive::StudyArchive;
 pub(crate) use mass_properties::MassPropertiesEvidence;
 pub(crate) use workflow::{
     CandidateOutcome, CandidateSummary, OptimizerCheckpoint, StudyArchiveWorkflow, StudyLoadResult,
-    StudyRunResult,
+    StudyRunResult, StudyTradeSurface,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]

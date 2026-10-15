@@ -10,6 +10,8 @@ use crate::domain::study::{ObjectiveDirection, StudyDefinition};
 use crate::services::analysis::ApplicationService;
 use crate::services::study::evidence_links;
 
+mod surface;
+
 pub(super) fn rank(
     study: &StudyDefinition,
     workflow: &mut StudyArchiveWorkflow,
@@ -141,6 +143,8 @@ pub(super) fn run_result(
         .collect::<BTreeMap<_, _>>();
     let evidence = evidence_links::load_all_blocking(service, archive)?;
     let path = service.studies.archive_path(&archive.archive_id)?;
+    let trade_surface = surface::from_archive(archive);
+    let irregular_trade_space = trade_surface.is_none();
     Ok(StudyRunResult {
         study_id: archive.study_id.clone(),
         study_digest: archive.study_digest.clone(),
@@ -169,6 +173,8 @@ pub(super) fn run_result(
         )?,
         archive_path: path.display().to_string(),
         complete: archive.complete,
+        trade_surface,
+        irregular_trade_space,
     })
 }
 

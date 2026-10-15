@@ -93,6 +93,11 @@ warning_registry! {
         false,
         "A boundary-limited requirement margin cannot be plotted as pass or fail."
     ),
+    IrregularTradeSpace => (
+        "IRREGULAR_TRADE_SPACE",
+        false,
+        "A nonrectangular study trade space remains a Pareto scatter without a fabricated surface."
+    ),
     LowLandingFuel => (
         "LOW_LANDING_FUEL",
         false,

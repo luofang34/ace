@@ -9,7 +9,7 @@ use crate::domain::quantity::{GRAVITY_M_S2, parse_quantity};
 use crate::domain::result::{ResultProvenance, SweepResult, SweepRow};
 use crate::domain::schema::{EngineProfile, Wing};
 use crate::domain::validity::MetricValidity;
-use crate::models::breguet;
+use crate::models::breguet::{self, BreguetEstimate};
 use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
 use crate::services::analysis::ApplicationService;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
@@ -24,8 +24,18 @@ pub(crate) struct SweepVariable {
 #[derive(Debug, Clone)]
 struct SweepEvaluation {
     metrics: BTreeMap<String, f64>,
+    feasible: bool,
     metric_validity: BTreeMap<String, MetricValidity>,
     warnings: Vec<Diagnostic>,
+}
+
+struct SweepMetricContext<'a> {
+    scenario: &'a crate::domain::schema::ResolvedScenario,
+    performance: &'a crate::domain::result::PerformanceSummary,
+    mission: &'a crate::domain::result::MissionResult,
+    payload_range: &'a crate::domain::result::PayloadRangeResult,
+    requirements: &'a [crate::domain::result::RequirementEvaluation],
+    breguet: BreguetEstimate,
 }
 
 impl SweepVariable {
@@ -132,8 +142,23 @@ impl ApplicationService {
         let (scenario, mission) = self.mission_blocking(scenario_path, &evaluation_overrides)?;
         let (_, payload_range) =
             self.payload_range_blocking(scenario_path, &evaluation_overrides)?;
+        let requirements =
+            evaluate_requirements(&scenario, &mission, &performance, Some(&payload_range))?;
+        let feasible = hard_requirements_passed(
+            mission.completed,
+            &scenario.requirements.items,
+            &requirements,
+        );
         let evaluation = SweepEvaluation {
-            metrics: metric_values(&scenario, &performance, &mission, &payload_range, metrics)?,
+            metrics: metric_values(
+                &scenario,
+                &performance,
+                &mission,
+                &payload_range,
+                &requirements,
+                metrics,
+            )?,
+            feasible,
             metric_validity: metrics
                 .iter()
                 .filter_map(|metric| {
@@ -158,6 +183,7 @@ fn metric_values(
     performance: &crate::domain::result::PerformanceSummary,
     mission: &crate::domain::result::MissionResult,
     payload_range: &crate::domain::result::PayloadRangeResult,
+    requirements: &[crate::domain::result::RequirementEvaluation],
     metrics: &[String],
 ) -> AexResult<BTreeMap<String, f64>> {
     let breguet = breguet::estimate(
@@ -165,77 +191,90 @@ fn metric_values(
         performance.maximum_lift_to_drag_ratio,
         mission.total_fuel_burn_kg,
     )?;
-    let requirements = evaluate_requirements(scenario, mission, performance, Some(payload_range))?;
+    let context = SweepMetricContext {
+        scenario,
+        performance,
+        mission,
+        payload_range,
+        requirements,
+        breguet,
+    };
     metrics
         .iter()
-        .map(|metric| {
-            let value = match metric.as_str() {
-                "performance.stall_speed" => performance.stall_speed_clean_m_s,
-                "performance.stall_speed_landing" => performance.stall_speed_landing_m_s,
-                "performance.service_ceiling" => performance.service_ceiling_m,
-                "performance.maximum_level_speed" => performance.maximum_level_speed_m_s,
-                "performance.achieved_cruise_mach" => {
-                    optional_performance_metric(metric, performance.achieved_cruise_mach)?
-                }
-                "performance.achieved_cruise_true_airspeed" => optional_performance_metric(
-                    metric,
-                    performance.achieved_cruise_true_airspeed_m_s,
-                )?,
-                "performance.minimum_cruise_excess_power" => {
-                    optional_performance_metric(metric, performance.minimum_cruise_excess_power_w)?
-                }
-                "performance.cruise_feasible" => optional_performance_metric(
-                    metric,
-                    performance
-                        .cruise_feasible
-                        .map(|feasible| f64::from(u8::from(feasible))),
-                )?,
-                "performance.takeoff_field_length" => {
-                    estimate_takeoff_distance(scenario)?.distance_m
-                }
-                "performance.landing_field_length" => {
-                    estimate_landing_distance(scenario)?.distance_m
-                }
-                "aerodynamics.maximum_lift_to_drag_ratio" => performance.maximum_lift_to_drag_ratio,
-                "geometry.aspect_ratio" => scenario.aircraft.wing.aspect_ratio,
-                "geometry.wing_area" => scenario.aircraft.wing.area_m2,
-                "geometry.wing_span" => scenario.aircraft.wing.span_m,
-                "performance.wing_loading" => {
-                    scenario.aircraft.mass.maximum_takeoff_mass_kg * GRAVITY_M_S2
-                        / scenario.aircraft.wing.area_m2
-                }
-                "performance.thrust_or_power_loading" => installed_loading(scenario),
-                "mission.total_fuel" => mission.total_fuel_burn_kg,
-                "mission.landing_fuel" => landing_fuel_metric(mission)?,
-                "mission.completed_distance" | "mission.range" => mission.total_distance.value,
-                "mission.breguet_range" => breguet.range_m,
-                "mission.breguet_endurance" => breguet.endurance_s,
-                "mission.payload_mass" => scenario.mission.payload_mass_kg,
-                "performance.full_payload_range" => {
-                    payload_range_metric(payload_range, "full_payload_mission")?
-                }
-                "performance.zero_payload_ferry_range" => {
-                    payload_range_metric(payload_range, "zero_payload_ferry")?
-                }
-                "feasibility.hard_constraints_passed" => {
-                    let passed = hard_requirements_passed(
-                        mission.completed,
-                        &scenario.requirements.items,
-                        &requirements,
-                    );
-                    f64::from(u8::from(passed))
-                }
-                _ => {
-                    return Err(AexError::validation(
-                        "UNSUPPORTED_SWEEP_METRIC",
-                        metric,
-                        "metric is not implemented",
-                    ));
-                }
-            };
-            Ok((metric.clone(), value))
-        })
+        .map(|metric| context.value(metric).map(|value| (metric.clone(), value)))
         .collect()
+}
+
+impl SweepMetricContext<'_> {
+    fn value(&self, metric: &str) -> AexResult<f64> {
+        let value = match metric {
+            "performance.stall_speed" => self.performance.stall_speed_clean_m_s,
+            "performance.stall_speed_landing" => self.performance.stall_speed_landing_m_s,
+            "performance.service_ceiling" => self.performance.service_ceiling_m,
+            "performance.maximum_level_speed" => self.performance.maximum_level_speed_m_s,
+            "performance.achieved_cruise_mach" => {
+                optional_performance_metric(metric, self.performance.achieved_cruise_mach)?
+            }
+            "performance.achieved_cruise_true_airspeed" => optional_performance_metric(
+                metric,
+                self.performance.achieved_cruise_true_airspeed_m_s,
+            )?,
+            "performance.minimum_cruise_excess_power" => {
+                optional_performance_metric(metric, self.performance.minimum_cruise_excess_power_w)?
+            }
+            "performance.cruise_feasible" => optional_performance_metric(
+                metric,
+                self.performance
+                    .cruise_feasible
+                    .map(|feasible| f64::from(u8::from(feasible))),
+            )?,
+            "performance.takeoff_field_length" => {
+                estimate_takeoff_distance(self.scenario)?.distance_m
+            }
+            "performance.landing_field_length" => {
+                estimate_landing_distance(self.scenario)?.distance_m
+            }
+            "aerodynamics.maximum_lift_to_drag_ratio" => {
+                self.performance.maximum_lift_to_drag_ratio
+            }
+            "geometry.aspect_ratio" => self.scenario.aircraft.wing.aspect_ratio,
+            "geometry.wing_area" => self.scenario.aircraft.wing.area_m2,
+            "geometry.wing_span" => self.scenario.aircraft.wing.span_m,
+            "performance.wing_loading" => {
+                self.scenario.aircraft.mass.maximum_takeoff_mass_kg * GRAVITY_M_S2
+                    / self.scenario.aircraft.wing.area_m2
+            }
+            "performance.thrust_or_power_loading" => installed_loading(self.scenario),
+            "mission.total_fuel" => self.mission.total_fuel_burn_kg,
+            "mission.landing_fuel" => landing_fuel_metric(self.mission)?,
+            "mission.completed_distance" | "mission.range" => self.mission.total_distance.value,
+            "mission.breguet_range" => self.breguet.range_m,
+            "mission.breguet_endurance" => self.breguet.endurance_s,
+            "mission.payload_mass" => self.scenario.mission.payload_mass_kg,
+            "performance.full_payload_range" => {
+                payload_range_metric(self.payload_range, "full_payload_mission")?
+            }
+            "performance.zero_payload_ferry_range" => {
+                payload_range_metric(self.payload_range, "zero_payload_ferry")?
+            }
+            "feasibility.hard_constraints_passed" => {
+                let passed = hard_requirements_passed(
+                    self.mission.completed,
+                    &self.scenario.requirements.items,
+                    self.requirements,
+                );
+                f64::from(u8::from(passed))
+            }
+            _ => {
+                return Err(AexError::validation(
+                    "UNSUPPORTED_SWEEP_METRIC",
+                    metric,
+                    "metric is not implemented",
+                ));
+            }
+        };
+        Ok(value)
+    }
 }
 
 fn landing_fuel_metric(mission: &crate::domain::result::MissionResult) -> AexResult<f64> {
@@ -322,6 +361,7 @@ fn row(overrides: &BTreeMap<String, String>, evaluation: SweepEvaluation) -> Swe
             .map(|(path, value)| (path.clone(), serde_json::Value::String(value.clone())))
             .collect(),
         metrics: evaluation.metrics,
+        feasible: evaluation.feasible,
         metric_validity: evaluation.metric_validity,
         warnings: evaluation.warnings,
     }

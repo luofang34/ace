@@ -13,6 +13,8 @@ use serde_json::json;
 
 #[path = "mcp_stdio/compact_mission.rs"]
 mod compact_mission;
+#[path = "mcp_stdio/domain_error.rs"]
+mod domain_error;
 #[path = "mcp_stdio/fixtures.rs"]
 mod fixtures;
 
@@ -190,10 +192,16 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
             name: "run_parameter_sweep".into(),
             arguments: Some(arguments(json!({
                 "scenario_path": scenario_path,
-                "variables": [{
-                    "path": "aircraft.geometry.wing.aspect_ratio",
-                    "values": ["7.5", "8.5"]
-                }],
+                "variables": [
+                    {
+                        "path": "aircraft.geometry.wing.aspect_ratio",
+                        "values": ["7.5", "8.5"]
+                    },
+                    {
+                        "path": "aircraft.propulsion.sizing_factor",
+                        "values": ["1.0", "1.1"]
+                    }
+                ],
                 "metrics": [
                     "aerodynamics.maximum_lift_to_drag_ratio",
                     "feasibility.hard_constraints_passed"
@@ -204,8 +212,21 @@ async fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> 
         .await?
         .structured_content
         .ok_or_else(|| io::Error::other("missing sweep result"))?;
-    assert_eq!(sweep["result"]["rows"].as_array().map(Vec::len), Some(2));
+    assert_eq!(sweep["result"]["rows"].as_array().map(Vec::len), Some(4));
     assert_eq!(sweep["result"]["provenance"]["backend"], "native");
+    assert_eq!(sweep["chart_spec"]["chart_type"], "carpet");
+    assert_eq!(
+        sweep["chart_spec"]["surface"]["values"]
+            .as_array()
+            .map(Vec::len),
+        Some(4)
+    );
+    assert_eq!(
+        sweep["chart_spec"]["surface"]["feasible_mask"]
+            .as_array()
+            .map(Vec::len),
+        Some(4)
+    );
     client.cancel().await?;
     Ok(())
 }
@@ -458,41 +479,6 @@ async fn unavailable_openvsp_preflights_before_mutation() -> Result<(), Box<dyn 
     );
     assert!(!design_root.exists());
     assert!(!artifact.exists());
-    client.cancel().await?;
-    Ok(())
-}
-
-#[tokio::test]
-async fn sr71_domain_failure_is_an_actionable_tool_result() -> Result<(), Box<dyn Error>> {
-    let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
-    command.args(["mcp", "serve"]);
-    let client = ().serve(TokioChildProcess::new(command)?).await?;
-    let result = client
-        .call_tool(CallToolRequestParams {
-            meta: None,
-            name: "simulate_mission".into(),
-            arguments: Some(arguments(json!({"scenario_path": scenario("sr71")}))?),
-            task: None,
-        })
-        .await?;
-
-    assert_eq!(result.is_error, Some(true));
-    let detail = result
-        .structured_content
-        .ok_or_else(|| io::Error::other("missing structured domain failure"))?;
-    assert_eq!(detail["status"], "error");
-    assert_eq!(detail["code"], "MODEL_DOMAIN_UNSUPPORTED");
-    let atmosphere = detail["diagnostics"]
-        .as_array()
-        .and_then(|diagnostics| {
-            diagnostics.iter().find(|diagnostic| {
-                diagnostic["valid_range"]["model_id"] == "atmosphere.isa1976"
-                    && diagnostic["violating_path"] == "mission.segments.supersonic_cruise.altitude"
-            })
-        })
-        .ok_or_else(|| io::Error::other("missing atmosphere diagnostic"))?;
-    assert_eq!(atmosphere["valid_range"]["maximum"], 20_000.0);
-    assert_eq!(atmosphere["suggested_override"]["value"], "20000 m");
     client.cancel().await?;
     Ok(())
 }
