@@ -171,6 +171,22 @@ pub enum AexError {
         /// Human-readable failure detail.
         message: String,
     },
+    /// A point speed is below the stall speed for its altitude, mass and configuration.
+    #[error(
+        "SPEED_BELOW_STALL: {speed_m_s:.2} m/s is below the {minimum_flyable_speed_m_s:.2} m/s stall speed"
+    )]
+    SpeedBelowStall {
+        /// Requested true airspeed.
+        speed_m_s: f64,
+        /// Stall speed at the requested altitude, mass and configuration.
+        minimum_flyable_speed_m_s: f64,
+        /// Requested altitude.
+        altitude_m: f64,
+        /// Requested mass.
+        mass_kg: f64,
+        /// Requested aerodynamic configuration.
+        configuration: String,
+    },
     /// Declared operating conditions exceed one or more registered model domains.
     #[error("MODEL_DOMAIN_UNSUPPORTED: {message}")]
     ModelDomainUnsupported {
@@ -279,6 +295,24 @@ impl AexError {
                 message.clone(),
                 Some("analysis".to_owned()),
                 empty_context(),
+            ),
+            Self::SpeedBelowStall {
+                speed_m_s,
+                minimum_flyable_speed_m_s,
+                altitude_m,
+                mass_kg,
+                configuration,
+            } => error_detail(
+                "SPEED_BELOW_STALL",
+                self.to_string(),
+                Some("condition.speed".to_owned()),
+                json!({
+                    "speed_m_s": speed_m_s,
+                    "minimum_flyable_speed_m_s": minimum_flyable_speed_m_s,
+                    "altitude_m": altitude_m,
+                    "mass_kg": mass_kg,
+                    "configuration": configuration,
+                }),
             ),
             Self::ModelDomainUnsupported {
                 message,
