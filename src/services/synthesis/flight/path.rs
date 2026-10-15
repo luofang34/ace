@@ -115,8 +115,8 @@ pub(super) fn evaluate(
         approximate: true,
         artifacts: Vec::new(),
         details: serde_json::json!({"method":"rk4_energy_path", "force_balance":"L=mg*cos(gamma); T=D+mg*sin(gamma)+m*V*dV/ds",
-            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; constant installed thrust and TSFC; no wind, turns, speedbrakes, idle floor or engine transients; CL limit and no table extrapolation",
-            "polar_table":model.aero.polar_table,
+            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; constant installed thrust and TSFC; no wind, turns, speedbrakes, idle floor or engine transients; CL limit; tabulated polars follow polar_basis",
+            "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis,
             "path_angle_deg":path.sin_gamma.asin().to_degrees(), "maximum_step_s":model.maximum_step}),
     })
 }

@@ -11,6 +11,8 @@ pub(super) struct FlightModel {
     pub available_thrust: f64,
     pub fuel_price: f64,
     pub maximum_step: f64,
+    /// How a tabulated polar is evaluated outside its sampled range.
+    pub polar_basis: Option<&'static str>,
 }
 
 impl FlightModel {
@@ -44,6 +46,7 @@ impl FlightModel {
             available_thrust,
             fuel_price,
             maximum_step: positive(inputs, "maximum_step", Second)?,
+            polar_basis: None,
         })
     }
 }
