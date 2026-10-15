@@ -7,7 +7,7 @@ use crate::models::aerodynamics::{
     FlightCondition, evaluate as evaluate_aerodynamics, maximum_lift_to_drag_ratio,
     minimum_drag_speed_m_s, minimum_power_speed_m_s, stall_speed_m_s,
 };
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::{Isa1976, scenario_atmosphere};
 use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
 use crate::models::propulsion::{
     OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion, required_fuel_flow,
@@ -63,8 +63,8 @@ struct SolvedMetric {
 impl PointAnalyzer {
     pub(crate) fn new(scenario: ResolvedScenario) -> Self {
         Self {
+            atmosphere: scenario_atmosphere(&scenario),
             scenario,
-            atmosphere: Isa1976::new(0.0),
         }
     }
 

@@ -381,3 +381,34 @@ fn point_reports_required_power_fuel_flow_separately_from_full_throttle()
     assert!(point.fuel_flow_required_kg_s < point.fuel_flow_max_power_kg_s);
     Ok(())
 }
+
+#[test]
+fn declared_isa_offset_changes_point_and_mission_results() -> Result<(), Box<dyn std::error::Error>>
+{
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let resolver = crate::services::resolver::ScenarioResolver::new(std::sync::Arc::new(
+        crate::storage::profile_store::FileProfileStore,
+    ));
+    let hot = resolver.resolve_blocking(
+        &root.join("examples/c172/scenario.yaml"),
+        &std::collections::BTreeMap::from([(
+            "mission.atmosphere.isa_offset".to_owned(),
+            "20 degC".to_owned(),
+        )]),
+    )?;
+    assert_eq!(hot.mission.isa_offset_k, 20.0);
+    let standard = example_scenario("c172")?;
+    let point = |scenario: ResolvedScenario| {
+        PointAnalyzer::new(scenario).point(1_500.0, 50.0, 1_000.0, "clean")
+    };
+    let (hot_point, standard_point) = (point(hot.clone())?, point(standard.clone())?);
+    assert!(hot_point.rate_of_climb_m_s < standard_point.rate_of_climb_m_s);
+    assert!(hot_point.mach < standard_point.mach);
+    let fuel = |scenario: ResolvedScenario| {
+        MissionSimulator::new(scenario)
+            .simulate()
+            .map(|mission| mission.total_fuel_burn_kg)
+    };
+    assert_ne!(fuel(hot)?, fuel(standard)?);
+    Ok(())
+}

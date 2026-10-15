@@ -27,6 +27,8 @@ pub(crate) enum Dimension {
     Force,
     Angle,
     RotationSpeed,
+    /// Temperature difference, such as an ISA deviation; never an absolute temperature.
+    TemperatureDifference,
 }
 
 impl Dimension {
@@ -41,6 +43,7 @@ impl Dimension {
             Self::Force => "N",
             Self::Angle => "rad",
             Self::RotationSpeed => "rad/s",
+            Self::TemperatureDifference => "K",
         }
     }
 }
@@ -57,6 +60,7 @@ pub(crate) fn parse_quantity(raw: &str, dimension: Dimension) -> AexResult<f64> 
         Dimension::Force => parse_force(value, unit),
         Dimension::Angle => parse_angle(value, unit),
         Dimension::RotationSpeed => parse_rotation_speed(value, unit),
+        Dimension::TemperatureDifference => parse_temperature_difference(value, unit),
     };
     normalized.ok_or_else(|| AexError::Quantity {
         value: raw.to_owned(),
@@ -88,6 +92,14 @@ fn split_quantity<'a>(raw: &'a str, target: &'static str) -> AexResult<(f64, &'a
         });
     }
     Ok((value, unit))
+}
+
+fn parse_temperature_difference(value: f64, unit: &str) -> Option<f64> {
+    match unit {
+        "K" | "degC" => Some(value),
+        "degF" => Some(value * 5.0 / 9.0),
+        _ => None,
+    }
 }
 
 fn parse_mass(value: f64, unit: &str) -> Option<f64> {

@@ -2,7 +2,7 @@ use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::GRAVITY_M_S2;
 use crate::domain::schema::{EngineProfile, ResolvedScenario, SegmentKind};
 use crate::domain::warning::WarningCode;
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::scenario_atmosphere;
 use crate::models::propulsion::{OperatingMode, ThrustFuelBasis, fuel_flow_for_required_thrust};
 
 #[derive(Debug, Clone)]
@@ -84,11 +84,11 @@ fn cruise_condition(scenario: &ResolvedScenario) -> AexResult<(f64, f64, f64)> {
         .find(|segment| segment.kind == SegmentKind::Cruise);
     let altitude = segment.and_then(|item| item.altitude_m).unwrap_or(0.0);
     if let Some(speed) = segment.and_then(|item| item.true_airspeed_m_s) {
-        let atmosphere = Isa1976::new(0.0).evaluate(altitude)?;
+        let atmosphere = scenario_atmosphere(scenario).evaluate(altitude)?;
         return Ok((altitude, speed, speed / atmosphere.speed_of_sound_m_s));
     }
     let mach = segment.and_then(|item| item.mach).unwrap_or(0.3);
-    let atmosphere = Isa1976::new(0.0).evaluate(altitude)?;
+    let atmosphere = scenario_atmosphere(scenario).evaluate(altitude)?;
     Ok((altitude, mach * atmosphere.speed_of_sound_m_s, mach))
 }
 

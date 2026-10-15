@@ -8,7 +8,7 @@ use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 use crate::models::aerodynamics::stall_speed_m_s;
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::scenario_atmosphere;
 use crate::models::performance::PointAnalyzer;
 
 mod constraints;
@@ -60,7 +60,7 @@ pub(crate) fn performance_curves(
     altitude_m: f64,
 ) -> AexResult<ChartSpec> {
     let analyzer = PointAnalyzer::new(scenario.clone());
-    let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
+    let atmosphere = scenario_atmosphere(scenario).evaluate(altitude_m)?;
     let mass = scenario.aircraft.mass.maximum_takeoff_mass_kg;
     let reference = coefficient_evaluation_at_mach(&scenario.aircraft, "clean", 0.0)?;
     let stall = stall_speed_m_s(&scenario.aircraft, "clean", mass, atmosphere.density_kg_m3)?;

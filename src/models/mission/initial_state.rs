@@ -3,7 +3,7 @@
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::schema::{MissionInitialState, ResolvedScenario};
 use crate::domain::warning::WarningCode;
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::{Isa1976, scenario_atmosphere};
 use crate::services::resolver::usable_initial_fuel_kg;
 
 #[derive(Debug, Clone, Copy)]
@@ -47,7 +47,11 @@ pub(super) fn initial_mission_state(scenario: &ResolvedScenario) -> AexResult<In
         .as_ref()
         .and_then(|state| state.altitude_m)
         .unwrap_or(0.0);
-    let speed_m_s = initial_true_airspeed(scenario.mission.initial_state.as_ref(), altitude_m)?;
+    let speed_m_s = initial_true_airspeed(
+        scenario.mission.initial_state.as_ref(),
+        altitude_m,
+        &scenario_atmosphere(scenario),
+    )?;
     let mass_kg =
         aircraft.mass.operating_empty_mass_kg + scenario.mission.payload_mass_kg + fuel.loaded_kg;
     Ok(InitialMissionState {
@@ -77,6 +81,7 @@ fn requested_fuel_kg(state: Option<&MissionInitialState>, usable_fuel_kg: f64) -
 fn initial_true_airspeed(
     state: Option<&MissionInitialState>,
     altitude_m: f64,
+    atmosphere: &Isa1976,
 ) -> AexResult<Option<f64>> {
     let Some(state) = state else {
         return Ok(None);
@@ -87,7 +92,7 @@ fn initial_true_airspeed(
     if state.mach.is_none() && state.indicated_airspeed_m_s.is_none() {
         return Ok(None);
     }
-    let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
+    let atmosphere = atmosphere.evaluate(altitude_m)?;
     if let Some(mach) = state.mach {
         return Ok(Some(mach * atmosphere.speed_of_sound_m_s));
     }

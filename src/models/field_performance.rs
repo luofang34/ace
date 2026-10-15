@@ -6,7 +6,7 @@ use crate::models::aerodynamics::{
     FlightCondition, coefficient_evaluation_at_mach, evaluate as evaluate_aerodynamics,
     stall_speed_m_s,
 };
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::scenario_atmosphere;
 use crate::models::propulsion::{OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion};
 
 pub(crate) struct FieldPerformanceEstimate {
@@ -80,7 +80,7 @@ pub(crate) fn estimate_second_segment_climb_gradient(
     }
     let mut operating = scenario.clone();
     operating.aircraft.propulsion.engine_count = operating_engine_count;
-    let atmosphere = Isa1976::new(0.0).evaluate(0.0)?;
+    let atmosphere = scenario_atmosphere(scenario).evaluate(0.0)?;
     let mass = operating.aircraft.mass.maximum_takeoff_mass_kg;
     let stall = stall_speed_m_s(
         &operating.aircraft,

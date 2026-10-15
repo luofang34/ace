@@ -62,7 +62,7 @@ fn set_path(target: &mut Value, parts: &[&str], raw_value: &str, full_path: &str
         mapping.insert(key, value);
         return Ok(());
     }
-    if is_optional_geometry_mapping(full_path, parts) {
+    if is_optional_mapping(full_path, parts) {
         let nested = mapping
             .entry(key)
             .or_insert_with(|| Value::Mapping(Mapping::new()));
@@ -77,13 +77,14 @@ fn set_path(target: &mut Value, parts: &[&str], raw_value: &str, full_path: &str
     set_path(nested, &parts[1..], raw_value, full_path)
 }
 
-fn is_optional_geometry_mapping(full_path: &str, remaining: &[&str]) -> bool {
+/// Optional blocks an override may create when the document omits them.
+fn is_optional_mapping(full_path: &str, remaining: &[&str]) -> bool {
     remaining.len() == 2
-        && matches!(
+        && (matches!(
             remaining[0],
             "fuselage" | "horizontal_tail" | "vertical_tail"
-        )
-        && full_path.starts_with("aircraft.geometry.")
+        ) && full_path.starts_with("aircraft.geometry.")
+            || remaining[0] == "atmosphere" && full_path.starts_with("mission."))
 }
 
 fn set_sequence_path(
@@ -161,7 +162,8 @@ fn optional_override_value(raw: &str, path: &str) -> AexResult<Option<Value>> {
         | "aircraft.geometry.horizontal_tail.area"
         | "aircraft.geometry.horizontal_tail.arm"
         | "aircraft.geometry.vertical_tail.area"
-        | "aircraft.geometry.vertical_tail.arm" => Ok(Some(Value::String(raw.to_owned()))),
+        | "aircraft.geometry.vertical_tail.arm"
+        | "mission.atmosphere.isa_offset" => Ok(Some(Value::String(raw.to_owned()))),
         "aircraft.geometry.wing.aspect_ratio" => numeric_override(raw, path).map(Some),
         _ => Ok(None),
     }

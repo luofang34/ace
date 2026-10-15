@@ -2,7 +2,7 @@ use crate::domain::diagnostic::AexResult;
 use crate::domain::schema::{
     EnergySchedulePoint, EngineProfile, MissionSegment, ResolvedScenario, SegmentKind,
 };
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::{Isa1976, scenario_atmosphere};
 
 pub(crate) fn representative_speed(
     segment: &MissionSegment,
@@ -21,7 +21,7 @@ pub(super) fn representative_speed_with_fallback(
     if let Some(speed) = segment.true_airspeed_m_s {
         return Ok(speed);
     }
-    let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
+    let atmosphere = scenario_atmosphere(scenario).evaluate(altitude_m)?;
     if let Some(mach) = segment.mach {
         return Ok(mach * atmosphere.speed_of_sound_m_s);
     }
@@ -37,11 +37,16 @@ pub(super) fn representative_speed_with_fallback(
     }
 }
 
-pub(crate) fn energy_schedule_speed(point: &EnergySchedulePoint) -> AexResult<f64> {
+/// True airspeed of a schedule point; indicated and Mach speeds convert through
+/// `atmosphere`, so a declared ISA offset changes them.
+pub(crate) fn energy_schedule_speed(
+    point: &EnergySchedulePoint,
+    atmosphere: &Isa1976,
+) -> AexResult<f64> {
     if let Some(speed) = point.true_airspeed_m_s {
         return Ok(speed);
     }
-    let atmosphere = Isa1976::new(0.0).evaluate(point.altitude_m)?;
+    let atmosphere = atmosphere.evaluate(point.altitude_m)?;
     if let Some(mach) = point.mach {
         return Ok(mach * atmosphere.speed_of_sound_m_s);
     }

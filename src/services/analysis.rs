@@ -11,7 +11,7 @@ use crate::domain::result::{
     ConstraintResult, MissionResult, PayloadRangeResult, PerformanceSummary, PointPerformanceResult,
 };
 use crate::domain::schema::{RawProfile, ResolvedScenario};
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::scenario_atmosphere;
 use crate::models::constraints::ConstraintAnalyzer;
 use crate::models::mission::MissionSimulator;
 use crate::models::payload_range::PayloadRangeAnalyzer;
@@ -103,7 +103,7 @@ impl ApplicationService {
             condition.mach,
             mass,
         )?;
-        let atmosphere = Isa1976::new(0.0).evaluate(condition.altitude_m)?;
+        let atmosphere = scenario_atmosphere(&scenario).evaluate(condition.altitude_m)?;
         let speed = condition
             .speed_m_s
             .or_else(|| {

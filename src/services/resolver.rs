@@ -268,6 +268,13 @@ pub(crate) fn resolve_mission(document: MissionDocument) -> AexResult<Mission> {
             "mission.payload.mass",
         )?,
         initial_state: resolve_initial_state(raw.initial_state)?,
+        isa_offset_k: optional_quantity(
+            raw.atmosphere
+                .as_ref()
+                .and_then(|atmosphere| atmosphere.isa_offset.as_deref()),
+            Dimension::TemperatureDifference,
+        )?
+        .unwrap_or(0.0),
         segments,
     };
     validate_energy_schedule_transitions(&mission)?;

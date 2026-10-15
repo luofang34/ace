@@ -11,6 +11,12 @@ pub(crate) struct Isa1976 {
     temperature_offset_k: f64,
 }
 
+/// The atmosphere every native analysis of `scenario` uses: ISA shifted by the
+/// mission's declared temperature deviation.
+pub(crate) fn scenario_atmosphere(scenario: &crate::domain::schema::ResolvedScenario) -> Isa1976 {
+    Isa1976::new(scenario.mission.isa_offset_k)
+}
+
 impl Isa1976 {
     pub(crate) fn new(temperature_offset_k: f64) -> Self {
         Self {
