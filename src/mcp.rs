@@ -9,19 +9,20 @@ mod report;
 mod schema;
 pub(crate) mod serialization;
 mod study;
+mod synthesis;
+mod transport;
+pub(crate) use transport::serve_stdio;
 
 use std::path::{Path, PathBuf};
 
 use rmcp::handler::server::wrapper::{Json, Parameters};
-use rmcp::{
-    ErrorData, ServiceExt, handler::server::router::tool::ToolRouter, tool, tool_router,
-    transport::stdio,
-};
+use rmcp::{ErrorData, handler::server::router::tool::ToolRouter, tool, tool_router};
 use serde_json::{Value, json};
 
 use crate::charts::generators::{constraints, payload_range, sweep};
 use crate::charts::renderer::render_svg_blocking;
-use crate::domain::diagnostic::{AexError, AexResult};
+
+use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::warning::enforce_strict;
 use crate::services::analysis::{ApplicationService, PointCondition};
@@ -57,6 +58,26 @@ impl AexMcpServer {
 
 #[tool_router]
 impl AexMcpServer {
+    #[tool(
+        description = "Evaluate a vehicle synthesis graph with closure, margins, and calculation provenance"
+    )]
+    fn synthesize_vehicle(
+        &self,
+        Parameters(request): Parameters<synthesis::Request>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::run(request)
+    }
+
+    #[tool(
+        description = "Run a bounded vehicle study with canonical objectives, margins and separate provisional Pareto evidence"
+    )]
+    fn study_vehicle(
+        &self,
+        Parameters(request): Parameters<synthesis::StudyRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::study(request)
+    }
+
     #[tool(description = "Discover accepted vocabulary, models, warnings, and backends")]
     fn get_capabilities(&self) -> Result<Json<ObjectOutput>, ErrorData> {
         capabilities::get(&self.service)
@@ -467,18 +488,6 @@ impl AexMcpServer {
             request.units.as_deref(),
         )
     }
-}
-
-pub(crate) async fn serve_stdio(service: ApplicationService) -> AexResult<()> {
-    let server = AexMcpServer::new(service)
-        .serve(stdio())
-        .await
-        .map_err(|source| AexError::analysis("MCP_SERVE_ERROR", source.to_string()))?;
-    server
-        .waiting()
-        .await
-        .map_err(|source| AexError::analysis("MCP_TRANSPORT_ERROR", source.to_string()))?;
-    Ok(())
 }
 
 fn mcp_serialization_error(source: impl std::fmt::Display) -> ErrorData {

@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use rmcp::ErrorData;
 use serde_json::Value;
 

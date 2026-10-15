@@ -124,11 +124,13 @@ fn backend_search_path(executable: &Path) -> OsString {
 }
 
 fn probe_version_blocking(executable: &Path, search_path: &OsString) -> Result<String, String> {
-    let output = Command::new(executable)
-        .arg("-help")
-        .env("PATH", search_path)
-        .output()
-        .map_err(|source| format!("failed to probe {}: {source}", executable.display()))?;
+    let mut command = Command::new(executable);
+    command.arg("-help").env("PATH", search_path);
+    let output = super::process::output_blocking(
+        command,
+        &ace_engine::RunControl::bounded(std::time::Duration::from_secs(10)),
+    )
+    .map_err(|source| format!("failed to probe {}: {source}", executable.display()))?;
     if !output.status.success() {
         return Err(format!(
             "{} -help exited with status {}",

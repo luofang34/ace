@@ -8,6 +8,196 @@ It is not a flight simulator or certification tool. Results are conceptual
 estimates and are not suitable for operational flight planning or
 safety-critical decisions.
 
+## Vehicle synthesis
+
+The Cargo workspace separates vehicle data (`ace-model`), incremental
+execution (`ace-engine`), executable geometry, mass, mission and operating
+models (`ace-physics`), the sheet/provenance projection (`ace-sheet`), and bounded
+design studies (`ace-study`), and replayable engineering drawings (`ace-drawing`). The application package supplies aircraft solvers,
+CLI/MCP adapters, charts, and storage. The library crates are independent of
+filesystem access, command-line parsing, and aircraft-specific models.
+
+Vehicle documents declare canonical dimensional parameters, expression trees,
+requirements, semantic geometry, mass items, missions, operating economics,
+and optimization variables/objectives. Analyses map named solver ports onto
+those parameters. Coupled components require explicit seeds, dimensional
+tolerances, and an iteration limit. Unavailable solvers and failed closures
+remain unavailable in the result; each calculation retains its inputs, solver
+identity, selected semantic resources, structured results, and source revisions.
+
+```bash
+cargo run --bin aex -- synthesize examples/synthesis/transport.json --format json
+cargo run --bin aex -- synthesize examples/synthesis/transport.json \
+  --set 'wing.span=37 m' --format json
+```
+
+The transport synthesis file is an illustrative dependency/closure model, not
+an aircraft calibration. The MCP `synthesize_vehicle` tool uses the same
+service. Synthesis exports retain declared units and content-addressed evidence;
+`--units` display conversion is not applied to these documents. Embedders use
+`Session::edit`, `Session::transact` and `Session::run` to recompute only the
+affected graph region. Each analysis selects its consumed geometry and
+`resources`; their parameter bindings participate in invalidation and closure.
+Structural transactions accept typed `ModelEdit` declarations for geometry,
+mass, missions, requirements, analyses and operations. References and the new
+graph are validated before publication; rejected edits leave the session intact.
+The Sheet's `/api/edit` accepts either `updates` or an `edits` array, together
+with its `expected_revision` token.
+
+Native plugins include `vehicle.geometry_envelopes`, `vehicle.usable_volume`,
+`vehicle.wetted_area`, `vehicle.mass_properties`, `vehicle.constant_rate_phase`,
+`vehicle.mission_sequence`, `vehicle.mission_fuel_requirement`,
+`vehicle.mission_cg_envelope`, and
+`vehicle.operations`. Envelope clearances and
+constant-rate phases are explicitly approximate. Volume and wetted-area
+aggregation require explicit measurements for every selected, non-overlapping
+component. Missing inertia remains unknown, including changed loadings without
+a corresponding tensor.
+
+A mission analysis selects one mission. State-driven analyses declare
+`mode: "phase"` with no scalar outputs. Their adapters receive actual entry
+mass, fuel and conditions, including stage controls, and return integration
+increments. Each increment applies tank depletion and recomputes mass and CG;
+payload releases occur at the stage boundary. Scalar phase adapters can instead
+supply `duration`, `distance`, `fuel_burn`, `cost` and optional `state.*` outputs.
+Failed transitions retain the last valid stage and revoke downstream results.
+Mission `branches` start independently at a nominal stage boundary; their
+reserve/alternate consumption and expense do not accumulate into normal trip cost.
+
+The example uses `aircraft.level_flight_phase` for cruise and reserve: constant
+speed/altitude, parabolic drag, lift equal to weight, thrust equal to drag and
+declared installed TSFC/thrust. It rejects exceeded lift/thrust limits and Mach
+above 0.9; ground, climb and descent phases use declared approximate rates.
+The capacity-bounded fuel search assumes a monotonic fuel balance and feeds
+mission demand into the coupled empty-mass/MTOW closure. It requires usable tank
+capacity and terminal reserve, loads tanks in capacity proportion and checks
+every declared scenario. An unexecutable search bound remains unavailable.
+`fuel.required`, `fuel.loaded`, usable capacity, trip burn, contingency fuel and
+terminal remaining fuel are separate quantities.
+
+Synthesis and Sheet assessments separate execution, mandatory feasibility and
+evidence quality. A completed run can violate constraints. Missing evidence or
+an unmatched hard requirement context is unknown; soft and report-only margins
+do not establish infeasibility. Computed results do not imply calibration.
+Operations retain airport compatibility alongside cost per available seat mile.
+
+Geometry placement composes rigid local frames; mass CG and inertia use the
+same transforms as envelopes, clearances and sections. Embedded artifacts retain
+content digests, media/schema and generator identity. Changing their content
+requires updating the digest through a model transaction; external references
+must be explicitly verified when read. `aircraft.openvsp_wing` accepts canonical
+area/span/taper/sweep/dihedral/twist ports and produces an isolated symmetric
+wing artifact and wetted area when OpenVSP is installed. It uses default airfoil
+sections and remains conceptual; missing tools produce unavailable outputs.
+
+Rate-based operations require one currency, price year and cost scope. Native
+rates use USD, flight hours, cycles, turnaround time and annual ownership cost.
+Annual flight/operating time limits determine ownership allocation. Required
+route scenarios retain airport compatibility independently of CASM; load factor
+does not change its available-seat denominator. Price-year/currency conversion
+and uncertainty propagation are not implemented.
+
+Open an interactive synthesis sheet with:
+
+```bash
+cargo run --bin aex -- sheet examples/synthesis/transport.json --format json
+```
+
+Open the printed local URL in a browser. The sheet projects requirements,
+arrangement, critical sections, mass properties, mission, operating costs, and
+closure results from one model revision. Click values or geometry to inspect
+their sources and calculation evidence. Parameter edits recompute only affected
+nodes; wingtip drags and design-variable sliders show an isolated conceptual
+preview before committing on release. Approximate evidence remains marked,
+including violated constraints. Results from unavailable adapters remain unknown.
+Applications can bind a formal solver to a fast adapter with
+`Registry::register_preview`; named ports and units must match. Only preview
+branches use the replacement, retain its actual solver identity, and mark its
+outputs approximate. Formal runs keep the model's selected solver.
+
+CG constraints select the solver's limiting loading case. Requirements associated
+with semantic volumes prioritize their smallest available envelope sections;
+these remain bounding-box evidence, not internal CAD cross-sections. Invalidated
+results lose this focus until fresh calculations establish it again.
+
+The mission selector switches normal and contingency trajectories. CG envelopes
+are piecewise linear versus mass in vehicle axes; every integrated and released
+state is checked, without extrapolation. These are sampled trajectories, not a
+continuous stability or certification proof. Economic scenario selection changes
+the displayed case; every required scenario still participates in feasibility.
+
+Formal jobs have IDs, revision guards and a 60-second deadline; previews have a
+15-second deadline. **Cancel run** requests cleanup before reporting cancellation.
+Edits supersede older jobs. Native adapters must checkpoint `RunControl` between
+bounded units of work; arbitrary blocking native code cannot be forcibly stopped
+inside the process. The OpenVSP adapter supervises owned Unix process groups,
+kills timed-out/canceled children and waits for cleanup. Shutdown names and aborts
+execution monitors that exceed its grace period.
+
+Edits stay in memory until **Save model** is selected. Saving refuses to overwrite
+external changes to the input file. **Export JSON** downloads the current model;
+the browser print command produces the sheet layout. Stop the local server with
+Ctrl-C. `--port` selects a loopback port; the default chooses an available port.
+
+Export an engineering synthesis drawing from a supplied concept or an explicitly
+selected bounded-study candidate:
+
+```bash
+cargo run --bin aex -- drawing examples/synthesis/concept-transport.json \
+  --plan examples/synthesis/drawing-study.json --candidate 1 \
+  --directory output/pdf/concept --paper A3 --format json
+cargo run --bin aex -- drawing output/pdf/concept/drawing.json --replay \
+  --directory output/pdf/replayed --format json
+```
+
+Use a new output directory; publication is atomic and existing directories are
+not overwritten. The directory contains a frozen `drawing.json`, vector SVG/PDF, and a PNG preview
+from the same millimetre scene. `--paper A1` doubles the drawing's linear size.
+`--candidate` is a zero-based explicit selection, not a claim of optimality;
+without `--plan`, the supplied design is calculated and studies remain uncomputed.
+`--mission` selects the mission/operating case. `--set` changes canonical inputs
+before calculation; replay preserves the frozen page and rejects edits.
+Native `vehicle.concept_geometry` generates ellipsoidal body ends and trapezoidal
+diamond-section lifting surfaces from `geometry.*.shape` bindings, using the same
+rigid frames as mass and envelope checks. The drawing distinguishes these concept
+surfaces from dashed occupancy envelopes; body A(x) is not total aircraft area or
+wave-drag analysis. Surface-area sums include intersecting part/root surfaces.
+Fine mechanisms, calibrated airfoils, structure and continuous performance
+boundaries are outside this conceptual drawing contract. Evidence keys on SVG
+objects resolve through the frozen document to source parameters and calculations.
+
+Study the model's declared variables and objectives with:
+
+```bash
+cargo run --bin aex -- study examples/synthesis/transport.json \
+  --plan examples/synthesis/span-study.json --format json --output span-study.json
+```
+
+Use `examples/synthesis/route-study.json` for a bounded payload/range grid.
+Expand **Design studies** in Sheet and import its JSON archive to plot any two
+canonical metrics, including payload, block fuel and CASM against stage length.
+Imports require the exact baseline model and implementation build and verify
+archive/candidate/run hashes. The interactive view accepts up to 64 candidates
+and 128 MiB per archive. Points retain hard-constraint status and exact calculation
+inputs; sparse samples do not imply a continuous payload-range boundary.
+
+A plan uses `schema_version: 1`, a positive `max_evaluations`, and a `method`.
+The `grid` method provides unit-bearing samples in `axes`; `refine` provides
+`levels` and an optional `variables` list, then halves coordinate steps around
+the retained Pareto designs. Both methods enforce the vehicle's declared bounds
+and reuse unaffected calculations. Refinement is a bounded search, not a global
+optimality certificate. `stop_reason` distinguishes budget exhaustion from
+exhausting the requested grid or refinement levels.
+
+Archives retain each candidate model, current values, margins, and shared
+calculation evidence. `pareto` contains nondominated designs with current
+comparison evidence; `provisional_pareto` is separate. Unknown constraints,
+unmatched mandatory contexts, failed closures, and hard violations are excluded
+from both fronts. Soft violations remain visible without excluding a design.
+Use `StudyArchive::snapshot` to verify and restore a candidate's evidence for
+`ace_sheet::project`. The MCP `study_vehicle` tool accepts `vehicle_path`,
+`plan_path`, and optional overrides through the same service.
+
 ## Quick start
 
 Rust 1.88 or newer is required.

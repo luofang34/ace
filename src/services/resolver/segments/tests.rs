@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used)]
-
 use crate::domain::schema::RawMissionSegment;
 
 use super::resolve_segment;

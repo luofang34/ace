@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used)]
-
 use tempfile::TempDir;
 
 use crate::charts::spec::{AxisSpec, ChartSpec, SurfaceSpec};

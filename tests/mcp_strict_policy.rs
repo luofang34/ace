@@ -1,6 +1,6 @@
 //! MCP and CLI analysis adapters share the typed strict-warning policy.
 
-#![allow(clippy::expect_used, clippy::panic)]
+#![cfg(test)]
 
 use std::error::Error;
 use std::fs;
@@ -80,53 +80,58 @@ async fn call_tool_error(
         .ok_or_else(|| io::Error::other("strict failure omitted structured content").into())
 }
 
-#[tokio::test]
-async fn mcp_promotes_the_same_warning_and_keeps_advisories() -> Result<(), Box<dyn Error>> {
-    let temporary = tempfile::tempdir()?;
-    let atypical = copy_atypical_c172(&temporary.path().join("atypical"))?;
-    let atypical_path = atypical.display().to_string();
-    let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
-    command.args(["mcp", "serve"]);
-    let client = ().serve(TokioChildProcess::new(command)?).await?;
+#[test]
+fn mcp_promotes_the_same_warning_and_keeps_advisories() -> Result<(), Box<dyn Error>> {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(async {
+            let temporary = tempfile::tempdir()?;
+            let atypical = copy_atypical_c172(&temporary.path().join("atypical"))?;
+            let atypical_path = atypical.display().to_string();
+            let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
+            command.args(["mcp", "serve"]);
+            let client = ().serve(TokioChildProcess::new(command)?).await?;
 
-    let advisory = call_tool(
-        &client,
-        "resolve_scenario",
-        json!({"scenario_path": stock_c172(), "strict": true}),
-    )
-    .await?;
-    assert!(advisory["warnings"].as_array().is_some_and(|warnings| {
-        warnings
-            .iter()
-            .any(|warning| warning["code"] == "LOW_FIDELITY_MODEL")
-    }));
+            let advisory = call_tool(
+                &client,
+                "resolve_scenario",
+                json!({"scenario_path": stock_c172(), "strict": true}),
+            )
+            .await?;
+            assert!(advisory["warnings"].as_array().is_some_and(|warnings| {
+                warnings
+                    .iter()
+                    .any(|warning| warning["code"] == "LOW_FIDELITY_MODEL")
+            }));
 
-    let non_strict = call_tool(
-        &client,
-        "resolve_scenario",
-        json!({"scenario_path": atypical_path, "strict": false}),
-    )
-    .await?;
-    assert!(non_strict["warnings"].as_array().is_some_and(|warnings| {
-        warnings
-            .iter()
-            .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
-    }));
+            let non_strict = call_tool(
+                &client,
+                "resolve_scenario",
+                json!({"scenario_path": atypical_path, "strict": false}),
+            )
+            .await?;
+            assert!(non_strict["warnings"].as_array().is_some_and(|warnings| {
+                warnings
+                    .iter()
+                    .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
+            }));
 
-    for tool in ["resolve_scenario", "simulate_mission"] {
-        let detail = call_tool_error(
-            &client,
-            tool,
-            json!({"scenario_path": atypical_path, "strict": true}),
-        )
-        .await?;
-        assert_eq!(detail["code"], "STRICT_WARNING_FAILURE");
-        assert!(
-            detail["message"]
-                .as_str()
-                .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
-        );
-    }
-    client.cancel().await?;
-    Ok(())
+            for tool in ["resolve_scenario", "simulate_mission"] {
+                let detail = call_tool_error(
+                    &client,
+                    tool,
+                    json!({"scenario_path": atypical_path, "strict": true}),
+                )
+                .await?;
+                assert_eq!(detail["code"], "STRICT_WARNING_FAILURE");
+                assert!(
+                    detail["message"]
+                        .as_str()
+                        .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
+                );
+            }
+            client.cancel().await?;
+            Ok(())
+        })
 }

@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use crate::domain::schema::MissionInitialState;
 use crate::models::mission::MissionSimulator;
 use crate::test_support::{example_scenario, low_landing_fuel_sr71_scenario};

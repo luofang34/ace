@@ -20,7 +20,7 @@ use crate::services::requirements::{evaluate_requirements, hard_requirements_pas
 use crate::services::sweep::SweepVariable;
 use crate::storage::run_store::RunAttribution;
 
-use super::output::{emit_blocking, emit_scenario_blocking};
+use super::output::{emit_blocking, emit_canonical_blocking, emit_scenario_blocking};
 use super::plots::execute_plot;
 
 #[derive(Debug, Serialize)]
@@ -49,6 +49,7 @@ struct MissionEnvelope {
 pub(super) async fn execute(command: Command) -> AexResult<()> {
     let service = service_blocking()?;
     match command {
+        Command::Drawing(args) => super::vehicle::drawing_blocking(args),
         Command::Capabilities { output } => emit_blocking(&service.capabilities()?, &output),
         Command::Validate { path, output } => {
             let result = service.validate_path_blocking(&path)?;
@@ -65,6 +66,30 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
         Command::Profile { profile } => execute_profile(&service, profile),
         Command::Plot(arguments) => execute_plot(&service, arguments),
         Command::Report(arguments) => execute_report(&service, arguments),
+        Command::Synthesize(arguments) => {
+            let result = crate::services::synthesis::run_blocking(
+                &arguments.scenario,
+                &arguments.common.override_map(),
+            )?;
+            emit_canonical_blocking(&result, &arguments.common.output)
+        }
+        Command::Study {
+            scenario,
+            plan,
+            common,
+        } => {
+            let result = crate::services::vehicle_study::run_blocking(
+                &scenario,
+                &plan,
+                &common.override_map(),
+            )?;
+            emit_canonical_blocking(&result, &common.output)
+        }
+        Command::Sheet {
+            scenario,
+            port,
+            common,
+        } => super::vehicle::sheet(scenario, port, common).await,
         Command::Mcp {
             mcp: McpCommand::Serve,
         } => serve_stdio(service).await,

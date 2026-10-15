@@ -1,6 +1,6 @@
 //! Public CLI flow and calibration acceptance tests.
 
-#![allow(clippy::expect_used, clippy::panic)]
+#![cfg(test)]
 
 use std::error::Error;
 use std::fs;

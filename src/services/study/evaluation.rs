@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use crate::backends::contracts::{
     AnalysisBackend, AnalysisRequest, GeometryBackend, GeometryMetrics, GeometryRequest,
+    ResultProvenance,
 };
 use crate::domain::content_identity::digest_serializable;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic, Severity};
@@ -154,25 +155,23 @@ fn evaluate_native_blocking(
             constraints,
             diagnostics,
         },
-        provenance: EvidenceProvenance {
-            assumptions: combined(
-                &geometry.provenance.assumptions,
-                &analysis.provenance.assumptions,
-            ),
-            validity_range: combined(
-                &geometry.provenance.validity_range,
-                &analysis.provenance.validity_range,
-            ),
-            validity_domains: combined_domains(
-                &geometry.provenance.validity_domains,
-                &analysis.provenance.validity_domains,
-            ),
-            confidence: None,
-            dependencies: Vec::new(),
-            artifacts: Vec::new(),
-        },
+        provenance: evidence_provenance(&geometry.provenance, &analysis.provenance),
     })?;
     Ok((evidence, feasible, violation, objective_values))
+}
+
+fn evidence_provenance(
+    geometry: &ResultProvenance,
+    analysis: &ResultProvenance,
+) -> EvidenceProvenance {
+    EvidenceProvenance {
+        assumptions: combined(&geometry.assumptions, &analysis.assumptions),
+        validity_range: combined(&geometry.validity_range, &analysis.validity_range),
+        validity_domains: combined_domains(&geometry.validity_domains, &analysis.validity_domains),
+        confidence: None,
+        dependencies: Vec::new(),
+        artifacts: Vec::new(),
+    }
 }
 
 fn evidence_analysis(scenario: &ResolvedScenario) -> EvidenceAnalysis {

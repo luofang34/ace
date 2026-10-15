@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "max_evaluations": 6,
+  "method": {
+    "kind": "grid",
+    "axes": {
+      "mission.distance": [
+        {
+          "value": 1500,
+          "unit": "nmi"
+        },
+        {
+          "value": 2500,
+          "unit": "nmi"
+        },
+        {
+          "value": 3500,
+          "unit": "nmi"
+        }
+      ],
+      "payload.mass": [
+        {
+          "value": 18000,
+          "unit": "kg"
+        },
+        {
+          "value": 22000,
+          "unit": "kg"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "max_evaluations": 3,
+  "method": {
+    "kind": "grid",
+    "axes": {
+      "mission.distance": [
+        { "value": 1500, "unit": "nmi" },
+        { "value": 2000, "unit": "nmi" },
+        { "value": 2300, "unit": "nmi" }
+      ]
+    }
+  }
+}

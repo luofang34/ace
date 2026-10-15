@@ -7,14 +7,14 @@ void PrintErrors()
     }
 }
 
-void main()
+int main()
 {
     ReadVSPFile( "__ARTIFACT__" );
     int lifting_set = GetSetIndex( "ACE_VSPAERO_LIFTING" );
     if ( lifting_set < SET_FIRST_USER )
     {
         Print( "ACE_ERROR=missing ACE_VSPAERO_LIFTING geometry set" );
-        return;
+        return 1;
     }
 
     SetAnalysisInputDefaults( "VSPAEROComputeGeometry" );
@@ -79,4 +79,5 @@ void main()
     }
     PrintErrors();
     Print( "ACE_COMPLETE=1" );
+    return 0;
 }

@@ -1,6 +1,6 @@
 //! Public capability-manifest discovery and vocabulary round-trip tests.
 
-#![allow(clippy::expect_used, clippy::panic)]
+#![cfg(test)]
 
 use std::collections::BTreeSet;
 use std::error::Error;
@@ -54,49 +54,53 @@ fn segment_field_value(name: &str) -> Option<Value> {
     }
 }
 
-#[tokio::test]
-async fn cli_and_mcp_manifest_match_and_advertised_vocabulary_validates()
--> Result<(), Box<dyn Error>> {
-    let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
-    command.args(["mcp", "serve"]);
-    command.env("ACE_OPENVSP_EXECUTABLE", MISSING_OPENVSP);
-    let client = ().serve(TokioChildProcess::new(command)?).await?;
+#[test]
+fn cli_and_mcp_manifest_match_and_advertised_vocabulary_validates() -> Result<(), Box<dyn Error>> {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(async {
+            let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
+            command.args(["mcp", "serve"]);
+            command.env("ACE_OPENVSP_EXECUTABLE", MISSING_OPENVSP);
+            let client = ().serve(TokioChildProcess::new(command)?).await?;
 
-    let mcp = client
-        .call_tool(CallToolRequestParams {
-            meta: None,
-            name: "get_capabilities".into(),
-            arguments: Some(arguments(json!({}))?),
-            task: None,
+            let mcp = client
+                .call_tool(CallToolRequestParams {
+                    meta: None,
+                    name: "get_capabilities".into(),
+                    arguments: Some(arguments(json!({}))?),
+                    task: None,
+                })
+                .await?
+                .structured_content
+                .ok_or_else(|| io::Error::other("missing capability manifest"))?;
+            let cli = std::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"))
+                .env("ACE_OPENVSP_EXECUTABLE", MISSING_OPENVSP)
+                .args(["capabilities", "--format", "json"])
+                .output()?;
+            assert!(cli.status.success());
+            let cli: Value = serde_json::from_slice(&cli.stdout)?;
+            assert_eq!(mcp, cli);
+            assert_eq!(mcp["schema_version"], 1);
+
+            validate_document_types(&client, &mcp).await?;
+            validate_profile_types(&client, &mcp).await?;
+            validate_segment_types(&client, &mcp).await?;
+            initial_state::validate(&client, &mcp).await?;
+            energy_climb::validate(&client, &mcp).await?;
+            validate_exclusive_segment_fields(&client).await?;
+            validate_engine_off_fractions(&client).await?;
+            validate_unadvertised_segment_fields(&client).await?;
+            validate_requirement_metrics(&client, &mcp).await?;
+            validate_requirement_qualifiers(&client, &mcp).await?;
+            requirement_templates::validate(&client, &mcp).await?;
+            validate_configurations(&client, &mcp).await?;
+            assert_manifest_sections(&mcp)?;
+
+            client.cancel().await?;
+            Ok(())
         })
-        .await?
-        .structured_content
-        .ok_or_else(|| io::Error::other("missing capability manifest"))?;
-    let cli = std::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"))
-        .env("ACE_OPENVSP_EXECUTABLE", MISSING_OPENVSP)
-        .args(["capabilities", "--format", "json"])
-        .output()?;
-    assert!(cli.status.success());
-    let cli: Value = serde_json::from_slice(&cli.stdout)?;
-    assert_eq!(mcp, cli);
-    assert_eq!(mcp["schema_version"], 1);
-
-    validate_document_types(&client, &mcp).await?;
-    validate_profile_types(&client, &mcp).await?;
-    validate_segment_types(&client, &mcp).await?;
-    initial_state::validate(&client, &mcp).await?;
-    energy_climb::validate(&client, &mcp).await?;
-    validate_exclusive_segment_fields(&client).await?;
-    validate_engine_off_fractions(&client).await?;
-    validate_unadvertised_segment_fields(&client).await?;
-    validate_requirement_metrics(&client, &mcp).await?;
-    validate_requirement_qualifiers(&client, &mcp).await?;
-    requirement_templates::validate(&client, &mcp).await?;
-    validate_configurations(&client, &mcp).await?;
-    assert_manifest_sections(&mcp)?;
-
-    client.cancel().await?;
-    Ok(())
 }
 
 async fn validate_document_types(

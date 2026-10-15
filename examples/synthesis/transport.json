@@ -1,0 +1,2998 @@
+{
+  "schema_version": 1,
+  "id": "transport_synthesis",
+  "name": "Illustrative transport synthesis",
+  "domain": "fixed_wing",
+  "revision": 0,
+  "parameters": {
+    "wing.span": {
+      "unit": "m",
+      "value": {
+        "value": 35,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.area": {
+      "unit": "m^2",
+      "value": {
+        "value": 100,
+        "unit": "m^2"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.aspect_ratio": {
+      "unit": "1",
+      "value": null,
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "power",
+          "base": {
+            "op": "reference",
+            "parameter": "wing.span"
+          },
+          "exponent": 2
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "wing.area"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "payload.mass": {
+      "unit": "kg",
+      "value": {
+        "value": 25000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.required": {
+      "unit": "kg",
+      "value": {
+        "value": 20000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.mtow": {
+      "unit": "kg",
+      "value": {
+        "value": 90000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.residual": {
+      "unit": "kg",
+      "value": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.empty_coefficient": {
+      "unit": "1",
+      "value": {
+        "value": 0.5,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.empty_exponent": {
+      "unit": "1",
+      "value": {
+        "value": 1,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.lower": {
+      "unit": "kg",
+      "value": {
+        "value": 1,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.upper": {
+      "unit": "kg",
+      "value": {
+        "value": 200000,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "weight.oew": {
+      "unit": "kg",
+      "value": {
+        "value": 45000,
+        "unit": "kg"
+      },
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "weight.mtow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "weight.empty_coefficient"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "airport.maximum_span": {
+      "unit": "m",
+      "value": {
+        "value": 36,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "cabin.seats": {
+      "unit": "1",
+      "value": {
+        "value": 250,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.distance": {
+      "unit": "nmi",
+      "value": {
+        "value": 2500,
+        "unit": "nmi"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.fuel_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": {
+        "op": "reference",
+        "parameter": "mission.fuel_cost"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.trip_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.casm": {
+      "unit": "USD/nmi",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.left": {
+      "unit": "m",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "wing.span"
+        },
+        "right": {
+          "op": "constant",
+          "value": {
+            "value": -0.5,
+            "unit": "1"
+          }
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "wing.right": {
+      "unit": "m",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "wing.span"
+        },
+        "right": {
+          "op": "constant",
+          "value": {
+            "value": 0.5,
+            "unit": "1"
+          }
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "packing.minimum_clearance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "packing.minimum_margin": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.capacity": {
+      "unit": "kg",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "fuel.available_volume"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "fuel.density"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.mass": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.cg_x": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.cg_y": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.cg_z": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.minimum_cg_x": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "loading.maximum_cg_x": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 600,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 0.1,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.cost_rate": {
+      "unit": "USD/s",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.taxi.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.fuel_burn": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.taxi.cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 90,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 80,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 1.2,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.cost_rate": {
+      "unit": "USD/s",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.takeoff.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.fuel_burn": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.takeoff.cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 1200,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 160,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 1,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.cost_rate": {
+      "unit": "USD/s",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.climb.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.fuel_burn": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.climb.cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.cruise.duration_input": {
+      "unit": "s",
+      "value": null,
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "subtract",
+          "left": {
+            "op": "reference",
+            "parameter": "mission.distance"
+          },
+          "right": {
+            "op": "add",
+            "left": {
+              "op": "add",
+              "left": {
+                "op": "add",
+                "left": {
+                  "op": "add",
+                  "left": {
+                    "op": "reference",
+                    "parameter": "phase.taxi.distance"
+                  },
+                  "right": {
+                    "op": "reference",
+                    "parameter": "phase.takeoff.distance"
+                  }
+                },
+                "right": {
+                  "op": "reference",
+                  "parameter": "phase.climb.distance"
+                }
+              },
+              "right": {
+                "op": "reference",
+                "parameter": "phase.descent.distance"
+              }
+            },
+            "right": {
+              "op": "reference",
+              "parameter": "phase.landing.distance"
+            }
+          }
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "phase.cruise.speed"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.cruise.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 230,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 900,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 180,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 0.25,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.cost_rate": {
+      "unit": "USD/s",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.descent.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.fuel_burn": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.descent.cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 120,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 60,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 0.2,
+        "unit": "kg/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.cost_rate": {
+      "unit": "USD/s",
+      "value": null,
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.landing.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.fuel_burn": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.landing.cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.reserve.duration_input": {
+      "unit": "s",
+      "value": {
+        "value": 1800,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.reserve.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 120,
+        "unit": "m/s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.flown_distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.block_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.reserve_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.remaining_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.final_mass": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.fuel_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.network_compatible": {
+      "unit": "1",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.available_volume": {
+      "unit": "m^3",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.density": {
+      "unit": "kg/m^3",
+      "value": {
+        "value": 800,
+        "unit": "kg/m^3"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.capacity_margin": {
+      "unit": "kg",
+      "value": null,
+      "expression": {
+        "op": "subtract",
+        "left": {
+          "op": "reference",
+          "parameter": "fuel.capacity"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "fuel.required"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.loaded": {
+      "unit": "kg",
+      "value": {
+        "value": 20000,
+        "unit": "kg"
+      },
+      "expression": {
+        "op": "reference",
+        "parameter": "fuel.required"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.minimum_remaining": {
+      "unit": "kg",
+      "value": {
+        "value": 1000.01,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "fuel.sizing_tolerance": {
+      "unit": "kg",
+      "value": {
+        "value": 0.0001,
+        "unit": "kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "aero.cd0": {
+      "unit": "1",
+      "value": {
+        "value": 0.02,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "aero.oswald": {
+      "unit": "1",
+      "value": {
+        "value": 0.8,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "aero.cl_max": {
+      "unit": "1",
+      "value": {
+        "value": 1.5,
+        "unit": "1"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "engine.tsfc": {
+      "unit": "kg/(N*s)",
+      "value": {
+        "value": 1.6e-05,
+        "unit": "kg/(N*s)"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "engine.available_thrust": {
+      "unit": "N",
+      "value": {
+        "value": 100000,
+        "unit": "N"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.fuel_price": {
+      "unit": "USD/kg",
+      "value": {
+        "value": 1.2,
+        "unit": "USD/kg"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.maximum_step": {
+      "unit": "s",
+      "value": {
+        "value": 300,
+        "unit": "s"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.cruise.altitude": {
+      "unit": "m",
+      "value": {
+        "value": 10000,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.reserve.altitude": {
+      "unit": "m",
+      "value": {
+        "value": 1500,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "tank.offset_x": {
+      "unit": "m",
+      "value": {
+        "value": 0,
+        "unit": "m"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.crew_rate": {
+      "unit": "USD/h",
+      "value": {
+        "value": 600,
+        "unit": "USD/h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.maintenance_rate": {
+      "unit": "USD/h",
+      "value": {
+        "value": 350,
+        "unit": "USD/h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.maintenance_cycle": {
+      "unit": "USD",
+      "value": {
+        "value": 500,
+        "unit": "USD"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.turnaround_rate": {
+      "unit": "USD/h",
+      "value": {
+        "value": 200,
+        "unit": "USD/h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.annual_ownership": {
+      "unit": "USD",
+      "value": {
+        "value": 2000000,
+        "unit": "USD"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.annual_flight_time": {
+      "unit": "h",
+      "value": {
+        "value": 4000,
+        "unit": "h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.annual_operating_time": {
+      "unit": "h",
+      "value": {
+        "value": 6000,
+        "unit": "h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "economics.turnaround": {
+      "unit": "h",
+      "value": {
+        "value": 0.75,
+        "unit": "h"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional_distance": {
+      "unit": "nmi",
+      "value": {
+        "value": 1500,
+        "unit": "nmi"
+      },
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "phase.regional.duration_input": {
+      "unit": "s",
+      "value": null,
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "subtract",
+          "left": {
+            "op": "reference",
+            "parameter": "mission.regional_distance"
+          },
+          "right": {
+            "op": "add",
+            "left": {
+              "op": "add",
+              "left": {
+                "op": "add",
+                "left": {
+                  "op": "add",
+                  "left": {
+                    "op": "reference",
+                    "parameter": "phase.taxi.distance"
+                  },
+                  "right": {
+                    "op": "reference",
+                    "parameter": "phase.takeoff.distance"
+                  }
+                },
+                "right": {
+                  "op": "reference",
+                  "parameter": "phase.climb.distance"
+                }
+              },
+              "right": {
+                "op": "reference",
+                "parameter": "phase.descent.distance"
+              }
+            },
+            "right": {
+              "op": "reference",
+              "parameter": "phase.landing.distance"
+            }
+          }
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "phase.cruise.speed"
+        }
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.duration": {
+      "unit": "s",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.flown_distance": {
+      "unit": "m",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.block_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.reserve_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.remaining_fuel": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.final_mass": {
+      "unit": "kg",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.regional.fuel_cost": {
+      "unit": "USD",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "owner": "concept_design",
+      "revision": 0
+    },
+    "mission.cg_margin": {
+      "unit": "m",
+      "source": {
+        "kind": "analysis",
+        "reference": "Declared demonstration CG envelope; sampled mission trajectory"
+      },
+      "owner": "synthesis",
+      "revision": 0
+    },
+    "mission.regional.cg_margin": {
+      "unit": "m",
+      "source": {
+        "kind": "analysis",
+        "reference": "Declared demonstration CG envelope; sampled mission trajectory"
+      },
+      "owner": "synthesis",
+      "revision": 0
+    }
+  },
+  "analyses": {
+    "weight": {
+      "plugin": "aircraft.weight_closure",
+      "version": "1",
+      "inputs": {
+        "payload": "payload.mass",
+        "fuel": "fuel.required",
+        "empty_coefficient": "weight.empty_coefficient",
+        "empty_exponent": "weight.empty_exponent",
+        "lower_mass": "weight.lower",
+        "upper_mass": "weight.upper"
+      },
+      "outputs": {
+        "mtow": "weight.mtow",
+        "residual": "weight.residual"
+      }
+    },
+    "packing": {
+      "plugin": "vehicle.geometry_envelopes",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "minimum_clearance": "packing.minimum_clearance",
+        "minimum_margin": "packing.minimum_margin"
+      },
+      "resources": {
+        "clearances": [
+          "tank_spar",
+          "gear_spar"
+        ]
+      },
+      "geometry": [
+        "wing",
+        "fuselage",
+        "tank",
+        "rear_spar",
+        "gear_bay"
+      ]
+    },
+    "loading": {
+      "plugin": "vehicle.mass_properties",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "mass": "loading.mass",
+        "cg_x": "loading.cg_x",
+        "cg_y": "loading.cg_y",
+        "cg_z": "loading.cg_z",
+        "minimum_cg_x": "loading.minimum_cg_x",
+        "maximum_cg_x": "loading.maximum_cg_x"
+      },
+      "resources": {
+        "mass_items": [
+          "empty",
+          "payload",
+          "fuel"
+        ],
+        "loading_cases": [
+          "empty_tanks",
+          "no_payload"
+        ]
+      }
+    },
+    "taxi": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.taxi.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.taxi.fuel_flow",
+        "cost_rate": "phase.taxi.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.taxi.duration",
+        "distance": "phase.taxi.distance",
+        "fuel_burn": "phase.taxi.fuel_burn",
+        "cost": "phase.taxi.cost"
+      }
+    },
+    "takeoff": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.takeoff.duration_input",
+        "speed": "phase.takeoff.speed",
+        "fuel_flow": "phase.takeoff.fuel_flow",
+        "cost_rate": "phase.takeoff.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.takeoff.duration",
+        "distance": "phase.takeoff.distance",
+        "fuel_burn": "phase.takeoff.fuel_burn",
+        "cost": "phase.takeoff.cost"
+      }
+    },
+    "climb": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.climb.duration_input",
+        "speed": "phase.climb.speed",
+        "fuel_flow": "phase.climb.fuel_flow",
+        "cost_rate": "phase.climb.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.climb.duration",
+        "distance": "phase.climb.distance",
+        "fuel_burn": "phase.climb.fuel_burn",
+        "cost": "phase.climb.cost"
+      }
+    },
+    "cruise": {
+      "plugin": "aircraft.level_flight_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {}
+    },
+    "descent": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.descent.duration_input",
+        "speed": "phase.descent.speed",
+        "fuel_flow": "phase.descent.fuel_flow",
+        "cost_rate": "phase.descent.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.descent.duration",
+        "distance": "phase.descent.distance",
+        "fuel_burn": "phase.descent.fuel_burn",
+        "cost": "phase.descent.cost"
+      }
+    },
+    "landing": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.landing.duration_input",
+        "speed": "phase.landing.speed",
+        "fuel_flow": "phase.landing.fuel_flow",
+        "cost_rate": "phase.landing.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.landing.duration",
+        "distance": "phase.landing.distance",
+        "fuel_burn": "phase.landing.fuel_burn",
+        "cost": "phase.landing.cost"
+      }
+    },
+    "reserve": {
+      "plugin": "aircraft.level_flight_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "tsfc": "engine.tsfc",
+        "available_thrust": "engine.available_thrust",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {}
+    },
+    "mission": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.duration",
+        "distance": "mission.flown_distance",
+        "block_fuel": "mission.block_fuel",
+        "reserve_fuel": "mission.reserve_fuel",
+        "remaining_fuel": "mission.remaining_fuel",
+        "final_mass": "mission.final_mass",
+        "cost": "mission.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "design"
+        ]
+      }
+    },
+    "economics": {
+      "plugin": "vehicle.operations",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "trip_cost": "economics.trip_cost",
+        "casm": "economics.casm",
+        "network_compatible": "economics.network_compatible"
+      },
+      "resources": {
+        "operations": true
+      }
+    },
+    "fuel_volume": {
+      "plugin": "vehicle.usable_volume",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "volume": "fuel.available_volume"
+      },
+      "geometry": [
+        "tank"
+      ]
+    },
+    "fuel_requirement": {
+      "plugin": "vehicle.mission_fuel_requirement",
+      "version": "1",
+      "inputs": {
+        "minimum_remaining": "fuel.minimum_remaining",
+        "tolerance": "fuel.sizing_tolerance"
+      },
+      "outputs": {
+        "required_fuel": "fuel.required"
+      },
+      "resources": {
+        "missions": [
+          "design"
+        ]
+      }
+    },
+    "mission_regional": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.regional.duration",
+        "distance": "mission.regional.flown_distance",
+        "block_fuel": "mission.regional.block_fuel",
+        "reserve_fuel": "mission.regional.reserve_fuel",
+        "remaining_fuel": "mission.regional.remaining_fuel",
+        "final_mass": "mission.regional.final_mass",
+        "cost": "mission.regional.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "regional"
+        ]
+      }
+    },
+    "cg_design": {
+      "plugin": "vehicle.mission_cg_envelope",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "margin": "mission.cg_margin"
+      },
+      "resources": {
+        "missions": [
+          "design"
+        ]
+      }
+    },
+    "cg_regional": {
+      "plugin": "vehicle.mission_cg_envelope",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "margin": "mission.regional.cg_margin"
+      },
+      "resources": {
+        "missions": [
+          "regional"
+        ]
+      }
+    }
+  },
+  "closures": {
+    "mass_fuel": {
+      "tolerances": {
+        "weight.mtow": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "weight.residual": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "fuel.required": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "fuel.loaded": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        },
+        "weight.oew": {
+          "absolute": {
+            "value": 0.001,
+            "unit": "kg"
+          },
+          "relative": 1e-08
+        }
+      },
+      "max_iterations": 100,
+      "relaxation": 1.0
+    }
+  },
+  "requirements": {
+    "gate_span": {
+      "name": "Gate span limit",
+      "metric": "wing.span",
+      "relation": "le",
+      "target": {
+        "value": 36,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-AIRPORT-1"
+      }
+    },
+    "mtow": {
+      "name": "Takeoff mass limit",
+      "metric": "weight.mtow",
+      "relation": "le",
+      "target": {
+        "value": 100000,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-MASS-1"
+      }
+    },
+    "cost": {
+      "name": "Cost per seat nautical mile",
+      "metric": "economics.casm",
+      "relation": "le",
+      "target": {
+        "value": 0.05,
+        "unit": "USD/nmi"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-COST-1"
+      }
+    },
+    "packing_margin": {
+      "name": "packing margin",
+      "metric": "packing.minimum_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-PACKING_MARGIN"
+      }
+    },
+    "remaining_fuel": {
+      "name": "remaining fuel",
+      "metric": "mission.remaining_fuel",
+      "relation": "ge",
+      "target": {
+        "value": 1000,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-REMAINING_FUEL"
+      }
+    },
+    "airport_network": {
+      "name": "airport network",
+      "metric": "economics.network_compatible",
+      "relation": "ge",
+      "target": {
+        "value": 1,
+        "unit": "1"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-AIRPORT_NETWORK"
+      }
+    },
+    "aft_cg": {
+      "name": "aft cg",
+      "metric": "loading.maximum_cg_x",
+      "relation": "le",
+      "target": {
+        "value": 13,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "SRD-AFT_CG"
+      }
+    },
+    "fuel_volume": {
+      "name": "Usable fuel volume capacity",
+      "metric": "fuel.capacity_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "geometry": [
+        "tank"
+      ],
+      "source": {
+        "kind": "user",
+        "reference": "SRD-FUEL-VOLUME"
+      }
+    },
+    "cg_design": {
+      "name": "design mission CG envelope",
+      "metric": "mission.cg_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "Demonstration envelope in vehicle x coordinates; not certification limits"
+      }
+    },
+    "cg_regional": {
+      "name": "regional mission CG envelope",
+      "metric": "mission.regional.cg_margin",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "m"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "Demonstration envelope in vehicle x coordinates; not certification limits"
+      }
+    }
+  },
+  "geometry": {
+    "wing": {
+      "role": "wing",
+      "name": "wing",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "bounds": {
+        "minimum": [
+          {
+            "value": 10,
+            "unit": "m"
+          },
+          "wing.left",
+          {
+            "value": -0.5,
+            "unit": "m"
+          }
+        ],
+        "maximum": [
+          {
+            "value": 15,
+            "unit": "m"
+          },
+          "wing.right",
+          {
+            "value": 0.5,
+            "unit": "m"
+          }
+        ]
+      },
+      "assets": []
+    },
+    "fuselage": {
+      "role": "pressure_vessel",
+      "name": "fuselage",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "bounds": {
+        "minimum": [
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": -2,
+            "unit": "m"
+          },
+          {
+            "value": -2,
+            "unit": "m"
+          }
+        ],
+        "maximum": [
+          {
+            "value": 35,
+            "unit": "m"
+          },
+          {
+            "value": 2,
+            "unit": "m"
+          },
+          {
+            "value": 2,
+            "unit": "m"
+          }
+        ]
+      },
+      "assets": []
+    },
+    "tank": {
+      "role": "fuel_tank",
+      "name": "tank",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "bounds": {
+        "minimum": [
+          {
+            "value": 11,
+            "unit": "m"
+          },
+          {
+            "value": -10,
+            "unit": "m"
+          },
+          {
+            "value": -0.4,
+            "unit": "m"
+          }
+        ],
+        "maximum": [
+          {
+            "value": 13,
+            "unit": "m"
+          },
+          {
+            "value": 10,
+            "unit": "m"
+          },
+          {
+            "value": 0.4,
+            "unit": "m"
+          }
+        ]
+      },
+      "assets": [],
+      "volume": {
+        "value": 28,
+        "unit": "m^3"
+      },
+      "placement": {
+        "relative_to": null,
+        "translation": [
+          "tank.offset_x",
+          {
+            "value": 0,
+            "unit": "m"
+          },
+          {
+            "value": 0,
+            "unit": "m"
+          }
+        ],
+        "rotation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "rear_spar": {
+      "role": "structure",
+      "name": "rear spar",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "bounds": {
+        "minimum": [
+          {
+            "value": 13.4,
+            "unit": "m"
+          },
+          {
+            "value": -15,
+            "unit": "m"
+          },
+          {
+            "value": -0.4,
+            "unit": "m"
+          }
+        ],
+        "maximum": [
+          {
+            "value": 13.8,
+            "unit": "m"
+          },
+          {
+            "value": 15,
+            "unit": "m"
+          },
+          {
+            "value": 0.4,
+            "unit": "m"
+          }
+        ]
+      },
+      "assets": []
+    },
+    "gear_bay": {
+      "role": "landing_gear",
+      "name": "gear bay",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "bounds": {
+        "minimum": [
+          {
+            "value": 14,
+            "unit": "m"
+          },
+          {
+            "value": -1,
+            "unit": "m"
+          },
+          {
+            "value": -1.5,
+            "unit": "m"
+          }
+        ],
+        "maximum": [
+          {
+            "value": 15,
+            "unit": "m"
+          },
+          {
+            "value": 1,
+            "unit": "m"
+          },
+          {
+            "value": -0.6,
+            "unit": "m"
+          }
+        ]
+      },
+      "assets": []
+    }
+  },
+  "mass_items": {
+    "empty": {
+      "kind": "empty",
+      "mass": "weight.oew",
+      "cg": [
+        {
+          "value": 12,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      }
+    },
+    "payload": {
+      "kind": "payload",
+      "mass": "payload.mass",
+      "cg": [
+        {
+          "value": 13,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      }
+    },
+    "fuel": {
+      "kind": "fuel",
+      "mass": "fuel.loaded",
+      "cg": [
+        {
+          "value": 12,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative transport synthesis inputs; not aircraft calibration",
+        "revision": null
+      },
+      "capacity": "fuel.capacity",
+      "geometry": "tank",
+      "fill_curve": [
+        {
+          "fraction": 0,
+          "cg": [
+            {
+              "value": 11.5,
+              "unit": "m"
+            },
+            {
+              "value": 0,
+              "unit": "m"
+            },
+            {
+              "value": -0.3,
+              "unit": "m"
+            }
+          ]
+        },
+        {
+          "fraction": 1,
+          "cg": [
+            {
+              "value": 12,
+              "unit": "m"
+            },
+            {
+              "value": 0,
+              "unit": "m"
+            },
+            {
+              "value": 0,
+              "unit": "m"
+            }
+          ]
+        }
+      ],
+      "frame": "tank"
+    }
+  },
+  "operations": {
+    "seats": "cabin.seats",
+    "distance": "mission.distance",
+    "load_factor": {
+      "value": 0.85,
+      "unit": "1"
+    },
+    "costs": [],
+    "span": "wing.span",
+    "required_runway": {
+      "value": 1800,
+      "unit": "m"
+    },
+    "revenue_per_passenger": {
+      "value": 250,
+      "unit": "USD"
+    },
+    "airports": [
+      {
+        "id": "design_gate",
+        "maximum_span": "airport.maximum_span",
+        "runway": {
+          "value": 2200,
+          "unit": "m"
+        },
+        "movement_fee": {
+          "value": 1500,
+          "unit": "USD"
+        }
+      }
+    ],
+    "basis": {
+      "currency": "USD",
+      "price_year": 2026,
+      "cost_scope": "declared fuel, crew, maintenance, ground, airport and ownership costs"
+    },
+    "economics": {
+      "selected": "design",
+      "rates": {
+        "fuel": "economics.fuel_price",
+        "crew_flight_hour": "economics.crew_rate",
+        "maintenance_flight_hour": "economics.maintenance_rate",
+        "maintenance_cycle": "economics.maintenance_cycle",
+        "turnaround_hour": "economics.turnaround_rate",
+        "annual_ownership": "economics.annual_ownership"
+      },
+      "utilization": {
+        "flight_time": "economics.annual_flight_time",
+        "operating_time": "economics.annual_operating_time"
+      },
+      "scenarios": {
+        "design": {
+          "distance": "mission.distance",
+          "block_duration": "mission.duration",
+          "block_fuel": "mission.block_fuel",
+          "turnaround": "economics.turnaround"
+        },
+        "regional": {
+          "distance": "mission.regional_distance",
+          "block_duration": "mission.regional.duration",
+          "block_fuel": "mission.regional.block_fuel",
+          "turnaround": "economics.turnaround"
+        }
+      }
+    }
+  },
+  "objectives": {
+    "casm": {
+      "metric": "economics.casm",
+      "direction": "min"
+    }
+  },
+  "design_variables": [
+    {
+      "parameter": "wing.span",
+      "lower": {
+        "value": 30,
+        "unit": "m"
+      },
+      "upper": {
+        "value": 40,
+        "unit": "m"
+      }
+    },
+    {
+      "parameter": "mission.distance",
+      "lower": {
+        "value": 1500,
+        "unit": "nmi"
+      },
+      "upper": {
+        "value": 3500,
+        "unit": "nmi"
+      }
+    },
+    {
+      "parameter": "payload.mass",
+      "lower": {
+        "value": 16000,
+        "unit": "kg"
+      },
+      "upper": {
+        "value": 26000,
+        "unit": "kg"
+      }
+    }
+  ],
+  "clearances": {
+    "tank_spar": {
+      "first": "tank",
+      "second": "rear_spar",
+      "minimum": {
+        "value": 0.2,
+        "unit": "m"
+      }
+    },
+    "gear_spar": {
+      "first": "gear_bay",
+      "second": "rear_spar",
+      "minimum": {
+        "value": 0.15,
+        "unit": "m"
+      }
+    }
+  },
+  "loading_cases": {
+    "empty_tanks": {
+      "masses": {
+        "fuel": {
+          "value": 0,
+          "unit": "kg"
+        }
+      }
+    },
+    "no_payload": {
+      "masses": {
+        "payload": {
+          "value": 0,
+          "unit": "kg"
+        }
+      }
+    }
+  },
+  "missions": {
+    "design": {
+      "name": "Illustrative transport design mission",
+      "stages": [
+        {
+          "id": "taxi",
+          "kind": "taxi",
+          "analysis": "taxi",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "climb",
+          "kind": "climb",
+          "analysis": "climb",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "speed": "phase.cruise.speed",
+            "altitude": "phase.cruise.altitude",
+            "duration": "phase.cruise.duration_input"
+          }
+        },
+        {
+          "id": "descent",
+          "kind": "descent",
+          "analysis": "descent",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "landing",
+          "kind": "landing",
+          "analysis": "landing",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        }
+      ],
+      "branches": {
+        "reserve": {
+          "from_stage": "cruise",
+          "stages": [
+            {
+              "id": "reserve",
+              "kind": "reserve",
+              "analysis": "reserve",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "speed": "phase.reserve.speed",
+                "altitude": "phase.reserve.altitude",
+                "duration": "phase.reserve.duration_input"
+              }
+            },
+            {
+              "id": "reserve_descent",
+              "kind": "descent",
+              "analysis": "descent",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true
+            },
+            {
+              "id": "reserve_landing",
+              "kind": "landing",
+              "analysis": "landing",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true
+            }
+          ]
+        }
+      },
+      "cg_envelope": [
+        {
+          "mass": {
+            "value": 20000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 10.5,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 13,
+            "unit": "m"
+          }
+        },
+        {
+          "mass": {
+            "value": 200000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 10.5,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 13,
+            "unit": "m"
+          }
+        }
+      ]
+    },
+    "regional": {
+      "name": "Regional route at design dispatch loading",
+      "stages": [
+        {
+          "id": "taxi",
+          "kind": "taxi",
+          "analysis": "taxi",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "climb",
+          "kind": "climb",
+          "analysis": "climb",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "speed": "phase.cruise.speed",
+            "altitude": "phase.cruise.altitude",
+            "duration": "phase.regional.duration_input"
+          }
+        },
+        {
+          "id": "descent",
+          "kind": "descent",
+          "analysis": "descent",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "landing",
+          "kind": "landing",
+          "analysis": "landing",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        }
+      ],
+      "branches": {
+        "reserve": {
+          "from_stage": "cruise",
+          "stages": [
+            {
+              "id": "reserve",
+              "kind": "reserve",
+              "analysis": "reserve",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "speed": "phase.reserve.speed",
+                "altitude": "phase.reserve.altitude",
+                "duration": "phase.reserve.duration_input"
+              }
+            },
+            {
+              "id": "reserve_descent",
+              "kind": "descent",
+              "analysis": "descent",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true
+            },
+            {
+              "id": "reserve_landing",
+              "kind": "landing",
+              "analysis": "landing",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true
+            }
+          ]
+        }
+      },
+      "cg_envelope": [
+        {
+          "mass": {
+            "value": 20000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 10.5,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 13,
+            "unit": "m"
+          }
+        },
+        {
+          "mass": {
+            "value": 200000,
+            "unit": "kg"
+          },
+          "minimum": {
+            "value": 10.5,
+            "unit": "m"
+          },
+          "maximum": {
+            "value": 13,
+            "unit": "m"
+          }
+        }
+      ]
+    }
+  }
+}

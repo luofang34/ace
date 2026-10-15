@@ -1,5 +1,3 @@
-#![allow(clippy::expect_used, clippy::panic)]
-
 use approx::assert_relative_eq;
 
 use crate::models::atmosphere::Isa1976;
