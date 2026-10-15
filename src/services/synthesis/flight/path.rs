@@ -23,6 +23,7 @@ struct Path {
     length: f64,
     sin_gamma: f64,
     cos_gamma: f64,
+    idle_thrust: Option<f64>,
 }
 
 impl Path {
@@ -44,6 +45,15 @@ impl Path {
                     .into(),
             ));
         }
+        let idle_thrust = values
+            .contains_key("idle_thrust")
+            .then(|| read(values, "idle_thrust", Unit::Newton))
+            .transpose()?;
+        if idle_thrust.is_some_and(|idle| !idle.is_finite() || idle < 0.0) {
+            return Err(SolverError::Failed(
+                "idle_thrust must be nonnegative".into(),
+            ));
+        }
         Ok(Self {
             altitude,
             speed,
@@ -53,6 +63,7 @@ impl Path {
             length,
             sin_gamma: dh / length,
             cos_gamma: horizontal / length,
+            idle_thrust,
         })
     }
 
@@ -78,6 +89,7 @@ impl Path {
 struct Rate {
     burn_per_meter: f64,
     thrust: f64,
+    engine_thrust: f64,
     aero: AerodynamicState,
     mass: f64,
     altitude: f64,
@@ -102,12 +114,16 @@ pub(super) fn evaluate(
         Ok::<_, SolverError>(sum + q.to(Unit::Kilogram)?.value)
     })?;
     let mut increments = Vec::new();
+    let mut maximum_drag_device = 0.0_f64;
     for step in 0..steps as u32 {
         control.checkpoint()?;
         let lower = f64::from(step) / steps;
         let upper = f64::from(step + 1) / steps;
         let increment = integrate(model, &path, mass, lower, upper)?;
         mass -= increment.fuel_burn.value;
+        maximum_drag_device = increment.details["drag_device_n"]
+            .as_f64()
+            .map_or(maximum_drag_device, |drag| maximum_drag_device.max(drag));
         increments.push(increment);
     }
     Ok(PhaseOutput {
@@ -115,9 +131,9 @@ pub(super) fn evaluate(
         approximate: true,
         artifacts: Vec::new(),
         details: serde_json::json!({"method":"rk4_energy_path", "force_balance":"L=mg*cos(gamma); T=D+mg*sin(gamma)+m*V*dV/ds",
-            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; constant installed thrust and TSFC; no wind, turns, speedbrakes, idle floor or engine transients; CL limit; tabulated polars follow polar_basis",
+            "validity":"straight prescribed path; TAS linear along path; ISA; clean parabolic or tabulated induced drag; constant installed thrust and TSFC; no wind, turns or engine transients; below a declared idle_thrust the engine burns at idle and the surplus is drag_device_n, an unmodelled drag device; CL limit; tabulated polars follow polar_basis",
             "polar_table":model.aero.polar_table, "polar_basis":model.polar_basis,
-            "path_angle_deg":path.sin_gamma.asin().to_degrees(), "maximum_step_s":model.maximum_step}),
+            "path_angle_deg":path.sin_gamma.asin().to_degrees(), "idle_thrust_n":path.idle_thrust, "maximum_drag_device_n":maximum_drag_device, "maximum_step_s":model.maximum_step}),
     })
 }
 
@@ -149,7 +165,7 @@ fn integrate(
         ]),
         details: serde_json::json!({"start_mass_kg":mass,"end_mass_kg":mass-burn,
             "midpoint_mass_kg":c.mass,"midpoint_altitude_m":c.altitude,"midpoint_speed_m_s":c.speed,
-            "required_thrust_n":c.thrust,"aerodynamics":c.aero,
+            "required_thrust_n":c.thrust,"engine_thrust_n":c.engine_thrust,"drag_device_n":c.engine_thrust-c.thrust,"aerodynamics":c.aero,
             "specific_energy_change_j_kg":GRAVITY_M_S2*(altitude-path.point(lower).0)+0.5*(speed.powi(2)-path.point(lower).1.powi(2)),
             "specific_excess_work_j_kg":ds * ((a.thrust-a.aero.drag_n)/a.mass + 2.0*(b.thrust-b.aero.drag_n)/b.mass + 2.0*(c.thrust-c.aero.drag_n)/c.mass + (d.thrust-d.aero.drag_n)/d.mass)/6.0}),
     })
@@ -176,12 +192,13 @@ fn rate(model: &FlightModel, path: &Path, mass: f64, fraction: f64) -> Result<Ra
     .map_err(external)?;
     let acceleration = speed * (path.target_speed - path.speed) / path.length;
     let thrust = aero.drag_n + mass * (GRAVITY_M_S2 * path.sin_gamma + acceleration);
+    let engine_thrust = path.idle_thrust.map_or(thrust, |idle| thrust.max(idle));
     if aero.lift_coefficient > model.aero.cl_max
         || aero.model.validity_status != "valid"
-        || !(0.0..=model.available_thrust).contains(&thrust)
+        || !(0.0..=model.available_thrust).contains(&engine_thrust)
     {
         return Err(SolverError::Failed(format!(
-            "energy-path envelope exceeded at {altitude} m: CL {}, required thrust {thrust} N, available {} N, validity {}; negative thrust needs an explicit drag device or a different path",
+            "energy-path envelope exceeded at {altitude} m: CL {}, required thrust {thrust} N, available {} N, validity {}; thrust below zero needs a stage idle_thrust or a shallower path",
             aero.lift_coefficient, model.available_thrust, aero.model.validity_status
         )));
     }
@@ -194,12 +211,13 @@ fn rate(model: &FlightModel, path: &Path, mass: f64, fraction: f64) -> Result<Ra
         } else {
             propulsion::OperatingMode::Cruise
         },
-        thrust,
+        engine_thrust,
     )
     .map_err(external)?;
     Ok(Rate {
         burn_per_meter: flow.flow_kg_s / speed,
         thrust,
+        engine_thrust,
         aero,
         mass,
         altitude,
