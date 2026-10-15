@@ -52,7 +52,7 @@ pub(super) fn validate_energy_schedule_limits(
     aircraft: &Aircraft,
     mission: &Mission,
 ) -> AexResult<()> {
-    let atmosphere = Isa1976::new(0.0);
+    let atmosphere = Isa1976::new(mission.isa_offset_k);
     for segment in &mission.segments {
         let Some(schedule) = segment.energy_schedule.as_deref() else {
             continue;
@@ -60,7 +60,7 @@ pub(super) fn validate_energy_schedule_limits(
         for (index, point) in schedule.iter().enumerate() {
             let root = format!("mission.segments.{}.schedule.{index}", segment.id);
             validate_altitude_limit(aircraft, point.altitude_m, &root)?;
-            let speed_m_s = energy_schedule_speed(point)?;
+            let speed_m_s = energy_schedule_speed(point, &atmosphere)?;
             let mach = speed_m_s / atmosphere.evaluate(point.altitude_m)?.speed_of_sound_m_s;
             validate_speed_limits(aircraft, point, speed_m_s, mach, &root)?;
         }
@@ -161,8 +161,10 @@ fn validate_monotonic(points: &[EnergySchedulePoint], segment_path: &str) -> Aex
                 "energy_climb schedule requires at least two points",
             ));
         };
-        let start_speed = energy_schedule_speed(start)?;
-        let end_speed = energy_schedule_speed(end)?;
+        // Monotonicity is checked on the standard day; a uniform ISA offset scales
+        // both points' indicated-to-true conversion in the same direction.
+        let start_speed = energy_schedule_speed(start, &Isa1976::new(0.0))?;
+        let end_speed = energy_schedule_speed(end, &Isa1976::new(0.0))?;
         let delta_energy = GRAVITY_M_S2 * (end.altitude_m - start.altitude_m)
             + 0.5 * (end_speed.powi(2) - start_speed.powi(2));
         if end.altitude_m <= start.altitude_m || end_speed < start_speed || delta_energy <= 0.0 {

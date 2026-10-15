@@ -6,7 +6,7 @@ use crate::domain::result::{ConstraintResult, ModelMetadata};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::scenario_atmosphere;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ConstraintAnalyzer {
@@ -30,7 +30,7 @@ impl ConstraintAnalyzer {
                 start_n_m2 + f64::from(index) * (stop_n_m2 - start_n_m2) / f64::from(count - 1)
             })
             .collect();
-        let atmosphere = Isa1976::new(0.0).evaluate(0.0)?;
+        let atmosphere = scenario_atmosphere(&self.scenario).evaluate(0.0)?;
         let clean = &self.scenario.aircraft.aerodynamics.clean;
         let design_speed = design_speed(&self.scenario);
         let clean_evaluation = coefficient_evaluation_at_mach(

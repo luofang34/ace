@@ -134,6 +134,12 @@ Mission segments with `type: payload_drop` require `payload_mass`. The
 simulator removes that mass without recording fuel burn, enabling an explicit
 payload-delivery and empty-return mission.
 
+Missions may declare `atmosphere.isa_offset`, a temperature deviation in `K`,
+`degC` or `degF` (default `0 K`). Every native point, performance, field,
+constraint and mission evaluation of that scenario uses ISA shifted by it, and
+indicated or Mach speeds convert to true airspeed through that atmosphere. It
+can be set with `--set mission.atmosphere.isa_offset=20 degC`.
+
 Missions may declare an additive schema-version-1 `initial_state`:
 
 ```yaml

@@ -3,7 +3,7 @@ use crate::domain::quantity::QuantityOutput;
 use crate::domain::result::MissionResult;
 use crate::domain::schema::{MissionSegment, ResolvedScenario, SegmentKind};
 use crate::domain::warning::WarningCode;
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::{Isa1976, scenario_atmosphere};
 use crate::models::performance::PointAnalyzer;
 use crate::models::propulsion::OperatingMode;
 
@@ -44,8 +44,8 @@ struct SegmentComputation {
 impl MissionSimulator {
     pub(crate) fn new(scenario: ResolvedScenario) -> Self {
         Self {
+            atmosphere: scenario_atmosphere(&scenario),
             scenario,
-            atmosphere: Isa1976::new(0.0),
         }
     }
 

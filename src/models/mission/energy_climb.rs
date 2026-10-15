@@ -80,7 +80,7 @@ pub(super) fn compute(
             "energy_climb schedule requires at least two points",
         )
     })?;
-    let end_speed = energy_schedule_speed(last)?;
+    let end_speed = energy_schedule_speed(last, &simulator.atmosphere)?;
     Ok(SegmentComputation {
         fuel_burn_kg: integration.fuel_kg,
         payload_removed_kg: 0.0,
@@ -136,8 +136,8 @@ fn integrate_leg(
             "energy-climb integration requires two points per leg",
         ));
     };
-    let start_speed = energy_schedule_speed(start)?;
-    let end_speed = energy_schedule_speed(end)?;
+    let start_speed = energy_schedule_speed(start, &simulator.atmosphere)?;
+    let end_speed = energy_schedule_speed(end, &simulator.atmosphere)?;
     for step in 0..STEPS_PER_LEG {
         let lower = f64::from(step) / f64::from(STEPS_PER_LEG);
         let upper = f64::from(step + 1) / f64::from(STEPS_PER_LEG);

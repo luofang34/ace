@@ -4,7 +4,7 @@ use crate::domain::result::{ModelMetadata, PayloadRangePoint, PayloadRangeResult
 use crate::domain::schema::{EngineProfile, ResolvedScenario, SegmentKind};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::{FlightCondition, evaluate as evaluate_aerodynamics};
-use crate::models::atmosphere::Isa1976;
+use crate::models::atmosphere::scenario_atmosphere;
 use crate::models::mission::{
     representative_speed, segment_end_altitude, segment_operating_altitude,
 };
@@ -142,7 +142,7 @@ fn representative_cruise_fuel_flow(
     speed_m_s: f64,
     mass_kg: f64,
 ) -> AexResult<(f64, Vec<Diagnostic>)> {
-    let atmosphere = Isa1976::new(0.0).evaluate(altitude_m)?;
+    let atmosphere = scenario_atmosphere(scenario).evaluate(altitude_m)?;
     let aero = evaluate_aerodynamics(
         &scenario.aircraft,
         "clean",

@@ -18,7 +18,15 @@ pub(crate) struct RawMission {
     pub(crate) payload: RawPayload,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) initial_state: Option<RawMissionInitialState>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) atmosphere: Option<RawMissionAtmosphere>,
     pub(crate) segments: Vec<RawMissionSegment>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RawMissionAtmosphere {
+    pub(crate) isa_offset: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -82,6 +90,8 @@ pub(crate) struct Mission {
     pub(crate) payload_mass_kg: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) initial_state: Option<MissionInitialState>,
+    /// ISA temperature deviation applied to every native atmosphere evaluation.
+    pub(crate) isa_offset_k: f64,
     pub(crate) segments: Vec<MissionSegment>,
 }
 

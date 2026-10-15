@@ -151,6 +151,7 @@ fn quantity_dimension(value: &str) -> Option<(Dimension, &'static str)> {
         "N" | "kN" | "lbf" => Some((Dimension::Force, "N")),
         "rad" | "deg" | "degree" => Some((Dimension::Angle, "rad")),
         "rad/s" | "rpm" => Some((Dimension::RotationSpeed, "rad/s")),
+        "K" | "degC" | "degF" => Some((Dimension::TemperatureDifference, "K")),
         _ => None,
     }
 }
