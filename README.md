@@ -262,7 +262,7 @@ Use `StudyArchive::snapshot` to verify and restore a candidate's evidence for
 
 ## Quick start
 
-Rust 1.88 or newer is required.
+Development tracks the current stable Rust toolchain selected by `rust-toolchain.toml`; no minimum version is declared.
 
 ```bash
 cargo build
