@@ -165,7 +165,7 @@ fn plot(args: &ArgMatches) -> Result<PlotArgs, Error> {
         kind,
         scenario: required(args, "scenario")?,
         artifact: optional(args, "output"),
-        format: format(args)?,
+        format: format_for_path(args, optional::<PathBuf>(args, "spec-output").as_deref())?,
         spec_output: optional(args, "spec-output"),
         units: optional(args, "units"),
         altitude: required(args, "altitude")?,
@@ -197,10 +197,34 @@ fn overrides(args: &ArgMatches) -> Result<Vec<(String, String)>, Error> {
 }
 
 fn output(args: &ArgMatches) -> Result<OutputArgs, Error> {
+    let path: Option<PathBuf> = optional(args, "output");
     Ok(OutputArgs {
-        format: format(args)?,
-        output: optional(args, "output"),
+        format: format_for_path(args, path.as_deref())?,
+        output: path,
         units: optional(args, "units"),
+    })
+}
+
+fn format_for_path(
+    args: &ArgMatches,
+    path: Option<&std::path::Path>,
+) -> Result<OutputFormat, Error> {
+    let extension = path.and_then(|p| p.extension()).and_then(|e| e.to_str());
+    let inferred = match extension {
+        Some("json") => Some(OutputFormat::Json),
+        Some("yaml" | "yml") => Some(OutputFormat::Yaml),
+        Some("csv") => Some(OutputFormat::Csv),
+        _ => None,
+    };
+    let selected = format(args)?;
+    let explicit = args.value_source("format") == Some(clap::parser::ValueSource::CommandLine);
+    if explicit && inferred.is_some_and(|f| f != selected) {
+        return Err(invalid("output extension conflicts with explicit --format"));
+    }
+    Ok(if explicit {
+        selected
+    } else {
+        inferred.unwrap_or(selected)
     })
 }
 

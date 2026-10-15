@@ -213,7 +213,7 @@ pub(super) struct OutputArgs {
     pub(super) units: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum OutputFormat {
     Table,
     Json,
