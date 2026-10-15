@@ -45,6 +45,8 @@ fn requirements(scene: &mut Scene, sheet: &Sheet) {
             MarginStatus::Fail => "FAIL",
             MarginStatus::Unknown => "N/C",
             MarginStatus::NotApplicable => "N/A",
+            MarginStatus::Warn if margin.provisional => "WARN/PROV",
+            MarginStatus::Warn => "WARN",
             _ if margin.provisional => "PROV",
             _ => "PASS",
         };

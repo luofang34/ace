@@ -29,6 +29,23 @@ fn quantity(document: &DrawingDocument, id: &str) -> f64 {
     document.input.snapshot.values[id].quantity.unwrap().value
 }
 
+#[test]
+fn calculated_warning_margin_stays_warn_in_scene_and_pdf() {
+    let mut session = session();
+    let document = document(&mut session, Paper::A3);
+    let margins =
+        ace_engine::evaluate_requirements(session.model(), &document.input.snapshot).unwrap();
+    assert_eq!(margins["gate_span"].status, ace_engine::MarginStatus::Warn);
+    assert!(!margins["gate_span"].provisional);
+    assert!((margins["gate_span"].absolute.unwrap().value - 1.0).abs() < 1e-12);
+    assert!(document.scene.elements.iter().any(|element| {
+        element.evidence == "requirement:gate_span"
+            && matches!(&element.primitive, Primitive::Text { text, .. } if text == "WARN +1.00 m")
+    }));
+    let pdf = document.pdf().unwrap();
+    assert!(std::str::from_utf8(&pdf).unwrap().contains("WARN +1.00 m"));
+}
+
 fn span_mm(document: &DrawingDocument) -> f64 {
     let points: Vec<_> = document
         .scene
