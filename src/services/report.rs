@@ -350,11 +350,10 @@ pub(crate) fn markdown_report(
     if let Some(landing_fuel) = &mission.landing_fuel {
         writeln!(output, "- Landing fuel: {:.1} kg", landing_fuel.value).map_err(format_error)?;
     }
-    writeln!(
-        output,
-        "- Service ceiling: {:.0} m",
-        performance.service_ceiling_m
-    )
+    match performance.service_ceiling_m {
+        Some(ceiling) => writeln!(output, "- Service ceiling: {ceiling:.0} m"),
+        None => writeln!(output, "- Service ceiling: unavailable"),
+    }
     .map_err(format_error)?;
     write_cruise_performance(&mut output, performance)?;
     writeln!(output, "\n## Requirements").map_err(format_error)?;

@@ -210,7 +210,14 @@ impl SweepMetricContext<'_> {
         let value = match metric {
             "performance.stall_speed" => self.performance.stall_speed_clean_m_s,
             "performance.stall_speed_landing" => self.performance.stall_speed_landing_m_s,
-            "performance.service_ceiling" => self.performance.service_ceiling_m,
+            "performance.service_ceiling" => {
+                self.performance.service_ceiling_m.ok_or_else(|| {
+                    AexError::analysis(
+                        "CEILING_UNAVAILABLE",
+                        "performance.service_ceiling has no root inside the searchable altitude range",
+                    )
+                })?
+            }
             "performance.maximum_level_speed" => self.performance.maximum_level_speed_m_s,
             "performance.achieved_cruise_mach" => {
                 optional_performance_metric(metric, self.performance.achieved_cruise_mach)?

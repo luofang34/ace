@@ -116,11 +116,17 @@ against configurable class thresholds.
 
 Performance results include `metric_validity` for maximum level speed, service
 ceiling, and absolute ceiling. An interior root is `valid`; an interior root
-that uses a model outside its registered envelope is `extrapolated`; a result
-pinned to the atmosphere or a default search cap is `boundary_limited`.
-Explicit aircraft operating limits are treated as valid declared limits rather
-than artificial solver caps. A boundary-limited value is not evidence that the
-physical threshold occurs at that value.
+that uses a model outside its registered envelope is `extrapolated`. A maximum
+speed pinned to a default search cap is `boundary_limited`; explicit aircraft
+speed limits are valid declared limits. Ceilings search up to the lowest of
+`aircraft.limits.maximum_operating_altitude`, the engine profile's
+`limits.maximum_altitude` and the 19.9 km atmosphere top. A ceiling clamped at a
+declared limit is `boundary_limited` with that limit as its `boundary`, and a
+`ge` requirement it already meets passes because the true ceiling can only be
+higher. When the climb threshold is still met at the atmosphere top, or not met
+at sea level, the ceiling is omitted, its validity is `unsupported`, and
+`CEILING_UNAVAILABLE` explains why. A boundary-limited value is not evidence
+that the physical threshold occurs at that value.
 
 Declared cruise Mach and true airspeed remain inputs for reporting. Achieved
 cruise Mach and true airspeed evaluate installed capability at every cruise

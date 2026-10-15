@@ -2,7 +2,7 @@ use super::solver::bounded_root;
 use super::validity::{
     altitude_upper_bound, from_warnings as validity_from_warnings, speed_upper_bound,
 };
-use super::{ClimbRateEvaluation, PointAnalyzer, SolvedMetric, extend_unique_diagnostics};
+use super::{ClimbRateEvaluation, PointAnalyzer, extend_unique_diagnostics};
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::{FOOT_M, GRAVITY_M_S2};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
@@ -10,6 +10,35 @@ use crate::domain::validity::MetricValidity;
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::stall_speed_m_s;
 use crate::models::propulsion::{OperatingMode, shaft_power_floored};
+
+/// A solved ceiling, or the reason no ceiling exists inside the searchable range.
+#[derive(Debug)]
+pub(super) struct CeilingMetric {
+    pub(super) value: Option<f64>,
+    pub(super) validity: MetricValidity,
+    pub(super) reason: Option<String>,
+}
+
+impl CeilingMetric {
+    fn unavailable(reason: String) -> Self {
+        Self {
+            value: None,
+            validity: MetricValidity::unsupported(),
+            reason: Some(reason),
+        }
+    }
+
+    pub(super) fn diagnostic(&self, metric: &str) -> Option<Diagnostic> {
+        self.reason.as_ref().map(|reason| {
+            Diagnostic::warning_with_context(
+                WarningCode::CeilingUnavailable,
+                format!("{metric} is unavailable: {reason}"),
+                metric,
+                serde_json::json!({"metric": metric}),
+            )
+        })
+    }
+}
 
 impl PointAnalyzer {
     pub(crate) fn maximum_rate_of_climb(
@@ -74,11 +103,15 @@ impl PointAnalyzer {
         })
     }
 
+    /// Solves for the altitude where the best climb rate meets `threshold_m_s`.
+    /// A declared airframe or engine altitude limit clamps the result and is named
+    /// as its boundary; when no root lies between sea level and the atmosphere
+    /// model's top, the ceiling is unavailable rather than a search-bound number.
     pub(super) fn ceiling_solution(
         &self,
         mass_kg: f64,
         threshold_m_s: f64,
-    ) -> AexResult<SolvedMetric> {
+    ) -> AexResult<CeilingMetric> {
         let upper = altitude_upper_bound(&self.scenario);
         let function = |altitude| {
             self.maximum_rate_of_climb(altitude, mass_kg)
@@ -86,25 +119,30 @@ impl PointAnalyzer {
         };
         let sea_level = function(0.0)?;
         if sea_level <= 0.0 {
-            return Ok(SolvedMetric {
-                value: 0.0,
-                validity: MetricValidity::boundary_limited(
-                    "performance.ceiling_search.minimum_altitude",
-                ),
-            });
+            return Ok(CeilingMetric::unavailable(format!(
+                "climb rate is below the {threshold_m_s:.3} m/s ceiling threshold at sea level"
+            )));
         }
         let top = function(upper.value)?;
         if top >= 0.0 {
-            return Ok(SolvedMetric {
-                value: upper.value,
-                validity: upper.validity(),
+            if upper.artificial {
+                return Ok(CeilingMetric::unavailable(format!(
+                    "climb rate still meets the {threshold_m_s:.3} m/s ceiling threshold at the {:.0} m {} search limit",
+                    upper.value, upper.source
+                )));
+            }
+            return Ok(CeilingMetric {
+                value: Some(upper.value),
+                validity: MetricValidity::boundary_limited(&upper.source),
+                reason: None,
             });
         }
         let value = bounded_root(0.0, upper.value, 1.0, 80, function)?;
         let evaluation = self.maximum_rate_of_climb_with_diagnostics(value, mass_kg)?;
-        Ok(SolvedMetric {
-            value,
+        Ok(CeilingMetric {
+            value: Some(value),
             validity: evaluation.validity,
+            reason: None,
         })
     }
 
@@ -113,23 +151,25 @@ impl PointAnalyzer {
     pub(super) fn power_floor_warning(
         &self,
         metric: &str,
-        ceiling: &SolvedMetric,
+        ceiling: &CeilingMetric,
     ) -> AexResult<Option<Diagnostic>> {
-        let density = self.atmosphere.evaluate(ceiling.value)?.density_kg_m3;
+        let Some(altitude) = ceiling.value else {
+            return Ok(None);
+        };
+        let density = self.atmosphere.evaluate(altitude)?.density_kg_m3;
         if !shaft_power_floored(&self.scenario, density) {
             return Ok(None);
         }
         Ok(Some(Diagnostic::warning_with_context(
             WarningCode::CeilingReliesOnPowerFloor,
             format!(
-                "{metric} at {:.0} m relies on the declared minimum power fraction, not the lapse law",
-                ceiling.value
+                "{metric} at {altitude:.0} m relies on the declared minimum power fraction, not the lapse law"
             ),
             format!(
                 "engine.{}.power_lapse.minimum_power_fraction",
                 self.scenario.engine.profile_id()
             ),
-            serde_json::json!({"metric": metric, "altitude_m": ceiling.value}),
+            serde_json::json!({"metric": metric, "altitude_m": altitude}),
         )))
     }
 }

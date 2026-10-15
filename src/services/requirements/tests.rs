@@ -75,6 +75,7 @@ fn sr71_boundary_ceiling_requirement_is_indeterminate_and_nullable()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut scenario = example_scenario("sr71")?;
     scenario.aircraft.propulsion.sizing_factor = 2.0;
+    scenario.aircraft.limits.maximum_operating_altitude_m = Some(15_000.0);
     let performance = PointAnalyzer::new(scenario.clone()).summary(None)?;
     let requirement = scenario
         .requirements
@@ -85,8 +86,11 @@ fn sr71_boundary_ceiling_requirement_is_indeterminate_and_nullable()
     let evaluation = evaluate_one(
         requirement,
         MetricInput {
-            actual: performance.service_ceiling_m,
+            actual: performance
+                .service_ceiling_m
+                .ok_or("declared limit clamps the SR-71 ceiling")?,
             validity: performance.validity_for("performance.service_ceiling"),
+            lower_bound: true,
         },
     );
 
@@ -425,5 +429,37 @@ fn c172_static_margin_bounds_are_both_bindable() -> Result<(), Box<dyn std::erro
         assert_eq!(evaluation.metric, metric);
         assert_eq!(evaluation.resolved_status(), RequirementStatus::Pass);
     }
+    Ok(())
+}
+
+#[test]
+fn ceiling_clamped_at_declared_limit_passes_ge_requirements_below_the_clamp()
+-> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("b777")?;
+    let performance = PointAnalyzer::new(scenario.clone()).summary(None)?;
+    assert_eq!(
+        performance.validity_for("performance.service_ceiling"),
+        crate::domain::validity::MetricValidity::boundary_limited(
+            "aircraft.limits.maximum_operating_altitude"
+        )
+    );
+    let requirement = scenario
+        .requirements
+        .items
+        .iter()
+        .find(|item| item.metric == "performance.service_ceiling")
+        .ok_or("missing B777 service-ceiling requirement")?;
+    let evaluation = evaluate_one(
+        requirement,
+        MetricInput {
+            actual: performance
+                .service_ceiling_m
+                .ok_or("B777 ceiling is clamped, not unavailable")?,
+            validity: performance.validity_for("performance.service_ceiling"),
+            lower_bound: true,
+        },
+    );
+    assert_eq!(evaluation.resolved_status(), RequirementStatus::Pass);
+    assert_eq!(evaluation.passed, Some(true));
     Ok(())
 }

@@ -191,6 +191,7 @@ impl PointAnalyzer {
             (SERVICE_CEILING_METRIC, &service_ceiling),
             (ABSOLUTE_CEILING_METRIC, &absolute_ceiling),
         ] {
+            ceiling_warnings.extend(ceiling.diagnostic(metric));
             ceiling_warnings.extend(self.power_floor_warning(metric, ceiling)?);
         }
         let mut cruise_warnings = cruise.warnings;

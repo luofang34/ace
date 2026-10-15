@@ -58,6 +58,11 @@ warning_registry! {
         true,
         "A ceiling exists only because a declared minimum shaft-power fraction exceeds the lapsed power."
     ),
+    CeilingUnavailable => (
+        "CEILING_UNAVAILABLE",
+        false,
+        "No ceiling root lies inside the searchable altitude range, so the ceiling is reported as unavailable."
+    ),
     CertificationUseNotProhibited => (
         "CERTIFICATION_USE_NOT_PROHIBITED",
         false,

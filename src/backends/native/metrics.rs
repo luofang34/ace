@@ -214,13 +214,13 @@ fn insert_performance(
         performance.maximum_level_speed_m_s,
         "m/s",
     );
-    insert(
+    insert_optional(
         metrics,
         "performance.service_ceiling",
         performance.service_ceiling_m,
         "m",
     );
-    insert(
+    insert_optional(
         metrics,
         "performance.absolute_ceiling",
         performance.absolute_ceiling_m,

@@ -1,6 +1,8 @@
-use crate::domain::diagnostic::AexResult;
+use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::propulsion::PowerLapse;
+use crate::domain::quantity::FOOT_M;
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
+use crate::domain::validity::{MetricValidity, ValidityStatus};
 use crate::domain::warning::WarningCode;
 use crate::models::atmosphere::Isa1976;
 use crate::models::performance::PointAnalyzer;
@@ -47,9 +49,10 @@ fn turbo(floor: Option<f64>) -> AexResult<PowerLapse> {
 fn service_ceiling(scenario: ResolvedScenario) -> AexResult<f64> {
     let analyzer = PointAnalyzer::new(scenario);
     let mass = 850.0;
-    Ok(analyzer
+    analyzer
         .ceiling_solution(mass, super::service_ceiling_threshold(&analyzer.scenario))?
-        .value)
+        .value
+        .ok_or_else(|| AexError::analysis("TEST_FIXTURE", "ceiling must be bracketed"))
 }
 
 #[test]
@@ -82,7 +85,11 @@ fn a_ceiling_held_up_by_the_power_floor_is_flagged() -> AexResult<()> {
     let floored = isr(turbo(Some(0.55))?)?;
     let analyzer = PointAnalyzer::new(floored.clone());
     let summary = analyzer.summary(None)?;
-    assert!(summary.service_ceiling_m > 9_000.0);
+    assert!(
+        summary
+            .service_ceiling_m
+            .is_some_and(|ceiling| ceiling > 9_000.0)
+    );
     assert!(
         summary
             .warnings
@@ -95,6 +102,55 @@ fn a_ceiling_held_up_by_the_power_floor_is_flagged() -> AexResult<()> {
             .warnings
             .iter()
             .any(|warning| { warning.code == WarningCode::CeilingReliesOnPowerFloor.as_str() })
+    );
+    Ok(())
+}
+
+#[test]
+fn declared_engine_altitude_limit_clamps_and_names_the_ceiling() -> AexResult<()> {
+    let mut scenario = isr(turbo(None)?)?;
+    let EngineProfile::Piston(engine) = &mut scenario.engine else {
+        return Err(AexError::analysis("TEST_FIXTURE", "shaft engine expected"));
+    };
+    engine.maximum_altitude_m = Some(25_000.0 * FOOT_M);
+    let boundary = format!("engine.{}.limits.maximum_altitude", engine.id);
+    let summary = PointAnalyzer::new(scenario).summary(None)?;
+    let ceiling = summary.service_ceiling_m.unwrap_or(f64::NAN);
+    assert!((ceiling - 25_000.0 * FOOT_M).abs() < 1e-9);
+    assert!((6_000.0..=9_000.0).contains(&ceiling));
+    assert_eq!(
+        summary.validity_for("performance.service_ceiling"),
+        MetricValidity::boundary_limited(&boundary)
+    );
+    Ok(())
+}
+
+#[test]
+fn an_unbracketed_ceiling_is_unavailable_not_the_search_limit() -> AexResult<()> {
+    let mut scenario = example_scenario("c172")?;
+    scenario.aircraft.propulsion.sizing_factor = 10.0;
+    let EngineProfile::Piston(engine) = &mut scenario.engine else {
+        return Err(AexError::analysis("TEST_FIXTURE", "shaft engine expected"));
+    };
+    // Without the engine's declared altitude limit only the atmosphere top remains.
+    engine.maximum_altitude_m = None;
+    let summary = PointAnalyzer::new(scenario).summary(None)?;
+    assert_eq!(summary.service_ceiling_m, None);
+    assert_eq!(summary.absolute_ceiling_m, None);
+    for metric in [
+        "performance.service_ceiling",
+        "performance.absolute_ceiling",
+    ] {
+        assert_eq!(
+            summary.validity_for(metric).status,
+            ValidityStatus::Unsupported
+        );
+    }
+    assert!(
+        summary
+            .warnings
+            .iter()
+            .any(|warning| warning.code == WarningCode::CeilingUnavailable.as_str())
     );
     Ok(())
 }

@@ -118,8 +118,10 @@ pub(crate) struct PerformanceSummary {
     pub(crate) minimum_power_speed_m_s: f64,
     pub(crate) maximum_lift_to_drag_ratio: f64,
     pub(crate) maximum_level_speed_m_s: f64,
-    pub(crate) service_ceiling_m: f64,
-    pub(crate) absolute_ceiling_m: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) service_ceiling_m: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) absolute_ceiling_m: Option<f64>,
     pub(crate) cruise_mach: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) declared_cruise_mach: Option<f64>,
