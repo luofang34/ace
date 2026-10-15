@@ -64,7 +64,7 @@ pub(super) fn evaluate(
         approximate: true,
         artifacts: Vec::new(),
         details: serde_json::json!({"method":"rk4_level_flight", "force_balance":"lift=weight; thrust=drag",
-            "validity":"parabolic polar; constant flight condition and declared installed thrust/TSFC; CL within limit; Mach <= 0.9", "maximum_step_s":model.maximum_step}),
+            "validity":"parabolic or tabulated induced drag; constant flight condition and declared installed thrust/TSFC; CL within limit; no table extrapolation", "polar_table":model.aero.polar_table, "maximum_step_s":model.maximum_step}),
     })
 }
 

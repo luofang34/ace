@@ -20,6 +20,7 @@ use crate::models::blended_wing::is_blended_wing_body;
 
 mod geometry;
 mod parsing;
+pub(crate) mod polar;
 mod synthesis;
 
 use geometry::{blended_wing_center_of_gravity_x, geometry_script};

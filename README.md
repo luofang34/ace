@@ -96,6 +96,24 @@ area/span/taper/sweep/dihedral/twist ports and produces an isolated symmetric
 wing artifact and wetted area when OpenVSP is installed. It uses default airfoil
 sections and remains conceptual; missing tools produce unavailable outputs.
 
+`examples/synthesis/vspaero-transport.json` connects `aircraft.vspaero_wing_polar`
+to the state-driven climb, cruise, descent, approach and reserve phases:
+
+```bash
+cargo run --bin aex -- synthesize examples/synthesis/vspaero-transport.json --format json
+```
+
+The adapter requires both `vspscript` and its sibling `vspaero` executable.
+It retains the generated geometry, raw solver output and fitted polar with both
+executable digests. It reduces VSPAERO's induced drag to `k(Mach) * CL²` at Mach
+0.2, 0.5 and 0.8; the supplied parasite `CD0` remains separate. Every sampled
+point must meet an absolute 0.00002 plus relative 5% fit tolerance. Flight phases
+reject Mach extrapolation and CL above the common sampled limit. This adapter
+supports isolated, untwisted wings with symmetric NACA 0012 airfoils;
+unsupported shapes fail explicitly. Mesh convergence, experimental calibration,
+whole-aircraft interference, trim, stall and transonic shocks remain unverified.
+Use the same model file with `sheet`, `study` or `drawing` to project its results.
+
 Rate-based operations require one currency, price year and cost scope. Native
 rates use USD, flight hours, cycles, turnaround time and annual ownership cost.
 Annual flight/operating time limits determine ownership allocation. Required

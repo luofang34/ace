@@ -9,6 +9,7 @@ mod ground;
 mod integration;
 mod parameters;
 mod path;
+mod polar;
 
 #[derive(Clone, Copy)]
 pub(super) enum PhaseKind {
@@ -21,6 +22,7 @@ pub(super) enum PhaseKind {
 pub(super) struct FlightPhase {
     spec: PluginSpec,
     kind: PhaseKind,
+    vspaero: bool,
 }
 
 impl FlightPhase {
@@ -55,6 +57,7 @@ impl FlightPhase {
         };
         Self {
             kind,
+            vspaero: false,
             spec: PluginSpec {
                 identity: PluginIdentity {
                     id: id.into(),
@@ -69,6 +72,21 @@ impl FlightPhase {
                 outputs: BTreeMap::new(),
             },
         }
+    }
+
+    pub fn with_vspaero(kind: PhaseKind) -> Self {
+        let mut phase = Self::with_kind(kind);
+        phase.vspaero = true;
+        phase.spec.identity.id = phase
+            .spec
+            .identity
+            .id
+            .replace("aircraft.", "aircraft.vspaero_");
+        phase.spec.inputs.remove("oswald");
+        for port in crate::backends::openvsp::polar::PORTS {
+            phase.spec.inputs.insert(port.into(), Unit::Ratio);
+        }
+        phase
     }
 }
 
@@ -94,7 +112,11 @@ impl AnalysisPlugin for FlightPhase {
         if matches!(self.kind, PhaseKind::GroundEstimate) {
             return ground::evaluate(inputs, state);
         }
-        let model = parameters::FlightModel::new(inputs)?;
+        let model = if self.vspaero {
+            polar::model(inputs)?
+        } else {
+            parameters::FlightModel::new(inputs)?
+        };
         match self.kind {
             PhaseKind::EnergyPath => path::evaluate(&model, state, context.registry.control()),
             PhaseKind::RouteCruise => {

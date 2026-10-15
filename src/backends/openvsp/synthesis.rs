@@ -71,7 +71,7 @@ fn wing_settings(inputs: &BTreeMap<String, f64>) -> AexResult<BTreeMap<String, f
     let root = 2.0 * area / (span * (1.0 + taper));
     // Canonical geometry uses horizontal span, untwisted projected area and leading-edge sweep.
     // OpenVSP section span and sweep are measured in the inclined panel plane.
-    Ok(BTreeMap::from([
+    let mut settings = BTreeMap::from([
         ("Span".into(), span / (2.0 * cos_dihedral)),
         ("Root_Chord".into(), root),
         ("Tip_Chord".into(), root * taper),
@@ -87,32 +87,63 @@ fn wing_settings(inputs: &BTreeMap<String, f64>) -> AexResult<BTreeMap<String, f
         ("Taper".into(), taper),
         ("TotalArea".into(), area / cos_dihedral),
         ("TotalProjectedSpan".into(), span),
-    ]))
+    ]);
+    if let Some(thickness) = inputs.get("thickness") {
+        settings.insert("RootThickness".into(), *thickness);
+        settings.insert("TipThickness".into(), *thickness);
+        settings.insert("RootCamber".into(), 0.0);
+        settings.insert("TipCamber".into(), 0.0);
+    }
+    Ok(settings)
 }
 
 fn wing_script(settings: &BTreeMap<String, f64>, artifact: &str) -> String {
     let mut script = String::from(
         "int main() { ClearVSPModel(); string wing=AddGeom(\"WING\",\"\"); SetDriverGroup(wing,1,SPAN_WSECT_DRIVER,ROOTC_WSECT_DRIVER,TIPC_WSECT_DRIVER); Update(); SetParmVal(wing,\"Sym_Planar_Flag\",\"Sym\",SYM_XZ);\n",
     );
+    if settings.contains_key("RootThickness") {
+        script.push_str("ChangeXSecShape(GetXSecSurf(wing,0),0,XS_FOUR_SERIES); ChangeXSecShape(GetXSecSurf(wing,0),1,XS_FOUR_SERIES); Update();\n");
+    }
     for (name, value) in settings {
         if !name.starts_with("Total") && name != "Taper" {
             script.push_str(&format!(
-                "SetParmVal(wing,\"{name}\",\"XSec_1\",{value:.15});\n"
+                "SetParmVal({},{value:.15});\n",
+                wing_parameter(name)
             ));
         }
     }
     script.push_str("Update();\n");
     for name in settings.keys() {
-        let group = if name.starts_with("Total") {
-            "WingGeom"
-        } else {
-            "XSec_1"
-        };
-        script.push_str(&format!("Print(\"ACE_GEOMETRY_{name}=\",false); Print(GetParmVal(wing,\"{name}\",\"{group}\"));\n"));
+        script.push_str(&format!(
+            "Print(\"ACE_GEOMETRY_{name}=\",false); Print(GetParmVal({}));\n",
+            wing_parameter(name)
+        ));
     }
     script.push_str(&format!("WriteVSPFile(\"{artifact}\",SET_ALL);\n"));
     script.push_str("ComputeCompGeom(SET_ALL,false,0); string id=FindLatestResultsID(\"Comp_Geom\"); array<double> areas=GetDoubleResults(id,\"Wet_Area\"); double area=0; for(uint i=0;i<areas.size();i++){area+=areas[i];} Print(\"ACE_WETTED_AREA_M2=\",false); Print(area); while(GetNumTotalErrors()>0){ErrorObj err=PopLastError();Print(\"ACE_ERROR=\"+err.GetErrorString());} Print(\"ACE_COMPLETE=1\"); return 0; }");
     script
+}
+
+fn wing_parameter(name: &str) -> String {
+    if let Some(field) = name
+        .strip_prefix("Root")
+        .or_else(|| name.strip_prefix("Tip"))
+        && matches!(field, "Thickness" | "Camber")
+    {
+        let index = if name.starts_with("Root") { 0 } else { 1 };
+        let parameter = if field == "Thickness" {
+            "ThickChord"
+        } else {
+            "Camber"
+        };
+        return format!("GetXSecParm(GetXSec(GetXSecSurf(wing,0),{index}),\"{parameter}\")");
+    }
+    let group = if name.starts_with("Total") {
+        "WingGeom"
+    } else {
+        "XSec_1"
+    };
+    format!("GetParm(wing,\"{name}\",\"{group}\")")
 }
 
 fn validate_readback(
