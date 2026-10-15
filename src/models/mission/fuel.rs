@@ -1,8 +1,7 @@
 use crate::domain::diagnostic::{AexResult, Diagnostic};
-use crate::domain::schema::EngineProfile;
 use crate::models::aerodynamics::{FlightCondition, evaluate as evaluate_aerodynamics};
 use crate::models::propulsion::{
-    OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion, fuel_flow_for_required_thrust,
+    OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion, required_fuel_flow,
 };
 
 use super::{MissionSimulator, extend_unique_diagnostics};
@@ -82,7 +81,7 @@ fn required(
         },
     )?;
     let mach = speed_m_s / atmosphere.speed_of_sound_m_s;
-    let flow = required_flow(simulator, &aero, altitude_m, mach, mode)?;
+    let flow = required_fuel_flow(&simulator.scenario, &aero, altitude_m, mach, mode)?;
     let mut warnings = aero.warnings;
     extend_unique_diagnostics(&mut warnings, propulsion.warnings);
     extend_unique_diagnostics(&mut warnings, flow.warnings);
@@ -90,44 +89,6 @@ fn required(
         flow_kg_s: flow.flow_kg_s,
         warnings,
     })
-}
-
-fn required_flow(
-    simulator: &MissionSimulator,
-    aero: &crate::domain::result::AerodynamicState,
-    altitude_m: f64,
-    mach: f64,
-    mode: OperatingMode,
-) -> AexResult<FuelFlowEvaluation> {
-    match &simulator.scenario.engine {
-        EngineProfile::Piston(profile) => {
-            let efficiency = simulator
-                .scenario
-                .propeller
-                .as_ref()
-                .map_or(0.75, |propeller| propeller.cruise_efficiency);
-            let shaft_power_kw = aero.power_required_w / efficiency / 1000.0;
-            let bsfc = profile.bsfc.at(
-                match mode {
-                    OperatingMode::Economy => OperatingMode::Economy,
-                    _ => OperatingMode::Cruise,
-                },
-                altitude_m,
-            );
-            Ok(FuelFlowEvaluation {
-                flow_kg_s: bsfc * shaft_power_kw / 3600.0,
-                warnings: Vec::new(),
-            })
-        }
-        EngineProfile::Turbofan(profile) => {
-            let result =
-                fuel_flow_for_required_thrust(profile, altitude_m, mach, mode, aero.drag_n)?;
-            Ok(FuelFlowEvaluation {
-                flow_kg_s: result.flow_kg_s,
-                warnings: result.warnings,
-            })
-        }
-    }
 }
 
 pub(super) fn available(

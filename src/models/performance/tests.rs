@@ -355,3 +355,29 @@ fn legacy_performance_json_defaults_metric_validity() -> Result<(), Box<dyn std:
     );
     Ok(())
 }
+
+#[test]
+fn point_reports_required_power_fuel_flow_separately_from_full_throttle()
+-> Result<(), Box<dyn std::error::Error>> {
+    let scenario = example_scenario("c172")?;
+    let crate::domain::schema::EngineProfile::Piston(engine) = &scenario.engine else {
+        return Err("C172 uses a shaft engine".into());
+    };
+    let bsfc = engine.bsfc.cruise_kg_kwh;
+    let efficiency = scenario
+        .propeller
+        .as_ref()
+        .ok_or("C172 declares a propeller")?
+        .cruise_efficiency;
+    let point = PointAnalyzer::new(scenario).point(1_500.0, 45.0, 1_000.0, "clean")?;
+    // BSFC * P_required / eta, independent of the shared implementation.
+    let expected = bsfc * point.power_required_w / efficiency / 3.6e6;
+    assert!((point.fuel_flow_required_kg_s - expected).abs() < 1e-12);
+    assert_eq!(point.propeller_efficiency, Some(efficiency));
+    assert_eq!(
+        point.fuel_flow_max_power_kg_s,
+        point.propulsion.fuel_flow_kg_s
+    );
+    assert!(point.fuel_flow_required_kg_s < point.fuel_flow_max_power_kg_s);
+    Ok(())
+}

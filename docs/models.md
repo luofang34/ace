@@ -112,7 +112,11 @@ The service computes stall, drag, required and available thrust/power, excess
 values, climb rate/gradient, best glide, minimum-power speed, maximum speed,
 and service/absolute ceilings. Maximum speed uses the high-speed root unless
 an explicit operating limit controls first. Ceilings solve maximum climb rate
-against configurable class thresholds.
+against configurable class thresholds. Point results report
+`fuel_flow_required_kg_s` at the required thrust or shaft power, using the same
+formula as mission segments (shaft engines: cruise BSFC times required power
+divided by the propeller's cruise `propeller_efficiency`), alongside
+`fuel_flow_max_power_kg_s` at full throttle.
 
 Performance results include `metric_validity` for maximum level speed, service
 ceiling, and absolute ceiling. An interior root is `valid`; an interior root

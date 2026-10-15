@@ -87,6 +87,13 @@ pub(crate) struct PointPerformanceResult {
     pub(crate) excess_power_w: f64,
     pub(crate) rate_of_climb_m_s: f64,
     pub(crate) climb_gradient: f64,
+    /// Fuel flow at the thrust or shaft power this condition requires.
+    pub(crate) fuel_flow_required_kg_s: f64,
+    /// Fuel flow at full throttle; equals `propulsion.fuel_flow_kg_s`.
+    pub(crate) fuel_flow_max_power_kg_s: f64,
+    /// Propeller efficiency used for the required-power flow of a shaft engine.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) propeller_efficiency: Option<f64>,
     pub(crate) best_glide_speed_m_s: f64,
     pub(crate) maximum_lift_to_drag_ratio: f64,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]

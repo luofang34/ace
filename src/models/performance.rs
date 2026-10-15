@@ -9,7 +9,9 @@ use crate::models::aerodynamics::{
 };
 use crate::models::atmosphere::Isa1976;
 use crate::models::field_performance::{estimate_landing_distance, estimate_takeoff_distance};
-use crate::models::propulsion::{OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion};
+use crate::models::propulsion::{
+    OperatingMode, PropulsionQuery, evaluate as evaluate_propulsion, required_fuel_flow,
+};
 
 mod ceiling;
 mod cruise;
@@ -109,6 +111,13 @@ impl PointAnalyzer {
                 mode: OperatingMode::Cruise,
             },
         )?;
+        let required_flow = required_fuel_flow(
+            &self.scenario,
+            &aerodynamics,
+            altitude_m,
+            mach,
+            OperatingMode::Cruise,
+        )?;
         let (available_power, available_thrust) = available_propulsion(&propulsion, speed_m_s);
         let excess_power = available_power - aerodynamics.power_required_w;
         let excess_thrust = available_thrust - aerodynamics.drag_n;
@@ -116,6 +125,7 @@ impl PointAnalyzer {
         let mut warnings = aerodynamics.warnings.clone();
         extend_unique_diagnostics(&mut warnings, propulsion.warnings.clone());
         extend_unique_diagnostics(&mut warnings, reference.warnings);
+        extend_unique_diagnostics(&mut warnings, required_flow.warnings);
         Ok(PointPerformanceResult {
             scenario_id: self.scenario.id.clone(),
             altitude_m,
@@ -130,6 +140,9 @@ impl PointAnalyzer {
             excess_power_w: excess_power,
             rate_of_climb_m_s: rate_of_climb,
             climb_gradient: excess_thrust / (mass_kg * GRAVITY_M_S2),
+            fuel_flow_required_kg_s: required_flow.flow_kg_s,
+            fuel_flow_max_power_kg_s: propulsion.fuel_flow_kg_s,
+            propeller_efficiency: required_flow.propeller_efficiency,
             best_glide_speed_m_s: minimum_drag_speed_m_s(
                 &self.scenario.aircraft,
                 "clean",
