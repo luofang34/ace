@@ -1,7 +1,7 @@
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 pub(crate) use crate::domain::propulsion::PropulsionMode as OperatingMode;
 use crate::domain::propulsion::{TableFuelValue, TablePropulsionDeck};
-use crate::domain::result::{AtmosphereState, ModelMetadata, PropulsionState};
+use crate::domain::result::{AerodynamicState, AtmosphereState, ModelMetadata, PropulsionState};
 use crate::domain::schema::{
     EngineProfile, PistonProfile, PropellerProfile, ResolvedScenario, SimpleTurbofanDeck,
     TurbofanProfile,
@@ -9,6 +9,7 @@ use crate::domain::schema::{
 use crate::domain::warning::WarningCode;
 
 const SEA_LEVEL_DENSITY_KG_M3: f64 = 1.225;
+const DEFAULT_PROPELLER_EFFICIENCY: f64 = 0.75;
 
 mod table_deck;
 
@@ -285,6 +286,58 @@ pub(crate) fn fuel_flow_for_required_thrust(
         basis: ThrustFuelBasis::Tsfc,
         warnings: Vec::new(),
     })
+}
+
+/// Fuel flow at the power or thrust needed to fly `aero`'s condition, as opposed to
+/// the full-throttle flow in [`PropulsionState`]. Shaft engines convert required
+/// power through the propeller's cruise efficiency and the mode BSFC (economy keeps
+/// economy BSFC; every other mode uses cruise).
+pub(crate) fn required_fuel_flow(
+    scenario: &ResolvedScenario,
+    aero: &AerodynamicState,
+    altitude_m: f64,
+    mach: f64,
+    mode: OperatingMode,
+) -> AexResult<RequiredFuelFlow> {
+    match &scenario.engine {
+        EngineProfile::Piston(profile) => {
+            let efficiency = scenario
+                .propeller
+                .as_ref()
+                .map_or(DEFAULT_PROPELLER_EFFICIENCY, |propeller| {
+                    propeller.cruise_efficiency
+                });
+            let shaft_power_kw = aero.power_required_w / efficiency / 1000.0;
+            let bsfc = profile.bsfc.at(
+                match mode {
+                    OperatingMode::Economy => OperatingMode::Economy,
+                    _ => OperatingMode::Cruise,
+                },
+                altitude_m,
+            );
+            Ok(RequiredFuelFlow {
+                flow_kg_s: bsfc * shaft_power_kw / 3600.0,
+                propeller_efficiency: Some(efficiency),
+                warnings: Vec::new(),
+            })
+        }
+        EngineProfile::Turbofan(profile) => {
+            let result =
+                fuel_flow_for_required_thrust(profile, altitude_m, mach, mode, aero.drag_n)?;
+            Ok(RequiredFuelFlow {
+                flow_kg_s: result.flow_kg_s,
+                propeller_efficiency: None,
+                warnings: result.warnings,
+            })
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct RequiredFuelFlow {
+    pub(crate) flow_kg_s: f64,
+    pub(crate) propeller_efficiency: Option<f64>,
+    pub(crate) warnings: Vec<Diagnostic>,
 }
 
 fn metadata(model_id: &str, version: u32, validity: &str) -> ModelMetadata {
