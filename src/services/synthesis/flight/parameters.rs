@@ -11,8 +11,6 @@ pub(super) struct FlightModel {
     pub powerplant: Powerplant,
     pub fuel_price: f64,
     pub maximum_step: f64,
-    /// How a tabulated polar is evaluated outside its sampled range.
-    pub polar_basis: Option<&'static str>,
 }
 
 impl FlightModel {
@@ -43,7 +41,6 @@ impl FlightModel {
             powerplant: Powerplant::new(inputs)?,
             fuel_price,
             maximum_step: positive(inputs, "maximum_step", Second)?,
-            polar_basis: None,
         })
     }
 }

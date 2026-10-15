@@ -122,10 +122,11 @@ cargo run --bin aex -- synthesize examples/synthesis/vspaero-transport.json --fo
 The adapter requires both `vspscript` and its sibling `vspaero` executable.
 It retains the generated geometry, raw solver output and fitted polar with both
 executable digests. It reduces VSPAERO's induced drag to `k(Mach) * CL²` at Mach
-0.2, 0.5 and 0.8; the supplied parasite `CD0` remains separate. Every sampled
-point must meet an absolute 0.00002 plus relative 5% fit tolerance. Below Mach
-0.2, flight phases hold the Mach 0.2 polar and record that basis in their
-details; they reject Mach above 0.8 and CL above the common sampled limit. This adapter
+0, 0.2, 0.4, 0.6 and 0.8 (ports `k_000` to `k_080`); the supplied parasite `CD0`
+remains separate. Every sampled point must meet an absolute 0.00002 plus
+relative 5% fit tolerance. Flight phases interpolate the table from the
+incompressible sample upward, so low-speed phases need no extrapolation; they
+reject Mach above 0.8 and CL above the common sampled limit. This adapter
 supports isolated, untwisted wings with symmetric NACA 0012 airfoils;
 unsupported shapes fail explicitly. Mesh convergence, experimental calibration,
 whole-aircraft interference, trim, stall and transonic shocks remain unverified.

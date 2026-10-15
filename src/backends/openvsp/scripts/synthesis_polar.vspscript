@@ -19,7 +19,7 @@ int main() {
     SetDoubleAnalysisInput(analysis,"AlphaStart",alpha_start);
     SetDoubleAnalysisInput(analysis,"AlphaEnd",alpha_end);
     SetIntAnalysisInput(analysis,"AlphaNpts",alpha_count);
-    array<double> mach_start={0.2}; array<double> mach_end={0.8}; array<int> mach_count={3};
+    array<double> mach_start={0.0}; array<double> mach_end={0.8}; array<int> mach_count={5};
     SetDoubleAnalysisInput(analysis,"MachStart",mach_start);
     SetDoubleAnalysisInput(analysis,"MachEnd",mach_end);
     SetIntAnalysisInput(analysis,"MachNpts",mach_count);
@@ -29,7 +29,7 @@ int main() {
     array<double> alpha=GetDoubleResults(result,"Alpha");
     array<double> lift=GetDoubleResults(result,"CLtot");
     array<double> drag=GetDoubleResults(result,"CDi");
-    if (mach.size()!=18 || alpha.size()!=18 || lift.size()!=18 || drag.size()!=18) {
+    if (mach.size()!=30 || alpha.size()!=30 || lift.size()!=30 || drag.size()!=30) {
         Print("ACE_ERROR=incomplete VSPAERO Mach/alpha grid"); return 1;
     }
     for(uint i=0;i<mach.size();i++) {

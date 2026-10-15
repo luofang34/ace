@@ -8,8 +8,11 @@ mod fitting;
 pub(crate) use fitting::{Fit, Point};
 
 const SCRIPT: &str = include_str!("scripts/synthesis_polar.vspscript");
-pub(crate) const MACH: [f64; 3] = [0.2, 0.5, 0.8];
-pub(crate) const PORTS: [&str; 4] = ["k_020", "k_050", "k_080", "cl_limit"];
+/// Sampled from the incompressible limit so subsonic flight phases interpolate
+/// rather than extrapolate; above Mach 0.8 transonic effects are outside the reduction.
+pub(crate) const MACH: [f64; 5] = [0.0, 0.2, 0.4, 0.6, 0.8];
+/// Induced-drag factor port per entry of [`MACH`], then the common sampled CL limit.
+pub(crate) const PORTS: [&str; 6] = ["k_000", "k_020", "k_040", "k_060", "k_080", "cl_limit"];
 
 #[derive(Serialize)]
 pub(crate) struct Polar {

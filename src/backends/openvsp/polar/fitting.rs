@@ -48,10 +48,11 @@ pub(super) fn parse(raw: &str) -> AexResult<Vec<Point>> {
 }
 
 pub(super) fn fit(points: &[Point]) -> AexResult<Vec<Fit>> {
-    if points.len() != 18 {
-        return Err(invalid(
-            "requires exactly six alpha samples at each of three Mach points",
-        ));
+    if points.len() != 6 * MACH.len() {
+        return Err(invalid(format!(
+            "requires exactly six alpha samples at each of {} Mach points",
+            MACH.len()
+        )));
     }
     MACH.into_iter()
         .map(|mach| fit_slice(points, mach))

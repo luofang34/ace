@@ -2416,6 +2416,17 @@
       "owner": "concept_configuration",
       "revision": 0
     },
+    "aero.vspaero.k_000": {
+      "unit": "1",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "computed",
+        "reference": "VSPAERO CDi reduction; attached flow and sampled domain only"
+      },
+      "owner": "aerodynamics",
+      "revision": 0
+    },
     "aero.vspaero.k_020": {
       "unit": "1",
       "value": null,
@@ -2427,7 +2438,18 @@
       "owner": "aerodynamics",
       "revision": 0
     },
-    "aero.vspaero.k_050": {
+    "aero.vspaero.k_040": {
+      "unit": "1",
+      "value": null,
+      "expression": null,
+      "source": {
+        "kind": "computed",
+        "reference": "VSPAERO CDi reduction; attached flow and sampled domain only"
+      },
+      "owner": "aerodynamics",
+      "revision": 0
+    },
+    "aero.vspaero.k_060": {
       "unit": "1",
       "value": null,
       "expression": null,
@@ -2570,8 +2592,10 @@
         "available_thrust": "engine.available_thrust",
         "fuel_price": "economics.fuel_price",
         "maximum_step": "phase.path.maximum_step",
+        "k_000": "aero.vspaero.k_000",
         "k_020": "aero.vspaero.k_020",
-        "k_050": "aero.vspaero.k_050",
+        "k_040": "aero.vspaero.k_040",
+        "k_060": "aero.vspaero.k_060",
         "k_080": "aero.vspaero.k_080",
         "cl_limit": "aero.vspaero.cl_limit"
       },
@@ -2590,8 +2614,10 @@
         "available_thrust": "engine.available_thrust",
         "fuel_price": "economics.fuel_price",
         "maximum_step": "mission.maximum_step",
+        "k_000": "aero.vspaero.k_000",
         "k_020": "aero.vspaero.k_020",
-        "k_050": "aero.vspaero.k_050",
+        "k_040": "aero.vspaero.k_040",
+        "k_060": "aero.vspaero.k_060",
         "k_080": "aero.vspaero.k_080",
         "cl_limit": "aero.vspaero.cl_limit"
       },
@@ -2610,8 +2636,10 @@
         "available_thrust": "engine.available_thrust",
         "fuel_price": "economics.fuel_price",
         "maximum_step": "phase.path.maximum_step",
+        "k_000": "aero.vspaero.k_000",
         "k_020": "aero.vspaero.k_020",
-        "k_050": "aero.vspaero.k_050",
+        "k_040": "aero.vspaero.k_040",
+        "k_060": "aero.vspaero.k_060",
         "k_080": "aero.vspaero.k_080",
         "cl_limit": "aero.vspaero.cl_limit"
       },
@@ -2640,8 +2668,10 @@
         "available_thrust": "engine.available_thrust",
         "fuel_price": "economics.fuel_price",
         "maximum_step": "mission.maximum_step",
+        "k_000": "aero.vspaero.k_000",
         "k_020": "aero.vspaero.k_020",
-        "k_050": "aero.vspaero.k_050",
+        "k_040": "aero.vspaero.k_040",
+        "k_060": "aero.vspaero.k_060",
         "k_080": "aero.vspaero.k_080",
         "cl_limit": "aero.vspaero.cl_limit"
       },
@@ -2786,8 +2816,10 @@
         "available_thrust": "engine.available_thrust",
         "fuel_price": "economics.fuel_price",
         "maximum_step": "phase.path.maximum_step",
+        "k_000": "aero.vspaero.k_000",
         "k_020": "aero.vspaero.k_020",
-        "k_050": "aero.vspaero.k_050",
+        "k_040": "aero.vspaero.k_040",
+        "k_060": "aero.vspaero.k_060",
         "k_080": "aero.vspaero.k_080",
         "cl_limit": "aero.vspaero.cl_limit"
       },
@@ -2806,8 +2838,10 @@
         "thickness": "wing.thickness"
       },
       "outputs": {
+        "k_000": "aero.vspaero.k_000",
         "k_020": "aero.vspaero.k_020",
-        "k_050": "aero.vspaero.k_050",
+        "k_040": "aero.vspaero.k_040",
+        "k_060": "aero.vspaero.k_060",
         "k_080": "aero.vspaero.k_080",
         "cl_limit": "aero.vspaero.cl_limit"
       }
