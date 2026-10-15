@@ -177,6 +177,21 @@ cargo run --bin aex -- drawing output/pdf/concept/drawing.json --replay \
 Use a new output directory; publication is atomic and existing directories are
 not overwritten. The directory contains a frozen `drawing.json`, vector SVG/PDF, and a PNG preview
 from the same millimetre scene. `--paper A1` doubles the drawing's linear size.
+`--paper 16:9` uses a separate presentation composition. `--from-snapshot` reads
+a synthesis report, drawing input, or verified drawing archive without running
+engineering solvers. `--drawing-data profile.json` adds typed, English-only
+geometry paths, section stations, curves, result callouts and documentary facts.
+External calculation/test/readiness claims require the matching model digest and
+revision; configuration definitions can bind directly to canonical parameters.
+Supplied structure is drawn only where declared, and material hatching requires
+a closed polygon in the section plane. The evidence register retains full text,
+equations, conditions and all curve samples when the sheet shows an abbreviated selection.
+The `DrawingData` and `FigureSpec` public Rust types define the import format.
+Caller-defined `figures` select geometry, compatible imported curves, documentary
+facts or supplied diagram linework, with independent IDs and pixel dimensions.
+Each figure exports SVG/PDF, frozen JSON and PNG at four times its requested display
+resolution. `manifest.json` records file paths, revision, units, evidence and missing
+inputs. Missing geometry/results remain N/C and make presentation completeness false.
 `--candidate` is a zero-based explicit selection, not a claim of optimality;
 without `--plan`, the supplied design is calculated and studies remain uncomputed.
 `--brand "Your Organization" --drawing-title "Concept Study" customizes the heading
@@ -190,8 +205,8 @@ diamond-section lifting surfaces from `geometry.*.shape` bindings, using the sam
 rigid frames as mass and envelope checks. The drawing distinguishes these concept
 surfaces from dashed occupancy envelopes; body A(x) is not total aircraft area or
 wave-drag analysis. Surface-area sums include intersecting part/root surfaces.
-Fine mechanisms, calibrated airfoils, structure and continuous performance
-boundaries are outside this conceptual drawing contract. Evidence keys on SVG
+Fine mechanisms, structural sizing, calibrated airfoils and continuous performance
+boundaries are not inferred by the renderer. Evidence keys on SVG
 objects resolve through the frozen document to source parameters and calculations.
 
 Study the model's declared variables and objectives with:

@@ -11,6 +11,9 @@ pub enum Paper {
     A3,
     /// 841 by 594 mm, with the same content at twice the linear size.
     A1,
+    /// 480 by 270 mm, independently composed for 16:9 presentation.
+    #[serde(rename = "16:9")]
+    Widescreen,
 }
 
 /// Frozen authoritative input, including optional bounded-search evidence.
@@ -26,6 +29,9 @@ pub struct DrawingInput {
     pub study: Option<ace_study::StudyArchive>,
     /// Selected candidate content address; absent for a directly supplied design.
     pub candidate: Option<String>,
+    /// Optional imported geometry/results and configurable drawing content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data: Option<crate::DrawingData>,
 }
 
 /// Portable single-page drawing and its exact scientific inputs.
@@ -46,6 +52,9 @@ pub struct DrawingDocument {
     /// Frozen presentation identity; absent preserves the original drawing format.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub branding: Option<Branding>,
+    /// Caller-defined figure identity; absent for the complete synthesis sheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub figure: Option<crate::FigureSpec>,
 }
 
 /// Compose a readable engineering drawing without changing or recomputing its source design.
@@ -71,9 +80,23 @@ pub fn compose_branded(
         generator: ace_engine::implementation_identity(),
         scene,
         branding: Some(branding),
+        figure: None,
     };
     document.digest = digest(&document)?;
     Ok(document)
+}
+
+pub(crate) fn figure(
+    document: &DrawingDocument,
+    spec: &crate::FigureSpec,
+) -> DrawingResult<DrawingDocument> {
+    let sheet = ace_sheet::project(&document.input.model, &document.input.snapshot)?;
+    let mut result = document.clone();
+    result.figure = Some(spec.clone());
+    result.scene = crate::layout::figure(&sheet, &document.input, spec)?;
+    result.digest.clear();
+    result.digest = digest(&result)?;
+    Ok(result)
 }
 
 impl DrawingDocument {
@@ -117,6 +140,9 @@ impl DrawingDocument {
 fn verify_input(input: &DrawingInput) -> DrawingResult<()> {
     let snapshot = &input.snapshot;
     input.model.validate()?;
+    if let Some(data) = &input.data {
+        crate::data::validate(data, input)?;
+    }
     if snapshot.revision != input.model.revision
         || snapshot.vehicle_id != input.model.id
         || digest(&input.model)? != snapshot.model_digest
@@ -135,13 +161,7 @@ fn verify_input(input: &DrawingInput) -> DrawingResult<()> {
             artifact.validate()?;
         }
     }
-    for value in snapshot.values.values().filter(|v| v.usable()) {
-        if let Some(id) = &value.run_id
-            && !snapshot.runs.iter().any(|run| &run.id == id)
-        {
-            return Err(DrawingError::Invalid(format!("missing producing run {id}")));
-        }
-    }
+    verify_values(input)?;
     match (&input.study, &input.candidate) {
         (Some(study), Some(id)) => {
             study.verify()?;
@@ -160,6 +180,39 @@ fn verify_input(input: &DrawingInput) -> DrawingResult<()> {
             return Err(DrawingError::Invalid(
                 "study and selected candidate must be supplied together".into(),
             ));
+        }
+    }
+    Ok(())
+}
+
+fn verify_values(input: &DrawingInput) -> DrawingResult<()> {
+    for (id, value) in input.snapshot.values.iter().filter(|(_, v)| v.usable()) {
+        let expected = if let Some(run_id) = &value.run_id {
+            input
+                .snapshot
+                .runs
+                .iter()
+                .find(|r| &r.id == run_id && r.status == value.status)
+                .and_then(|run| run.outputs.get(id))
+                .copied()
+        } else if value.status == ace_engine::ValueStatus::Input {
+            input.model.parameters.get(id).and_then(|p| p.value)
+        } else {
+            None
+        };
+        let matches = expected
+            .zip(value.quantity)
+            .is_some_and(|(expected, actual)| {
+                expected.to(actual.unit).is_ok_and(|converted| {
+                    // Canonical unit normalization can round even an unchanged angle by one ULP.
+                    (converted.value - actual.value).abs()
+                        <= 8. * f64::EPSILON * actual.value.abs().max(1.)
+                })
+            });
+        if value.parameter != *id || !matches {
+            return Err(DrawingError::Invalid(format!(
+                "value {id} does not match its canonical input or producing run"
+            )));
         }
     }
     Ok(())

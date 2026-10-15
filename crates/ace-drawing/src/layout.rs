@@ -1,10 +1,14 @@
-use crate::{DrawingError, DrawingInput, DrawingResult, Evidence, Paper, Primitive, Scene, Stroke};
+use crate::{DrawingError, DrawingInput, DrawingResult, Evidence, Paper, Primitive, Scene};
 use ace_sheet::{DomainPanel, Sheet};
 use std::collections::BTreeMap;
 
+mod arrangement;
 mod charts;
+mod figures;
 mod geometry;
+mod imported;
 mod statements;
+pub(crate) use figures::compose as figure;
 
 pub(crate) fn compose(
     sheet: &Sheet,
@@ -12,42 +16,7 @@ pub(crate) fn compose(
     paper: Paper,
     branding: &crate::Branding,
 ) -> DrawingResult<Scene> {
-    let mut scene = Scene {
-        width_mm: 420.0,
-        height_mm: 297.0,
-        scale_denominator: 300.0,
-        elements: Vec::new(),
-        evidence: evidence(sheet, input),
-    };
-    geometry::draw(&mut scene, sheet)?;
-    statements::draw(&mut scene, sheet, input)?;
-    charts::draw(&mut scene, sheet, input)?;
-    title(&mut scene, sheet, input, paper, branding);
-    if matches!(paper, Paper::A1) {
-        scene.width_mm = 841.0;
-        scene.height_mm = 594.0;
-        scene.scale_denominator *= 0.5;
-        for element in &mut scene.elements {
-            match &mut element.primitive {
-                Primitive::Path { points, .. } => {
-                    for p in points {
-                        p[0] *= 2.0;
-                        p[1] *= 2.0;
-                    }
-                }
-                Primitive::Text { at, size, text, .. } => {
-                    *text = text
-                        .replace("1:200 (A3)", "1:100 (A1)")
-                        .replace("1:100 (A3)", "1:50 (A1)");
-                    at[0] *= 2.0;
-                    at[1] *= 2.0;
-                    *size *= 2.0;
-                }
-            }
-        }
-    }
-    validate(&scene)?;
-    Ok(scene)
+    arrangement::compose(sheet, input, paper, branding)
 }
 
 fn evidence(sheet: &Sheet, input: &DrawingInput) -> BTreeMap<String, Evidence> {
@@ -58,8 +27,65 @@ fn evidence(sheet: &Sheet, input: &DrawingInput) -> BTreeMap<String, Evidence> {
         run_id: None,
         source: "drawing layout".into(),
         quality: "annotation".into(),
+        units: Vec::new(),
+        imported: None,
     };
     let mut result = BTreeMap::from([("layout".into(), base.clone())]);
+    result.insert(
+        "geometry:extent".into(),
+        Evidence {
+            source: "derived extents/stations of rendered geometry in the frozen input".into(),
+            quality: "derived geometry; not structural validation".into(),
+            units: vec![ace_model::Unit::Meter],
+            ..base.clone()
+        },
+    );
+    for (id, item) in &input.model.mass_items {
+        let run_id = item
+            .mass
+            .parameter()
+            .and_then(|id| sheet.snapshot.values.get(id))
+            .and_then(|v| v.run_id.clone());
+        result.insert(
+            format!("mass:{id}"),
+            Evidence {
+                source: format!("mass_items.{id}: {}", item.source.reference),
+                run_id,
+                units: vec![ace_model::Unit::Kilogram],
+                quality: item.source.kind.clone(),
+                ..base.clone()
+            },
+        );
+    }
+    result.insert(
+        "mass:total".into(),
+        Evidence {
+            source: "sum of current mass item bindings; unavailable if any contribution is missing"
+                .into(),
+            units: vec![ace_model::Unit::Kilogram],
+            quality: "derived mass sum".into(),
+            ..base.clone()
+        },
+    );
+    result.insert(
+        "operations:basis".into(),
+        Evidence {
+            source: "canonical operations economic basis".into(),
+            ..base.clone()
+        },
+    );
+    computed_evidence(&mut result, sheet, input, &base);
+    study_evidence(&mut result, input, &base);
+    imported::evidence(&mut result, input, &base);
+    result
+}
+
+fn computed_evidence(
+    result: &mut BTreeMap<String, Evidence>,
+    sheet: &Sheet,
+    input: &DrawingInput,
+    base: &Evidence,
+) {
     for (id, value) in &sheet.snapshot.values {
         result.insert(
             format!("parameter:{id}"),
@@ -67,6 +93,12 @@ fn evidence(sheet: &Sheet, input: &DrawingInput) -> BTreeMap<String, Evidence> {
                 source: id.clone(),
                 run_id: value.run_id.clone(),
                 quality: format!("{:?}", value.status),
+                units: input
+                    .model
+                    .parameters
+                    .get(id)
+                    .map(|p| vec![p.unit])
+                    .unwrap_or_default(),
                 ..base.clone()
             },
         );
@@ -89,6 +121,15 @@ fn evidence(sheet: &Sheet, input: &DrawingInput) -> BTreeMap<String, Evidence> {
                 source: panel.analysis.clone(),
                 run_id: Some(panel.run_id.clone()),
                 quality: format!("{:?}; historical={}", panel.status, panel.historical),
+                units: match panel.plugin.as_str() {
+                    "vehicle.mission_cg_envelope" => {
+                        vec![ace_model::Unit::Meter, ace_model::Unit::Kilogram]
+                    }
+                    "vehicle.mission_sequence" => {
+                        vec![ace_model::Unit::Second, ace_model::Unit::Kilogram]
+                    }
+                    _ => Vec::new(),
+                },
                 ..base.clone()
             },
         );
@@ -112,8 +153,6 @@ fn evidence(sheet: &Sheet, input: &DrawingInput) -> BTreeMap<String, Evidence> {
             },
         );
     }
-    study_evidence(&mut result, input, &base);
-    result
 }
 
 fn study_evidence(result: &mut BTreeMap<String, Evidence>, input: &DrawingInput, base: &Evidence) {
@@ -136,99 +175,12 @@ fn study_evidence(result: &mut BTreeMap<String, Evidence>, input: &DrawingInput,
                     run_id: None,
                     source: candidate.id.clone(),
                     quality: format!("{:?}; discrete sample", candidate.feasibility),
+                    units: Vec::new(),
+                    imported: None,
                 },
             );
         }
     }
-}
-
-fn title(
-    scene: &mut Scene,
-    sheet: &Sheet,
-    input: &DrawingInput,
-    paper: Paper,
-    branding: &crate::Branding,
-) {
-    let heading = branding.heading();
-    // Bound every glyph by one em so wide customer names cannot overlap status text.
-    let size = 5.0_f64.min(280.0 / (heading.len() as f64 * 1.02));
-    scene.label([8.0, 14.0], heading, size, true, Stroke::Outline, "layout");
-    scene.text(
-        [8.0, 20.0],
-        format!(
-            "{} | {} | CONCEPT - NOT FOR MANUFACTURE",
-            short(&sheet.model.name, 48),
-            input.scenario
-        ),
-        "layout",
-    );
-    scene.label(
-        [300.0, 12.0],
-        format!("EXECUTION: {:?}", sheet.assessment.execution),
-        2.8,
-        true,
-        Stroke::Outline,
-        "layout",
-    );
-    let stroke = if sheet.assessment.feasibility == ace_engine::Feasibility::Violated {
-        Stroke::Failure
-    } else {
-        Stroke::Data
-    };
-    scene.label(
-        [300.0, 17.0],
-        format!("FEASIBILITY: {:?}", sheet.assessment.feasibility),
-        2.8,
-        true,
-        stroke,
-        "layout",
-    );
-    scene.text(
-        [300.0, 22.0],
-        format!("Evidence: {:?}", sheet.assessment.evidence),
-        "layout",
-    );
-    scene.line([8.0, 25.0], [412.0, 25.0], Stroke::Outline, "layout");
-    footer(scene, sheet, input, paper);
-}
-
-fn footer(scene: &mut Scene, sheet: &Sheet, input: &DrawingInput, paper: Paper) {
-    scene.line([8.0, 282.0], [412.0, 282.0], Stroke::Outline, "layout");
-    scene.text(
-        [8.0, 287.0],
-        format!(
-            "REV {} | MODEL {} | BUILD {}",
-            sheet.revision,
-            short(&sheet.snapshot.model_digest, 12),
-            short(&sheet.snapshot.build.source_digest, 12)
-        ),
-        "layout",
-    );
-    scene.text(
-        [8.0, 292.0],
-        evidence_index(sheet, &input.scenario),
-        "layout",
-    );
-    scene.text(
-        [270.0, 287.0],
-        format!(
-            "Selected: {}",
-            input
-                .candidate
-                .as_deref()
-                .map(|s| short(s, 14))
-                .unwrap_or_else(|| "supplied design".into())
-        ),
-        "layout",
-    );
-    scene.text(
-        [270.0, 292.0],
-        match paper {
-            Paper::A3 => "A3 420 x 297 mm | Main 1:300 | Sheet 1/1",
-            Paper::A1 => "A1 841 x 594 mm | Main 1:150 | Sheet 1/1",
-        },
-        "layout",
-    );
 }
 
 pub(super) fn panel<'a>(
@@ -245,7 +197,14 @@ pub(super) fn panel<'a>(
 }
 
 pub(super) fn short(s: &str, count: usize) -> String {
-    s.chars().take(count).collect()
+    if s.chars().count() > count {
+        format!(
+            "{}...",
+            s.chars().take(count.saturating_sub(3)).collect::<String>()
+        )
+    } else {
+        s.into()
+    }
 }
 
 pub(crate) fn validate(scene: &Scene) -> DrawingResult<()> {
@@ -285,31 +244,4 @@ pub(crate) fn validate(scene: &Scene) -> DrawingResult<()> {
         }
     }
     Ok(())
-}
-
-fn evidence_index(sheet: &Sheet, scenario: &str) -> String {
-    let plugins = [
-        "vehicle.concept_geometry",
-        "vehicle.mission_sequence",
-        "vehicle.mission_cg_envelope",
-        "vehicle.operations",
-    ];
-    plugins
-        .iter()
-        .enumerate()
-        .map(|(i, plugin)| {
-            format!(
-                "E{} {}",
-                i + 1,
-                panel(
-                    sheet,
-                    plugin,
-                    plugin.contains("mission").then_some(scenario)
-                )
-                .map(|p| short(&p.run_id, 10))
-                .unwrap_or_else(|| "N/C".into())
-            )
-        })
-        .collect::<Vec<_>>()
-        .join(" | ")
 }

@@ -51,6 +51,8 @@ pub(super) struct DrawingArgs {
     pub scenario: String,
     pub replay: bool,
     pub branding: Option<ace_drawing::Branding>,
+    pub drawing_data: Option<PathBuf>,
+    pub from_snapshot: bool,
     pub common: CommonArgs,
 }
 

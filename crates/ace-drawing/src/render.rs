@@ -65,5 +65,8 @@ fn style(stroke: Stroke) -> (&'static str, f64, &'static str) {
         Stroke::Data => ("#155e75", 0.30, "none"),
         Stroke::Failure => ("#b33329", 0.28, "none"),
         Stroke::Annotation => ("#34454e", 0.18, "none"),
+        Stroke::Structure => ("#172c36", 0.40, "none"),
+        Stroke::Hidden => ("#52616a", 0.18, "1.5 0.8"),
+        Stroke::Hatch => ("#52616a", 0.12, "none"),
     }
 }

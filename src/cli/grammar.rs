@@ -72,10 +72,12 @@ fn drawing() -> Command {
             .arg(
                 Arg::new("paper")
                     .long("paper")
-                    .value_parser(["A3", "A1"])
+                    .value_parser(["A3", "A1", "16:9"])
                     .default_value("A3"),
             )
             .arg(optional_path("plan"))
+            .arg(optional_path("drawing-data"))
+            .arg(flag("from-snapshot"))
             .arg(
                 Arg::new("candidate")
                     .long("candidate")

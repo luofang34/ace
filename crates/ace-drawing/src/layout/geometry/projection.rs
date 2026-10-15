@@ -1,9 +1,6 @@
-use super::{FRONT, PLAN, SCALE, SIDE, X};
 use crate::{Scene, Stroke};
-use ace_physics::GeometryReport;
-use ace_sheet::Sheet;
 
-pub(super) fn project(p: [f64; 3], view: usize, origin: [f64; 2], scale: f64) -> [f64; 2] {
+pub(crate) fn project(p: [f64; 3], view: usize, origin: [f64; 2], scale: f64) -> [f64; 2] {
     let pair = match view {
         0 => [p[0], p[1]],
         1 => [p[0], p[2]],
@@ -12,7 +9,7 @@ pub(super) fn project(p: [f64; 3], view: usize, origin: [f64; 2], scale: f64) ->
     [origin[0] + pair[0] * scale, origin[1] - pair[1] * scale]
 }
 
-pub(super) fn hull(mut points: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
+pub(crate) fn hull(mut points: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
     points.sort_by(|a, b| a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1])));
     points.dedup();
     let mut lower = Vec::new();
@@ -41,56 +38,7 @@ fn append(chain: &mut Vec<[f64; 2]>, p: [f64; 2]) {
     chain.push(p);
 }
 
-pub(super) fn occupancy(scene: &mut Scene, sheet: &Sheet, report: &GeometryReport) {
-    for (id, envelope) in &report.envelopes {
-        if sheet
-            .model
-            .geometry
-            .get(id)
-            .is_some_and(|g| g.shape.is_some())
-        {
-            continue;
-        }
-        let reference = format!("geometry:{id}");
-        for (view, origin) in [(0, [X, PLAN]), (1, [X, SIDE]), (2, [177.0, FRONT])] {
-            let vertices = (0..8).map(|i| {
-                std::array::from_fn(|axis| {
-                    if i & (1 << axis) == 0 {
-                        envelope.minimum_m[axis]
-                    } else {
-                        envelope.maximum_m[axis]
-                    }
-                })
-            });
-            let points = hull(vertices.map(|p| project(p, view, origin, SCALE)).collect());
-            scene.path(
-                &format!("{id}:envelope{view}"),
-                points,
-                true,
-                Stroke::Envelope,
-                &reference,
-            );
-        }
-    }
-    for (row, id) in ["cabin", "cargo", "tank", "gear_bay"].iter().enumerate() {
-        if let Some(object) = report.envelopes.get(*id) {
-            let center = std::array::from_fn(|i| (object.minimum_m[i] + object.maximum_m[i]) * 0.5);
-            let point = project(center, 0, [X, PLAN], SCALE);
-            let y = 87.0 + row as f64 * 9.0;
-            let reference = format!("geometry:{id}");
-            scene.text([98.0, y], id.to_uppercase(), &reference);
-            scene.path(
-                "leader",
-                vec![[116.0, y - 1.0], [124.0, y - 1.0], point],
-                false,
-                Stroke::Envelope,
-                &reference,
-            );
-        }
-    }
-}
-
-pub(super) fn dimension(
+pub(crate) fn dimension(
     scene: &mut Scene,
     a: [f64; 2],
     b: [f64; 2],

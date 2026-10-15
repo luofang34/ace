@@ -16,6 +16,12 @@ pub struct Evidence {
     pub source: String,
     /// Explicit validity and fidelity label.
     pub quality: String,
+    /// Physical units represented by this drawing entity.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub units: Vec<ace_model::Unit>,
+    /// Supplied evidence category, readiness and revision binding when applicable.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub imported: Option<crate::SourceEvidence>,
 }
 
 /// Engineering line semantics shared by all output formats.
@@ -34,6 +40,12 @@ pub enum Stroke {
     Failure,
     /// Drawing framework, dimensions or unvalidated limits.
     Annotation,
+    /// Supplied structural member, never inferred from an occupancy envelope.
+    Structure,
+    /// Hidden geometry explicitly declared in the source data.
+    Hidden,
+    /// Section material hatch line.
+    Hatch,
 }
 
 /// Renderer-independent vector primitive in page millimetres, origin at top left.
@@ -138,25 +150,5 @@ impl Scene {
 
     pub(crate) fn line(&mut self, a: [f64; 2], b: [f64; 2], stroke: Stroke, evidence: &str) {
         self.path("line", vec![a, b], false, stroke, evidence);
-    }
-
-    pub(crate) fn panel(&mut self, bounds: [f64; 4], title: &str, evidence: &str) {
-        let [x, y, w, h] = bounds;
-        self.path(
-            title,
-            vec![[x, y], [x + w, y], [x + w, y + h], [x, y + h]],
-            true,
-            Stroke::Datum,
-            "layout",
-        );
-        self.label(
-            [x + 2.0, y + 4.0],
-            title,
-            2.8,
-            true,
-            Stroke::Outline,
-            evidence,
-        );
-        self.line([x, y + 6.0], [x + w, y + 6.0], Stroke::Datum, "layout");
     }
 }

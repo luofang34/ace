@@ -47,6 +47,18 @@ pub enum Unit {
     /// Watts.
     #[serde(rename = "W")]
     Watt,
+    /// Pascals of pressure or stress.
+    #[serde(rename = "Pa")]
+    Pascal,
+    /// Megapascals of pressure or stress.
+    #[serde(rename = "MPa")]
+    Megapascal,
+    /// Joules of energy.
+    #[serde(rename = "J")]
+    Joule,
+    /// Kilowatt-hours of energy.
+    #[serde(rename = "kWh")]
+    KilowattHour,
     /// Radians.
     #[serde(rename = "rad")]
     Radian,
@@ -102,6 +114,10 @@ impl Unit {
             Self::Knot => (1852.0 / 3600.0, [0, 1, -1, 0, 0]),
             Self::Newton => (1.0, [1, 1, -2, 0, 0]),
             Self::Watt => (1.0, [1, 2, -3, 0, 0]),
+            Self::Pascal => (1.0, [1, -1, -2, 0, 0]),
+            Self::Megapascal => (1e6, [1, -1, -2, 0, 0]),
+            Self::Joule => (1.0, [1, 2, -2, 0, 0]),
+            Self::KilowattHour => (3.6e6, [1, 2, -2, 0, 0]),
             Self::Radian => (1.0, [0, 0, 0, 1, 0]),
             Self::Degree => (std::f64::consts::PI / 180.0, [0, 0, 0, 1, 0]),
             Self::KilogramPerSecond => (1.0, [1, 0, -1, 0, 0]),

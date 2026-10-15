@@ -2,11 +2,45 @@ use crate::domain::diagnostic::{AexError, AexResult};
 use ace_drawing::DrawingDocument;
 use std::path::Path;
 
-pub(super) fn write_blocking(document: &DrawingDocument, directory: &Path) -> AexResult<()> {
-    let svg = document.svg().map_err(super::drawing_error)?;
-    let pdf = document.pdf().map_err(super::drawing_error)?;
-    let png = png_blocking(&svg)?;
-    let json = serde_json::to_vec(document).map_err(|source| AexError::Json { source })?;
+pub(super) fn write_blocking(
+    document: &DrawingDocument,
+    directory: &Path,
+) -> AexResult<Vec<String>> {
+    let mut documents = vec![("drawing".to_owned(), document.clone())];
+    for figure in ace_drawing::compose_figures(document).map_err(super::drawing_error)? {
+        let id = figure
+            .figure
+            .as_ref()
+            .map(|f| f.id.clone())
+            .ok_or_else(|| {
+                AexError::validation("DRAWING_FIGURE", "id", "missing figure identity")
+            })?;
+        documents.push((id, figure));
+    }
+    let mut files = Vec::new();
+    for (stem, item) in &documents {
+        let svg = item.svg().map_err(super::drawing_error)?;
+        let pdf = item.pdf().map_err(super::drawing_error)?;
+        let target = item
+            .figure
+            .as_ref()
+            .map(|f| [f.width_px * 4, f.height_px * 4]);
+        let png = png_blocking(&svg, target)?;
+        let json = serde_json::to_vec(item).map_err(|source| AexError::Json { source })?;
+        for (extension, bytes) in [
+            ("json", json),
+            ("svg", svg.into_bytes()),
+            ("pdf", pdf),
+            ("png", png),
+        ] {
+            files.push((format!("{stem}.{extension}"), bytes));
+        }
+    }
+    let manifest = super::manifest::build(&documents)?;
+    files.push((
+        "manifest.json".into(),
+        serde_json::to_vec_pretty(&manifest).map_err(|source| AexError::Json { source })?,
+    ));
     if directory.exists() {
         return Err(AexError::validation(
             "DRAWING_DESTINATION",
@@ -29,12 +63,7 @@ pub(super) fn write_blocking(document: &DrawingDocument, directory: &Path) -> Ae
             path: parent.into(),
             source,
         })?;
-    for (name, bytes) in [
-        ("drawing.json", json),
-        ("drawing.svg", svg.into_bytes()),
-        ("drawing.pdf", pdf),
-        ("drawing.png", png),
-    ] {
+    for (name, bytes) in &files {
         let path = staging.path().join(name);
         std::fs::write(&path, bytes).map_err(|source| AexError::Write { path, source })?;
     }
@@ -42,17 +71,19 @@ pub(super) fn write_blocking(document: &DrawingDocument, directory: &Path) -> Ae
         path: directory.into(),
         source,
     })?;
-    Ok(())
+    Ok(files.into_iter().map(|(name, _)| name).collect())
 }
 
-fn png_blocking(svg: &str) -> AexResult<Vec<u8>> {
+fn png_blocking(svg: &str, target: Option<[u32; 2]>) -> AexResult<Vec<u8>> {
     let mut options = resvg::usvg::Options::default();
     options.fontdb_mut().load_system_fonts();
     let tree = resvg::usvg::Tree::from_str(svg, &options).map_err(|source| AexError::Service {
         operation: "parse drawing SVG for preview",
         source: Box::new(source),
     })?;
-    let scale = 200.0 / 96.0;
+    let scale = target
+        .map(|[w, h]| (w as f32 / tree.size().width()).max(h as f32 / tree.size().height()))
+        .unwrap_or(200.0 / 96.0);
     let width = (tree.size().width() * scale).ceil() as u32;
     let height = (tree.size().height() * scale).ceil() as u32;
     let mut pixmap = resvg::tiny_skia::Pixmap::new(width, height).ok_or_else(|| {

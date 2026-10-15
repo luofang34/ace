@@ -72,15 +72,17 @@ fn drawing(args: &ArgMatches) -> Result<Command, Error> {
     Ok(Command::Drawing(DrawingArgs {
         source: required(args, "source")?,
         directory: required(args, "directory")?,
-        paper: if required::<String>(args, "paper")? == "A1" {
-            ace_drawing::Paper::A1
-        } else {
-            ace_drawing::Paper::A3
+        paper: match required::<String>(args, "paper")?.as_str() {
+            "A1" => ace_drawing::Paper::A1,
+            "16:9" => ace_drawing::Paper::Widescreen,
+            _ => ace_drawing::Paper::A3,
         },
         plan: optional(args, "plan"),
         candidate: optional(args, "candidate"),
         scenario: required(args, "mission")?,
         replay: args.get_flag("replay"),
+        drawing_data: optional(args, "drawing-data"),
+        from_snapshot: args.get_flag("from-snapshot"),
         branding: (args.contains_id("brand") || args.contains_id("drawing-title")).then(|| {
             ace_drawing::Branding {
                 organization: optional(args, "brand").unwrap_or_default(),

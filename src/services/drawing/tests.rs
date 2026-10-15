@@ -19,6 +19,7 @@ fn document(session: &mut ace_engine::Session, paper: Paper) -> DrawingDocument 
             scenario: "design".into(),
             study: None,
             candidate: None,
+            data: None,
         },
         paper,
     )
@@ -92,8 +93,8 @@ fn canonical_edits_update_surfaces_mass_trajectory_and_hard_failures_together() 
         )
         .unwrap();
     let after = document(&mut session, Paper::A3);
-    assert!((span_mm(&before) - 35.0 * 1000.0 / 300.0).abs() < 1e-9);
-    assert!((span_mm(&after) - 37.0 * 1000.0 / 300.0).abs() < 1e-9);
+    assert!((span_mm(&before) - 35.0 * 1000.0 / before.scene.scale_denominator).abs() < 1e-9);
+    assert!((span_mm(&after) - 37.0 * 1000.0 / after.scene.scale_denominator).abs() < 1e-9);
     assert_ne!(
         quantity(&before, "fuel.required"),
         quantity(&after, "fuel.required")
@@ -149,6 +150,14 @@ fn archive_replay_is_identical_and_rejects_modified_evidence_or_mixed_revision()
     mixed.model.revision = mixed.model.revision.wrapping_add(1);
     assert!(ace_drawing::compose(mixed, Paper::A3).is_err());
     let mut altered = document.input;
+    let mut detached = altered.clone();
+    detached
+        .snapshot
+        .values
+        .get_mut("fuel.required")
+        .unwrap()
+        .quantity = Some(Quantity::new(1., Unit::Kilogram).unwrap());
+    assert!(ace_drawing::compose(detached, Paper::A3).is_err());
     altered.snapshot.runs[0].outputs.clear();
     assert!(ace_drawing::compose(altered, Paper::A3).is_err());
 }
@@ -160,8 +169,8 @@ fn paper_sizes_preserve_scale_and_missing_study_remains_explicit() {
     let a1 = document(&mut session, Paper::A1);
     assert!((span_mm(&a1) - 2.0 * span_mm(&a3)).abs() < 1e-9);
     assert_eq!(a1.scene.width_mm, 841.0);
-    assert_eq!(a1.scene.scale_denominator, 150.0);
-    assert!(a3.svg().unwrap().contains("Study NOT CALCULATED"));
+    assert_eq!(a1.scene.scale_denominator, a3.scene.scale_denominator / 2.0);
+    assert!(a3.svg().unwrap().contains("External results: N/C"));
     assert!(
         a3.scene
             .elements
@@ -195,8 +204,7 @@ fn insufficient_capacity_is_exported_as_missing_analysis_not_a_light_optimum() {
     );
     let svg = document.svg().unwrap();
     assert!(svg.contains("NOT CLOSED"));
-    assert!(svg.contains("Mission NOT CALCULATED"));
-    assert!(svg.contains("CG envelope NOT CALCULATED"));
+    assert_eq!(svg.matches("N/C - no usable result curve").count(), 2);
 }
 
 #[test]
@@ -221,7 +229,13 @@ fn wing_projected_area_matches_independent_trapezoid_geometry() {
                 * 0.5;
         }
     }
-    assert!((area - quantity(&document, "wing.area") * (1000.0 / 300.0_f64).powi(2)).abs() < 1e-8);
+    assert!(
+        (area
+            - quantity(&document, "wing.area")
+                * (1000.0 / document.scene.scale_denominator).powi(2))
+        .abs()
+            < 1e-8
+    );
 }
 
 #[test]
