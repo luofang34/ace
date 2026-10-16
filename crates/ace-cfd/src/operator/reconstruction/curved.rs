@@ -52,6 +52,15 @@ fn bounds(
     let own = axisymmetry::components(op.gas, states[i], cell.center[1]);
     let mut lower = own;
     let mut upper = own;
+    let mut include = |values: [f64; 6]| {
+        for k in 0..5 {
+            lower[k] = lower[k].min(values[k]);
+            upper[k] = upper[k].max(values[k]);
+        }
+    };
+    if let Some(value) = axis_sample(op, states, i, gradient, cell.center[1]) {
+        include(value);
+    }
     for id in cell.faces {
         let face = &op.mesh.faces[id];
         if op.extrapolated_outflow(face) {
@@ -59,9 +68,18 @@ fn bounds(
         }
         let (q, location) = op.sample(face, i, states);
         let values = axisymmetry::components(op.gas, q, location[1]);
-        for k in 0..5 {
-            lower[k] = lower[k].min(values[k]);
-            upper[k] = upper[k].max(values[k]);
+        include(values);
+        if face.neighbor.is_none() && matches!(face.boundary, Boundary::Axis) {
+            // Thermodynamic slopes feed the shock pressure/source balance.
+            // Keep that closure independent of the no-slip velocity trace bounds.
+            for p in face.integration_points() {
+                let d = axisymmetry::deltas(cell, p.center)[0];
+                let mut value = own;
+                for k in [0, 4] {
+                    value[k] += dot(gradient[k], d);
+                }
+                include(value);
+            }
         }
         // Face quadrature in cell-moment coordinates extends beyond the polygon
         // of face-neighbour means near the axis. The second ring includes the
@@ -70,6 +88,9 @@ fn bounds(
             .neighbor
             .map(|n| if face.owner == i { n } else { face.owner })
         {
+            if let Some(value) = axis_sample(op, states, n, gradient, cell.center[1]) {
+                include(value);
+            }
             for id in op.mesh.cells[n].faces {
                 let other = &op.mesh.faces[id];
                 if let Some(m) = other
@@ -78,27 +99,43 @@ fn bounds(
                 {
                     let values =
                         axisymmetry::components(op.gas, states[m], op.mesh.cells[m].center[1]);
-                    for k in 0..5 {
-                        lower[k] = lower[k].min(values[k]);
-                        upper[k] = upper[k].max(values[k]);
+                    include(values);
+                    if let Some(value) = axis_sample(op, states, m, gradient, cell.center[1]) {
+                        include(value);
                     }
-                }
-            }
-        }
-        if face.neighbor.is_none() && matches!(face.boundary, Boundary::Axis) {
-            // Even fields have a physical extremum at the axis. Their boundary
-            // values follow from the moment fit, not a copied cell mean.
-            for p in face.integration_points() {
-                let d = axisymmetry::deltas(cell, p.center);
-                for k in 0..5 {
-                    let value = own[k] + dot(gradient[k], d[usize::from(k == 2)]);
-                    lower[k] = lower[k].min(value);
-                    upper[k] = upper[k].max(value);
                 }
             }
         }
     }
     (lower, upper)
+}
+
+fn axis_sample(
+    op: &FlowOperator,
+    states: &[Primitive],
+    i: usize,
+    gradient: [Vector; 6],
+    radius: f64,
+) -> Option<[f64; 6]> {
+    let cell = &op.mesh.cells[i];
+    if !cell.faces.iter().any(|id| {
+        let face = &op.mesh.faces[*id];
+        face.neighbor.is_none() && matches!(face.boundary, Boundary::Axis)
+    }) {
+        return None;
+    }
+    let values = axisymmetry::components(op.gas, states[i], cell.center[1]);
+    let coordinates = axisymmetry::moment_coordinates(cell);
+    // Axis extrema extend the angular range at existing axial sample locations.
+    // Extrapolating along an entire axis face can import an unresolved normal
+    // curvature overshoot into the range only for the axis-adjacent row.
+    Some(std::array::from_fn(|k| {
+        if (1..=3).contains(&k) {
+            values[k] - gradient[k][1] * coordinates[usize::from(k == 2)][1] / (2.0 * radius)
+        } else {
+            values[k]
+        }
+    }))
 }
 
 pub(in crate::operator) fn reconstruct(
