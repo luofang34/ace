@@ -286,3 +286,78 @@ fn conservative_axial_temperature_curvature_converges_at_the_axis() {
         );
     }
 }
+
+fn wall_axis_trace_gap(angular_cells: usize) -> f64 {
+    let grid = SphereGrid {
+        radius: 0.01,
+        outer_radius: 0.02,
+        radial_cells: 24,
+        angular_cells,
+        stretching: 2.0,
+        shock_shape_mach: None,
+    };
+    let gas = IdealGas {
+        gamma: 1.4,
+        gas_constant: 287.05,
+        viscosity: 1.8e-5,
+        conductivity: 0.025,
+    };
+    let rho = 0.01;
+    let pressure = rho * gas.gas_constant * 300.0;
+    let inflow = Primitive {
+        density: rho,
+        pressure,
+        velocity: [0.0; 3],
+    };
+    let op = FlowOperator::new(Mesh::curved_sphere(grid).unwrap(), gas, inflow, 300.0).unwrap();
+    let state: Vec<_> = (0..grid.radial_cells * angular_cells)
+        .map(|i| {
+            super::manufactured::cell_mean(
+                grid,
+                i % grid.radial_cells,
+                i / grid.radial_cells,
+                |x, y| {
+                    let radius = x.hypot(y);
+                    let distance = radius - grid.radius;
+                    // This streamfunction field has zero divergence and vanishes on
+                    // the sphere; its normal component is quadratic in wall distance.
+                    let velocity = [
+                        200000.0 * (distance * distance + distance * y * y / radius),
+                        -200000.0 * distance * x * y / radius,
+                        0.0,
+                    ];
+                    (gas.conservative(Primitive { velocity, ..inflow }), [0.0; 5])
+                },
+            )
+            .0
+        })
+        .collect();
+    let mut workspace = op.workspace();
+    op.prepare(&state, &mut workspace).unwrap();
+    let mut sums = [[0.0; 2]; 2];
+    for wall in op.mesh.faces.iter().filter(|f| {
+        f.owner < 2 * grid.radial_cells
+            && matches!(f.boundary, Boundary::Wall)
+            && f.neighbor.is_none()
+    }) {
+        let row = wall.owner / grid.radial_cells;
+        for point in wall.integration_points() {
+            let face = wall.at_point(point);
+            let q = op.face_state(&face, wall.owner, true, &workspace);
+            sums[row][0] += point.area * dot(q.velocity, face.normal);
+            sums[row][1] += point.area;
+        }
+    }
+    (sums[1][0] / sums[1][1] - sums[0][0] / sums[0][1]).abs()
+}
+
+#[test]
+fn wall_velocity_limiter_preserves_axis_trace_regularity() {
+    let gaps = [48, 96, 192].map(wall_axis_trace_gap);
+    // At fixed radial resolution, a smooth even trace has an angular difference
+    // proportional to theta². An axis-only range exemption leaves a finite jump.
+    assert!(
+        gaps[0] / gaps[1] > 3.0 && gaps[1] / gaps[2] > 3.0,
+        "axis trace gaps={gaps:?}"
+    );
+}
