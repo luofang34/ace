@@ -138,3 +138,55 @@ fn shock_flattening_preserves_mean_pressure_and_the_face_radius() {
         "physical pressure jump must trigger the sensor"
     );
 }
+
+#[test]
+fn shock_flattening_preserves_curved_primitive_bounds() {
+    let (op, _) = curved_operator();
+    for slope in [100.0, 200.0, 500.0] {
+        let state: Vec<_> = op
+            .mesh
+            .cells
+            .iter()
+            .map(|cell| {
+                let [x, y, _] = cell.center;
+                op.gas.conservative(Primitive {
+                    pressure: 1000.0 * (slope * (x + y)).exp(),
+                    velocity: [1000.0 * (x.hypot(y) - 0.01), 0.0, 0.0],
+                    ..op.inflow
+                })
+            })
+            .collect();
+        let mut workspace = op.workspace();
+        op.prepare(&state, &mut workspace).unwrap();
+        let mut active = 0_usize;
+        for (i, cell) in op.mesh.cells.iter().enumerate() {
+            if workspace.shock_sensor[i] == 0.0 {
+                continue;
+            }
+            active = active.wrapping_add(1);
+            let (lower, upper) =
+                bounds(&op, &workspace.primitive, i, workspace.gradient[i].regular);
+            for id in cell.faces {
+                let face = &op.mesh.faces[id];
+                if face.neighbor.is_none() {
+                    continue;
+                }
+                for point in face.integration_points() {
+                    let q = op.face_state(&face.at_point(point), i, true, &workspace);
+                    let values = axisymmetry::components(op.gas, q, point.center[1]);
+                    // Pressure has a separate polynomial/source closure.
+                    for k in 0..4 {
+                        let tolerance = 2e-12 * lower[k].abs().max(upper[k].abs()).max(1.0);
+                        assert!(
+                            values[k] >= lower[k] - tolerance && values[k] <= upper[k] + tolerance,
+                            "cell={i}, component={k}, value={}, bounds={:?}",
+                            values[k],
+                            [lower[k], upper[k]]
+                        );
+                    }
+                }
+            }
+        }
+        assert!(active > 10, "pressure variation must exercise flattening");
+    }
+}

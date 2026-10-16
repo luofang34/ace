@@ -324,7 +324,7 @@ impl FlowOperator {
         if !second_order || self.cell_flux_outflow(face) {
             return q;
         }
-        let g = reconstruction::flatten(workspace.gradient[cell], workspace.shock_sensor[cell]);
+        let g = workspace.gradient[cell];
         let delta = sub(face.center, self.mesh.cells[cell].center);
         let geometry = &self.mesh.cells[cell];
         if geometry.radial_moments.is_some() {
