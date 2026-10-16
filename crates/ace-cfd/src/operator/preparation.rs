@@ -1,5 +1,5 @@
 use super::reconstruction::gradients;
-use super::{FlowOperator, Workspace, axial, axisymmetry, pressure};
+use super::{FlowOperator, Workspace, axial, axisymmetry, pressure, reconstruction};
 use crate::{CfdError, Conserved};
 
 impl FlowOperator {
@@ -58,6 +58,14 @@ impl FlowOperator {
                     workspace.shock_sensor[n].max(workspace.shock_seed[face.owner]);
             }
         }
+        self.prepare_pressure(workspace);
+        // Curved pressure polynomials consume the original limited
+        // slopes; primitive face traces additionally bound the projected slopes.
+        reconstruction::limit_shock_gradients(self, workspace);
+        Ok(())
+    }
+
+    fn prepare_pressure(&self, workspace: &mut Workspace) {
         for i in 0..self.mesh.cells.len() {
             workspace.axial[i] = axial::fit(self, workspace, i);
             workspace.pressure[i] = pressure::coefficients(
@@ -79,6 +87,5 @@ impl FlowOperator {
         for i in 0..self.mesh.cells.len() {
             workspace.pressure[i] = pressure::fit(self, workspace, i);
         }
-        Ok(())
     }
 }

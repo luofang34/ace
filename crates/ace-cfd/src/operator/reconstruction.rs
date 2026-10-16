@@ -3,6 +3,8 @@ use crate::{FlowOperator, IdealGas, Primitive};
 
 mod curved;
 pub(super) use curved::reconstruct as reconstruct_curved;
+mod shock;
+pub(super) use shock::limit_shock_gradients;
 
 #[derive(Clone, Copy, Default)]
 pub(super) struct Gradient {
@@ -77,7 +79,7 @@ pub(super) fn gradients(
             limited: if cell.radial_moments.is_some() {
                 curved::limit(op, states, i, regular)
             } else {
-                limit(op, cell, own, lower, upper, raw)
+                limit(op, cell, own, lower, upper, std::array::from_fn(|k| raw[k]))
             },
         };
     }
@@ -89,7 +91,7 @@ fn limit(
     own: [f64; 6],
     lower: [f64; 6],
     upper: [f64; 6],
-    raw: [Vector; 6],
+    raw: [Vector; 5],
 ) -> [Vector; 5] {
     let mut limiter = [1.0_f64; 5];
     for id in cell.faces {
@@ -142,8 +144,8 @@ pub(super) fn reconstruct(q: Primitive, gradient: Gradient, delta: Vector) -> Pr
 
 fn increment(q: Primitive, change: [f64; 5]) -> Primitive {
     let own = q.components();
-    // Directional shock flattening rotates limited slopes. Bound the resulting
-    // increment, preserving the cell state and the conservative shared face flux.
+    // Preserve positive thermodynamics even for boundary traces outside the
+    // interior-face limiter constraints, without altering the cell mean.
     let mut fraction = 1.0_f64;
     for k in [0, 4] {
         if change[k] < 0.0 {
@@ -175,3 +177,6 @@ pub(super) fn thermal_gradient(
         )
     })
 }
+
+#[cfg(test)]
+mod tests;

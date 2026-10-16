@@ -12,6 +12,37 @@ pub(super) fn limit(
     let cell = &op.mesh.cells[i];
     let own = axisymmetry::components(op.gas, states[i], cell.center[1]);
     let (lower, upper) = bounds(op, states, i, gradient);
+    limit_slopes(
+        op,
+        cell,
+        own,
+        lower,
+        upper,
+        std::array::from_fn(|k| gradient[k]),
+    )
+}
+
+pub(super) fn limit_projected(
+    op: &FlowOperator,
+    states: &[Primitive],
+    i: usize,
+    gradient: Gradient,
+) -> [Vector; 5] {
+    let cell = &op.mesh.cells[i];
+    let own = axisymmetry::components(op.gas, states[i], cell.center[1]);
+    // Projection changes the slopes, not the admissible sample range.
+    let (lower, upper) = bounds(op, states, i, gradient.regular);
+    limit_slopes(op, cell, own, lower, upper, gradient.limited)
+}
+
+fn limit_slopes(
+    op: &FlowOperator,
+    cell: &Cell,
+    own: [f64; 6],
+    lower: [f64; 6],
+    upper: [f64; 6],
+    gradient: [Vector; 5],
+) -> [Vector; 5] {
     let mut factors = [1.0_f64; 5];
     for id in cell.faces {
         let face = &op.mesh.faces[id];
