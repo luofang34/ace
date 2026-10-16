@@ -1,0 +1,341 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -27,6 +27,7 @@
+ import nm.number;
+ 
+ import gas;
++import flowstate;
+ import fvcell;
+ import fvinterface;
+ import geom;
+@@ -519,6 +520,26 @@
+         }
+     }
+ 
++    if (exists("ace-trace-only")) {
++        foreach (blk; localFluidBlocks) blk.set_interpolation_order(GlobalConfig.interpolation_order);
++        evalRHS(simTime, 0);
++        aceTraceFaces("trace-total.csv");
++        aceTraceCells();
++        copy("trace-cells.csv", "saved-cells.csv");
++        copy("trace-inviscid.csv", "saved-inviscid.csv");
++        if (exists("ace-trace-jacobian")) aceTraceJacobian();
++        aceTraceAxisConsistency();
++        aceTraceAffineStrain();
++        aceTraceWallPipeline();
++        aceTraceWallConsistency();
++        aceTraceIsobaricReconstruction();
++        aceTraceAxisThermal();
++        aceTraceBalancedStrain();
++        std.file.rename("saved-cells.csv", "trace-cells.csv");
++        std.file.rename("saved-inviscid.csv", "trace-inviscid.csv");
++        return;
++    }
++
+     if (GlobalConfig.is_master_task) {
+         // report the initial residuals
+         auto cqi = GlobalConfig.cqi;
+@@ -1797,6 +1818,8 @@
+         blk.applyPostConvFluxAction(pseudoSimTime, 0, ftl);
+     }
+ 
++    if (exists("ace-trace-only")) aceTraceFaces("trace-inviscid.csv");
++
+     if (GlobalConfig.viscous) {
+         foreach (blk; localFluidBlocks) {
+             blk.applyPreSpatialDerivActionAtBndryFaces(pseudoSimTime, 0, ftl);
+@@ -3270,3 +3293,291 @@
+     }
+     f.close();
+ }
++
++void aceTraceFaces(string name)
++{
++    auto output = File(name, "w");
++    output.writeln("id,left,right,x,y,nx,ny,area,rho,p,T,u,v,S,gTx,gTy,mass,momx,momy,energy");
++    foreach (blk; localFluidBlocks) {
++        auto cqi = blk.myConfig.cqi;
++        foreach (f; blk.faces) {
++            output.writef("%d,%d,%d", f.id, f.left_cell is null ? -1 : f.left_cell.id,
++                          f.right_cell is null ? -1 : f.right_cell.id);
++            foreach (value; [f.pos.x, f.pos.y, f.n.x, f.n.y, f.area[0],
++                             f.fs.gas.rho, f.fs.gas.p, f.fs.gas.T, f.fs.vel.x, f.fs.vel.y,
++                             f.fs.S, f.grad.T[0], f.grad.T[1], f.F[cqi.mass],
++                             f.F[cqi.xMom], f.F[cqi.yMom], f.F[cqi.totEnergy]]) {
++                output.writef(",%.17e", value.re);
++            }
++            output.writeln();
++        }
++    }
++}
++void aceTraceCells()
++{
++    auto output = File("trace-cells.csv", "w");
++    output.writeln("id,x,y,rho,p,T,u,v,S,gTx,gTy,dudx,dudy,dvdx,dvdy,mass,momx,momy,energy");
++    foreach (blk; localFluidBlocks) {
++        auto cqi = blk.myConfig.cqi;
++        foreach (c; blk.cells) {
++            output.writef("%d",c.id);
++            foreach(value; [c.pos[0].x,c.pos[0].y,c.fs.gas.rho,c.fs.gas.p,c.fs.gas.T,
++                            c.fs.vel.x,c.fs.vel.y,c.fs.S,c.grad.T[0],c.grad.T[1],
++                            c.grad.vel[0][0],c.grad.vel[0][1],c.grad.vel[1][0],c.grad.vel[1][1],
++                            c.dUdt[0][cqi.mass],c.dUdt[0][cqi.xMom],c.dUdt[0][cqi.yMom],
++                            c.dUdt[0][cqi.totEnergy]]) output.writef(",%.17e",value.re);
++            output.writeln();
++        }
++    }
++}
++
++void aceTraceAxisConsistency()
++{
++    // This manufactured field is evaluated only after the saved-state trace.
++    // It never enters pseudo-time iteration or checkpoint output.
++    auto output = File("trace-axis-consistency.csv", "w");
++    output.writeln("id,x,y,expected,actual,axis_velocity");
++    foreach (blk; localFluidBlocks) {
++        foreach (c; blk.cells) { c.fs.vel.x=0.0; c.fs.vel.y=1000.0*c.pos[0].y; c.fs.vel.z=0.0; }
++        foreach (f; blk.faces) { f.fs.vel.x=0.0; f.fs.vel.y=1000.0*f.pos.y; f.fs.vel.z=0.0; }
++        blk.applyPreSpatialDerivActionAtBndryFaces(0.0, 0, 0);
++        blk.flow_property_spatial_derivatives(0);
++        foreach (f; blk.faces) {
++            if (f.pos.y != 0.0) continue;
++            auto c = f.right_cell;
++            if (c is null || !c.is_interior_to_domain) c = f.left_cell;
++            // Exclude intersections with the inflow and no-slip wall.
++            bool corner = false;
++            foreach (cf; c.iface) if (cf.is_on_boundary && cf.pos.y != 0.0) corner = true;
++            if (corner) continue;
++            output.writefln("%d,%.17e,%.17e,%.17e,%.17e,%.17e", c.id,
++                c.pos[0].x.re, c.pos[0].y.re, 1000.0, c.grad.vel[1][1].re, f.fs.vel.y.re);
++        }
++    }
++}
++
++void aceTraceAffineStrain()
++{
++    foreach (blk; localFluidBlocks) {
++        auto gmodel=blk.myConfig.gmodel;
++        foreach (c; blk.cells) {
++            c.fs.gas.p=300.0; c.fs.gas.T=300.0;
++            gmodel.update_thermo_from_pT(c.fs.gas);
++            gmodel.update_trans_coeffs(c.fs.gas);
++            c.fs.vel.x=-2000.0*c.pos[0].x;
++            c.fs.vel.y=1000.0*c.pos[0].y; c.fs.vel.z=0.0;
++            c.encode_conserved(0, 0, blk.omegaz);
++        }
++    }
++    evalRHS(0.0, 0);
++    aceTraceFaces("strain-total.csv");
++    aceTraceCells();
++    std.file.rename("trace-cells.csv", "strain-cells.csv");
++    std.file.rename("trace-inviscid.csv", "strain-inviscid.csv");
++}
++
++void aceTraceWallConsistency()
++{
++    auto output=File("trace-wall-consistency.csv", "w");
++    output.writeln("id,x,y,distance,curvature,expected,actual");
++    foreach (blk; localFluidBlocks) {
++        foreach (f; blk.faces) {
++            if (!f.is_on_boundary || !blk.bc[f.bc_id].is_wall_with_viscous_effects) continue;
++            auto c=f.left_cell;
++            if (c is null || !c.is_interior_to_domain) c=f.right_cell;
++            // Each cloud receives exact samples from a polynomial normal to its wall plane.
++            foreach (curvature; [0.0, 1.0e9]) {
++                foreach (i,p; c.cloud_pos) {
++                    number d=-(p.x-f.pos.x)*f.n.x-(p.y-f.pos.y)*f.n.y;
++                    c.cloud_fs[i].gas.T=300.0+3.0e6*d+curvature*d*d;
++                }
++                c.grad.gradients_leastsq(c.cloud_fs,c.cloud_pos,*(c.ws_grad));
++                f.average_cell_deriv_values(0);
++                number d=-(c.pos[0].x-f.pos.x)*f.n.x-(c.pos[0].y-f.pos.y)*f.n.y;
++                number actual=-f.grad.T[0]*f.n.x-f.grad.T[1]*f.n.y;
++                output.writefln("%d,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e",
++                    f.id,f.pos.x.re,f.pos.y.re,d.re,curvature,3.0e6,actual.re);
++            }
++        }
++    }
++}
++
++void aceTraceIsobaricReconstruction()
++{
++    auto output=File("trace-isobaric-reconstruction.csv", "w");
++    output.writeln("id,x,y,expected_pressure,left_pressure,right_pressure,left_temperature,right_temperature");
++    foreach (blk; localFluidBlocks) {
++        auto structured=cast(SFluidBlock)blk;
++        if (structured is null) continue;
++        foreach (c; blk.cells) {
++            auto p=c.pos[0];
++            c.fs.gas.p=300.0;
++            c.fs.gas.T=300.0+3.0e4*(sqrt(p.x*p.x+p.y*p.y)-0.01);
++            blk.myConfig.gmodel.update_thermo_from_pT(c.fs.gas);
++            c.fs.vel.set(0.0,0.0,0.0);
++        }
++        foreach (f; blk.faces) {
++            if (f.left_cells.length<2 || f.right_cells.length<2) continue;
++            bool interior=true;
++            foreach (cells; [f.left_cells,f.right_cells]) {
++                foreach (c; cells) if (!c.is_interior_to_domain) interior=false;
++            }
++            if (!interior) continue;
++            auto left=FlowState(f.left_cells[0].fs);
++            auto right=FlowState(f.right_cells[0].fs);
++            structured.one_d.interp(f,left,right);
++            output.writefln("%d,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e",
++                f.id,f.pos.x.re,f.pos.y.re,300.0,left.gas.p.re,right.gas.p.re,
++                left.gas.T.re,right.gas.T.re);
++        }
++    }
++}
++
++void aceTraceWallPipeline()
++{
++    number radius=0.0;
++    number wallTemperature=0.0;
++    foreach (blk; localFluidBlocks) foreach (f; blk.faces) {
++        if (f.is_on_boundary && blk.bc[f.bc_id].is_wall_with_viscous_effects) {
++            radius=sqrt(f.pos.x*f.pos.x+f.pos.y*f.pos.y);
++            wallTemperature=f.fs.gas.T;
++            break;
++        }
++    }
++    foreach (blk; localFluidBlocks) foreach (c; blk.cells) {
++        auto p=c.pos[0];
++        c.fs.gas.p=300.0;
++        c.fs.gas.T=wallTemperature+1.0e4*(sqrt(p.x*p.x+p.y*p.y)-radius);
++        blk.myConfig.gmodel.update_thermo_from_pT(c.fs.gas);
++        blk.myConfig.gmodel.update_trans_coeffs(c.fs.gas);
++        c.fs.vel.set(0.0,0.0,0.0);
++        c.encode_conserved(0,0,blk.omegaz);
++    }
++    evalRHS(0.0,0);
++    auto output=File("trace-wall-pipeline.csv", "w");
++    output.writeln("id,x,y,expected,actual,wall_temperature");
++    foreach (blk; localFluidBlocks) foreach (f; blk.faces) {
++        if (!f.is_on_boundary || !blk.bc[f.bc_id].is_wall_with_viscous_effects) continue;
++        number actual=-f.grad.T[0]*f.n.x-f.grad.T[1]*f.n.y;
++        output.writefln("%d,%.17e,%.17e,%.17e,%.17e,%.17e",
++            f.id,f.pos.x.re,f.pos.y.re,1.0e4,actual.re,f.fs.gas.T.re);
++    }
++}
++
++void aceTraceJacobian()
++{
++    // Probe the active continuous sensor or an outlet cell away from its corner.
++    bool outlet = exists("ace-trace-jacobian-outlet");
++    FVCell selected;
++    double radius = double.max;
++    foreach (blk; localFluidBlocks) foreach (c; blk.cells) {
++        bool candidate = c.fs.S > 0.02 && c.fs.S < 0.99 &&
++                         fabs(c.fs.vel.x).re < 0.95*c.fs.gas.a.re;
++        if (outlet) {
++            bool onOutlet = false;
++            bool onWall = false;
++            foreach (face; c.iface) if (face.is_on_boundary) {
++                onOutlet |= blk.bc[face.bc_id].type == "outflow_simple_flux_zero_normal_gradient";
++                onWall |= blk.bc[face.bc_id].is_wall_with_viscous_effects;
++            }
++            candidate = onOutlet && !onWall;
++        }
++        if (candidate && c.pos[0].y.re < radius) {
++            selected=c; radius=c.pos[0].y.re;
++        }
++    }
++    if (selected is null) return;
++    auto output=File("trace-jacobian.csv","w");
++    output.writeln("selected,epsilon,complex_step,updated_sensor,sign,id,mass,momx,momy,energy");
++    int ftl=to!int(GlobalConfig.n_flow_time_levels-1);
++    foreach (imaginary; [false,true]) foreach (epsilon; [1.0e-5,1.0e-6,1.0e-7]) {
++        foreach (updated; [false,true]) foreach (sign; [-1.0,1.0]) {
++            foreach (blk; localFluidBlocks) foreach (c; blk.cells) c.decode_conserved(0,0,blk.omegaz);
++            evalRHS(0.0,0);
++            foreach (blk; localFluidBlocks) {
++                auto cqi=blk.myConfig.cqi;
++                foreach (c; blk.cells) {
++                    c.U[ftl].copy_values_from(c.U[0]);
++                    if (c is selected) {
++                        auto change=sign*epsilon*100.0*c.U[0][cqi.mass].re;
++                        c.U[ftl][cqi.xMom] += imaginary ? complex(0.0,change) : complex(change,0.0);
++                    }
++                    c.decode_conserved(0,ftl,blk.omegaz);
++                }
++            }
++            evalRHS(0.0,ftl);
++            if (updated) { detect_shocks(0,ftl); evalRHS(0.0,ftl); }
++            foreach (blk; localFluidBlocks) {
++                auto cqi=blk.myConfig.cqi;
++                foreach (c; blk.cells) {
++                    output.writef("%d,%.17e,%d,%d,%.1f,%d", selected.id,epsilon,
++                        imaginary?1:0,updated?1:0,sign,c.id);
++                    foreach (k; [cqi.mass,cqi.xMom,cqi.yMom,cqi.totEnergy]) {
++                        auto value=c.dUdt[ftl][k];
++                        output.writef(",%.17e",imaginary?value.im/epsilon:value.re);
++                    }
++                    output.writeln();
++                }
++            }
++        }
++    }
++    foreach (blk; localFluidBlocks) foreach (c; blk.cells) c.decode_conserved(0,0,blk.omegaz);
++    evalRHS(0.0,0);
++}
++
++void aceTraceAxisThermal()
++{
++    foreach (direction; 0 .. 2) {
++        foreach (blk; localFluidBlocks) foreach (c; blk.cells) {
++            auto p=c.pos[0];
++            c.fs.gas.p=300.0;
++            c.fs.gas.T=300.0+1.0e6*(direction==0 ? p.y*p.y : p.x*p.x);
++            blk.myConfig.gmodel.update_thermo_from_pT(c.fs.gas);
++            blk.myConfig.gmodel.update_trans_coeffs(c.fs.gas);
++            c.fs.vel.set(0.0,0.0,0.0);
++            c.encode_conserved(0,0,blk.omegaz);
++        }
++        evalRHS(0.0,0);
++        auto output=File(direction==0 ? "trace-axis-thermal-radial.csv" :
++                                      "trace-axis-thermal-axial.csv", "w");
++        output.writeln("id,x,y,expected,actual,cell_gTx,cell_gTy,axis_T");
++        foreach (blk; localFluidBlocks) foreach (c; blk.cells) {
++            bool axis=false;
++            bool corner=false;
++            number axisTemperature=0.0;
++            foreach (f; c.iface) {
++                if (f.is_on_boundary && f.pos.y==0.0) {
++                    axis=true; axisTemperature=f.fs.gas.T;
++                } else if (f.is_on_boundary) corner=true;
++            }
++            if (!axis || corner) continue;
++            number divergence=0.0;
++            foreach (i,f; c.iface) {
++                divergence+=c.outsign[i]*f.q_conduction*f.area[0];
++            }
++            divergence/=c.volume[0];
++            number expected=(direction==0 ? 4.0e6 : 2.0e6)*c.fs.gas.k;
++            output.writefln("%d,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e",
++                c.id,c.pos[0].x.re,c.pos[0].y.re,expected.re,divergence.re,
++                c.grad.T[0].re,c.grad.T[1].re,axisTemperature.re);
++        }
++    }
++}
++
++void aceTraceBalancedStrain()
++{
++    foreach (blk; localFluidBlocks) foreach (c; blk.cells) {
++        auto p=c.pos[0];
++        c.fs.gas.p=10000.0-0.01*1.0e8*(2.0*p.x*p.x+0.5*p.y*p.y);
++        c.fs.gas.T=c.fs.gas.p/(0.01*287.05);
++        blk.myConfig.gmodel.update_thermo_from_pT(c.fs.gas);
++        blk.myConfig.gmodel.update_trans_coeffs(c.fs.gas);
++        c.fs.vel.x=-20000.0*p.x; c.fs.vel.y=10000.0*p.y; c.fs.vel.z=0.0;
++        c.encode_conserved(0,0,blk.omegaz);
++    }
++    evalRHS(0.0,0);
++    aceTraceCells();
++    aceTraceFaces("strain-equilibrium-total.csv");
++    std.file.rename("trace-cells.csv","strain-equilibrium-cells.csv");
++    std.file.rename("trace-inviscid.csv","strain-equilibrium-inviscid.csv");
++}

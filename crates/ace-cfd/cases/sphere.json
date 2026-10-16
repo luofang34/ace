@@ -1,0 +1,9 @@
+{
+  "grid": {"radius": 0.01, "outer_radius": 0.025, "radial_cells": 48, "angular_cells": 48, "stretching": 3.0},
+  "gas": {"gamma": 1.4, "gas_constant": 287.05, "viscosity": 0.000018, "conductivity": 0.025116875},
+  "inflow": {"density": 0.0034837136387388956, "velocity": [1041.6568532871086, 0.0, 0.0], "pressure": 300.0},
+  "wall_temperature": 300.0,
+  "convection": "ausmdv",
+  "solver": {"cfl": 0.5, "max_steps": 200000, "first_order_steps": 200, "check_interval": 200,
+    "residual_tolerance": 0.000001, "heat_flux_tolerance": 0.00001}
+}

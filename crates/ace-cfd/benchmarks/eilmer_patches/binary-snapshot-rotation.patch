@@ -1,0 +1,45 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -1245,8 +1245,8 @@
+                     foreach ( iSnap; 2 .. nTotalSnapshots+1) {
+                         foreach (blk; localFluidBlocks) {
+                             if (legacy) {
+-                                auto fromName = make_file_name!"flow"(jobName, blk.id, iSnap, "gz");
+-                                auto toName = make_file_name!"flow"(jobName, blk.id, iSnap-1, "gz");
++                                auto fromName = make_file_name!"flow"(jobName, blk.id, iSnap, GlobalConfig.flowFileExt);
++                                auto toName = make_file_name!"flow"(jobName, blk.id, iSnap-1, GlobalConfig.flowFileExt);
+                                 rename(fromName, toName);
+                             } else {
+                                 foreach (io; io_list) {
+@@ -1260,7 +1260,7 @@
+                     // ... and add the new fluid snapshot.
+                     foreach (blk; localFluidBlocks) {
+                         if (legacy) {
+-                            auto fileName = make_file_name!"flow"(jobName, blk.id, nTotalSnapshots, "gz");
++                            auto fileName = make_file_name!"flow"(jobName, blk.id, nTotalSnapshots, GlobalConfig.flowFileExt);
+                             blk.write_solution(fileName, pseudoSimTime);
+                         } else {
+                             foreach(io; blk.block_io) {
+@@ -1488,8 +1488,8 @@
+                 foreach ( iSnap; 2 .. nTotalSnapshots+1) {
+                     foreach (blk; localFluidBlocks) {
+                         if (legacy) {
+-                            auto fromName = make_file_name!"flow"(jobName, blk.id, iSnap, "gz");
+-                            auto toName = make_file_name!"flow"(jobName, blk.id, iSnap-1, "gz");
++                            auto fromName = make_file_name!"flow"(jobName, blk.id, iSnap, GlobalConfig.flowFileExt);
++                            auto toName = make_file_name!"flow"(jobName, blk.id, iSnap-1, GlobalConfig.flowFileExt);
+                             rename(fromName, toName);
+                         } else {
+                             foreach (io; io_list) {
+@@ -1503,7 +1503,7 @@
+                 // ... and add the new fluid snapshot.
+                 foreach (blk; localFluidBlocks) {
+                     if (legacy) {
+-                        auto fileName = make_file_name!"flow"(jobName, blk.id, nTotalSnapshots, "gz");
++                        auto fileName = make_file_name!"flow"(jobName, blk.id, nTotalSnapshots, GlobalConfig.flowFileExt);
+                         blk.write_solution(fileName, physicalSimTime);
+                     } else {
+                         foreach(io; blk.block_io) {

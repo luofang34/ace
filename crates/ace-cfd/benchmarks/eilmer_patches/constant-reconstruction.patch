@@ -1,0 +1,107 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/onedinterp.d
++++ b/src/eilmer/onedinterp.d
+@@ -324,8 +324,8 @@
+                 (del*del + delRplus*delRplus + myConfig.epsilon_van_albada);
+         }
+         // The actual high-order reconstruction, possibly limited.
+-        qL = qL0 + beta * sL * (wL_L2*qL2 + wL_L1*qL1 + (wL_L0-1.0)*qL0 + wL_R0*qR0 + wL_R1*qR1);
+-        qR = qR0 + beta * sR * (wR_L1*qL1 + wR_L0*qL0 + (wR_R0-1.0)*qR0 + wR_R1*qR1 + wR_R2*qR2);
++        qL = qL0 + beta * sL * (wL_L2*(qL2-qL0) + wL_L1*(qL1-qL0) + wL_R0*(qR0-qL0) + wL_R1*(qR1-qL0));
++        qR = qR0 + beta * sR * (wR_L1*(qL1-qR0) + wR_L0*(qL0-qR0) + wR_R1*(qR1-qR0) + wR_R2*(qR2-qR0));
+         if (myConfig.extrema_clipping) {
+             // An extra limiting filter to ensure that we do not compute new extreme values.
+             // This was introduced to deal with very sharp transitions in species.
+@@ -478,7 +478,7 @@
+     {
+         pragma(inline, true);
+         // The weights for interpolation or extrapolation may be used.
+-        number q = q0*w0 + q1*w1;
++        number q = q0 + (q1-q0)*w1;
+         if (myConfig.extrema_clipping) { q = clip_to_limits(q, q0, q1); }
+         return q;
+     }
+@@ -742,8 +742,14 @@
+         } // end switch thermo_interpolator
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier. PJ 21-feb-2012
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Lft.vel -= velocityL0;
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Lft.vel += cL0.fs.vel;
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Rght.vel -= velocityR0;
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Rght.vel += cR0.fs.vel;
+         }
+     } // end interp_l3r3()
+ 
+@@ -986,8 +992,14 @@
+         } // end switch thermo_interpolator
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier. PJ 21-feb-2012
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Lft.vel -= velocityL0;
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Lft.vel += cL0.fs.vel;
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Rght.vel -= velocityR0;
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Rght.vel += cR0.fs.vel;
+         }
+     } // end interp_l2r2()
+ 
+@@ -1212,8 +1224,14 @@
+         } // end switch thermo_interpolator
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier.
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Lft.vel -= velocityL0;
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Lft.vel += cL0.fs.vel;
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Rght.vel -= velocityR0;
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Rght.vel += cR0.fs.vel;
+         }
+     } // end interp_l2r1()
+ 
+@@ -1442,8 +1460,14 @@
+         } // end switch thermo_interpolator
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier.
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Lft.vel -= velocityL0;
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Lft.vel += cL0.fs.vel;
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Rght.vel -= velocityR0;
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Rght.vel += cR0.fs.vel;
+         }
+     } // end interp_l1r2()
+ 
+@@ -1642,7 +1666,10 @@
+         } // end switch thermo_interpolator
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier.
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Lft.vel -= velocityL0;
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Lft.vel += cL0.fs.vel;
+         }
+     } // end interp_l2r0()
+ 
+@@ -1842,7 +1869,10 @@
+         } // end switch thermo_interpolator
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier.
++            // Rotate the reconstructed increment so constant global velocity is exact.
++            Rght.vel -= velocityR0;
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
++            Rght.vel += cR0.fs.vel;
+         }
+     } // end interp_l0r2()
+ 

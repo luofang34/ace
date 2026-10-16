@@ -1,0 +1,198 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -84,6 +84,21 @@
+     }
+ }
+ 
++
++// The reference and restart history must round-trip the saved binary64 values.
++// Decimal conversion through std.conv can move the value by one ULP.
++double parseRestartScalar(string token)
++{
++    import core.stdc.stdlib : strtod;
++    auto input = toStringz(token);
++    immutable(char)* end;
++    double value = strtod(input, &end);
++    if (end == input || end != input + token.length) {
++        throw new Exception("Invalid restart scalar: " ~ token);
++    }
++    return value;
++}
++
+ void extractRestartInfoFromTimesFile(string jobName, ref RestartInfo[] times)
+ {
+     // Make a stack-local copy of conserved quantities info
+@@ -110,28 +125,28 @@
+             // Process a non-comment line.
+             auto tokens = line.split();
+             auto idx = to!int(tokens[0]);
+-            restartInfo.pseudoSimTime = to!double(tokens[1]);
+-            restartInfo.dt = to!double(tokens[2]);
+-            restartInfo.cfl = to!double(tokens[3]);
++            restartInfo.pseudoSimTime = parseRestartScalar(tokens[1]);
++            restartInfo.dt = parseRestartScalar(tokens[2]);
++            restartInfo.cfl = parseRestartScalar(tokens[3]);
+             restartInfo.step = to!int(tokens[4]);
+-            restartInfo.globalResidual = to!double(tokens[5]);
+-            if ( GlobalConfig.gmodel_master.n_species == 1 ) { restartInfo.residuals[cqi.mass] = to!double(tokens[6+MASS]); }
+-            restartInfo.residuals[cqi.xMom] = to!double(tokens[6+X_MOM]);
+-            restartInfo.residuals[cqi.yMom] = to!double(tokens[6+Y_MOM]);
++            restartInfo.globalResidual = parseRestartScalar(tokens[5]);
++            if ( GlobalConfig.gmodel_master.n_species == 1 ) { restartInfo.residuals[cqi.mass] = parseRestartScalar(tokens[6+MASS]); }
++            restartInfo.residuals[cqi.xMom] = parseRestartScalar(tokens[6+X_MOM]);
++            restartInfo.residuals[cqi.yMom] = parseRestartScalar(tokens[6+Y_MOM]);
+             if ( GlobalConfig.dimensions == 3 )
+-                restartInfo.residuals[cqi.zMom] = to!double(tokens[6+Z_MOM]);
+-            restartInfo.residuals[cqi.totEnergy] = to!double(tokens[6+TOT_ENERGY]);
++                restartInfo.residuals[cqi.zMom] = parseRestartScalar(tokens[6+Z_MOM]);
++            restartInfo.residuals[cqi.totEnergy] = parseRestartScalar(tokens[6+TOT_ENERGY]);
+             foreach(it; 0 .. GlobalConfig.turb_model.nturb) {
+-                restartInfo.residuals[cqi.rhoturb+it] = to!double(tokens[6+TKE+it]);
++                restartInfo.residuals[cqi.rhoturb+it] = parseRestartScalar(tokens[6+TKE+it]);
+             }
+             version(multi_species_gas){
+             foreach(sp; 0 .. GlobalConfig.gmodel_master.n_species) {
+-                restartInfo.residuals[cqi.species+sp] = to!double(tokens[6+SPECIES+sp]);
++                restartInfo.residuals[cqi.species+sp] = parseRestartScalar(tokens[6+SPECIES+sp]);
+             }
+             }
+             version(multi_T_gas){
+             foreach(imode; 0 .. GlobalConfig.gmodel_master.n_modes) {
+-                restartInfo.residuals[cqi.modes+imode] = to!double(tokens[6+MODES+imode]);
++                restartInfo.residuals[cqi.modes+imode] = parseRestartScalar(tokens[6+MODES+imode]);
+             }
+             }
+             times ~= restartInfo;
+@@ -170,26 +185,26 @@
+     auto tokens = line.split();
+     if (tokens.length==0) throw new Error(format("Error reading %s, no entries found!", refResidFname));
+ 
+-    double normRef = to!double(tokens[0]);
+-    if ( GlobalConfig.gmodel_master.n_species == 1 ) { maxResiduals[cqi.mass] = to!double(tokens[1+MASS]); }
+-    maxResiduals[cqi.xMom] = to!double(tokens[1+X_MOM]);
+-    maxResiduals[cqi.yMom] = to!double(tokens[1+Y_MOM]);
++    double normRef = parseRestartScalar(tokens[0]);
++    if ( GlobalConfig.gmodel_master.n_species == 1 ) { maxResiduals[cqi.mass] = parseRestartScalar(tokens[1+MASS]); }
++    maxResiduals[cqi.xMom] = parseRestartScalar(tokens[1+X_MOM]);
++    maxResiduals[cqi.yMom] = parseRestartScalar(tokens[1+Y_MOM]);
+     if ( GlobalConfig.dimensions == 3 )
+-        maxResiduals[cqi.zMom] = to!double(tokens[1+Z_MOM]);
+-    maxResiduals[cqi.totEnergy] = to!double(tokens[1+TOT_ENERGY]);
++        maxResiduals[cqi.zMom] = parseRestartScalar(tokens[1+Z_MOM]);
++    maxResiduals[cqi.totEnergy] = parseRestartScalar(tokens[1+TOT_ENERGY]);
+     foreach(it; 0 .. GlobalConfig.turb_model.nturb) {
+-        maxResiduals[cqi.rhoturb+it] = to!double(tokens[1+TKE+it]);
++        maxResiduals[cqi.rhoturb+it] = parseRestartScalar(tokens[1+TKE+it]);
+     }
+     version(multi_species_gas){
+         if ( GlobalConfig.gmodel_master.n_species > 1 ) {
+             foreach(sp; 0 .. GlobalConfig.gmodel_master.n_species) {
+-                maxResiduals[cqi.species+sp] = to!double(tokens[1+SPECIES+sp]);
++                maxResiduals[cqi.species+sp] = parseRestartScalar(tokens[1+SPECIES+sp]);
+             }
+         }
+     }
+     version(multi_T_gas){
+         foreach(imode; 0 .. GlobalConfig.gmodel_master.n_modes) {
+-            maxResiduals[cqi.modes+imode] = to!double(tokens[1+MODES+imode]);
++            maxResiduals[cqi.modes+imode] = parseRestartScalar(tokens[1+MODES+imode]);
+         }
+     }
+     return normRef;
+@@ -579,49 +594,51 @@
+         if (GlobalConfig.sssOptions.include_turb_quantities_in_residual == false) {
+             writeln("WARNING: The GLOBAL reference residual does not include turbulence quantities since include_turb_quantities_in_residual is set to false.");
+         }
+-        // store the initial residuals
+-        string refResidFname = jobName ~ "-ref-residuals.saved";
+-        auto refResid = File(refResidFname, "w");
+-        if ( GlobalConfig.dimensions == 2 ) {
+-            if ( GlobalConfig.gmodel_master.n_species == 1 ) {
+-                refResid.writef("%.18e %.18e %.18e %.18e %.18e",
+-                                normRef, maxResiduals[cqi.mass].re, maxResiduals[cqi.xMom].re,
+-                                maxResiduals[cqi.yMom].re, maxResiduals[cqi.totEnergy].re);
++        if (snapshotStart == 0) {
++            // store the initial residuals
++            string refResidFname = jobName ~ "-ref-residuals.saved";
++            auto refResid = File(refResidFname, "w");
++            if ( GlobalConfig.dimensions == 2 ) {
++                if ( GlobalConfig.gmodel_master.n_species == 1 ) {
++                    refResid.writef("%.18e %.18e %.18e %.18e %.18e",
++                                    normRef, maxResiduals[cqi.mass].re, maxResiduals[cqi.xMom].re,
++                                    maxResiduals[cqi.yMom].re, maxResiduals[cqi.totEnergy].re);
++                } else {
++                    refResid.writef("%.18e %.18e %.18e %.18e",
++                                    normRef, maxResiduals[cqi.xMom].re,
++                                    maxResiduals[cqi.yMom].re, maxResiduals[cqi.totEnergy].re);
++                }
+             } else {
+-                refResid.writef("%.18e %.18e %.18e %.18e",
+-                                normRef, maxResiduals[cqi.xMom].re,
+-                                maxResiduals[cqi.yMom].re, maxResiduals[cqi.totEnergy].re);
+-            }
+-        } else {
+-            if ( GlobalConfig.gmodel_master.n_species == 1 ) {
+-                refResid.writef("%.18e %.18e %.18e %.18e %.18e %.18e",
+-                                normRef, maxResiduals[cqi.mass].re, maxResiduals[cqi.xMom].re,
+-                                maxResiduals[cqi.yMom].re, maxResiduals[cqi.zMom].re,
+-                                maxResiduals[cqi.totEnergy].re);
+-            } else {
+-                refResid.writef("%.18e %.18e %.18e %.18e %.18e",
+-                                normRef, maxResiduals[cqi.xMom].re,
+-                                maxResiduals[cqi.yMom].re, maxResiduals[cqi.zMom].re,
+-                                maxResiduals[cqi.totEnergy].re);
+-            }
+-        }
+-        foreach(it; 0 .. GlobalConfig.turb_model.nturb) {
+-            refResid.writef(" %.18e", maxResiduals[cqi.rhoturb+it].re);
+-        }
+-        version(multi_species_gas){
+-            if ( GlobalConfig.gmodel_master.n_species > 1 ) {
+-                foreach(sp; 0 .. GlobalConfig.gmodel_master.n_species) {
+-                    refResid.writef(" %.18e", maxResiduals[cqi.species+sp].re);
+-                }
+-            }
+-        }
+-        version(multi_T_gas){
+-            foreach(imode; 0 .. GlobalConfig.gmodel_master.n_modes) {
+-                refResid.writef(" %.18e", maxResiduals[cqi.modes+imode].re);
+-            }
+-        }
+-        refResid.write("\n");
+-        refResid.close();
++                if ( GlobalConfig.gmodel_master.n_species == 1 ) {
++                    refResid.writef("%.18e %.18e %.18e %.18e %.18e %.18e",
++                                    normRef, maxResiduals[cqi.mass].re, maxResiduals[cqi.xMom].re,
++                                    maxResiduals[cqi.yMom].re, maxResiduals[cqi.zMom].re,
++                                    maxResiduals[cqi.totEnergy].re);
++                } else {
++                    refResid.writef("%.18e %.18e %.18e %.18e %.18e",
++                                    normRef, maxResiduals[cqi.xMom].re,
++                                    maxResiduals[cqi.yMom].re, maxResiduals[cqi.zMom].re,
++                                    maxResiduals[cqi.totEnergy].re);
++                }
++            }
++            foreach(it; 0 .. GlobalConfig.turb_model.nturb) {
++                refResid.writef(" %.18e", maxResiduals[cqi.rhoturb+it].re);
++            }
++            version(multi_species_gas){
++                if ( GlobalConfig.gmodel_master.n_species > 1 ) {
++                    foreach(sp; 0 .. GlobalConfig.gmodel_master.n_species) {
++                        refResid.writef(" %.18e", maxResiduals[cqi.species+sp].re);
++                    }
++                }
++            }
++            version(multi_T_gas){
++                foreach(imode; 0 .. GlobalConfig.gmodel_master.n_modes) {
++                    refResid.writef(" %.18e", maxResiduals[cqi.modes+imode].re);
++                }
++            }
++            refResid.write("\n");
++            refResid.close();
++        }
+     }
+ 
+     double wallClockElapsed;

@@ -1,0 +1,279 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/onedinterp.d
++++ b/src/eilmer/onedinterp.d
+@@ -493,6 +493,14 @@
+                      number cR0Length, number cR1Length, number cR2Length,
+                      ref FlowState Lft, ref FlowState Rght, number beta)
+     {
++        // Reconstruction must not change stored velocities through round-trip rotation.
++        auto velocityL0 = cL0.fs.vel;
++        auto velocityL1 = cL1.fs.vel;
++        auto velocityL2 = cL2.fs.vel;
++        auto velocityR0 = cR0.fs.vel;
++        auto velocityR1 = cR1.fs.vel;
++        auto velocityR2 = cR2.fs.vel;
++
+         auto gmodel = myConfig.gmodel;
+         uint nsp = myConfig.n_species;
+         auto nmodes = myConfig.n_modes;
+@@ -502,22 +510,22 @@
+             // to be reconstructed in the interface-local frame of reference so that
+             // the normal velocities are not messed up for mirror-image at walls.
+             // PJ 21-feb-2012
+-            cL2.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR2.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL2.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR2.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+         l3r3_prepare(cL2Length, cL1Length, cL0Length, cR0Length, cR1Length, cR2Length);
+-        interp_l3r3_scalar(cL2.fs.vel.x, cL1.fs.vel.x, cL0.fs.vel.x,
+-                           cR0.fs.vel.x, cR1.fs.vel.x, cR2.fs.vel.x,
++        interp_l3r3_scalar(velocityL2.x, velocityL1.x, velocityL0.x,
++                           velocityR0.x, velocityR1.x, velocityR2.x,
+                            Lft.vel.x, Rght.vel.x, beta);
+-        interp_l3r3_scalar(cL2.fs.vel.y, cL1.fs.vel.y, cL0.fs.vel.y,
+-                           cR0.fs.vel.y, cR1.fs.vel.y, cR2.fs.vel.y,
++        interp_l3r3_scalar(velocityL2.y, velocityL1.y, velocityL0.y,
++                           velocityR0.y, velocityR1.y, velocityR2.y,
+                            Lft.vel.y, Rght.vel.y, beta);
+-        interp_l3r3_scalar(cL2.fs.vel.z, cL1.fs.vel.z, cL0.fs.vel.z,
+-                           cR0.fs.vel.z, cR1.fs.vel.z, cR2.fs.vel.z,
++        interp_l3r3_scalar(velocityL2.z, velocityL1.z, velocityL0.z,
++                           velocityR0.z, velocityR1.z, velocityR2.z,
+                            Lft.vel.z, Rght.vel.z, beta);
+         version(MHD) {
+             if (myConfig.MHD) {
+@@ -736,12 +744,6 @@
+             // Undo the transformation made earlier. PJ 21-feb-2012
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL2.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR2.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+     } // end interp_l3r3()
+ 
+@@ -754,6 +756,12 @@
+                      number cR0Length, number cR1Length,
+                      ref FlowState Lft, ref FlowState Rght, number beta)
+     {
++        // Reconstruction must not change stored velocities through round-trip rotation.
++        auto velocityL0 = cL0.fs.vel;
++        auto velocityL1 = cL1.fs.vel;
++        auto velocityR0 = cR0.fs.vel;
++        auto velocityR1 = cR1.fs.vel;
++
+         auto gmodel = myConfig.gmodel;
+         uint nsp = myConfig.n_species;
+         auto nmodes = myConfig.n_modes;
+@@ -763,17 +771,17 @@
+             // to be reconstructed in the interface-local frame of reference so that
+             // the normal velocities are not messed up for mirror-image at walls.
+             // PJ 21-feb-2012
+-            cL1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+         l2r2_prepare(cL1Length, cL0Length, cR0Length, cR1Length);
+-        interp_l2r2_scalar(cL1.fs.vel.x, cL0.fs.vel.x, cR0.fs.vel.x, cR1.fs.vel.x,
++        interp_l2r2_scalar(velocityL1.x, velocityL0.x, velocityR0.x, velocityR1.x,
+                            Lft.vel.x, Rght.vel.x, beta);
+-        interp_l2r2_scalar(cL1.fs.vel.y, cL0.fs.vel.y, cR0.fs.vel.y, cR1.fs.vel.y,
++        interp_l2r2_scalar(velocityL1.y, velocityL0.y, velocityR0.y, velocityR1.y,
+                            Lft.vel.y, Rght.vel.y, beta);
+-        interp_l2r2_scalar(cL1.fs.vel.z, cL0.fs.vel.z, cR0.fs.vel.z, cR1.fs.vel.z,
++        interp_l2r2_scalar(velocityL1.z, velocityL0.z, velocityR0.z, velocityR1.z,
+                            Lft.vel.z, Rght.vel.z, beta);
+         version(MHD) {
+             if (myConfig.MHD) {
+@@ -980,10 +988,6 @@
+             // Undo the transformation made earlier. PJ 21-feb-2012
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+     } // end interp_l2r2()
+ 
+@@ -993,20 +997,25 @@
+                      number cL1Length, number cL0Length, number cR0Length,
+                      ref FlowState Lft, ref FlowState Rght, number beta)
+     {
++        // Reconstruction must not change stored velocities through round-trip rotation.
++        auto velocityL0 = cL0.fs.vel;
++        auto velocityL1 = cL1.fs.vel;
++        auto velocityR0 = cR0.fs.vel;
++
+         auto gmodel = myConfig.gmodel;
+         uint nsp = myConfig.n_species;
+         auto nmodes = myConfig.n_modes;
+         // High-order reconstruction for some properties.
+         if (myConfig.interpolate_in_local_frame) {
+             // In the interface-local frame.
+-            cL1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+         l2r1_prepare(cL1Length, cL0Length, cR0Length);
+-        interp_l2r1_scalar(cL1.fs.vel.x, cL0.fs.vel.x, cR0.fs.vel.x, Lft.vel.x, Rght.vel.x, beta);
+-        interp_l2r1_scalar(cL1.fs.vel.y, cL0.fs.vel.y, cR0.fs.vel.y, Lft.vel.y, Rght.vel.y, beta);
+-        interp_l2r1_scalar(cL1.fs.vel.z, cL0.fs.vel.z, cR0.fs.vel.z, Lft.vel.z, Rght.vel.z, beta);
++        interp_l2r1_scalar(velocityL1.x, velocityL0.x, velocityR0.x, Lft.vel.x, Rght.vel.x, beta);
++        interp_l2r1_scalar(velocityL1.y, velocityL0.y, velocityR0.y, Lft.vel.y, Rght.vel.y, beta);
++        interp_l2r1_scalar(velocityL1.z, velocityL0.z, velocityR0.z, Lft.vel.z, Rght.vel.z, beta);
+         version(MHD) {
+             if (myConfig.MHD) {
+                 interp_l2r1_scalar(cL1.fs.B.x, cL0.fs.B.x, cR0.fs.B.x, Lft.B.x, Rght.B.x, beta);
+@@ -1205,9 +1214,6 @@
+             // Undo the transformation made earlier.
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+     } // end interp_l2r1()
+ 
+@@ -1221,20 +1227,25 @@
+     // This is essentially a one-dimensional interpolation process.  It needs only
+     // the cell-average data and the lengths of the cells in the interpolation direction.
+     {
++        // Reconstruction must not change stored velocities through round-trip rotation.
++        auto velocityL0 = cL0.fs.vel;
++        auto velocityR0 = cR0.fs.vel;
++        auto velocityR1 = cR1.fs.vel;
++
+         auto gmodel = myConfig.gmodel;
+         uint nsp = myConfig.n_species;
+         auto nmodes = myConfig.n_modes;
+         // High-order reconstruction for some properties.
+         if (myConfig.interpolate_in_local_frame) {
+             // In the interface-local frame.
+-            cL0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+         l1r2_prepare(cL0Length, cR0Length, cR1Length);
+-        interp_l1r2_scalar(cL0.fs.vel.x, cR0.fs.vel.x, cR1.fs.vel.x, Lft.vel.x, Rght.vel.x, beta);
+-        interp_l1r2_scalar(cL0.fs.vel.y, cR0.fs.vel.y, cR1.fs.vel.y, Lft.vel.y, Rght.vel.y, beta);
+-        interp_l1r2_scalar(cL0.fs.vel.z, cR0.fs.vel.z, cR1.fs.vel.z, Lft.vel.z, Rght.vel.z, beta);
++        interp_l1r2_scalar(velocityL0.x, velocityR0.x, velocityR1.x, Lft.vel.x, Rght.vel.x, beta);
++        interp_l1r2_scalar(velocityL0.y, velocityR0.y, velocityR1.y, Lft.vel.y, Rght.vel.y, beta);
++        interp_l1r2_scalar(velocityL0.z, velocityR0.z, velocityR1.z, Lft.vel.z, Rght.vel.z, beta);
+         version(MHD) {
+             if (myConfig.MHD) {
+                 interp_l1r2_scalar(cL0.fs.B.x, cR0.fs.B.x, cR1.fs.B.x, Lft.B.x, Rght.B.x, beta);
+@@ -1433,9 +1444,6 @@
+             // Undo the transformation made earlier.
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+     } // end interp_l1r2()
+ 
+@@ -1445,6 +1453,10 @@
+                      number cL1Length, number cL0Length,
+                      ref FlowState Lft)
+     {
++        // Reconstruction must not change stored velocities through round-trip rotation.
++        auto velocityL0 = cL0.fs.vel;
++        auto velocityL1 = cL1.fs.vel;
++
+         auto gmodel = myConfig.gmodel;
+         uint nsp = myConfig.n_species;
+         auto nmodes = myConfig.n_modes;
+@@ -1457,13 +1469,13 @@
+         // High-order reconstruction for some properties.
+         if (myConfig.interpolate_in_local_frame) {
+             // In the interface-local frame.
+-            cL1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityL0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+         linear_extrap_prepare(cL0Length, cL1Length);
+-        Lft.vel.x = weight_scalar(cL0.fs.vel.x, cL1.fs.vel.x);
+-        Lft.vel.y = weight_scalar(cL0.fs.vel.y, cL1.fs.vel.y);
+-        Lft.vel.z = weight_scalar(cL0.fs.vel.z, cL1.fs.vel.z);
++        Lft.vel.x = weight_scalar(velocityL0.x, velocityL1.x);
++        Lft.vel.y = weight_scalar(velocityL0.y, velocityL1.y);
++        Lft.vel.z = weight_scalar(velocityL0.z, velocityL1.z);
+         version(MHD) {
+             if (myConfig.MHD) {
+                 Lft.B.x = weight_scalar(cL0.fs.B.x, cL1.fs.B.x);
+@@ -1631,8 +1643,6 @@
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier.
+             Lft.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cL0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+     } // end interp_l2r0()
+ 
+@@ -1642,6 +1652,10 @@
+                      number cR0Length, number cR1Length,
+                      ref FlowState Rght)
+     {
++        // Reconstruction must not change stored velocities through round-trip rotation.
++        auto velocityR0 = cR0.fs.vel;
++        auto velocityR1 = cR1.fs.vel;
++
+         auto gmodel = myConfig.gmodel;
+         uint nsp = myConfig.n_species;
+         auto nmodes = myConfig.n_modes;
+@@ -1655,13 +1669,13 @@
+         // High-order reconstruction for some properties.
+         if (myConfig.interpolate_in_local_frame) {
+             // In the interface-local frame.
+-            cR0.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR0.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
++            velocityR1.transform_to_local_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+         linear_extrap_prepare(cR0Length, cR1Length);
+-        Rght.vel.x = weight_scalar(cR0.fs.vel.x, cR1.fs.vel.x);
+-        Rght.vel.y = weight_scalar(cR0.fs.vel.y, cR1.fs.vel.y);
+-        Rght.vel.z = weight_scalar(cR0.fs.vel.z, cR1.fs.vel.z);
++        Rght.vel.x = weight_scalar(velocityR0.x, velocityR1.x);
++        Rght.vel.y = weight_scalar(velocityR0.y, velocityR1.y);
++        Rght.vel.z = weight_scalar(velocityR0.z, velocityR1.z);
+         version(MHD) {
+             if (myConfig.MHD) {
+                 Rght.B.x = weight_scalar(cR0.fs.B.x, cR1.fs.B.x);
+@@ -1829,8 +1843,6 @@
+         if (myConfig.interpolate_in_local_frame) {
+             // Undo the transformation made earlier.
+             Rght.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR0.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+-            cR1.fs.vel.transform_to_global_frame(IFace.n, IFace.t1, IFace.t2);
+         }
+     } // end interp_l0r2()
+ 
