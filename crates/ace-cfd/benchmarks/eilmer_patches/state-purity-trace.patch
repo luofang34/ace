@@ -1,0 +1,18 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -527,6 +527,12 @@
+         aceTraceCells();
+         copy("trace-cells.csv", "saved-cells.csv");
+         copy("trace-inviscid.csv", "saved-inviscid.csv");
++        if (exists("ace-trace-state-purity")) {
++            copy("trace-cells.csv", "state-purity-before.csv");
++            evalRHS(simTime, 0);
++            aceTraceCells();
++            copy("trace-cells.csv", "state-purity-after.csv");
++        }
+         if (exists("ace-trace-jacobian")) aceTraceJacobian();
+         aceTraceAxisConsistency();
+         aceTraceAffineStrain();

@@ -3,6 +3,17 @@
 version = 4
 
 [[package]]
+name = "ace-cfd"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "ace-drawing"
 version = "0.1.0"
 dependencies = [

@@ -1,0 +1,45 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/bc/boundary_interface_effect.d
++++ b/src/eilmer/bc/boundary_interface_effect.d
+@@ -236,6 +236,7 @@
+ 	} else {
+ 	    f.fs.copy_values_from(f.right_cell.fs);
+ 	}
++        enforce_axis_velocity(f);
+     }
+ 
+     override void apply_unstructured_grid(double t, int gtl, int ftl)
+@@ -244,6 +245,7 @@
+         foreach (i, f; bc.faces) {
+             auto c = (bc.outsigns[i] == 1) ? f.left_cell : f.right_cell;
+             f.fs.copy_values_from(c.fs);
++            enforce_axis_velocity(f);
+         }
+     }
+ 
+@@ -255,6 +257,7 @@
+         BoundaryCondition bc = blk.bc[which_boundary];
+         auto c = (bc.outsigns[f.i_bndry] == 1) ? f.left_cells[0] : f.right_cells[0];
+         f.fs.copy_values_from(c.fs);
++        enforce_axis_velocity(f);
+     }
+ 
+     override void apply_structured_grid(double t, int gtl, int ftl)
+@@ -266,8 +269,15 @@
+         foreach (i, f; bc.faces) {
+             auto c = (bc.outsigns[i] == 1) ? f.left_cells[0] : f.right_cells[0];
+             f.fs.copy_values_from(c.fs);
++            enforce_axis_velocity(f);
+         }
+     } // end apply_structured_grid()
++    private void enforce_axis_velocity(FVInterface f)
++    {
++        // A regular axisymmetric velocity is odd in radius. Copying a cell-centre
++        // radial velocity to r=0 corrupts the adjacent viscous gradient cloud.
++        if (blk.myConfig.axisymmetric && f.pos.y == 0.0) f.fs.vel.y = 0.0;
++    }
+ } // end class BIE_CopyCellData
+ 
+ class BIE_FlowStateCopy : BoundaryInterfaceEffect {

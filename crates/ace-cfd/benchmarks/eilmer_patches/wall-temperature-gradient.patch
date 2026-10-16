@@ -1,0 +1,32 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/fluidblock.d
++++ b/src/eilmer/fluidblock.d
+@@ -794,7 +794,25 @@
+     void viscous_flux(FVInterface[] face_list = [])
+     {
+         if (face_list.length == 0) { face_list = faces; }
+-        foreach (iface; face_list) { iface.viscous_flux_calc(); }
++        foreach (iface; face_list) {
++            // A limited convective face temperature need not preserve a linear
++            // thermal field beside a reflecting ghost cell. Enforce the imposed
++            // wall temperature directly in the conductive normal derivative.
++            if (myConfig.spatial_deriv_locn == SpatialDerivLocn.cells &&
++                iface.is_on_boundary && bc[iface.bc_id].type == "wall_no_slip_fixed_t" &&
++                !myConfig.turb_model.isTurbulent && myConfig.gmodel.n_modes == 0) {
++                auto cell=iface.left_cell;
++                if (cell is null || !cell.is_interior_to_domain) cell=iface.right_cell;
++                number distance=(iface.pos.x-cell.pos[0].x)*iface.n.x +
++                                (iface.pos.y-cell.pos[0].y)*iface.n.y +
++                                (iface.pos.z-cell.pos[0].z)*iface.n.z;
++                number normal=(iface.fs.gas.T-cell.fs.gas.T)/distance;
++                iface.grad.T[0]=normal*iface.n.x;
++                iface.grad.T[1]=normal*iface.n.y;
++                iface.grad.T[2]=normal*iface.n.z;
++            }
++            iface.viscous_flux_calc();
++        }
+     }
+ 
+     @nogc

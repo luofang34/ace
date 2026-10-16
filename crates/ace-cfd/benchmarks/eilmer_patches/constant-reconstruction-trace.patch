@@ -1,0 +1,82 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -541,6 +541,7 @@
+         aceTraceIsobaricReconstruction();
+         aceTraceAxisThermal();
+         aceTraceBalancedStrain();
++        if (exists("ace-trace-constant-reconstruction")) aceTraceConstantReconstruction();
+         std.file.rename("saved-cells.csv", "trace-cells.csv");
+         std.file.rename("saved-inviscid.csv", "trace-inviscid.csv");
+         return;
+@@ -3589,3 +3590,68 @@
+     std.file.rename("trace-cells.csv","strain-equilibrium-cells.csv");
+     std.file.rename("trace-inviscid.csv","strain-equilibrium-inviscid.csv");
+ }
++
++void aceTraceReconstructionStencil(SFluidBlock block, ref FVInterface face,
++                                   FVCell[] cells, int kind,
++                                   ref FlowState left, ref FlowState right)
++{
++    auto cL2=cells[0]; auto cL1=cells[1]; auto cL0=cells[2];
++    auto cR0=cells[3]; auto cR1=cells[4]; auto cR2=cells[5];
++    auto lengths=[number(0.71),number(0.83),number(1.1),number(1.23),number(0.94),number(1.7)];
++    switch (kind) {
++    case 0: block.one_d.interp_l3r3(face,cL2,cL1,cL0,cR0,cR1,cR2,
++        lengths[0],lengths[1],lengths[2],lengths[3],lengths[4],lengths[5],left,right,number(1.0)); break;
++    case 1: block.one_d.interp_l2r2(face,cL1,cL0,cR0,cR1,
++        lengths[1],lengths[2],lengths[3],lengths[4],left,right,number(1.0)); break;
++    case 2: block.one_d.interp_l2r1(face,cL1,cL0,cR0,
++        lengths[1],lengths[2],lengths[3],left,right,number(1.0)); break;
++    case 3: block.one_d.interp_l1r2(face,cL0,cR0,cR1,
++        lengths[2],lengths[3],lengths[4],left,right,number(1.0)); break;
++    case 4: block.one_d.interp_l2r0(face,cL1,cL0,lengths[1],lengths[2],left); break;
++    case 5: block.one_d.interp_l0r2(face,cR0,cR1,lengths[3],lengths[4],right); break;
++    default: throw new Error("Unknown reconstruction probe stencil");
++    }
++}
++
++void aceTraceConstantReconstruction()
++{
++    auto output=File("trace-constant-reconstruction.csv", "w");
++    output.writeln("face,kind,field,clip,local_frame,nx,ny,expected_u,expected_v,left_u,left_v,right_u,right_v");
++    foreach (blk; localFluidBlocks) {
++        auto structured=cast(SFluidBlock)blk;
++        if (structured is null || blk.cells.length < 6) continue;
++        auto cells=blk.cells[0..6];
++        auto clipped=blk.myConfig.extrema_clipping;
++        auto limited=blk.myConfig.apply_limiter;
++        auto local=blk.myConfig.interpolate_in_local_frame;
++        // Nonuniform stencil centres relative to the reconstructed face.
++        auto positions=[-2.285,-1.515,-0.55,0.615,1.7,3.02];
++        foreach (localFrame; [false,true]) foreach (clip; [false,true]) foreach (field; 0..3) {
++            if (field==2 && clip) continue;
++            blk.myConfig.extrema_clipping=clip;
++            blk.myConfig.apply_limiter=field!=2;
++            blk.myConfig.interpolate_in_local_frame=localFrame;
++            number expectedU=1041.6568532871086;
++            number expectedV=field==0 ? 0.0 : 123.456789;
++            foreach (i,c; cells) {
++                c.fs.gas.p=300.0; c.fs.gas.T=300.0;
++                blk.myConfig.gmodel.update_thermo_from_pT(c.fs.gas);
++                number distance=field==2 ? positions[i] : 0.0;
++                c.fs.vel.set(expectedU+2.3*distance,expectedV+3.1*distance,number(0.0));
++            }
++            foreach (f; blk.faces) {
++                if (f.id % 17 != 0) continue;
++                foreach (kind; 0..6) {
++                    auto left=FlowState(cells[2].fs); auto right=FlowState(cells[3].fs);
++                    aceTraceReconstructionStencil(structured,f,cells,kind,left,right);
++                    output.writefln("%d,%d,%d,%d,%d,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e,%.17e",
++                        f.id,kind,field,cast(int)clip,cast(int)localFrame,f.n.x.re,f.n.y.re,
++                        expectedU.re,expectedV.re,left.vel.x.re,left.vel.y.re,right.vel.x.re,right.vel.y.re);
++                }
++            }
++        }
++        blk.myConfig.extrema_clipping=clipped;
++        blk.myConfig.apply_limiter=limited;
++        blk.myConfig.interpolate_in_local_frame=local;
++    }
++}
