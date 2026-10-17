@@ -5,14 +5,20 @@ forebody with an isothermal no-slip wall. SI units are used throughout. The gas 
 calorically perfect with constant viscosity and thermal conductivity. Chemistry,
 vibrational nonequilibrium, radiation, turbulence and rarefied flow are outside this model.
 
+The benchmark scripts use the workspace-pinned Python through uv. Install uv, then
+run `uv python install` from the workspace root. The workspace requires a uv-managed
+interpreter, independently of any active Conda environment. The scripts use only
+the Python standard library. Run their checks with
+`uv run --no-project python -m unittest discover -s crates/ace-cfd/benchmarks`.
+
 From the workspace root:
 
 ```sh
 cargo test -p ace-cfd --all-targets
 cargo build -p ace-cfd --release --example sphere
 target/release/examples/sphere crates/ace-cfd/cases/sphere-viscous.json /tmp/sphere-result.json
-python3 crates/ace-cfd/benchmarks/dependency_guard.py
-python3 crates/ace-cfd/benchmarks/verify_conduction.py \
+uv run --no-project python crates/ace-cfd/benchmarks/dependency_guard.py
+uv run --no-project python crates/ace-cfd/benchmarks/verify_conduction.py \
   --rust target/release/examples/sphere --output /tmp/conduction-verification
 ```
 
@@ -78,7 +84,7 @@ It uses the free zlib library through D's standard library bindings. From the
 workspace root, with LDC on `PATH`:
 
 ```sh
-python3 crates/ace-cfd/benchmarks/verify_gzip.py --compiler /path/to/ldc2
+uv run --no-project python crates/ace-cfd/benchmarks/verify_gzip.py --compiler /path/to/ldc2
 make -C /path/to/gdtk/src/eilmer DMD=ldc2 FLAVOUR=fast \
   -W "$PWD/crates/ace-cfd/benchmarks/eilmer_gzip/gzip.d" \
   GZIP_DIR="$PWD/crates/ace-cfd/benchmarks/eilmer_gzip" e4shared e4-nk-shared
@@ -92,7 +98,7 @@ blank lines and final lines without a newline. `verify_gzip.py` checks interoper
 with Python's gzip implementation and rejection of damaged streams.
 
 ```sh
-python3 crates/ace-cfd/benchmarks/compare.py \
+uv run --no-project python crates/ace-cfd/benchmarks/compare.py \
   --rust target/release/examples/sphere \
   --eilmer /path/to/eilmer-install \
   --eilmer-nk /path/to/e4-nk-shared \
@@ -186,7 +192,7 @@ requires unchanged convection, cell states, cell gradients and non-outlet fluxes
 It checks the outlet only; the spatial and repeatability gates still apply.
 
 ```sh
-python3 crates/ace-cfd/benchmarks/trace_eilmer.py \
+uv run --no-project python crates/ace-cfd/benchmarks/trace_eilmer.py \
   --source /path/to/saved-eilmer-case --output /tmp/eilmer-trace \
   --executable /path/to/instrumented-e4-nk-shared \
   --installation /path/to/eilmer-install \
@@ -218,7 +224,7 @@ When simultaneous refinement hides opposing directional errors, a separate check
 solves the full 3×3 grid family:
 
 ```sh
-python3 crates/ace-cfd/benchmarks/verify_directional.py \
+uv run --no-project python crates/ace-cfd/benchmarks/verify_directional.py \
   --rust target/release/examples/sphere --output /tmp/directional-verification
 ```
 
