@@ -10,6 +10,7 @@ import shutil
 import subprocess
 
 from eilmer_restart import prepare_restart_blocking
+from eilmer_conserved import MARKER
 from trace_jacobian import check_jacobian_blocking
 from trace_reconstruction import check_reconstruction_blocking
 
@@ -25,6 +26,7 @@ def read_trace_blocking(path):
 
 def state_hashes_blocking(directory, snapshot):
     paths = [directory / "config/sphere.times", directory / "sphere-ref-residuals.saved"]
+    paths.append(directory / MARKER)
     paths.extend(sorted((directory / f"flow/t{snapshot:04d}").glob("*")))
     return {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in paths if path.is_file()}
@@ -62,9 +64,19 @@ def trace_blocking(source, output, executable, installation, case, *, jacobian=F
         raise ValueError("Executable does not contain the constant-reconstruction probe")
     jacobian = jacobian or jacobian_outlet
     manifest = prepare_restart_blocking(source, output, binary_flow=binary_flow)
+    config = json.loads((output / "config/sphere.config").read_text())
+    options = json.loads((output / "config/sphere.control").read_text())["steady_state_solver_options"]
+    phase = "0" if manifest["step"] <= options["number_start_up_steps"] else "1"
+    operator = dict(diagnostic_order=config["interpolation_order"],
+                    iteration_order=options["RHSeval" + phase])
+    operator["matches"] = operator["diagnostic_order"] == operator["iteration_order"]
+    exact = manifest["snapshot_payload"]["conserved_state_exact"]
+    if exact and b"ACE conserved checkpoint restored:" not in binary:
+        raise ValueError("Executable does not support exact conserved checkpoint restoration")
     # A copied trace must not supply evidence for an executable that did not
     # produce that diagnostic during this invocation.
-    for pattern in ("trace-*.csv", "strain-*.csv", "saved-*.csv", "state-purity-*.csv"):
+    for pattern in ("trace-*.csv", "trace-conserved.bin", "strain-*.csv",
+                    "saved-*.csv", "state-purity-*.csv"):
         for path in output.glob(pattern):
             path.unlink()
     frozen = output / "trace-executable"
@@ -96,6 +108,11 @@ def trace_blocking(source, output, executable, installation, case, *, jacobian=F
     if (before != state_hashes_blocking(output, manifest["snapshot"])
             or "STEP=" in (output / "trace.log").read_text()):
         raise RuntimeError("Trace changed a checkpoint or entered the iteration loop")
+    log = (output / "trace.log").read_text()
+    if exact and any("ACE conserved checkpoint restored: " + item["path"] not in log
+                     for item in manifest["snapshot_payload"]["files"]
+                     if item.get("kind") == "conserved"):
+        raise RuntimeError("Trace did not confirm restoration of every conserved block")
     cells = read_trace_blocking(output / "trace-cells.csv")
     faces = read_trace_blocking(output / "trace-inviscid.csv")
     axis = read_trace_blocking(output / "trace-axis-consistency.csv")
@@ -115,6 +132,8 @@ def trace_blocking(source, output, executable, installation, case, *, jacobian=F
     axis_error = max(abs(row["actual"] / row["expected"] - 1) for row in axis)
     axis_velocity = max(abs(row["axis_velocity"]) for row in axis)
     result = dict(checkpoint_unchanged=True, iterations_advanced=0,
+                  conserved_state_exact=exact,
+                  spatial_operator=operator,
                   flow_storage=manifest.get("flow_storage", {"converted": 0}),
                   executable_sha256=hashlib.sha256(binary).hexdigest(),
                   checkpoint_hashes=before, residual_components=residuals,

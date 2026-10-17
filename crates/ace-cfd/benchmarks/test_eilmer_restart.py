@@ -31,7 +31,7 @@ class RestartTests(unittest.TestCase):
                 "stop_on_absolute_global_residual": 1e-99}}
             (source / "config/sphere.control").write_text(json.dumps(control))
             for name in ("convergence.json", "results.json", "metrics.json", "trace-result.json",
-                         "repeatability.json"):
+                         "repeatability.json", "ace-trace-only", "ace-trace-state-purity"):
                 (source / name).write_text('{"converged": true}')
             result = prepare_restart_blocking(source, target, [(101, 50.0)])
             self.assertEqual(result["reference_residual"], 1.5e12)
@@ -45,7 +45,7 @@ class RestartTests(unittest.TestCase):
                 self.assertEqual(updated["steady_state_solver_options"][key], value)
             self.assertEqual(json.loads((source / "config/sphere.control").read_text()), control)
             for name in ("convergence.json", "results.json", "metrics.json", "trace-result.json",
-                         "repeatability.json"):
+                         "repeatability.json", "ace-trace-only", "ace-trace-state-purity"):
                 self.assertFalse((target / name).exists())
                 self.assertTrue((source / name).exists())
             with self.assertRaises(ValueError):

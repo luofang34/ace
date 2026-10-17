@@ -7,10 +7,12 @@ import subprocess
 import time
 
 from eilmer_snapshot import validate_snapshot_blocking
+from eilmer_conserved import MARKER
 from saved_state_residual import RELATIVE_RESIDUAL_TARGET, verify_saved_state_blocking
 
 
 def configure(directory):
+    (directory / MARKER).touch()
     with (directory / "sphere.lua").open("a") as stream:
         stream.write("""
 config.extrema_clipping = false
@@ -95,7 +97,9 @@ def measure_blocking(directory, case, read_wall, elapsed, *, saved_state=None):
         and global_relative <= RELATIVE_RESIDUAL_TARGET
         and normalized < case["solver"]["residual_tolerance"]
         and change < case["solver"]["heat_flux_tolerance"])
-    saved_state_qualified = (saved_state is not None and saved_state["qualified"]
+    saved_state_qualified = (payload["conserved_state_exact"]
+                             and saved_state is not None and saved_state["qualified"]
+                             and saved_state.get("conserved_state_exact", False)
                              and saved_state["reference_sha256"] == reference_hash
                              and all(saved_state["checkpoint_hashes"].get(item["path"]) == item["sha256"]
                                      for item in payload["files"]))

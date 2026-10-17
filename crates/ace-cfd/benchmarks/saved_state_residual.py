@@ -21,9 +21,13 @@ def verify_saved_state_blocking(directory, executable, case, env):
     reference = float(reference_bytes.split()[0])
     relative = norm / reference
     qualified = (math.isfinite(relative) and relative <= RELATIVE_RESIDUAL_TARGET
+                 and trace["conserved_state_exact"]
+                 and trace["spatial_operator"]["matches"]
                  and trace["state_purity"]["passed"] and trace["checkpoint_unchanged"]
                  and trace["normalized_residual"] < case["solver"]["residual_tolerance"])
     result = dict(qualified=qualified, global_residual=norm, relative_global_residual=relative,
+                  conserved_state_exact=trace["conserved_state_exact"],
+                  spatial_operator=trace["spatial_operator"],
                   reference_residual=reference,
                   reference_sha256=hashlib.sha256(reference_bytes).hexdigest(),
                   executable_sha256=trace["executable_sha256"],

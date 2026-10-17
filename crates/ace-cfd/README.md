@@ -103,7 +103,7 @@ uv run --no-project python crates/ace-cfd/benchmarks/compare.py \
   --eilmer /path/to/eilmer-install \
   --eilmer-nk /path/to/e4-nk-shared \
   --case crates/ace-cfd/cases/sphere-viscous.json \
-  --output /tmp/sphere-comparison
+  --output runs/sphere-comparison
 ```
 
 The output directory must not exist. Python needs only its standard library.
@@ -146,6 +146,14 @@ single-temperature structured benchmark layout. Restart preparation checks the
 selected payload against the time index and configured grid before copying it.
 The Newton–Krylov driver independently re-evaluates the saved state with the same
 residual thresholds; this verification is excluded from solver timing.
+It requires exact conserved checkpoints: primitive flow files alone can change
+momentum and total-energy bits when decoded and re-encoded. Generated steady cases
+enable `ace-exact-conserved-checkpoint`; each native binary snapshot has a
+`.conserved` sidecar bound to the flow and original residual-reference hashes.
+The reader checks its checksum, cell order, physical states, time and step before
+restoring conserved quantities. Primitive-only snapshots remain available for
+diagnostics but cannot qualify a Newton–Krylov comparison. Keep calculation outputs
+in persistent storage such as `runs/`; system temporary directories are not archives.
 Use `--verification-only` when other calculations may contend for CPU time; it
 retains the accuracy gates and disables qualification of a timing comparison.
 
@@ -177,6 +185,16 @@ and keeps the original reference file unchanged. `accepted-state-residual.patch`
 refreshes the steady residual before stopping checks and writes loads from the
 accepted state. These patches retain the stopping thresholds; use them together
 with the residual and state-purity trace patches for saved-state verification.
+Apply `conserved-checkpoint.patch` after these patches. It supports serial, steady,
+stationary structured 2D single-species, single-temperature cases in native binary
+format with unfrozen reconstruction; unsupported modes fail explicitly. Keep the
+marker and sidecars together.
+Restart preparation removes copied diagnostic control markers so a trace directory
+can resume ordinary iteration.
+Run `verify_eilmer_checkpoint.py --executable E4_NK --installation DGD --case INPUT_JSON
+--output UNUSED_DIRECTORY` to exercise the native writer, exact residual recovery,
+two rotated restarts and malformed-sidecar rejection on a small case. Its
+`ace-checkpoint-audit` marker enables accepted-state traces for this check only.
 Run `verify_eilmer_restart.py --source SAVED_CASE --executable E4_NK --installation DGD --output UNUSED_DIRECTORY`
 to exercise native snapshot rotation and repeated restarts while retaining the stopping thresholds.
 `outlet-zero-normal-gradient.patch` adds the explicit
@@ -202,6 +220,8 @@ uv run --no-project python crates/ace-cfd/benchmarks/trace_eilmer.py \
 
 The trace copies the checkpoint, preserves its flow and residual-reference bytes,
 and exports cell residuals, convective fluxes, total fluxes and viscous gradients.
+It evaluates the configured final interpolation order and records whether it
+matches the saved step's iteration phase; a mismatch cannot qualify saved residuals.
 It then checks the affine field `v_r = 1000 r` through Eilmer's boundary and gradient
 routines, excluding boundary intersections. The command requires the original
 case parameters and an unused output directory. Omit `--require-axis-regularity`

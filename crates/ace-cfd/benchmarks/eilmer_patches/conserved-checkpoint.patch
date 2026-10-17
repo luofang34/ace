@@ -1,0 +1,209 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -394,6 +394,8 @@
+         throw new Error("Invalid temporal_integration_mode set in user input script, please select either 0 (for steady-state), 1 (for BDF1), or 2 (for BDF2)");
+     }
+ 
++    aceRestoreConservedCheckpoint(snapshotStart);
++
+     // fill out all entries in the conserved quantity vector with the initial state
+     foreach (blk; parallel(localFluidBlocks, 1)) {
+         foreach (cell; blk.cells) {
+@@ -540,6 +542,7 @@
+         evalRHS(simTime, 0);
+         aceTraceFaces("trace-total.csv");
+         aceTraceCells();
++        aceTraceConserved();
+         copy("trace-cells.csv", "saved-cells.csv");
+         copy("trace-inviscid.csv", "saved-inviscid.csv");
+         if (exists("ace-trace-state-purity")) {
+@@ -1236,6 +1239,7 @@
+                         if (legacy) {
+                             auto fileName = make_file_name!"flow"(jobName, blk.id, nWrittenSnapshots, GlobalConfig.flowFileExt);
+                             blk.write_solution(fileName, pseudoSimTime);
++                            aceWriteConservedCheckpoint(blk, fileName, pseudoSimTime, step);
+                         } else {
+                             foreach(io; blk.block_io) {
+                                 auto fileName = make_file_name("CellData", io.tag, jobName, blk.id, nWrittenSnapshots, GlobalConfig.flowFileExt);
+@@ -1264,6 +1268,11 @@
+                                 auto fromName = make_file_name!"flow"(jobName, blk.id, iSnap, GlobalConfig.flowFileExt);
+                                 auto toName = make_file_name!"flow"(jobName, blk.id, iSnap-1, GlobalConfig.flowFileExt);
+                                 rename(fromName, toName);
++                                if (exists(aceCheckpointMarker)) {
++                                    rename(fromName ~ ".conserved", toName ~ ".conserved");
++                                    if (exists(fromName ~ ".conserved.cells.csv"))
++                                        rename(fromName ~ ".conserved.cells.csv", toName ~ ".conserved.cells.csv");
++                                }
+                             } else {
+                                 foreach (io; io_list) {
+                                     auto fromName = make_file_name("CellData", io.tag, jobName, blk.id, iSnap, GlobalConfig.flowFileExt);
+@@ -1278,6 +1287,7 @@
+                         if (legacy) {
+                             auto fileName = make_file_name!"flow"(jobName, blk.id, nTotalSnapshots, GlobalConfig.flowFileExt);
+                             blk.write_solution(fileName, pseudoSimTime);
++                            aceWriteConservedCheckpoint(blk, fileName, pseudoSimTime, step);
+                         } else {
+                             foreach(io; blk.block_io) {
+                                 auto fileName = make_file_name("CellData", io.tag, jobName, blk.id, nTotalSnapshots, GlobalConfig.flowFileExt);
+@@ -3701,3 +3711,158 @@
+         blk.myConfig.interpolate_in_local_frame=local;
+     }
+ }
++
++// SPDX-License-Identifier: GPL-3.0-or-later
++// Conserved bytes preserve the accepted residual across primitive-format restarts.
++enum aceCheckpointMarker = "ace-exact-conserved-checkpoint";
++enum ulong aceCheckpointMagic = 0x41434543504b5431UL;
++
++void aceCheckCheckpointMode(int step = 0)
++{
++    version(mpi_parallel) throw new Exception("Exact benchmark checkpoints require serial execution");
++    auto cqi = GlobalConfig.cqi;
++    if (GlobalConfig.dimensions != 2 || cqi.n != 4 || cqi.n_species != 1 ||
++        cqi.n_turb != 0 || cqi.n_modes != 0 || GlobalConfig.new_flow_format ||
++        GlobalConfig.flow_format != "rawbinary" || GlobalConfig.sssOptions.temporalIntegrationMode != 0) {
++        throw new Exception("Exact benchmark checkpoints require steady 2D single-species rawbinary flow");
++    }
++    if (GlobalConfig.grid_motion != GridMotion.none || GlobalConfig.frozen_limiter ||
++        GlobalConfig.frozen_shock_detector || step > GlobalConfig.freeze_limiter_on_step ||
++        step > GlobalConfig.shock_detector_freeze_step) {
++        throw new Exception("Exact conserved checkpoints do not store moving grids or frozen reconstruction");
++    }
++    foreach (blk; localFluidBlocks) {
++        if (cast(SFluidBlock) blk is null || blk.omegaz != 0.0)
++            throw new Exception("Exact benchmark checkpoints require stationary structured blocks");
++    }
++}
++
++void aceCheckConservedValues(double[4] values, string path)
++{
++    foreach (value; values) {
++        if (!isFinite(value)) throw new Exception("Nonfinite conserved checkpoint: " ~ path);
++    }
++    double rho = values[0];
++    if (rho <= 0.0) throw new Exception("Nonphysical conserved checkpoint: " ~ path);
++    double kinetic = 0.5 * (values[1]*values[1] + values[2]*values[2]) / rho;
++    if (!isFinite(kinetic) || values[3] <= kinetic)
++        throw new Exception("Nonphysical conserved checkpoint: " ~ path);
++}
++
++void aceTraceConserved()
++{
++    if (!exists(aceCheckpointMarker)) return;
++    auto stream = File("trace-conserved.bin", "wb");
++    foreach (blk; localFluidBlocks) {
++        auto cqi = blk.myConfig.cqi;
++        foreach (cell; blk.cells) {
++            double[4] values = [cell.U[0][cqi.mass].re, cell.U[0][cqi.xMom].re,
++                                cell.U[0][cqi.yMom].re, cell.U[0][cqi.totEnergy].re];
++            stream.rawWrite(values[]);
++        }
++    }
++}
++
++void aceWriteConservedCheckpoint(FluidBlock blk, string flowName, double time, int step)
++{
++    import std.digest.sha : sha256Of;
++    if (!exists(aceCheckpointMarker)) return;
++    aceCheckCheckpointMode(step);
++    string path = flowName ~ ".conserved";
++    auto stream = File(path ~ ".pending", "wb");
++    ulong[5] header = [aceCheckpointMagic, to!ulong(blk.id), to!ulong(blk.cells.length), to!ulong(step), 4UL];
++    double[1] clock = [time];
++    stream.rawWrite(header[]);
++    stream.rawWrite(clock[]);
++    auto flowHash = sha256Of(std.file.read(flowName));
++    auto referenceHash = sha256Of(std.file.read(GlobalConfig.base_file_name ~ "-ref-residuals.saved"));
++    stream.rawWrite(flowHash[]);
++    stream.rawWrite(referenceHash[]);
++    auto cqi = blk.myConfig.cqi;
++    foreach (index, cell; blk.cells) {
++        if (cell.id != index) throw new Exception("Nonsequential conserved cell IDs: " ~ path);
++        ulong[1] id = [to!ulong(cell.id)];
++        double[4] values = [cell.U[0][cqi.mass].re, cell.U[0][cqi.xMom].re,
++                            cell.U[0][cqi.yMom].re, cell.U[0][cqi.totEnergy].re];
++        aceCheckConservedValues(values, path);
++        stream.rawWrite(id[]);
++        stream.rawWrite(values[]);
++    }
++    stream.close();
++    auto checksum = sha256Of(std.file.read(path ~ ".pending"));
++    stream = File(path ~ ".pending", "ab");
++    stream.rawWrite(checksum[]);
++    stream.close();
++    std.file.rename(path ~ ".pending", path);
++    if (exists("ace-checkpoint-audit")) {
++        aceTraceCells();
++        copy("trace-cells.csv", path ~ ".cells.csv");
++    }
++}
++
++void aceReadConservedBlock(FluidBlock blk, string flowName, RestartInfo restart)
++{
++    import std.digest.sha : sha256Of;
++    aceCheckCheckpointMode(restart.step);
++    string path = flowName ~ ".conserved";
++    auto blob = cast(ubyte[]) std.file.read(path);
++    if (blob.length != 144 + 40 * blk.cells.length ||
++        sha256Of(blob[0..$-32])[] != blob[$-32..$]) {
++        throw new Exception("Invalid conserved checkpoint size or checksum: " ~ path);
++    }
++    auto stream = File(path, "rb");
++    ulong[5] header;
++    double[1] clock;
++    ubyte[32] flowHash, referenceHash;
++    if (stream.rawRead(header[]).length != 5 || stream.rawRead(clock[]).length != 1 ||
++        stream.rawRead(flowHash[]).length != 32 || stream.rawRead(referenceHash[]).length != 32 ||
++        header != [aceCheckpointMagic, to!ulong(blk.id), to!ulong(blk.cells.length), to!ulong(restart.step), 4UL] ||
++        clock[0] != restart.pseudoSimTime || !isFinite(clock[0]) ||
++        flowHash != sha256Of(std.file.read(flowName)) ||
++        referenceHash != sha256Of(std.file.read(GlobalConfig.base_file_name ~ "-ref-residuals.saved"))) {
++        throw new Exception("Conserved checkpoint does not match snapshot or reference: " ~ path);
++    }
++    auto cqi = blk.myConfig.cqi;
++    size_t[4] indices = [cqi.mass, cqi.xMom, cqi.yMom, cqi.totEnergy];
++    foreach (cell; blk.cells) {
++        ulong[1] id;
++        double[4] values;
++        if (stream.rawRead(id[]).length != 1 || stream.rawRead(values[]).length != 4 || id[0] != cell.id) {
++            throw new Exception("Invalid conserved checkpoint cell order: " ~ path);
++        }
++        aceCheckConservedValues(values, path);
++        foreach (j, index; indices) {
++            cell.U[0][index] = to!number(values[j]);
++        }
++        if (cell.decode_conserved(0, 0, blk.omegaz) != 0) {
++            throw new Exception("Conserved checkpoint decode failed: " ~ path);
++        }
++        double[4] decoded;
++        foreach (j, index; indices) decoded[j] = cell.U[0][index].re;
++        if ((cast(ubyte[]) decoded[]) != (cast(ubyte[]) values[])) {
++            throw new Exception("Conserved checkpoint decode changed stored bits: " ~ path);
++        }
++    }
++    writeln("ACE conserved checkpoint restored: ", path);
++}
++
++void aceRestoreConservedCheckpoint(int snapshot)
++{
++    if (!exists(aceCheckpointMarker)) {
++        foreach (blk; localFluidBlocks) {
++            auto path = make_file_name!"flow"(GlobalConfig.base_file_name, blk.id, snapshot, GlobalConfig.flowFileExt);
++            if (exists(path ~ ".conserved"))
++                throw new Exception("Conserved sidecar exists without its exact-restart mode marker");
++        }
++        return;
++    }
++    aceCheckCheckpointMode();
++    if (snapshot == 0) return;
++    RestartInfo[] times;
++    extractRestartInfoFromTimesFile(GlobalConfig.base_file_name, times);
++    if (snapshot < 0 || snapshot >= times.length) throw new Exception("Invalid conserved snapshot index");
++    foreach (blk; localFluidBlocks) {
++        auto path = make_file_name!"flow"(GlobalConfig.base_file_name, blk.id, snapshot, GlobalConfig.flowFileExt);
++        aceReadConservedBlock(blk, path, times[snapshot]);
++    }
++}

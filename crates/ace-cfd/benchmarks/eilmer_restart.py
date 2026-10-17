@@ -42,7 +42,9 @@ def prepare_restart_blocking(source, destination, cfl_schedule=(), *, binary_flo
         raise RuntimeError("Restart inputs changed while the snapshot was being copied")
     # Derived results describe the source run, not this new execution.
     for name in ("convergence.json", "results.json", "metrics.json", "trace-result.json",
-                 "repeatability.json"):
+                 "repeatability.json", "ace-trace-only", "ace-trace-jacobian",
+                 "ace-trace-jacobian-outlet", "ace-trace-state-purity",
+                 "ace-trace-constant-reconstruction"):
         (destination / name).unlink(missing_ok=True)
     log = destination / "run.log"
     if log.exists():

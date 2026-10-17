@@ -6,6 +6,7 @@ import math
 import struct
 
 from eilmer_binary import encode_flow
+from eilmer_conserved import MARKER, validate_conserved_blocking
 
 
 def binary_header(blob):
@@ -60,6 +61,17 @@ def validate_snapshot_blocking(directory, snapshot, expected_time):
     blocks = config.get("nfluidblock")
     if not isinstance(blocks, int) or blocks <= 0 or not math.isfinite(expected_time):
         raise ValueError("Positive fluid block count and finite restart time required")
+    exact = (directory / MARKER).is_file()
+    if exact and mode != "rawbinary":
+        raise ValueError("Exact conserved checkpoints require rawbinary flow")
+    step = None
+    if exact:
+        rows = [line.split() for line in (directory / "config/sphere.times").read_text().splitlines()
+                if line.strip() and not line.startswith("#")]
+        selected = [row for row in rows if int(row[0]) == snapshot]
+        if len(selected) != 1 or float(selected[0][1]) != expected_time:
+            raise ValueError("Conserved checkpoint needs an unambiguous time-index row")
+        step = int(selected[0][4])
     records = []
     for block in range(blocks):
         suffix = "bin" if mode == "rawbinary" else "gz"
@@ -74,5 +86,10 @@ def validate_snapshot_blocking(directory, snapshot, expected_time):
                              f"payload grid={header['shape']}, configured grid={shape}")
         records.append(dict(path=str(path.relative_to(directory)),
                             sha256=hashlib.sha256(data).hexdigest(), **header))
+        if exact:
+            records.append(validate_conserved_blocking(directory, path, block=block,
+                           cells=math.prod(shape), time=expected_time, step=step))
+        elif path.with_name(path.name + ".conserved").exists():
+            raise ValueError("Conserved sidecar exists without its exact-restart mode marker")
     return dict(snapshot=snapshot, expected_time=expected_time, files=records,
-                payload_time_and_grid_verified=True)
+                payload_time_and_grid_verified=True, conserved_state_exact=exact)
