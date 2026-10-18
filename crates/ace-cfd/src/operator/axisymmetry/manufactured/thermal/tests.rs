@@ -100,3 +100,60 @@ fn quadratic_wall_temperature_has_zero_heat_and_convergent_boundary_balance() {
     }
     assert!(errors[2][0] < 0.005, "{errors:?}");
 }
+
+#[test]
+fn resolved_thermal_waves_have_second_order_conduction_at_the_axis() {
+    let frequency: f64 = 1000.0;
+    let amplitude = 100.0;
+    let errors = [48, 96, 192].map(|n| {
+        let (mut op, grid) =
+            super::super::super::tests::strain_operator(n, crate::Convection::Ausmdv);
+        let samples: Vec<_> = (0..n * n)
+            .map(|i| {
+                super::super::cell_mean(grid, i % n, i / n, |x, y| {
+                    let density = 0.01 * (1.0 + 0.2 * (frequency * x).cos());
+                    let temperature =
+                        500.0 + amplitude * ((frequency * x).cos() + (frequency * y).cos());
+                    let mut source = [0.0; 5];
+                    source[4] = -op.gas.conductivity
+                        * amplitude
+                        * (frequency.powi(2) * ((frequency * x).cos() + (frequency * y).cos())
+                            + frequency * (frequency * y).sin() / y);
+                    (
+                        op.gas.conservative(Primitive {
+                            density,
+                            pressure: density * op.gas.gas_constant * temperature,
+                            velocity: [0.0; 3],
+                        }),
+                        source,
+                    )
+                })
+            })
+            .collect();
+        let state: Vec<_> = samples.iter().map(|sample| sample.0).collect();
+        let conductivity = op.gas.conductivity;
+        let residuals = [1.0, 2.0, 3.0].map(|multiple| {
+            op.gas.conductivity = multiple * conductivity;
+            op.residual(&state, true).unwrap()
+        });
+        let scale = conductivity * amplitude * frequency.powi(2);
+        let mut maximum = 0.0_f64;
+        for j in 0..n / 12 {
+            for i in n / 3..2 * n / 3 {
+                let cell = j * n + i;
+                let first = residuals[1][cell][4] - residuals[0][cell][4];
+                let second = residuals[2][cell][4] - residuals[1][cell][4];
+                assert!((first - second).abs() / scale < 1e-9);
+                maximum = maximum.max((first - samples[cell].1[4]).abs() / scale);
+            }
+        }
+        maximum
+    });
+    // The same conservative means drive convection and diffusion. Varying only
+    // conductivity isolates Fourier heat transport without assuming that this
+    // manufactured field satisfies the source-free momentum equations.
+    assert!(
+        errors[0] / errors[1] > 3.5 && errors[1] / errors[2] > 3.5 && errors[2] < 0.005,
+        "interior thermal diffusion errors: {errors:?}"
+    );
+}
