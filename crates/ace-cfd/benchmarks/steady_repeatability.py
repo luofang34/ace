@@ -31,12 +31,13 @@ def compare_walls(walls, converged, tolerance):
         timing_qualified=False)
 
 
-def repeat_eilmer_blocking(directory, case, vertices, prior, shared, executable, env):
+def repeat_eilmer_blocking(directory, case, vertices, prior, shared, executable, env, *,
+                          outlet="native"):
     """Use a converged coarse-grid initialization to check the finest cold-start result."""
     from compare import execute, load_wall
     from eilmer_case import prepare
     import eilmer_nk
-    prepare(directory, case, case["solver"]["max_steps"], vertices)
+    prepare(directory, case, case["solver"]["max_steps"], vertices, outlet=outlet)
     eilmer_nk.configure(directory)
     lua = directory / "sphere.lua"
     source = lua.read_text().replace("block = FluidBlock:new",

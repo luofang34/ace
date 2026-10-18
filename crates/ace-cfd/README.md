@@ -133,6 +133,10 @@ qualified `boundary_verification`: Eilmer's native `OutFlowBC_Simple` copies
 interior cell gradients to outlet faces, whereas Rust's zero-gradient modes remove
 normal viscous derivatives. Native reference runs therefore provide boundary
 sensitivity evidence until a common physical outlet condition has been verified.
+`--eilmer-outlet zero-normal-gradient` selects the patched zero-normal reference
+outlet for both cold-start and repeated solves. It requires `zero_gradient_cell_flux`
+in the Rust case's `outflow` setting; the selection alone does not qualify the
+independent boundary-verification gate. Omitting the option retains the native outlet.
 A failed accuracy
 gate must not be used to claim a performance advantage. This is a single timing
 sample per grid; controlled repeated timings are needed for performance claims.

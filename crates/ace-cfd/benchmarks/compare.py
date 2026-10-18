@@ -74,6 +74,8 @@ def main():
     parser.add_argument("--rust", required=True, type=Path)
     parser.add_argument("--eilmer", required=True, type=Path)
     parser.add_argument("--eilmer-nk", type=Path, help="Use this Newton–Krylov executable")
+    parser.add_argument("--eilmer-outlet", choices=("native", "zero-normal-gradient"),
+                        default="native", help="Select the reference viscous outlet condition")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--resolutions", nargs="+", type=int, default=[48, 96, 192])
     parser.add_argument("--steps", type=int, default=200000)
@@ -85,6 +87,9 @@ def main():
     if args.eilmer_nk:
         args.eilmer_nk = args.eilmer_nk.resolve()
     template = json.loads(args.case.read_text())
+    if (args.eilmer_outlet == "zero-normal-gradient"
+            and template.get("outflow", "zero_gradient") != "zero_gradient_cell_flux"):
+        raise ValueError("The zero-normal Eilmer comparison requires Rust outflow=zero_gradient_cell_flux")
     cases = [nested_case(template, n, n) for n in args.resolutions]
     args.output.mkdir(parents=True, exist_ok=False)
     args.rust = freeze(args.rust, args.output / "sphere-executable")
@@ -101,6 +106,7 @@ def main():
               "rust_sha256": hashlib.sha256(args.rust.read_bytes()).hexdigest(),
               "eilmer_sha256": hashlib.sha256((args.eilmer_nk or shared).read_bytes()).hexdigest(),
               "eilmer_method": "newton_krylov" if args.eilmer_nk else "explicit_local_time",
+              "eilmer_outlet": args.eilmer_outlet,
               "timing_scope": "serial solver process including I/O; preparation reported separately",
               "case": template,
               "validation_scope": "constant-property ideal-gas cross-code verification, not experimental validation"}
@@ -117,7 +123,7 @@ def main():
                                   prep_seconds=result["preparation_seconds"], steps=solution["steps"],
                                   converged=solution["converged"], **wall_metrics(solution["wall"])))
         ed = args.output / f"eilmer-{n}"
-        prepare(ed, case, args.steps, result.get("mesh_vertices"))
+        prepare(ed, case, args.steps, result.get("mesh_vertices"), outlet=args.eilmer_outlet)
         if args.eilmer_nk:
             eilmer_nk.configure(ed)
         prep = execute(ed, "prep", [str(shared), "--prep", "--job=sphere"], env)
@@ -142,13 +148,17 @@ def main():
     report["refinement"] = compare_refinement(report["runs"])
     report["refinement"]["boundary_verification"] = {
         "qualified": False,
-        "reason": ("Native Eilmer SimpleFlux copies interior cell viscous gradients; "
+        "reason": (("Native Eilmer SimpleFlux copies interior cell viscous gradients; "
                    "Rust outlet modes do not impose the same viscous boundary condition. "
-                   "A controlled common boundary condition must be verified before timing.")}
+                   "A controlled common boundary condition must be verified before timing.")
+                   if args.eilmer_outlet == "native" else
+                   ("Zero-normal outlet selection alone does not verify the executing operators. "
+                    "Both executables require independent fixed-state boundary verification before timing."))}
     if args.eilmer_nk:
         repeat, repeat_wall = repeat_eilmer_blocking(
             args.output / "eilmer-repeat", case, result.get("mesh_vertices"),
-            args.output / f"eilmer-{args.resolutions[0]}", shared, args.eilmer_nk, env)
+            args.output / f"eilmer-{args.resolutions[0]}", shared, args.eilmer_nk, env,
+            outlet=args.eilmer_outlet)
         report["reference_repeatability"] = compare_walls(
             [wall, repeat_wall], [convergence["converged"], repeat["converged"]],
             case["solver"]["heat_flux_tolerance"])

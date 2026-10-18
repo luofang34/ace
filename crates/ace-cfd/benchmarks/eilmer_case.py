@@ -3,7 +3,14 @@ import math
 from pathlib import Path
 
 
-def prepare(directory, case, steps, vertices=None):
+def prepare(directory, case, steps, vertices=None, *, outlet="native"):
+    try:
+        outlet_bc = {
+            "native": "OutFlowBC_Simple:new{}",
+            "zero-normal-gradient": "OutFlowBC_SimpleFlux:new{zeroNormalViscousGradients=true}",
+        }[outlet]
+    except KeyError as error:
+        raise ValueError(f"Unsupported Eilmer outlet selection: {outlet}") from error
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=False)
     g, gas, inflow = case["grid"], case["gas"], case["inflow"]
@@ -66,5 +73,5 @@ grid = StructuredGrid:new{{filename='mesh.vtk',fmt='vtk'}}
 block = FluidBlock:new{{grid=grid,initialState=inflow,
  bcList={{west=InFlowBC_Supersonic:new{{flowState=inflow}},
  east=WallBC_NoSlip_FixedT:new{{Twall={case['wall_temperature']:.17g},group='loads'}},
- north=OutFlowBC_Simple:new{{}}}}}}
+ north={outlet_bc}}}}}
 """)
