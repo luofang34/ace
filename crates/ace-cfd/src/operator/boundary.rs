@@ -13,9 +13,9 @@ pub enum Outflow {
     ZeroGradient,
     /// Extrapolate using gradients fitted to interior and wall samples only.
     OneSided,
-    /// Use the cell convective flux with the same one-sided viscous gradients.
+    /// Decode conservative cell means for convection; retain one-sided viscous gradients.
     CellFlux,
-    /// Copy the cell convective state while retaining zero normal viscous gradients.
+    /// Decode conservative cell means for convection; impose zero normal viscous gradients.
     ZeroGradientCellFlux,
 }
 

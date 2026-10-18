@@ -86,6 +86,18 @@ def viscous_flux(velocity, gradient, center, normal, gas, project=True):
     return [0.0, traction[0], traction[1], 0.0, energy]
 
 
+def conservative_primitive(state, gas):
+    """Decode a conservative cell mean without a primitive covariance correction."""
+    rho, mx, my, mz, energy = state
+    if rho <= 0:
+        raise ValueError("Outlet conservative density must be positive")
+    velocity = [mx / rho, my / rho, mz / rho]
+    pressure = (gas["gamma"] - 1) * (energy - 0.5 * rho * sum(v * v for v in velocity))
+    if pressure <= 0:
+        raise ValueError("Outlet conservative pressure must be positive")
+    return dict(density=rho, velocity=velocity, pressure=pressure)
+
+
 def point_fluxes(cell, face, moments, gas):
     """Recover the viscous point velocity and equal-state Euler convection."""
     q, g = cell["primitive"], cell["gradient"]
@@ -97,8 +109,9 @@ def point_fluxes(cell, face, moments, gas):
              + (g[2][1] - q["velocity"][1] / cy) / cy * (y*y - odd_y2) / (2 * cy))
     expected = viscous_flux((u, v), g, face["center"], face["normal"], gas)
     unprojected = viscous_flux((u, v), g, face["center"], face["normal"], gas, False)
-    rho, p = q["density"], q["pressure"]
-    qx, qy, qz = q["velocity"]
+    convective_state = conservative_primitive(cell["mean_state"], gas)
+    rho, p = convective_state["density"], convective_state["pressure"]
+    qx, qy, qz = convective_state["velocity"]
     nx, ny, _ = face["normal"]
     speed = qx * nx + qy * ny
     energy = p / (gas["gamma"] - 1) + 0.5 * rho * (qx*qx + qy*qy + qz*qz)
@@ -180,8 +193,9 @@ def compare_traces(case, saved, diagnostic, trace):
         if owner not in moments:
             raise RuntimeError("Outlet face owner is outside the last angular row")
         cell = cells[owner]
-        if face["left"] != cell["primitive"] or face["right"] != cell["primitive"]:
-            raise RuntimeError("Outlet convection must use the adjacent cell state")
+        expected_state = conservative_primitive(cell["mean_state"], case["gas"])
+        if face["left"] != expected_state or face["right"] != expected_state:
+            raise RuntimeError("Outlet convection must decode the adjacent conservative state")
         nx, ny, nz = face["normal"]
         if (abs(nx - 1) > 1e-14 or abs(ny) > 1e-14 or nz != 0
                 or face["center"][1] <= 0 or face["area"] <= 0):
@@ -203,7 +217,7 @@ def compare_traces(case, saved, diagnostic, trace):
                 quadrature_points=len(points), maximum_scaled_viscous_flux_error=error,
                 unprojected_gradient_difference=difference,
                 viscous_outward_power=math.fsum(powers), conserved_bits_identical=True,
-                convective_states_equal_adjacent_cell=True, iterations_advanced=0,
+                convective_states_decode_conservative_means=True, iterations_advanced=0,
                 spatial_qualified=False, timing_qualified=False)
 
 
