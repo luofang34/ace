@@ -28,6 +28,66 @@ fn curved_operator() -> (FlowOperator, SphereGrid) {
 }
 
 #[test]
+fn shock_sensor_transitions_keep_curved_viscous_residuals_continuous() {
+    for scheme in [crate::Convection::default(), crate::Convection::Ausmdv] {
+        let (op, grid) = curved_operator();
+        let op = op.with_convection(scheme);
+        for threshold in [0.05, 0.20] {
+            let differences = [1.0e-4, 1.0e-6, 1.0e-8].map(|epsilon| {
+                let residuals = [-1.0, 1.0].map(|sign| {
+                    let ratio = threshold + sign * epsilon;
+                    let pressure = op.inflow.pressure * (1.0 + ratio) / (1.0 - ratio);
+                    let rho = op.inflow.density;
+                    let strain = 1000.0_f64;
+                    let state: Vec<_> = op
+                        .mesh
+                        .cells
+                        .iter()
+                        .enumerate()
+                        .map(|(i, cell)| {
+                            let p = if i % grid.radial_cells < grid.radial_cells / 2 {
+                                op.inflow.pressure
+                            } else {
+                                pressure
+                            };
+                            // Exact conservative means retain regular radial velocity
+                            // and prevent kinetic averaging from shifting the threshold.
+                            let yy = axisymmetry::moment_coordinates(cell)[0][1];
+                            [
+                                rho,
+                                rho * 200.0,
+                                rho * strain * cell.center[1],
+                                0.0,
+                                p / (op.gas.gamma - 1.0)
+                                    + 0.5 * rho * (200.0_f64.powi(2) + strain.powi(2) * yy),
+                            ]
+                        })
+                        .collect();
+                    let mut workspace = op.workspace();
+                    op.prepare(&state, &mut workspace).unwrap();
+                    let id = (grid.angular_cells / 3) * grid.radial_cells + grid.radial_cells / 2;
+                    let expected = ((ratio - 0.05) / 0.15).clamp(0.0, 1.0);
+                    assert!((workspace.shock_sensor[id] - expected).abs() < 1e-12);
+                    op.residual(&state, true).unwrap()
+                });
+                residuals[0]
+                    .iter()
+                    .flatten()
+                    .zip(residuals[1].iter().flatten())
+                    .map(|(a, b)| (a - b).abs())
+                    .fold(0.0_f64, f64::max)
+            });
+            assert!(
+                differences[0] > 0.0
+                    && differences[1] < 0.02 * differences[0]
+                    && differences[2] < 0.02 * differences[1],
+                "{scheme:?}, threshold={threshold}, residual jumps={differences:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn limiter_preserves_affine_fields_in_cell_moment_coordinates() {
     let (op, grid) = curved_operator();
     for axial in [4000.0, 6500.0] {
