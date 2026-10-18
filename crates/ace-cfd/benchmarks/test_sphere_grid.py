@@ -122,6 +122,46 @@ class SphereGridTests(unittest.TestCase):
             self.assertNotEqual(refused.returncode, 0)
             self.assertEqual(output.read_bytes(), before)
 
+    def test_comparison_driver_passes_the_requested_nested_mesh_to_the_solver(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, output = root / "master.json", root / "run"
+            master = self.aligned()
+            source.write_text(json.dumps(master))
+            executable = root / "capture"
+            executable.write_text(f"#!{sys.executable}\nraise RuntimeError('stop before solving')\n")
+            executable.chmod(0o755)
+            reference = root / "eilmer/bin"
+            reference.mkdir(parents=True)
+            (reference / "e4shared").write_bytes(executable.read_bytes())
+            result = subprocess.run([
+                sys.executable, str(Path(__file__).with_name("compare.py")),
+                "--case", str(source), "--output", str(output), "--rust", str(executable),
+                "--eilmer", str(reference.parent), "--resolutions", "4", "8", "16",
+                "--steps", "12345", "--verification-only"], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("stop before solving", (output / "rust-4/run.log").read_text())
+            case = json.loads((output / "rust-4/input.json").read_text())
+            self.assertEqual(case["mesh_vertices"],
+                             [master["mesh_vertices"][j * 4 * 17 + i * 4]
+                              for j in range(5) for i in range(5)])
+            self.assertEqual(case["outflow"], master["outflow"])
+            self.assertEqual(case["solver"], dict(master["solver"], max_steps=12345))
+
+    def test_comparison_driver_rejects_incompatible_master_before_creating_a_run(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, output = root / "master.json", root / "run"
+            source.write_text(json.dumps(self.aligned(8, 8)))
+            result = subprocess.run([
+                sys.executable, str(Path(__file__).with_name("compare.py")),
+                "--case", str(source), "--output", str(output), "--rust", str(root / "unused"),
+                "--eilmer", str(root / "unused"), "--resolutions", "4", "8", "16"],
+                capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("divide the supplied master grid", result.stderr)
+            self.assertFalse(output.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

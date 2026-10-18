@@ -13,6 +13,7 @@ import time
 from eilmer_case import prepare
 from eilmer_run import run as run_eilmer
 from convergence import compare_refinement, time_to_tolerance
+from sphere_grid import nested_case
 from steady_repeatability import compare_walls, repeat_eilmer_blocking
 import eilmer_nk
 
@@ -83,6 +84,8 @@ def main():
     args.rust, args.eilmer, args.output = args.rust.resolve(), args.eilmer.resolve(), args.output.resolve()
     if args.eilmer_nk:
         args.eilmer_nk = args.eilmer_nk.resolve()
+    template = json.loads(args.case.read_text())
+    cases = [nested_case(template, n, n) for n in args.resolutions]
     args.output.mkdir(parents=True, exist_ok=False)
     args.rust = freeze(args.rust, args.output / "sphere-executable")
     shared = freeze(args.eilmer / "bin/e4shared", args.output / "eilmer-shared-executable")
@@ -91,7 +94,6 @@ def main():
         shutil.copyfile(script, args.output / script.name)
     if args.eilmer_nk:
         args.eilmer_nk = freeze(args.eilmer_nk, args.output / "eilmer-nk-executable")
-    template = json.loads(args.case.read_text())
     env = dict(os.environ, DGD=str(args.eilmer), DGD_LUA_PATH=str(args.eilmer / "lib/?.lua"),
                DGD_LUA_CPATH=str(args.eilmer / "lib/?.so"))
     env["PATH"] = str(args.eilmer / "bin") + os.pathsep + env.get("PATH", "")
@@ -102,9 +104,7 @@ def main():
               "timing_scope": "serial solver process including I/O; preparation reported separately",
               "case": template,
               "validation_scope": "constant-property ideal-gas cross-code verification, not experimental validation"}
-    for n in args.resolutions:
-        case = json.loads(json.dumps(template))
-        case["grid"].update(radial_cells=n, angular_cells=n)
+    for n, case in zip(args.resolutions, cases, strict=True):
         case["solver"]["max_steps"] = args.steps
         rd = args.output / f"rust-{n}"
         rd.mkdir()
