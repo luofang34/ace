@@ -222,6 +222,12 @@ to verify the selected boundary on a checkpoint without advancing it. The check
 compares against independent Newtonian stress and Fourier conduction formulas and
 requires unchanged convection, cell states, cell gradients and non-outlet fluxes.
 It checks the outlet only; the spatial and repeatability gates still apply.
+For the Rust `zero_gradient_cell_flux` outlet, use `verify_rust_outlet.py
+--case INPUT_JSON --saved RESULT_JSON --executable SPHERE_BINARY --output UNUSED_DIRECTORY`.
+The case must supply the saved curved mesh explicitly and have zero swirl. The
+check freezes and hashes its inputs, verifies conserved-state bits, and independently
+integrates cell moments to recover every outlet quadrature-point flux. It does not
+advance the state or qualify interior gradients and spatial convergence.
 
 ```sh
 uv run --no-project python crates/ace-cfd/benchmarks/trace_eilmer.py \
