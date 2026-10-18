@@ -19,6 +19,23 @@ pub struct CellDiagnostic {
     pub temperature_mean: f64,
     /// Physical gradients of density, three velocities, pressure and temperature.
     pub gradient: [Vector; 6],
+    /// Gradients before limiting in the even scalar and odd radial-velocity coordinates.
+    /// The radial velocity entry differentiates v/y; other entries differentiate
+    /// the primitive quantities with respect to x and y²/(2*cell-center y).
+    pub regular_gradient: [Vector; 6],
+    /// Convective gradients after limiting and shock projection, in regular
+    /// coordinates for curved cells and Cartesian coordinates for planar cells.
+    /// The entries are density, three velocities and pressure; curved pressure
+    /// traces instead use `pressure_coefficients`.
+    pub limited_gradient: [Vector; 5],
+    /// Curved-cell pressure polynomial used at faces and in volume sources.
+    /// Its basis is x, z, x²/2, xz, z²/2, x³/6, x²z/2, x⁴/24, with each monomial
+    /// centered by its volume mean. Here x is measured from the volume centroid
+    /// and z=(y²-mean(y²))/(2*cell-center y).
+    /// Planar cells use only the first two coefficients, for Cartesian x and y.
+    pub pressure_coefficients: [f64; 8],
+    /// Squared relative pressure-fit defect on held-out cell means, bounded to `[0,1]`.
+    pub pressure_model_defect: f64,
     /// Continuous pressure sensor used for shock dissipation.
     pub shock_sensor: f64,
     /// Unscaled conservative time derivative, including axisymmetric sources.
@@ -105,6 +122,10 @@ impl FlowOperator {
                 primitive: workspace.primitive[i],
                 temperature_mean: workspace.temperature_mean[i],
                 gradient: workspace.gradient[i].raw,
+                regular_gradient: workspace.gradient[i].regular,
+                limited_gradient: workspace.gradient[i].limited,
+                pressure_coefficients: workspace.pressure[i],
+                pressure_model_defect: workspace.pressure_defect[i],
                 shock_sensor: workspace.shock_sensor[i],
                 residual: workspace.residual[i],
                 time_step: workspace.time_step[i],
