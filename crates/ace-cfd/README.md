@@ -65,6 +65,16 @@ The example also accepts `mesh_vertices` in the input: Cartesian points ordered
 angle-major, from wall to far field, with `(radial_cells + 1) * (angular_cells + 1)`
 entries. These coordinates override the grid generator and must preserve the
 spherical wall, symmetry axis, equatorial outlet and convex cells.
+`sphere_grid.py --case CASE --output INPUT --radial-cells NR --angular-cells NT
+--nose N --curvature C --stretching S --mach M` generates explicit vertices from a
+hyperbolic guide at the specified Mach number. `N` and `C` are its nose distance and curvature
+radius divided by the body radius. The guide crosses half the radial index;
+its angular shape blends in away from the wall to retain near-wall spacing.
+This prepares geometry only and preserves the case's boundary and solver settings.
+`verify_directional.py --case INPUT` can sample a supplied master grid: each requested
+cell count must divide the corresponding master count. It retains exact selected
+vertices, saves the master input and its hash, and writes solve checkpoints alongside
+the results. Use a persistent output directory under `runs/` for long studies.
 Set `curved_geometry: true` to integrate polar cells with a spherical wall and
 curved radial faces. Every angular row of supplied vertices must lie on one ray;
 radial levels interpolate linearly between angular nodes. Wall reconstruction
