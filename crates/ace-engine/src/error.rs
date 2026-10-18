@@ -4,6 +4,15 @@ use thiserror::Error;
 /// Domain or serialization error that prevents constructing or editing a session.
 #[derive(Debug, Error)]
 pub enum EngineError {
+    /// A registered solver cannot satisfy the selected analysis contract.
+    #[error("analysis {analysis}: {source}")]
+    Contract {
+        /// Analysis or registered solver identifier.
+        analysis: String,
+        /// Original contract failure.
+        #[source]
+        source: ace_model::ContractError,
+    },
     /// Execution canceled or its deadline elapsed.
     #[error(transparent)]
     Interrupted(#[from] crate::Interruption),
@@ -34,6 +43,9 @@ pub type EngineResult<T> = Result<T, EngineError>;
 /// Typed failure from an installed solver.
 #[derive(Debug, Error)]
 pub enum SolverError {
+    /// A declared applicability or invocation contract was violated.
+    #[error(transparent)]
+    Contract(#[from] ace_model::ContractError),
     /// Execution canceled or its deadline elapsed.
     #[error(transparent)]
     Interrupted(#[from] crate::Interruption),

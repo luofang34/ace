@@ -56,6 +56,8 @@ fn registry() -> Registry {
     registry
         .register(Arc::new(FractionPhase {
             spec: PluginSpec {
+                mode: ace_model::AnalysisMode::Phase,
+                domain: Default::default(),
                 identity: PluginIdentity {
                     id: "test.phase".into(),
                     version: "1".into(),

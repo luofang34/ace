@@ -39,6 +39,9 @@ pub struct PhaseOutput {
 pub struct PhaseRun {
     /// Actual adapter identity, including explicit preview substitutions.
     pub plugin: PluginIdentity,
+    /// Exact invocation contract; absent only in evidence without recorded contracts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contract: Option<super::PluginSpec>,
     /// Exact named scalar inputs after unit conversion.
     pub inputs: BTreeMap<String, Quantity>,
     /// Entry state with the phase controls already applied.
@@ -69,22 +72,17 @@ impl Registry {
                 ))
             })?;
         let spec = plugin.spec();
-        if !spec.inputs.keys().eq(analysis.inputs.keys()) || !spec.outputs.is_empty() {
+        if spec.mode != AnalysisMode::Phase
+            || !spec.inputs.keys().eq(analysis.inputs.keys())
+            || !spec.outputs.is_empty()
+            || !analysis.outputs.is_empty()
+        {
             return Err(SolverError::Failed(format!(
                 "phase port contract mismatch: {}",
                 analysis.plugin
             )));
         }
-        let mut inputs = BTreeMap::new();
-        for ((port, parameter), unit) in analysis.inputs.iter().zip(spec.inputs.values()) {
-            let value = context.values.get(parameter).ok_or_else(|| {
-                SolverError::Failed(format!(
-                    "phase {} missing input {parameter}",
-                    analysis.plugin
-                ))
-            })?;
-            inputs.insert(port.clone(), value.to(*unit)?);
-        }
+        let inputs = phase_inputs(analysis, spec, context.values)?;
         let resources = context.resources.for_phase(analysis)?;
         let mut dependencies = resources.dependencies();
         dependencies.extend(analysis.inputs.values().cloned());
@@ -100,23 +98,83 @@ impl Registry {
             registry: self,
         };
         self.control().checkpoint()?;
+        spec.domain.check(&inputs, Some(&state.conditions))?;
         let mut output = plugin.evaluate_phase(&inputs, state, &scoped)?;
         self.control().checkpoint()?;
-        for artifact in &output.artifacts {
-            artifact.validate()?;
-        }
-        if output.increments.is_empty() || output.increments.len() > 100_000 {
-            return Err(SolverError::Failed(format!(
-                "phase {} requires 1..=100000 integration intervals",
-                analysis.plugin
-            )));
-        }
+        validate_output(&output, spec, &inputs, state, self.control())?;
         output.approximate |= spec.identity.fidelity == Fidelity::Surrogate;
         Ok(PhaseRun {
             plugin: spec.identity.clone(),
+            contract: Some(spec.clone()),
             inputs,
             initial_state: state.clone(),
             output,
         })
     }
 }
+
+fn phase_inputs(
+    analysis: &Analysis,
+    spec: &super::PluginSpec,
+    values: &BTreeMap<String, Quantity>,
+) -> Result<BTreeMap<String, Quantity>, SolverError> {
+    analysis
+        .inputs
+        .iter()
+        .zip(spec.inputs.values())
+        .map(|((port, parameter), schema)| {
+            let value = values.get(parameter).ok_or_else(|| {
+                ace_model::ContractError::invalid(
+                    &analysis.plugin,
+                    format!("missing phase input {parameter}"),
+                )
+            })?;
+            Ok((port.clone(), value.to(schema.unit)?))
+        })
+        .collect()
+}
+
+fn validate_output(
+    output: &PhaseOutput,
+    spec: &super::PluginSpec,
+    inputs: &BTreeMap<String, Quantity>,
+    state: &VehicleState,
+    control: &crate::RunControl,
+) -> Result<(), SolverError> {
+    use ace_model::{ContractError, Unit};
+    for artifact in &output.artifacts {
+        artifact.validate()?;
+    }
+    if output.increments.is_empty() || output.increments.len() > 100_000 {
+        return Err(ContractError::invalid(
+            &spec.identity.id,
+            "requires 1..=100000 integration intervals",
+        )
+        .into());
+    }
+    let mut conditions = state.conditions.clone();
+    for increment in &output.increments {
+        control.checkpoint()?;
+        for (name, value, unit) in [
+            ("duration", increment.duration, Unit::Second),
+            ("distance", increment.distance, Unit::Meter),
+            ("fuel_burn", increment.fuel_burn, Unit::Kilogram),
+            ("cost", increment.cost, Unit::Dollar),
+        ] {
+            if value.to(unit)?.value < 0.0 {
+                return Err(
+                    ContractError::invalid(name, "phase increment must be nonnegative").into(),
+                );
+            }
+        }
+        for value in increment.conditions.values() {
+            value.to(value.unit)?;
+        }
+        conditions.extend(increment.conditions.clone());
+        spec.domain.check(inputs, Some(&conditions))?;
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests;

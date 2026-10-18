@@ -53,13 +53,15 @@ impl Wing {
             ("twist", Unit::Degree),
         ]
         .into_iter()
-        .map(|(name, unit)| (name.into(), unit))
+        .map(|(name, unit)| (name.into(), unit.into()))
         .collect();
         Ok(Self {
             spec: PluginSpec {
+                mode: ace_model::AnalysisMode::Scalar,
+                domain: Default::default(),
                 identity,
                 inputs,
-                outputs: BTreeMap::from([("wetted_area".into(), Unit::SquareMeter)]),
+                outputs: BTreeMap::from([("wetted_area".into(), Unit::SquareMeter.into())]),
             },
             backend,
             binary,

@@ -89,6 +89,7 @@ impl Executor<'_> {
             node: node.id.clone(),
             model_digest: self.digest.into(),
             plugin: None,
+            contract: None,
             calculation: serde_json::Value::Null,
             inputs,
             outputs: BTreeMap::new(),
@@ -110,6 +111,10 @@ impl Executor<'_> {
                         .registry
                         .get(&analysis.plugin, &analysis.version)
                         .map(|plugin| plugin.spec().identity.clone());
+                    run.contract = self
+                        .registry
+                        .get(&analysis.plugin, &analysis.version)
+                        .map(|plugin| plugin.spec().clone());
                     run.resources = ace_model::AnalysisResources::collect(self.model, analysis)?;
                 }
             }
@@ -214,16 +219,18 @@ impl Executor<'_> {
             let value = values
                 .get(parameter)
                 .ok_or_else(|| ModelError::UnknownReference(parameter.clone()))?;
-            inputs.insert(port.clone(), value.to(*unit)?);
+            inputs.insert(port.clone(), value.to(unit.unit)?);
         }
         for (parameter, unit) in analysis.outputs.values().zip(spec.outputs.values()) {
-            Quantity::new(1.0, *unit)?.to(self.model.parameter(parameter)?.unit)?;
+            Quantity::new(1.0, unit.unit)?.to(self.model.parameter(parameter)?.unit)?;
         }
         let geometry = AnalysisContext {
             resources: ace_model::AnalysisResources::collect(self.model, analysis)?,
             values,
             registry: self.registry,
         };
+        spec.domain.check(&inputs, None)?;
+        self.registry.control().checkpoint()?;
         let result = plugin.evaluate(&inputs, &geometry)?;
         self.registry.control().checkpoint()?;
         for artifact in &result.artifacts {
@@ -245,7 +252,7 @@ impl Executor<'_> {
                 .values
                 .get(port)
                 .ok_or_else(|| ModelError::UnknownReference(port.clone()))?;
-            outputs.insert(parameter.clone(), value.to(*unit)?);
+            outputs.insert(parameter.clone(), value.to(unit.unit)?);
         }
         Ok(PluginOutput {
             values: outputs,

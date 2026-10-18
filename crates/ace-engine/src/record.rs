@@ -67,6 +67,9 @@ pub struct RunRecord {
     pub model_digest: String,
     /// Executable identity; expressions and closure relaxation have no plugin.
     pub plugin: Option<PluginIdentity>,
+    /// Exact scalar contract used by this invocation, including executable limits.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contract: Option<crate::PluginSpec>,
     /// Serialized expression or closure settings.
     pub calculation: serde_json::Value,
     /// Consumed canonical value records.

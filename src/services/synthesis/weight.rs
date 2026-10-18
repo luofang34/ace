@@ -14,6 +14,8 @@ impl WeightPlugin {
     pub fn new() -> Self {
         Self {
             spec: PluginSpec {
+                mode: ace_model::AnalysisMode::Scalar,
+                domain: domain(),
                 identity: PluginIdentity {
                     id: "aircraft.weight_closure".into(),
                     version: "1".into(),
@@ -21,16 +23,16 @@ impl WeightPlugin {
                     code_revision: ace_engine::implementation_identity().digest,
                 },
                 inputs: BTreeMap::from([
-                    ("payload".into(), Unit::Kilogram),
-                    ("fuel".into(), Unit::Kilogram),
-                    ("empty_coefficient".into(), Unit::Ratio),
-                    ("empty_exponent".into(), Unit::Ratio),
-                    ("lower_mass".into(), Unit::Kilogram),
-                    ("upper_mass".into(), Unit::Kilogram),
+                    ("payload".into(), Unit::Kilogram.into()),
+                    ("fuel".into(), Unit::Kilogram.into()),
+                    ("empty_coefficient".into(), Unit::Ratio.into()),
+                    ("empty_exponent".into(), Unit::Ratio.into()),
+                    ("lower_mass".into(), Unit::Kilogram.into()),
+                    ("upper_mass".into(), Unit::Kilogram.into()),
                 ]),
                 outputs: BTreeMap::from([
-                    ("mtow".into(), Unit::Kilogram),
-                    ("residual".into(), Unit::Kilogram),
+                    ("mtow".into(), Unit::Kilogram.into()),
+                    ("residual".into(), Unit::Kilogram.into()),
                 ]),
             },
         }
@@ -94,4 +96,31 @@ fn value(inputs: &BTreeMap<String, Quantity>, port: &str) -> Result<f64, SolverE
         .get(port)
         .map(|quantity| quantity.value)
         .ok_or_else(|| SolverError::Failed(format!("missing weight input port {port}")))
+}
+
+fn domain() -> ace_model::ValidityDomain {
+    use ace_model::{DomainBound, DomainLimit, DomainVariable, ValidityDomain};
+    let bounds = [
+        ("payload", Unit::Kilogram),
+        ("fuel", Unit::Kilogram),
+        ("empty_coefficient", Unit::Ratio),
+        ("empty_exponent", Unit::Ratio),
+        ("lower_mass", Unit::Kilogram),
+        ("upper_mass", Unit::Kilogram),
+    ]
+    .into_iter()
+    .map(|(name, unit)| {
+        let mut bound = DomainBound::positive(DomainVariable::Input(name.into()), unit);
+        if matches!(name, "payload" | "fuel") {
+            bound.lower = Some(DomainLimit {
+                value: 0.0,
+                inclusive: true,
+            });
+        }
+        bound
+    })
+    .collect();
+    ValidityDomain { bounds, assumptions: vec![
+        "Empirical empty-mass power law; the solver also requires an ordered sign-changing mass bracket".into(),
+    ] }
 }

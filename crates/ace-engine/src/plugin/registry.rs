@@ -49,6 +49,13 @@ impl Registry {
     /// Add a solver with a previously unused identifier/version.
     pub fn register(&mut self, plugin: Arc<dyn AnalysisPlugin>) -> EngineResult<()> {
         let identity = &plugin.spec().identity;
+        plugin
+            .spec()
+            .validate()
+            .map_err(|source| crate::EngineError::Contract {
+                analysis: identity.id.clone(),
+                source,
+            })?;
         let key = (identity.id.clone(), identity.version.clone());
         if self.plugins.contains_key(&key) {
             return Err(EngineError::DuplicatePlugin(key.0, key.1));
@@ -79,10 +86,18 @@ impl Registry {
             return Err(invalid("preview adapter is already registered"));
         }
         let spec = plugin.spec();
+        spec.validate()
+            .map_err(|source| crate::EngineError::Contract {
+                analysis: spec.identity.id.clone(),
+                source,
+            })?;
         if !fast(spec) {
             return Err(invalid("preview adapter must be conceptual or surrogate"));
         }
-        if spec.inputs != original.spec().inputs || spec.outputs != original.spec().outputs {
+        if spec.mode != original.spec().mode
+            || spec.inputs != original.spec().inputs
+            || spec.outputs != original.spec().outputs
+        {
             return Err(invalid(
                 "preview ports and units must match the authoritative solver",
             ));

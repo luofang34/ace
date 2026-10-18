@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "name": "one-minute-constant-rates",
+  "reference": {
+    "kind": "analytic",
+    "citation": "Hand integration: 60 s * 2 m/s = 120 m; 60 s * 0.05 kg/s = 3 kg; 60 s * 0.2 USD/s = 12 USD.",
+    "assumptions": [
+      "Prescribed constant rates; no aerodynamic or propulsion prediction.",
+      "Numerical integration identity only; not physical calibration."
+    ]
+  },
+  "configuration": {},
+  "expected": {
+    "elapsed": {
+      "value": {
+        "value": 60,
+        "unit": "s"
+      },
+      "tolerance": {
+        "absolute": {
+          "value": 1e-08,
+          "unit": "s"
+        },
+        "relative": 1e-12
+      }
+    },
+    "distance": {
+      "value": {
+        "value": 120,
+        "unit": "m"
+      },
+      "tolerance": {
+        "absolute": {
+          "value": 1e-08,
+          "unit": "m"
+        },
+        "relative": 1e-12
+      }
+    },
+    "burn": {
+      "value": {
+        "value": 3,
+        "unit": "kg"
+      },
+      "tolerance": {
+        "absolute": {
+          "value": 1e-08,
+          "unit": "kg"
+        },
+        "relative": 1e-12
+      }
+    },
+    "cost": {
+      "value": {
+        "value": 12,
+        "unit": "USD"
+      },
+      "tolerance": {
+        "absolute": {
+          "value": 1e-08,
+          "unit": "USD"
+        },
+        "relative": 1e-12
+      }
+    }
+  }
+}

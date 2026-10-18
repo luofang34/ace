@@ -164,9 +164,9 @@ fn preview_registration_rejects_ambiguous_or_incompatible_contracts() -> crate::
     for (input, unit) in [(true, Unit::Meter), (false, Unit::Meter)] {
         let mut bad = recorded("bad", Fidelity::Surrogate, 1.0).spec.clone();
         if input {
-            bad.inputs.insert("input".into(), unit);
+            bad.inputs.insert("input".into(), unit.into());
         } else {
-            bad.outputs.insert("output".into(), unit);
+            bad.outputs.insert("output".into(), unit.into());
         }
         assert!(
             registry

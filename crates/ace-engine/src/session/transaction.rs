@@ -35,6 +35,7 @@ impl Session {
             }
         }
         let graph = Graph::compile(&model)?;
+        self.registry.validate_model(&model)?;
         let model_digest = digest(&model)?;
         let dirty = affected(self, &model, &graph)?;
         let mut values = initial_values(&model, &graph)?;

@@ -173,6 +173,7 @@ fn relax(
         node: format!("closure:{id}"),
         model_digest: executor.digest.into(),
         plugin: None,
+        contract: None,
         calculation: serde_json::to_value(closure)?,
         inputs,
         outputs,

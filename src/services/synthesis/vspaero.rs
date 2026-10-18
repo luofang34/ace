@@ -56,15 +56,17 @@ impl PolarPlugin {
             ("thickness", Unit::Ratio),
         ]
         .into_iter()
-        .map(|(name, unit)| (name.into(), unit))
+        .map(|(name, unit)| (name.into(), unit.into()))
         .collect();
         Ok(Self {
             spec: PluginSpec {
+                mode: ace_model::AnalysisMode::Scalar,
+                domain: domain(),
                 identity,
                 inputs,
                 outputs: PORTS
                     .into_iter()
-                    .map(|name| (name.into(), Unit::Ratio))
+                    .map(|name| (name.into(), super::flight::contract::polar_port(name)))
                     .collect(),
             },
             backend,
@@ -132,23 +134,39 @@ impl PolarPlugin {
 }
 
 fn validate(values: &BTreeMap<String, f64>) -> Result<(), SolverError> {
-    let read = |name| {
-        values
-            .get(name)
-            .copied()
-            .ok_or_else(|| SolverError::Failed(format!("missing polar input {name}")))
-    };
-    if read("area")? <= 0.0
-        || read("span")? <= 0.0
-        || !(0.1..=1.0).contains(&read("taper")?)
-        || read("sweep")?.abs() > 40.0
-        || read("dihedral")?.abs() > 10.0
-        || read("twist")?.abs() > 1e-10
-        || (read("thickness")? - 0.12).abs() > 1e-10
-    {
-        return Err(SolverError::Failed("VSPAERO reduction requires positive area/span, taper 0.1..1, sweep +/-40 deg, dihedral +/-10 deg, zero twist and symmetric 12%-thick airfoils".into()));
+    let domain = domain();
+    let mut inputs = BTreeMap::new();
+    for bound in &domain.bounds {
+        if let ace_model::DomainVariable::Input(name) = &bound.variable
+            && let Some(value) = values.get(name)
+        {
+            inputs.insert(name.clone(), Quantity::new(*value, bound.unit)?);
+        }
     }
+    domain.check(&inputs, None)?;
     Ok(())
+}
+
+fn domain() -> ace_model::ValidityDomain {
+    use ace_model::{DomainBound, DomainVariable, ValidityDomain};
+    let input = |name: &str| DomainVariable::Input(name.into());
+    let mut bounds = vec![
+        DomainBound::positive(input("area"), Unit::SquareMeter),
+        DomainBound::positive(input("span"), Unit::Meter),
+    ];
+    for (name, unit, lower, upper) in [
+        ("taper", Unit::Ratio, 0.1, 1.0),
+        ("sweep", Unit::Degree, -40.0, 40.0),
+        ("dihedral", Unit::Degree, -10.0, 10.0),
+        ("twist", Unit::Degree, -1e-10, 1e-10),
+        ("thickness", Unit::Ratio, 0.12 - 1e-10, 0.12 + 1e-10),
+    ] {
+        bounds.push(DomainBound::closed(input(name), unit, lower, upper));
+    }
+    ValidityDomain { bounds, assumptions: vec![
+        "Isolated untwisted symmetric NACA 0012 wing; attached flow; default mesh and wake".into(),
+        "Induced-drag reduction only; no whole-aircraft interference, trim, stall, transonic shocks or experimental calibration".into(),
+    ] }
 }
 
 impl AnalysisPlugin for PolarPlugin {
