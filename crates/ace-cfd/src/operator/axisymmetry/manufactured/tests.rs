@@ -148,6 +148,75 @@ fn resolved_thin_thermal_layer_retains_second_order_wall_heat() {
 }
 
 #[test]
+fn nonlinear_wall_factors_converge_without_mutual_error_cancellation() {
+    let gas = IdealGas {
+        gamma: 1.4,
+        gas_constant: 287.05,
+        viscosity: 1.8e-5,
+        conductivity: 0.025116875,
+    };
+    let thickness = 0.00016;
+    let thermal_ratio = 1.8;
+    let wall_temperature = 300.0;
+    let inflow = Primitive {
+        density: 3000.0 / (gas.gas_constant * wall_temperature),
+        pressure: 3000.0,
+        velocity: [0.0; 3],
+    };
+    for variable_density in [false, true] {
+        let errors = [192, 384, 768].map(|n| {
+            let grid = crate::SphereGrid {
+                radius: 0.01,
+                outer_radius: 0.01064,
+                radial_cells: n,
+                angular_cells: 8,
+                stretching: 0.0,
+                shock_shape_mach: None,
+            };
+            let op = FlowOperator::new(
+                Mesh::curved_sphere(grid).unwrap(),
+                gas,
+                inflow,
+                wall_temperature,
+            )
+            .unwrap();
+            let state: Vec<_> = (0..n * grid.angular_cells)
+                .map(|k| {
+                    super::cell_mean(grid, k % n, k / n, |x, y| {
+                        let distance = x.hypot(y) - grid.radius;
+                        let profile = inflow.density
+                            / (1.0 + thermal_ratio * -(-distance / thickness).exp_m1());
+                        // Linear surplus isolates density extrapolation; constant
+                        // density isolates the nonlinear surplus derivative.
+                        let (density, surplus) = if variable_density {
+                            (
+                                profile,
+                                inflow.density * thermal_ratio * distance / thickness,
+                            )
+                        } else {
+                            (inflow.density, inflow.density - profile)
+                        };
+                        let energy = gas.cp() / gas.gamma * wall_temperature * (density + surplus);
+                        ([density, 0.0, 0.0, 0.0, energy], [0.0; 5])
+                    })
+                    .0
+                })
+                .collect();
+            let exact = gas.conductivity * wall_temperature * thermal_ratio / thickness;
+            op.wall_samples(&state)
+                .unwrap()
+                .iter()
+                .map(|w| (w.heat_flux / exact - 1.0).abs())
+                .fold(0.0_f64, f64::max)
+        });
+        assert!(
+            errors[0] / errors[1] > 3.5 && errors[1] / errors[2] > 3.5 && errors[2] < 0.0002,
+            "variable_density={variable_density}, isolated wall-factor errors={errors:?}"
+        );
+    }
+}
+
+#[test]
 fn axial_velocity_recovers_the_volume_mean_from_density_weighted_momentum() {
     let errors = [24, 48, 96].map(|n| {
         let (op, grid) = super::super::tests::strain_operator(n, Convection::Ausmdv);
