@@ -439,3 +439,20 @@ fn model_download_preserves_integer_revisions_without_browser_round_trip() {
         server.shutdown().await.unwrap();
     });
 }
+
+#[test]
+fn agent_tool_module_is_served_from_the_local_origin() {
+    let (_directory, path) = fixture_blocking();
+    runtime().block_on(async {
+        let server = start(&path, 0, &BTreeMap::new()).await.unwrap();
+        let (status, body) = request(server.address, "GET", "/agent.js", None, None).await;
+        assert_eq!(status, 200);
+        let source = body.as_str().unwrap();
+        assert!(source.contains("document?.modelContext"));
+        assert!(source.contains("ace.edit_parameters"));
+        let (status, page) = request(server.address, "GET", "/app.js", None, None).await;
+        assert_eq!(status, 200);
+        assert!(page.as_str().unwrap().contains("registerAgentTools"));
+        server.shutdown().await.unwrap();
+    });
+}
