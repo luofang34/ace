@@ -29,6 +29,14 @@ fn installed_openvsp_wing_adapter_returns_verified_geometry_from_canonical_input
     let artifact = &first.artifacts[0];
     artifact.validate().unwrap();
     assert!(artifact.text.as_deref().unwrap().contains("Vsp_Geometry"));
+    let repeated = plugin
+        .evaluate_blocking(&inputs, &ace_engine::RunControl::default())
+        .unwrap();
+    assert_eq!(
+        repeated.artifacts[0].digest, artifact.digest,
+        "identical canonical inputs must reproduce the kernel artifact byte for byte"
+    );
+    assert!(artifact.text.as_deref().unwrap().contains("ID=\"AAAAAAAA"));
     inputs.insert("span".into(), Quantity::new(37.0, Unit::Meter).unwrap());
     let second = plugin
         .evaluate_blocking(&inputs, &ace_engine::RunControl::default())
