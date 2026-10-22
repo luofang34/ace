@@ -15,8 +15,8 @@ pub use concept::{
 };
 pub use error::{PhysicsError, PhysicsResult};
 pub use geometry::{
-    AreaStation, ClearanceResult, Envelope, GeometryReport, SectionResult, SectionSlice,
-    evaluate_geometry,
+    AreaStation, ClearanceResult, Envelope, Frame, GeometryReport, SectionResult, SectionSlice,
+    evaluate_geometry, resolve_frame,
 };
 pub use mass::{
     ItemState, LoadingResult, MassReport, MassState, evaluate_mass, mass_state,

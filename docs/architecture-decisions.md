@@ -351,3 +351,23 @@ grid-study archives use the same representation. Evolutionary,
 higher-dimensional, conditional, or incomplete study spaces remain Pareto
 scatter and carry `IRREGULAR_TRADE_SPACE`; the chart layer never invents
 missing grid cells.
+
+## ADR-031 — OpenVSP is an accepted interim kernel behind an interchange boundary
+
+OpenVSP is distributed under the NASA Open Source Agreement 1.3, which the Free
+Software Foundation does not classify as free software. Until a free geometry
+kernel reproduces its products, OpenVSP is an accepted, explicitly bounded
+exception to the free-software project requirement for outer-mold-line
+surfaces, intersected surface measurement, and CAD/mesh interchange export.
+
+The boundary keeps the kernel replaceable. Canonical vehicle state never stores
+kernel identifiers, parameters, or files. `vehicle.openvsp_geometry` consumes
+only canonical `shape` bindings and composed placement frames, verifies the
+kernel's parameter readback against the request, and publishes open interchange
+artifacts: the canonicalized `.vsp3`, STEP AP203 surfaces, and a Wavefront OBJ
+tessellation, each content-addressed with the kernel binary identity. Kernel
+random identifiers and export time stamps are normalized so identical canonical
+inputs reproduce identical digests, as ADR-022 requires. A replacement kernel
+satisfies this decision when it publishes the same artifact schemas from the
+same canonical inputs and its exported extents agree with the native concept
+geometry within the adapter's verification tolerance.

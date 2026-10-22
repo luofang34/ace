@@ -1,14 +1,34 @@
-//! Deterministic OpenVSP artifact text. The kernel assigns random object identifiers, so
-//! identical canonical inputs would otherwise produce different content addresses and break
-//! evidence replay.
+//! Deterministic OpenVSP artifact text. The kernel assigns random object identifiers and
+//! stamps export headers with the wall clock, so identical canonical inputs would otherwise
+//! produce different content addresses and break evidence replay.
 
 use std::collections::HashMap;
 
+const STEP_TIMESTAMP: &str = "2000-01-01T00:00:00";
 const ID_LENGTH: std::ops::RangeInclusive<usize> = 8..=12;
 
 /// Rename every object identifier in order of first occurrence and order identifier-keyed lists.
 pub(crate) fn vsp3(text: &str) -> String {
     sort_unsteady_components(&rename_ids(text))
+}
+
+/// Replace the exporter's wall-clock `FILE_NAME` time stamp with a fixed valid value.
+pub(crate) fn step(text: &str) -> String {
+    let Some(header) = text.find("FILE_NAME(") else {
+        return text.to_owned();
+    };
+    let Some(first_separator) = text[header..].find("','") else {
+        return text.to_owned();
+    };
+    let stamp_start = header + first_separator + 3;
+    let Some(stamp_length) = text[stamp_start..].find('\'') else {
+        return text.to_owned();
+    };
+    let mut result = String::with_capacity(text.len());
+    result.push_str(&text[..stamp_start]);
+    result.push_str(STEP_TIMESTAMP);
+    result.push_str(&text[stamp_start + stamp_length..]);
+    result
 }
 
 /// Identifiers appear as `ID="…"` attributes (including `AttachID`) and `<…ID>…</…ID>` elements.

@@ -11,6 +11,7 @@ use crate::domain::diagnostic::{AexError, AexResult};
 
 mod flight;
 mod geometry;
+mod kernel;
 mod vspaero;
 mod weight;
 
@@ -66,6 +67,7 @@ pub(crate) fn create_session_blocking(
     }
     geometry::register_blocking(&model, &mut registry)?;
     vspaero::register_blocking(&model, &mut registry)?;
+    kernel::register_blocking(&model, &mut registry)?;
     let mut session = Session::new(model, registry)?;
     let updates = overrides
         .iter()

@@ -134,6 +134,19 @@ area/span/taper/sweep/dihedral/twist ports and produces an isolated symmetric
 wing artifact and wetted area when OpenVSP is installed. It uses default airfoil
 sections and remains conceptual; missing tools produce unavailable outputs.
 
+`vehicle.openvsp_geometry` generates every selected geometry object that declares
+a native `shape` as one OpenVSP model in its composed placement frame: bodies
+become lofted elliptical fuselages and wings become NACA four-series trapezoidal
+surfaces. It publishes the canonicalized `.vsp3`, a STEP AP203 surface model and
+a Wavefront OBJ tessellation as content-addressed artifacts, and reports the
+CompGeom intersected wetted area and enclosed volume. Kernel identifiers and
+export time stamps are normalized, so identical inputs reproduce identical
+digests. Symmetric surfaces must keep their local y axis parallel to the vehicle
+y axis at zero lateral offset; other placements and shapes outside the native
+concept domain fail explicitly. Envelope-only objects are not exported.
+`examples/synthesis/kernel-transport.json` adds this analysis to the concept
+transport.
+
 `examples/synthesis/vspaero-transport.json` connects `aircraft.vspaero_wing_polar`
 to the state-driven climb, cruise, descent, approach and reserve phases:
 
