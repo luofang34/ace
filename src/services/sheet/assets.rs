@@ -43,6 +43,10 @@ pub(super) fn routes() -> Router {
             "/controls.js",
             get(|| async { asset(include_str!("web/controls.js"), "text/javascript") }),
         )
+        .route(
+            "/agent.js",
+            get(|| async { asset(include_str!("web/agent.js"), "text/javascript") }),
+        )
 }
 
 fn asset(content: &'static str, content_type: &'static str) -> Response<Body> {

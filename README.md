@@ -202,6 +202,11 @@ Edits stay in memory until **Save model** is selected. Saving refuses to overwri
 external changes to the input file. **Export JSON** downloads the current model;
 the browser print command produces the sheet layout. Stop the local server with
 Ctrl-C. `--port` selects a loopback port; the default chooses an available port.
+When the browser exposes WebMCP (`document.modelContext`, or the earlier
+`navigator.modelContext` preview), the sheet registers `ace.describe_design`,
+`ace.list_parameters`, `ace.read_values`, `ace.edit_parameters` and
+`ace.run_analysis` so a browser agent drives the same session API with explicit
+units and revision guards. Other browsers are unaffected.
 
 Export an engineering synthesis drawing from a supplied concept or an explicitly
 selected bounded-study candidate:
