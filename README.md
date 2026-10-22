@@ -174,6 +174,10 @@ their sources and calculation evidence. Parameter edits recompute only affected
 nodes; wingtip drags and design-variable sliders show an isolated conceptual
 preview before committing on release. Approximate evidence remains marked,
 including violated constraints. Results from unavailable adapters remain unknown.
+When the model runs `vehicle.openvsp_geometry`, the sheet renders the kernel's
+OBJ tessellation in a WebGL view with the intersected wetted area, volume and
+per-object measurements, and offers the STEP, OBJ and `.vsp3` artifacts for
+download. The view keeps the last complete run until fresh kernel results arrive.
 Applications can bind a formal solver to a fast adapter with
 `Registry::register_preview`; named ports and units must match. Only preview
 branches use the replacement, retain its actual solver identity, and mark its
