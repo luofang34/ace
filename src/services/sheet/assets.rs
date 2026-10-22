@@ -47,6 +47,10 @@ pub(super) fn routes() -> Router {
             "/agent.js",
             get(|| async { asset(include_str!("web/agent.js"), "text/javascript") }),
         )
+        .route(
+            "/viewer.js",
+            get(|| async { asset(include_str!("web/viewer.js"), "text/javascript") }),
+        )
 }
 
 fn asset(content: &'static str, content_type: &'static str) -> Response<Body> {

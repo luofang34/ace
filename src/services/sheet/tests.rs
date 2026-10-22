@@ -456,3 +456,21 @@ fn agent_tool_module_is_served_from_the_local_origin() {
         server.shutdown().await.unwrap();
     });
 }
+
+#[test]
+fn kernel_viewer_module_and_card_are_served_from_the_local_origin() {
+    let (_directory, path) = fixture_blocking();
+    runtime().block_on(async {
+        let server = start(&path, 0, &BTreeMap::new()).await.unwrap();
+        let (status, body) = request(server.address, "GET", "/viewer.js", None, None).await;
+        assert_eq!(status, 200);
+        assert!(body.as_str().unwrap().contains("export function parseObj"));
+        let (status, page) = request(server.address, "GET", "/", None, None).await;
+        assert_eq!(status, 200);
+        assert!(page.as_str().unwrap().contains("id=\"kernel\""));
+        let (status, view) = request(server.address, "GET", "/view.js", None, None).await;
+        assert_eq!(status, 200);
+        assert!(view.as_str().unwrap().contains("vehicle.openvsp_geometry"));
+        server.shutdown().await.unwrap();
+    });
+}
