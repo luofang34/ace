@@ -30,7 +30,9 @@ struct FleetDocument {
     vehicle: PathBuf,
     #[serde(default)]
     overrides: BTreeMap<String, String>,
-    capabilities: CapabilityMap,
+    /// Overrides the vehicle's declared capability map.
+    #[serde(default)]
+    capabilities: Option<CapabilityMap>,
     initial_units: u32,
     replacement_lead_time: Quantity,
     max_replacements: u32,
@@ -87,8 +89,10 @@ pub(crate) fn campaign_blocking(path: &Path) -> AexResult<CampaignRecord> {
         let mut session =
             super::synthesis::open_blocking(&base.join(&fleet.vehicle), &fleet.overrides)?;
         let snapshot = session.run()?;
-        let capability =
-            VehicleCapability::from_snapshot(session.model(), &snapshot, &fleet.capabilities)?;
+        let capability = match &fleet.capabilities {
+            Some(map) => VehicleCapability::from_snapshot(session.model(), &snapshot, map)?,
+            None => VehicleCapability::from_declared(session.model(), &snapshot)?,
+        };
         fleets.insert(
             id,
             Fleet {

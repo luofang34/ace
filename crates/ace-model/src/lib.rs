@@ -1,6 +1,7 @@
 //! Vehicle-independent, serializable design data with explicit dimensional contracts.
 
 mod artifact;
+mod capability;
 mod contract;
 mod edit;
 mod error;
@@ -18,6 +19,7 @@ mod units;
 mod vehicle;
 
 pub use artifact::{Artifact, GeneratorIdentity};
+pub use capability::CapabilityMap;
 pub use contract::{
     ContractError, DomainBound, DomainLimit, DomainVariable, PortMeaning, ScalarPort,
     ValidityDomain,

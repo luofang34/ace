@@ -70,3 +70,24 @@ fn missing_stale_or_out_of_range_capabilities_are_rejected() {
     invalid.values.loss_per_sortie.value = 1.5;
     assert!(invalid.verify().is_err());
 }
+
+#[test]
+fn a_vehicle_can_declare_its_own_capability_map() {
+    let mut model: VehicleModel = serde_json::from_value(json!({"schema_version":1,"id":"uas","name":"uas","domain":"vehicle",
+        "parameters":{"cost.unit":input(50_000.0,"USD"),"flight.speed":input(50.0,"m/s"),"cost.hourly":input(100.0,"USD/h"),
+            "reliability.loss":input(0.01,"1"),"ground.turnaround":input(2.0,"h"),"flight.endurance":input(10.0,"h")}}))
+    .unwrap();
+    let mut session = Session::new(model.clone(), Registry::default()).unwrap();
+    let snapshot = session.run().unwrap();
+    assert!(VehicleCapability::from_declared(&model, &snapshot).is_err());
+    model.capabilities = Some(map());
+    model.validate().unwrap();
+    let mut session = Session::new(model.clone(), Registry::default()).unwrap();
+    let snapshot = session.run().unwrap();
+    let declared = VehicleCapability::from_declared(&model, &snapshot).unwrap();
+    assert_eq!(declared.values.endurance.value, 36_000.0);
+    if let Some(map) = model.capabilities.as_mut() {
+        map.turnaround = "ground.missing".into();
+    }
+    assert!(model.validate().is_err());
+}
