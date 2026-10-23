@@ -45,8 +45,26 @@ affected graph region. Each analysis selects its consumed geometry and
 Structural transactions accept typed `ModelEdit` declarations for geometry,
 mass, missions, requirements, analyses and operations. References and the new
 graph are validated before publication; rejected edits leave the session intact.
+Registered `PluginSpec` contracts declare scalar or state-phase invocation,
+`ScalarPort` units and optional semantic/reference identities, and executable
+`ValidityDomain` intervals. Direct producer/consumer connections require matching
+semantics when declared. Semantic ports accept independent inputs or direct typed
+producers; expressions do not infer semantic identities. Missing solvers remain
+unavailable. Applicability intervals are checked
+against actual inputs, phase entry conditions and reported trajectory conditions;
+coupled physical limits remain the responsibility of each solver. Contracts and
+assumptions are retained in calculation evidence and do not imply calibration.
 The Sheet's `/api/edit` accepts either `updates` or an `edits` array, together
 with its `expected_revision` token.
+
+Library users can run `ace_study::VerificationCase::run` against a `Session` and
+serialize the resulting `VerificationRecord`. `replay` uses the frozen model and
+requires the recorded build and installed contracts; changed evidence is rejected.
+`VariantMatrix::expand` generates a deterministic, bounded Cartesian matrix of
+typed structural edits and parameter overrides, with explicit exclusions and
+conflicting writes rejected. It does not perform pairwise sampling.
+The `examples/synthesis/constant-rate*.json` files provide a small analytic case
+and variant matrix consumed by `cargo test --test solver_verification`.
 
 Native plugins include `vehicle.geometry_envelopes`, `vehicle.usable_volume`,
 `vehicle.wetted_area`, `vehicle.mass_properties`, `vehicle.constant_rate_phase`,

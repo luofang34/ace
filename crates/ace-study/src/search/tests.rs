@@ -239,14 +239,16 @@ fn plugin_session(installed: bool) -> Session {
         registry
             .register(Arc::new(Quality {
                 spec: PluginSpec {
+                    mode: ace_model::AnalysisMode::Scalar,
+                    domain: Default::default(),
                     identity: PluginIdentity {
                         id: "quality".into(),
                         version: "1".into(),
                         fidelity: Fidelity::Conceptual,
                         code_revision: "fixture".into(),
                     },
-                    inputs: BTreeMap::from([("x".into(), Unit::Meter)]),
-                    outputs: BTreeMap::from([("loss".into(), Unit::SquareMeter)]),
+                    inputs: BTreeMap::from([("x".into(), Unit::Meter.into())]),
+                    outputs: BTreeMap::from([("loss".into(), Unit::SquareMeter.into())]),
                 },
             }))
             .unwrap();

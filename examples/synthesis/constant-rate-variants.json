@@ -1,0 +1,59 @@
+{
+  "axes": {
+    "duration": {
+      "low": {
+        "updates": {
+          "duration": {
+            "value": 60,
+            "unit": "s"
+          }
+        }
+      },
+      "high": {
+        "updates": {
+          "duration": {
+            "value": 120,
+            "unit": "s"
+          }
+        }
+      }
+    },
+    "speed": {
+      "low": {
+        "updates": {
+          "speed": {
+            "value": 0,
+            "unit": "m/s"
+          }
+        }
+      },
+      "high": {
+        "updates": {
+          "speed": {
+            "value": 2,
+            "unit": "m/s"
+          }
+        }
+      }
+    },
+    "fuel_flow": {
+      "low": {
+        "updates": {
+          "fuel_flow": {
+            "value": 0,
+            "unit": "kg/s"
+          }
+        }
+      },
+      "high": {
+        "updates": {
+          "fuel_flow": {
+            "value": 0.05,
+            "unit": "kg/s"
+          }
+        }
+      }
+    }
+  },
+  "max_combinations": 8
+}

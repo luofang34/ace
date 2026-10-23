@@ -53,6 +53,7 @@ impl Session {
     /// Validate and compile a vehicle model with an application-selected plugin registry.
     pub fn new(model: VehicleModel, registry: Registry) -> EngineResult<Self> {
         let graph = Graph::compile(&model)?;
+        registry.validate_model(&model)?;
         let values = initial_values(&model, &graph)?;
         let model_digest = digest(&model)?;
         let dirty = graph.nodes.keys().cloned().collect();
@@ -71,6 +72,11 @@ impl Session {
     /// Inspect authoritative data; mutation is only available through validated transactions.
     pub fn model(&self) -> &VehicleModel {
         &self.model
+    }
+
+    /// Resolve installed scalar and phase contracts for this authoritative model.
+    pub fn contracts(&self) -> BTreeMap<String, crate::PluginSpec> {
+        self.registry.contracts(&self.model)
     }
 
     /// Apply one atomic input edit and immediately revoke all affected output values.
@@ -127,7 +133,9 @@ impl Session {
     /// Install a deferred solver and invalidate only its affected graph region.
     pub fn register(&mut self, plugin: Arc<dyn AnalysisPlugin>) -> EngineResult<()> {
         let identity = plugin.spec().identity.clone();
-        self.registry.register(plugin)?;
+        let mut registry = self.registry.clone();
+        registry.register(plugin)?;
+        registry.validate_model(&self.model)?;
         let mut dirty = BTreeSet::new();
         let mut outputs = BTreeSet::new();
         for (id, node) in &self.graph.nodes {
@@ -147,6 +155,7 @@ impl Session {
             }
         }
         dirty.extend(self.graph.affected(&outputs));
+        self.registry = registry;
         self.invalidate(&dirty);
         Ok(())
     }

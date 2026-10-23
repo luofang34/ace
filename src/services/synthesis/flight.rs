@@ -5,6 +5,7 @@ use ace_engine::{
 use ace_model::{Quantity, Unit, VehicleState};
 use std::collections::BTreeMap;
 
+pub(super) mod contract;
 mod ground;
 mod integration;
 mod parameters;
@@ -56,6 +57,8 @@ impl FlightPhase {
             kind,
             vspaero: false,
             spec: PluginSpec {
+                mode: ace_model::AnalysisMode::Phase,
+                domain: contract::domain(kind, false, false),
                 identity: PluginIdentity {
                     id: id.into(),
                     version: "1".into(),
@@ -64,7 +67,7 @@ impl FlightPhase {
                 },
                 inputs: ports
                     .into_iter()
-                    .map(|(name, unit)| (name.into(), unit))
+                    .map(|(name, unit)| (name.into(), unit.into()))
                     .collect(),
                 outputs: BTreeMap::new(),
             },
@@ -91,8 +94,9 @@ impl FlightPhase {
             ("bsfc", Unit::KilogramPerKilowattHour),
             ("power_lapse_exponent", Unit::Ratio),
         ] {
-            self.spec.inputs.insert(port.into(), unit);
+            self.spec.inputs.insert(port.into(), unit.into());
         }
+        self.spec.domain = contract::domain(self.kind, true, self.vspaero);
         self
     }
 
@@ -106,8 +110,16 @@ impl FlightPhase {
             .replace("aircraft.", "aircraft.vspaero_");
         phase.spec.inputs.remove("oswald");
         for port in crate::backends::openvsp::polar::PORTS {
-            phase.spec.inputs.insert(port.into(), Unit::Ratio);
+            phase
+                .spec
+                .inputs
+                .insert(port.into(), contract::polar_port(port));
         }
+        phase.spec.domain = contract::domain(
+            phase.kind,
+            phase.spec.inputs.contains_key("shaft_power"),
+            true,
+        );
         phase
     }
 }

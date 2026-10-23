@@ -105,8 +105,8 @@ fn propeller_inputs_are_validated_and_variants_expose_power_ports() {
         spec.identity.id,
         "aircraft.vspaero_propeller_energy_path_phase"
     );
-    assert_eq!(spec.inputs["bsfc"], Unit::KilogramPerKilowattHour);
-    assert_eq!(spec.inputs["shaft_power"], Unit::Watt);
+    assert_eq!(spec.inputs["bsfc"].unit, Unit::KilogramPerKilowattHour);
+    assert_eq!(spec.inputs["shaft_power"].unit, Unit::Watt);
     for removed in ["tsfc", "available_thrust", "oswald"] {
         assert!(!spec.inputs.contains_key(removed));
     }

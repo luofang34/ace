@@ -18,6 +18,8 @@ pub(super) fn build(kind: Kind, revision: &str) -> PluginSpec {
         Kind::Phase => "vehicle.constant_rate_phase",
     };
     PluginSpec {
+        mode: ace_model::AnalysisMode::Scalar,
+        domain: domain(kind),
         identity: PluginIdentity {
             id: id.into(),
             version: "1".into(),
@@ -29,7 +31,27 @@ pub(super) fn build(kind: Kind, revision: &str) -> PluginSpec {
     }
 }
 
-fn inputs(kind: Kind) -> BTreeMap<String, Unit> {
+fn domain(kind: Kind) -> ace_model::ValidityDomain {
+    use ace_model::{DomainBound, DomainLimit, DomainVariable, ValidityDomain};
+    let bounds = inputs(kind)
+        .into_iter()
+        .map(|(name, port)| {
+            let mut bound = DomainBound::positive(DomainVariable::Input(name.clone()), port.unit);
+            if name != "tolerance" {
+                bound.lower = Some(DomainLimit {
+                    value: 0.0,
+                    inclusive: true,
+                });
+            }
+            bound
+        })
+        .collect();
+    ValidityDomain { bounds, assumptions: vec![
+        "Geometry, loading, mission and economic applicability is checked against selected semantic resources".into(),
+    ] }
+}
+
+fn inputs(kind: Kind) -> BTreeMap<String, ace_model::ScalarPort> {
     use Unit::*;
     let ports: &[(&str, Unit)] = match kind {
         Kind::Phase => &[
@@ -43,11 +65,11 @@ fn inputs(kind: Kind) -> BTreeMap<String, Unit> {
     };
     ports
         .iter()
-        .map(|(id, unit)| ((*id).into(), *unit))
+        .map(|(id, unit)| ((*id).into(), (*unit).into()))
         .collect()
 }
 
-fn outputs(kind: Kind) -> BTreeMap<String, Unit> {
+fn outputs(kind: Kind) -> BTreeMap<String, ace_model::ScalarPort> {
     use Unit::*;
     let ports: &[(&str, Unit)] = match kind {
         Kind::ConceptGeometry => &[("part_area", SquareMeter)],
@@ -92,6 +114,6 @@ fn outputs(kind: Kind) -> BTreeMap<String, Unit> {
     };
     ports
         .iter()
-        .map(|(id, unit)| ((*id).into(), *unit))
+        .map(|(id, unit)| ((*id).into(), (*unit).into()))
         .collect()
 }

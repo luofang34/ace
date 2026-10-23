@@ -7,6 +7,8 @@ use ace_model::{
 };
 use std::collections::BTreeMap;
 use std::sync::Arc;
+#[path = "contract/tests.rs"]
+mod contract;
 mod coupled_solver;
 mod geometry;
 #[path = "preview/tests.rs"]
@@ -288,14 +290,16 @@ impl AnalysisPlugin for Scale {
 fn plugin(approximate: bool, wrong_unit: bool) -> Arc<dyn AnalysisPlugin> {
     Arc::new(Scale {
         spec: PluginSpec {
+            mode: ace_model::AnalysisMode::Scalar,
+            domain: Default::default(),
             identity: PluginIdentity {
                 id: "scale".into(),
                 version: "1".into(),
                 fidelity: Fidelity::Conceptual,
                 code_revision: "fixture-commit".into(),
             },
-            inputs: BTreeMap::from([("input".into(), Unit::Kilogram)]),
-            outputs: BTreeMap::from([("output".into(), Unit::Kilogram)]),
+            inputs: BTreeMap::from([("input".into(), Unit::Kilogram.into())]),
+            outputs: BTreeMap::from([("output".into(), Unit::Kilogram.into())]),
         },
         approximate,
         wrong_unit,

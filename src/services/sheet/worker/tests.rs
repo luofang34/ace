@@ -57,14 +57,16 @@ fn fixture_blocking() -> (Worker, Arc<Notify>, Arc<Notify>, tempfile::TempDir) {
     registry
         .register(Arc::new(Gated {
             spec: PluginSpec {
+                mode: ace_model::AnalysisMode::Scalar,
+                domain: Default::default(),
                 identity: ace_engine::PluginIdentity {
                     id: "scale".into(),
                     version: "1".into(),
                     fidelity: ace_engine::Fidelity::Conceptual,
                     code_revision: "fixture".into(),
                 },
-                inputs: BTreeMap::from([("input".into(), Unit::Kilogram)]),
-                outputs: BTreeMap::from([("output".into(), Unit::Kilogram)]),
+                inputs: BTreeMap::from([("input".into(), Unit::Kilogram.into())]),
+                outputs: BTreeMap::from([("output".into(), Unit::Kilogram.into())]),
             },
             started: started.clone(),
             release: release.clone(),

@@ -1,10 +1,11 @@
 use crate::SolverError;
-use ace_model::{AnalysisResources, Quantity, Unit};
+use ace_model::{AnalysisMode, AnalysisResources, Quantity, ScalarPort, ValidityDomain};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 mod phase;
 mod registry;
+mod validation;
 pub use phase::{PhaseIncrement, PhaseOutput, PhaseRun};
 pub use registry::Registry;
 
@@ -47,14 +48,19 @@ impl PluginIdentity {
 }
 
 /// Input/output declaration used to reject contract mismatches before execution.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PluginSpec {
     /// Versioned solver identity.
     pub identity: PluginIdentity,
+    /// Invocation shape supported by this exact implementation.
+    pub mode: AnalysisMode,
     /// Named inputs and physical units.
-    pub inputs: BTreeMap<String, Unit>,
+    pub inputs: BTreeMap<String, ScalarPort>,
     /// Named outputs and physical units.
-    pub outputs: BTreeMap<String, Unit>,
+    pub outputs: BTreeMap<String, ScalarPort>,
+    /// Executable interval limits and explicit physical assumptions.
+    pub domain: ValidityDomain,
 }
 
 /// Only the semantic objects and parameter values declared by an analysis node.

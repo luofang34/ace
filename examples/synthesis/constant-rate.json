@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "constant-rate-verification",
+  "name": "Constant rate analytic verification",
+  "domain": "generic",
+  "parameters": {
+    "duration": {
+      "unit": "s",
+      "value": {
+        "value": 60,
+        "unit": "s"
+      },
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    },
+    "speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 2,
+        "unit": "m/s"
+      },
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    },
+    "fuel_flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 0.05,
+        "unit": "kg/s"
+      },
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    },
+    "cost_rate": {
+      "unit": "USD/s",
+      "value": {
+        "value": 0.2,
+        "unit": "USD/s"
+      },
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    },
+    "elapsed": {
+      "unit": "s",
+      "value": null,
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    },
+    "distance": {
+      "unit": "m",
+      "value": null,
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    },
+    "burn": {
+      "unit": "kg",
+      "value": null,
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    },
+    "cost": {
+      "unit": "USD",
+      "value": null,
+      "source": {
+        "kind": "analytic",
+        "reference": "constant rates: distance=v*t; fuel=flow*t; cost=rate*t; declared units",
+        "revision": null
+      },
+      "owner": "verification"
+    }
+  },
+  "analyses": {
+    "phase": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "duration",
+        "speed": "speed",
+        "fuel_flow": "fuel_flow",
+        "cost_rate": "cost_rate"
+      },
+      "outputs": {
+        "duration": "elapsed",
+        "distance": "distance",
+        "fuel_burn": "burn",
+        "cost": "cost"
+      }
+    }
+  }
+}
