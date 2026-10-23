@@ -43,8 +43,9 @@ impl OpenVspBackend {
         )?;
         let measured = validate_readback(&output, &settings)?;
         let wetted_area = positive_marker_number(&output, "ACE_WETTED_AREA_M2=")?;
-        let content =
-            fs::read_to_string(&path).map_err(|source| AexError::Read { path, source })?;
+        let content = super::canonical::vsp3(
+            &fs::read_to_string(&path).map_err(|source| AexError::Read { path, source })?,
+        );
         Ok(SynthesisWing {
             content,
             wetted_area,

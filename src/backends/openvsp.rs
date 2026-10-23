@@ -18,6 +18,7 @@ use crate::domain::quantity::QuantityOutput;
 use crate::domain::schema::{ResolvedScenario, SegmentKind};
 use crate::models::blended_wing::is_blended_wing_body;
 
+pub(crate) mod canonical;
 mod geometry;
 mod parsing;
 pub(crate) mod polar;
