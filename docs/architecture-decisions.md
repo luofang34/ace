@@ -420,8 +420,8 @@ The native estimator is conceptual: Wright learning at a constant burdened
 rate and tooling amortized over the declared quantity. Its results are
 approximate, its assumptions travel in the solver contract, and quantities or
 catalog values outside its domain fail rather than extrapolate. Catalog
-choices are currently changed by editing the bill; a typed structural edit for
-the bill is deferred until the transaction vocabulary can carry it.
+choices are changed by editing the bill; the bill is not part of the typed
+transaction vocabulary.
 
 ## ADR-035 — Systems of vehicles are judged by mission effectiveness per dollar
 
