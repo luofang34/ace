@@ -179,6 +179,18 @@ process, summed unit by unit up to one million vehicles. Cost becomes a bindable
 requirement or objective metric like any other output, and mass edits
 invalidate it through the graph.
 
+`ace_study::VehicleCapability::from_snapshot` turns a synthesized vehicle into
+a content-addressed capability record: unit cost, endurance, cruise speed,
+hourly operating cost, loss probability per sortie and turnaround, each read
+through an explicit parameter map and kept with its producing value record.
+`ace_study::Campaign` compares force structures built on such records against
+a persistent-presence demand. Every fleet faces the same seeded weather draws;
+sorties, link losses, attrition and lead-time replacements are simulated day by
+day. Each fleet reports its success rate with a 95% interval over replications,
+a tri-state verdict against the required rate, delivered station time, losses
+and mean campaign cost. Only fleets that pass are ranked by station hours per
+dollar, so a cheap fleet cannot win by failing the mission.
+
 `examples/synthesis/vspaero-transport.json` connects `aircraft.vspaero_wing_polar`
 to the state-driven climb, cruise, descent, approach and reserve phases:
 

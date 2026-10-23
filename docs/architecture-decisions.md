@@ -422,3 +422,22 @@ approximate, its assumptions travel in the solver contract, and quantities or
 catalog values outside its domain fail rather than extrapolate. Catalog
 choices are currently changed by editing the bill; a typed structural edit for
 the bill is deferred until the transaction vocabulary can carry it.
+
+## ADR-035 — Systems of vehicles are judged by mission effectiveness per dollar
+
+The unit of comparison above the vehicle is a force structure performing a
+mission, not a single airframe closing its design point. A vehicle enters the
+system layer only as a content-addressed capability record read from an exact
+synthesis snapshot through an explicit parameter map, so every fleet-level
+number traces back to the model revision, build and calculations behind it.
+Autonomy, sensors and compute enter as vehicle parameters behind that record;
+mission software is not modelled.
+
+Campaigns are seeded, conceptual simulations with their model identity in the
+record. All fleets share one environment stream, so differences come from the
+fleets rather than from luck. Success is a hard threshold judged by a
+tri-state verdict on a 95% interval over replications, consistent with
+ADR-026. Cost effectiveness ranks only fleets that pass; a ratio is never
+allowed to buy back a failed mission. Loss rates, prices and environment
+probabilities are inputs whose provenance is the user's responsibility, and
+outcomes are never better than the evidence behind their capabilities.

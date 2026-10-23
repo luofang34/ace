@@ -4,7 +4,7 @@ use ace_model::{Priority, Quantity, Source, VehicleModel};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-mod sampling;
+pub(crate) mod sampling;
 mod statistics;
 
 pub use sampling::InputDistribution;
