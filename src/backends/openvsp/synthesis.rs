@@ -147,7 +147,7 @@ fn wing_parameter(name: &str) -> String {
     format!("GetParm(wing,\"{name}\",\"{group}\")")
 }
 
-fn validate_readback(
+pub(super) fn validate_readback(
     output: &str,
     expected: &BTreeMap<String, f64>,
 ) -> AexResult<BTreeMap<String, f64>> {

@@ -20,6 +20,7 @@ use crate::models::blended_wing::is_blended_wing_body;
 
 pub(crate) mod canonical;
 mod geometry;
+pub(crate) mod kernel;
 mod parsing;
 pub(crate) mod polar;
 mod synthesis;

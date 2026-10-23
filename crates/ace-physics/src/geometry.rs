@@ -96,6 +96,28 @@ pub struct GeometryReport {
     pub area_distribution: Vec<AreaStation>,
 }
 
+/// Rigid local-to-vehicle placement of one selected object, composing its parent frames.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct Frame {
+    /// Proper orthonormal rotation mapping local vectors to vehicle axes.
+    pub rotation: [[f64; 3]; 3],
+    /// Local origin in vehicle coordinates, metres.
+    pub translation: [f64; 3],
+}
+
+/// Resolve the vehicle-frame placement of a selected geometry object or frame reference.
+pub fn resolve_frame(
+    id: &str,
+    resources: &AnalysisResources,
+    values: &BTreeMap<String, Quantity>,
+) -> PhysicsResult<Frame> {
+    let transform = frames::resolve(id, resources, values)?;
+    Ok(Frame {
+        rotation: transform.rotation,
+        translation: transform.translation,
+    })
+}
+
 /// Resolve declared geometry and evaluate conservative envelope clearances.
 pub fn evaluate_geometry(
     resources: &AnalysisResources,

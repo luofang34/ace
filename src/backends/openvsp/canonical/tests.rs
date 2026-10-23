@@ -41,6 +41,19 @@ fn unsteady_group_components_are_ordered_independently_of_identifier_order() {
 }
 
 #[test]
+fn step_header_time_stamp_is_fixed_and_the_body_is_untouched() {
+    let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'1');\nFILE_NAME('outfile.stp','2026-10-22T14:29:54',(''),(''),'','','');\nFILE_SCHEMA(('CONFIG_CONTROL_DESIGN'));\nENDSEC;\nDATA;\n#1=CALENDAR_DATE(2000,1,1);\n";
+    let fixed = step(text);
+    assert!(fixed.contains("FILE_NAME('outfile.stp','2000-01-01T00:00:00',(''),(''),'','','');"));
+    assert_eq!(step(&fixed), fixed);
+    assert_eq!(
+        fixed.replace("2000-01-01T00:00:00", "2026-10-22T14:29:54"),
+        text
+    );
+    assert_eq!(step("DATA;\n"), "DATA;\n");
+}
+
+#[test]
 fn canonical_text_is_a_fixed_point() {
     let once = vsp3(&vehicle(["YBGVVWMBUT", "QEZGJJUIZMC", "RSTVPDCQD", "NONE"]));
     assert_eq!(vsp3(&once), once);

@@ -1,0 +1,56 @@
+void PrintErrors()
+{
+    while ( GetNumTotalErrors() > 0 )
+    {
+        ErrorObj err = PopLastError();
+        Print( "ACE_ERROR=" + err.GetErrorString() );
+    }
+}
+
+int main()
+{
+    ClearVSPModel();
+    ReadVSPFile( "canonical.vsp3" );
+    Update();
+    ExportFile( "model.step", SET_ALL, EXPORT_STEP );
+
+    ComputeCompGeom( SET_ALL, false, 0 );
+    string result = FindLatestResultsID( "Comp_Geom" );
+    array<string> names = GetStringResults( result, "Comp_Name" );
+    array<double> areas = GetDoubleResults( result, "Wet_Area" );
+    array<double> volumes = GetDoubleResults( result, "Wet_Vol" );
+    for ( uint i = 0; i < names.size() && i < areas.size() && i < volumes.size(); i++ )
+    {
+        Print( "ACE_COMPONENT=" + names[i] + ",", false );
+        Print( areas[i], false );
+        Print( ",", false );
+        Print( volumes[i] );
+    }
+    array<double> total_area = GetDoubleResults( result, "Total_Wet_Area" );
+    array<double> total_volume = GetDoubleResults( result, "Total_Wet_Vol" );
+    if ( total_area.size() < 1 || total_volume.size() < 1 )
+    {
+        Print( "ACE_ERROR=CompGeom totals unavailable" );
+        return 1;
+    }
+    Print( "ACE_WETTED_AREA_M2=", false );
+    Print( total_area[0] );
+    Print( "ACE_VOLUME_M3=", false );
+    Print( total_volume[0] );
+
+    // Mesh exports and CompGeom leave mesh geoms behind; they must not re-enter the tessellation.
+    array<string> geoms = FindGeoms();
+    for ( uint i = 0; i < geoms.size(); i++ )
+    {
+        if ( GetGeomTypeName( geoms[i] ) == "Mesh" )
+        {
+            DeleteGeom( geoms[i] );
+        }
+    }
+    Update();
+    ExportFile( "model.obj", SET_ALL, EXPORT_OBJ );
+
+    PrintErrors();
+    Print( "ACE_COMPLETE=1" );
+    return 0;
+}
