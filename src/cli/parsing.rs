@@ -32,6 +32,20 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             plan: required(args, "plan")?,
             common: common(args)?,
         }),
+        "uncertainty" => Ok(Command::Uncertainty {
+            scenario: required(args, "scenario")?,
+            plan: required(args, "plan")?,
+            common: common(args)?,
+        }),
+        "calibrate" => Ok(Command::Calibrate {
+            scenario: required(args, "scenario")?,
+            case: required(args, "case")?,
+            common: common(args)?,
+        }),
+        "campaign" => Ok(Command::Campaign {
+            campaign: required(args, "campaign")?,
+            output: output(args)?,
+        }),
         "analyze" => Ok(Command::Analyze {
             analysis: analysis(args)?,
         }),

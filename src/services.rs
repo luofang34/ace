@@ -17,5 +17,6 @@ pub(crate) mod sheet;
 pub(crate) mod study;
 pub(crate) mod sweep;
 pub(crate) mod synthesis;
+pub(crate) mod system;
 pub(crate) mod validator;
 pub(crate) mod vehicle_study;

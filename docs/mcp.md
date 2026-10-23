@@ -72,6 +72,18 @@ that identical stored detail without rerunning analysis. The
 `hard_requirements_passed` headline is true only when the mission completes
 and every hard requirement passes.
 
+## Vehicle evidence and fleet campaigns
+
+`propagate_vehicle_uncertainty` takes `vehicle_path`, `plan_path` and optional
+`overrides`, and returns a content-addressed uncertainty record with each
+requirement's satisfaction probability, 95% interval and tri-state verdict.
+`calibrate_vehicle` takes `vehicle_path`, `case_path` and optional
+`overrides`, and returns prior and posterior residuals, consistency and the
+calibrated updates with their provenance. `evaluate_fleet_campaign` takes
+`campaign_path`, synthesizes every referenced vehicle into a capability record
+and returns each fleet's success interval, verdict and cost, together with the
+most cost-effective passing fleet. Domain failures are `isError` tool results.
+
 ## Design studies
 
 `load_design_study` resolves and validates the study and its relative or

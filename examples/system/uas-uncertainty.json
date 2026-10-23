@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "samples": 400,
+  "seed": 2026,
+  "metrics": [
+    "cost.unit"
+  ]
+}

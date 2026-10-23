@@ -85,6 +85,9 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             )?;
             emit_canonical_blocking(&result, &common.output)
         }
+        command @ (Command::Uncertainty { .. }
+        | Command::Calibrate { .. }
+        | Command::Campaign { .. }) => super::vehicle::system_blocking(command),
         Command::Sheet {
             scenario,
             port,

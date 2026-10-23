@@ -10,6 +10,7 @@ mod schema;
 pub(crate) mod serialization;
 mod study;
 mod synthesis;
+mod system;
 mod transport;
 pub(crate) use transport::serve_stdio;
 
@@ -51,7 +52,7 @@ impl AexMcpServer {
     fn new(service: ApplicationService) -> Self {
         Self {
             service,
-            tool_router: Self::tool_router(),
+            tool_router: Self::tool_router() + Self::system_router(),
         }
     }
 }

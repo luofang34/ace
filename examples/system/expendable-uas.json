@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "id": "expendable_uas",
+  "name": "Expendable surveillance UAS",
+  "domain": "fixed_wing",
+  "revision": 0,
+  "parameters": {
+    "structure.airframe": {
+      "unit": "kg",
+      "value": {
+        "value": 14,
+        "unit": "kg"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "structures"
+    },
+    "structure.wing": {
+      "unit": "kg",
+      "value": {
+        "value": 10,
+        "unit": "kg"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "structures"
+    },
+    "fuel.usable": {
+      "unit": "kg",
+      "value": {
+        "value": 12,
+        "unit": "kg"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "propulsion",
+      "uncertainty": {
+        "standard_deviation": {
+          "value": 0.5,
+          "unit": "kg"
+        },
+        "distribution": "normal"
+      },
+      "lower": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "upper": {
+        "value": 24,
+        "unit": "kg"
+      }
+    },
+    "fuel.flow": {
+      "unit": "kg/s",
+      "value": {
+        "value": 0.0003333333333333333,
+        "unit": "kg/s"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "propulsion",
+      "uncertainty": {
+        "standard_deviation": {
+          "value": 1.6666666666666667e-05,
+          "unit": "kg/s"
+        },
+        "distribution": "normal"
+      },
+      "lower": {
+        "value": 0.00016666666666666666,
+        "unit": "kg/s"
+      },
+      "upper": {
+        "value": 0.0005,
+        "unit": "kg/s"
+      }
+    },
+    "flight.speed": {
+      "unit": "m/s",
+      "value": {
+        "value": 30,
+        "unit": "m/s"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "performance"
+    },
+    "flight.endurance": {
+      "unit": "h",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "performance",
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "reference",
+          "parameter": "fuel.usable"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "fuel.flow"
+        }
+      }
+    },
+    "cost.hourly": {
+      "unit": "USD/h",
+      "value": {
+        "value": 150,
+        "unit": "USD/h"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "operations"
+    },
+    "reliability.loss": {
+      "unit": "1",
+      "value": {
+        "value": 0.004,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "reliability"
+    },
+    "ground.turnaround": {
+      "unit": "h",
+      "value": {
+        "value": 1.5,
+        "unit": "h"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "operations"
+    },
+    "build.quantity": {
+      "unit": "1",
+      "value": {
+        "value": 2000,
+        "unit": "1"
+      },
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "manufacturing"
+    },
+    "cost.unit": {
+      "unit": "USD",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "manufacturing"
+    },
+    "cost.recurring": {
+      "unit": "USD",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "manufacturing"
+    },
+    "cost.first": {
+      "unit": "USD",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "manufacturing"
+    },
+    "cost.labor": {
+      "unit": "h",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "manufacturing"
+    },
+    "cost.structure": {
+      "unit": "kg",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "owner": "manufacturing"
+    }
+  },
+  "analyses": {
+    "production": {
+      "plugin": "vehicle.production_cost",
+      "version": "1",
+      "inputs": {},
+      "resources": {
+        "production": true
+      },
+      "outputs": {
+        "unit_cost": "cost.unit",
+        "recurring_unit_cost": "cost.recurring",
+        "first_unit_cost": "cost.first",
+        "labor_hours": "cost.labor",
+        "structure_mass": "cost.structure"
+      }
+    }
+  },
+  "requirements": {
+    "endurance": {
+      "name": "Station endurance",
+      "metric": "flight.endurance",
+      "relation": "ge",
+      "target": {
+        "value": 8,
+        "unit": "h"
+      },
+      "priority": "hard",
+      "confidence": 0.9,
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      }
+    },
+    "unit_cost": {
+      "name": "Unit cost at rate",
+      "metric": "cost.unit",
+      "relation": "le",
+      "target": {
+        "value": 40000,
+        "unit": "USD"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      },
+      "confidence": 0.9
+    }
+  },
+  "mass_items": {
+    "airframe": {
+      "kind": "empty",
+      "mass": "structure.airframe",
+      "cg": [
+        {
+          "value": 1.0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      }
+    },
+    "wing": {
+      "kind": "empty",
+      "mass": "structure.wing",
+      "cg": [
+        {
+          "value": 1.0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "estimated",
+        "reference": "Illustrative system-study inputs; not calibrated vehicle, price or reliability data",
+        "revision": null
+      }
+    }
+  },
+  "production": {
+    "materials": {
+      "glass_composite": {
+        "cost_per_kg": {
+          "value": 25,
+          "unit": "USD/kg"
+        },
+        "buy_to_fly": {
+          "value": 1.4,
+          "unit": "1"
+        }
+      }
+    },
+    "processes": {
+      "wet_layup": {
+        "hours_per_kg": {
+          "value": 1.5,
+          "unit": "h/kg"
+        },
+        "tooling": {
+          "value": 60000,
+          "unit": "USD"
+        },
+        "learning": {
+          "value": 0.85,
+          "unit": "1"
+        }
+      }
+    },
+    "parts": {
+      "fuselage": {
+        "mass_item": "airframe",
+        "material": "glass_composite",
+        "process": "wet_layup"
+      },
+      "wing": {
+        "mass_item": "wing",
+        "material": "glass_composite",
+        "process": "wet_layup"
+      }
+    },
+    "purchased": {
+      "engine": {
+        "unit_cost": {
+          "value": 2500,
+          "unit": "USD"
+        }
+      },
+      "autopilot": {
+        "unit_cost": {
+          "value": 1500,
+          "unit": "USD"
+        }
+      },
+      "sensor": {
+        "unit_cost": {
+          "value": 8000,
+          "unit": "USD"
+        }
+      },
+      "datalink": {
+        "unit_cost": {
+          "value": 3000,
+          "unit": "USD"
+        }
+      }
+    },
+    "labor_rate": {
+      "value": 70,
+      "unit": "USD/h"
+    },
+    "quantity": "build.quantity"
+  },
+  "objectives": {
+    "unit_cost": {
+      "metric": "cost.unit",
+      "direction": "min"
+    }
+  }
+}

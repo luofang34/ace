@@ -1,5 +1,5 @@
 use super::{
-    arguments::{CommonArgs, DrawingArgs},
+    arguments::{Command, CommonArgs, DrawingArgs},
     output::emit_canonical_blocking,
 };
 use crate::domain::diagnostic::{AexError, AexResult};
@@ -41,4 +41,35 @@ pub(super) async fn sheet(scenario: PathBuf, port: u16, common: CommonArgs) -> A
     .await;
     let shutdown = server.shutdown().await;
     result.and(shutdown)
+}
+
+/// Probabilistic, measured-data and fleet-level evaluations of synthesis models.
+pub(super) fn system_blocking(command: Command) -> AexResult<()> {
+    use crate::services::system;
+    match command {
+        Command::Uncertainty {
+            scenario,
+            plan,
+            common,
+        } => emit_canonical_blocking(
+            &system::uncertainty_blocking(&scenario, &plan, &common.override_map())?,
+            &common.output,
+        ),
+        Command::Calibrate {
+            scenario,
+            case,
+            common,
+        } => emit_canonical_blocking(
+            &system::calibrate_blocking(&scenario, &case, &common.override_map())?,
+            &common.output,
+        ),
+        Command::Campaign { campaign, output } => {
+            emit_canonical_blocking(&system::campaign_blocking(&campaign)?, &output)
+        }
+        _ => Err(AexError::validation(
+            "UNSUPPORTED_COMMAND",
+            "command",
+            "not a system evaluation command",
+        )),
+    }
 }
