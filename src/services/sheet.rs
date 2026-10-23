@@ -75,6 +75,16 @@ pub(crate) async fn start(
     port: u16,
     overrides: &BTreeMap<String, String>,
 ) -> AexResult<SheetServer> {
+    start_with_limits(path, port, overrides, jobs::JobLimits::default()).await
+}
+
+/// Start a sheet whose background calculations use explicit wall-clock limits.
+pub(crate) async fn start_with_limits(
+    path: &Path,
+    port: u16,
+    overrides: &BTreeMap<String, String>,
+    limits: jobs::JobLimits,
+) -> AexResult<SheetServer> {
     let path = path.to_path_buf();
     let overrides = overrides.clone();
     let (session, file) = tokio::task::spawn_blocking(move || {
@@ -113,6 +123,7 @@ pub(crate) async fn start(
         receiver,
         publish,
         stopped.clone(),
+        limits,
     ));
     let server = tokio::spawn(serve(listener, routes, stopped));
     Ok(SheetServer {

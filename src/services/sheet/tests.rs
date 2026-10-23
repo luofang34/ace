@@ -116,6 +116,15 @@ fn fixture_blocking() -> (tempfile::TempDir, PathBuf) {
     (directory, path)
 }
 
+/// Behavioral tests must not race the interactive deadlines in unoptimized builds.
+async fn start_unhurried(path: &std::path::Path) -> AexResult<SheetServer> {
+    let limits = jobs::JobLimits {
+        preview: Duration::from_secs(600),
+        formal: Duration::from_secs(600),
+    };
+    start_with_limits(path, 0, &BTreeMap::new(), limits).await
+}
+
 fn runtime() -> tokio::runtime::Runtime {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -201,10 +210,38 @@ async fn shutdown_with_events(server: SheetServer, events: &mut BufReader<TcpStr
 }
 
 #[test]
+fn previews_past_their_limit_fail_without_changing_the_design() {
+    let defaults = jobs::JobLimits::default();
+    assert_eq!(defaults.preview, Duration::from_secs(15));
+    assert_eq!(defaults.formal, Duration::from_secs(60));
+    let (_directory, path) = fixture_blocking();
+    runtime().block_on(async {
+        let limits = jobs::JobLimits {
+            preview: Duration::from_millis(1),
+            formal: Duration::from_secs(600),
+        };
+        let server = start_with_limits(&path, 0, &BTreeMap::new(), limits)
+            .await
+            .unwrap();
+        let address = server.address;
+        let mut stream = events(address).await;
+        next_state(&mut stream, "0").await;
+        let edit = json!({"expected_revision":"0","updates":{"wing.span":{"value":37,"unit":"m"}}});
+        let (status, _) = request(address, "POST", "/api/preview", Some(edit), None).await;
+        assert_ne!(status, 200);
+        assert_eq!(
+            request(address, "GET", "/api/state", None, None).await.1["sheet"]["revision"],
+            "0"
+        );
+        shutdown_with_events(server, &mut stream).await;
+    });
+}
+
+#[test]
 fn live_sheet_edits_preview_revision_conflicts_and_saves_use_one_authoritative_session() {
     let (_directory, path) = fixture_blocking();
     runtime().block_on(async {
-        let server = start(&path, 0, &BTreeMap::new()).await.unwrap();
+        let server = start_unhurried(&path).await.unwrap();
         let address = server.address;
         let mut stream = events(address).await;
         let initial = next_state(&mut stream, "0").await;
@@ -274,7 +311,7 @@ fn live_sheet_edits_preview_revision_conflicts_and_saves_use_one_authoritative_s
 fn outside_origins_and_external_file_changes_cannot_mutate_the_design() {
     let (_directory, path) = fixture_blocking();
     runtime().block_on(async {
-        let server = start(&path, 0, &BTreeMap::new()).await.unwrap();
+        let server = start_unhurried(&path).await.unwrap();
         let address = server.address;
         let mut stream = events(address).await;
         next_state(&mut stream, "0").await;
@@ -390,7 +427,7 @@ fn model_download_preserves_integer_revisions_without_browser_round_trip() {
     model.revision = u64::MAX;
     std::fs::write(&path, serde_json::to_vec(&model).unwrap()).unwrap();
     runtime().block_on(async {
-        let server = start(&path, 0, &BTreeMap::new()).await.unwrap();
+        let server = start_unhurried(&path).await.unwrap();
         let (status, exported) = request(server.address, "GET", "/api/model", None, None).await;
         assert_eq!(status, 200);
         let exported: ace_model::VehicleModel = serde_json::from_value(exported).unwrap();

@@ -50,12 +50,13 @@ pub(super) async fn run(
     mut commands: mpsc::Receiver<Command>,
     publish: watch::Sender<Arc<Publication>>,
     mut stopped: watch::Receiver<bool>,
+    limits: super::jobs::JobLimits,
 ) -> AexResult<()> {
     let mut worker = Worker {
         session,
         file,
         publish,
-        jobs: Default::default(),
+        jobs: super::jobs::Jobs::new(limits),
         formal: None,
         preview: None,
     };

@@ -88,7 +88,7 @@ fn fixture_blocking() -> (Worker, Arc<Notify>, Arc<Notify>, tempfile::TempDir) {
             session,
             file,
             publish,
-            jobs: Default::default(),
+            jobs: crate::services::sheet::jobs::Jobs::new(Default::default()),
             formal: None,
             preview: None,
         },

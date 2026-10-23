@@ -20,14 +20,41 @@ pub(super) struct Completion {
     pub preview: Option<oneshot::Sender<AexResult<Preview>>>,
 }
 
-#[derive(Default)]
+/// Wall-clock limits that keep interactive previews responsive and bound formal runs.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct JobLimits {
+    /// Isolated preview of an unsaved edit.
+    pub preview: Duration,
+    /// Authoritative recomputation of the current design.
+    pub formal: Duration,
+}
+
+impl Default for JobLimits {
+    fn default() -> Self {
+        Self {
+            preview: Duration::from_secs(15),
+            formal: Duration::from_secs(60),
+        }
+    }
+}
+
 pub(super) struct Jobs {
     pub tasks: JoinSet<Completion>,
     controls: BTreeMap<String, RunControl>,
     sequence: u64,
+    limits: JobLimits,
 }
 
 impl Jobs {
+    pub fn new(limits: JobLimits) -> Self {
+        Self {
+            tasks: JoinSet::new(),
+            controls: BTreeMap::new(),
+            sequence: 0,
+            limits,
+        }
+    }
+
     pub fn start(
         &mut self,
         session: Session,
@@ -40,7 +67,12 @@ impl Jobs {
         } else {
             "formal"
         };
-        let timeout_seconds = if preview.is_some() { 15 } else { 60 };
+        let limit = if preview.is_some() {
+            self.limits.preview
+        } else {
+            self.limits.formal
+        };
+        let timeout_seconds = limit.as_secs().max(1);
         let status = JobStatus {
             id: format!("{kind}-{}-r{base_revision}", self.sequence),
             revision: base_revision,
@@ -48,7 +80,7 @@ impl Jobs {
             state: "running".into(),
             timeout_seconds,
         };
-        let control = RunControl::bounded(Duration::from_secs(timeout_seconds));
+        let control = RunControl::bounded(limit);
         self.controls.insert(status.id.clone(), control.clone());
         self.tasks
             .spawn(execute(session, status.clone(), control, preview));
