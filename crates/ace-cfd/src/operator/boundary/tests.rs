@@ -27,6 +27,84 @@ fn operator(outflow: Outflow) -> FlowOperator {
         .with_outflow(outflow)
 }
 
+fn curved_operator(outflow: Outflow) -> FlowOperator {
+    let original = operator(outflow);
+    let mesh = Mesh::curved_sphere(SphereGrid {
+        radius: 0.01,
+        outer_radius: 0.02,
+        radial_cells: 12,
+        angular_cells: 12,
+        stretching: 2.0,
+        shock_shape_mach: Some(3.0),
+    })
+    .unwrap();
+    FlowOperator::new(mesh, original.gas, original.inflow, 300.0)
+        .unwrap()
+        .with_outflow(outflow)
+}
+
+#[test]
+fn cell_outlet_transports_the_supplied_conservative_mass_momentum_and_energy() {
+    for mode in [Outflow::CellFlux, Outflow::ZeroGradientCellFlux] {
+        let op = curved_operator(mode);
+        let state: Vec<_> = op
+            .mesh
+            .cells
+            .iter()
+            .map(|cell| {
+                op.gas.conservative(Primitive {
+                    density: 0.01 * (1.0 + 10.0 * cell.center[1]),
+                    velocity: [
+                        200.0 + 2000.0 * cell.center[1],
+                        1000.0 * cell.center[1],
+                        0.0,
+                    ],
+                    pressure: 1000.0 + 1000.0 * cell.center[0],
+                })
+            })
+            .collect();
+        let mut ws = op.workspace();
+        op.evaluate(&state, true, &mut ws).unwrap();
+        let mut covariance_exercised = false;
+        for face in op
+            .mesh
+            .faces
+            .iter()
+            .filter(|face| op.cell_flux_outflow(face))
+        {
+            let mean = state[face.owner];
+            let rho = mean[0];
+            let momentum = [mean[1], mean[2], mean[3]];
+            let pressure = (op.gas.gamma - 1.0) * (mean[4] - 0.5 * dot(momentum, momentum) / rho);
+            let primitive = ws.primitive[face.owner];
+            covariance_exercised |= (rho * primitive.velocity[0] - mean[1]).abs() > 1e-6;
+            for point in face.integration_points() {
+                let mass = dot(momentum, point.normal);
+                let speed = mass / rho;
+                let expected = [
+                    mass,
+                    mean[1] * speed + pressure * point.normal[0],
+                    mean[2] * speed + pressure * point.normal[1],
+                    mean[3] * speed + pressure * point.normal[2],
+                    (mean[4] + pressure) * speed,
+                ];
+                for second_order in [false, true] {
+                    let left = op.face_state(&face.at_point(point), face.owner, second_order, &ws);
+                    let actual =
+                        op.convection(left, left, point.normal, ws.shock_sensor[face.owner]);
+                    for k in 0..5 {
+                        assert!(
+                            (actual[k] - expected[k]).abs() < 2e-12 * expected[k].abs().max(1.0),
+                            "{mode:?}, component={k}, actual={actual:?}, expected={expected:?}"
+                        );
+                    }
+                }
+            }
+        }
+        assert!(covariance_exercised);
+    }
+}
+
 #[test]
 fn one_sided_outlet_transmits_affine_conductive_energy_flux() {
     for mode in [
@@ -81,16 +159,7 @@ fn outlet_choices_preserve_uniform_rest() {
 
 #[test]
 fn copied_outlet_convection_preserves_all_other_fluxes_and_viscous_terms() {
-    let mut op = operator(Outflow::ZeroGradient);
-    let grid = SphereGrid {
-        radius: 0.01,
-        outer_radius: 0.02,
-        radial_cells: 12,
-        angular_cells: 12,
-        stretching: 2.0,
-        shock_shape_mach: Some(3.0),
-    };
-    op.mesh = Mesh::curved_sphere(grid).unwrap();
+    let mut op = curved_operator(Outflow::ZeroGradient);
     let state: Vec<_> = op
         .mesh
         .cells
@@ -104,7 +173,6 @@ fn copied_outlet_convection_preserves_all_other_fluxes_and_viscous_terms() {
         })
         .collect();
     let before = op.face_diagnostics(&state).unwrap();
-    let cells = op.cell_diagnostics(&state).unwrap();
     op.outflow = Outflow::ZeroGradientCellFlux;
     let after = op.face_diagnostics(&state).unwrap();
     let mut changed = false;
@@ -113,7 +181,7 @@ fn copied_outlet_convection_preserves_all_other_fluxes_and_viscous_terms() {
             assert_eq!(a.total_flux, b.total_flux);
             continue;
         }
-        let expected = cells[b.owner].primitive;
+        let expected = op.gas.primitive(state[b.owner], b.owner).unwrap();
         assert_eq!(b.left.components(), expected.components());
         let convective_before = crate::flux::physical(op.gas, a.left, a.normal);
         let convective_after = crate::flux::physical(op.gas, b.left, b.normal);

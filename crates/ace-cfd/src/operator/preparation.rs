@@ -12,6 +12,7 @@ impl FlowOperator {
         workspace.mean_state.copy_from_slice(state);
         for (i, u) in state.iter().enumerate() {
             workspace.primitive[i] = self.gas.primitive(*u, i)?;
+            workspace.conservative_primitive[i] = workspace.primitive[i];
             workspace.temperature_mean[i] = self.gas.temperature(workspace.primitive[i]);
             if u[3] != 0.0 {
                 return Err(CfdError::Configuration(

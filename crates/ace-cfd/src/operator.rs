@@ -49,6 +49,7 @@ pub struct FlowOperator {
 
 pub(crate) struct Workspace {
     mean_state: Vec<Conserved>,
+    conservative_primitive: Vec<Primitive>,
     primitive: Vec<Primitive>,
     temperature_mean: Vec<f64>,
     gradient: Vec<Gradient>,
@@ -188,6 +189,7 @@ impl FlowOperator {
         let n = self.mesh.cell_count();
         Workspace {
             mean_state: vec![[0.0; 5]; n],
+            conservative_primitive: vec![self.inflow; n],
             primitive: vec![self.inflow; n],
             temperature_mean: vec![self.gas.temperature(self.inflow); n],
             gradient: vec![Gradient::default(); n],
@@ -320,8 +322,13 @@ impl FlowOperator {
         second_order: bool,
         workspace: &Workspace,
     ) -> Primitive {
+        if self.cell_flux_outflow(face) {
+            // A product of volume-mean density and velocity omits covariance.
+            // Cell fluxes must decode the supplied momentum and total energy.
+            return workspace.conservative_primitive[cell];
+        }
         let q = workspace.primitive[cell];
-        if !second_order || self.cell_flux_outflow(face) {
+        if !second_order {
             return q;
         }
         let g = workspace.gradient[cell];
