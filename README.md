@@ -147,6 +147,17 @@ concept domain fail explicitly. Envelope-only objects are not exported.
 `examples/synthesis/kernel-transport.json` adds this analysis to the concept
 transport.
 
+Parameters may declare an `uncertainty` with a `normal` or `uniform`
+distribution about their value, and requirements may declare a `confidence`.
+`ace_study::UncertaintyPlan::run` samples every uncertain independent input
+jointly from a seeded, version-stable generator, redraws values outside declared
+parameter bounds, and evaluates the whole graph per draw. The record reports
+metric statistics and each requirement's satisfaction probability with a 95%
+Wilson interval: it passes only when the interval lies at or above the declared
+confidence, fails when it lies below, and is otherwise indeterminate. Draws whose
+evidence is missing count as unsatisfied. Sampled feasibility is at best
+provisional, and a hard requirement without a confidence leaves it unknown.
+
 `examples/synthesis/vspaero-transport.json` connects `aircraft.vspaero_wing_polar`
 to the state-driven climb, cruise, descent, approach and reserve phases:
 

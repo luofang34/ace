@@ -371,3 +371,20 @@ inputs reproduce identical digests, as ADR-022 requires. A replacement kernel
 satisfies this decision when it publishes the same artifact schemas from the
 same canonical inputs and its exported extents agree with the native concept
 geometry within the adapter's verification tolerance.
+
+## ADR-032 — Declared uncertainty is propagated by seeded sampling
+
+Input uncertainty is design data, and a requirement may state the probability
+with which it must hold. Uncertainty studies draw every uncertain independent
+input jointly from a hand-written SplitMix64 generator whose algorithm, seed,
+transforms and truncation rule are part of the content-addressed record, so a
+plan reproduces its evidence byte for byte across platforms and dependency
+updates. Computed outputs cannot be perturbed. Each draw runs the full
+authoritative graph; no surrogate or reduced model is substituted.
+
+A finite sample cannot prove a probability. Each requirement therefore reports
+a Wilson 95% interval and a tri-state verdict against its declared confidence,
+consistent with ADR-026. Missing evidence counts against satisfaction rather
+than being discarded. Sampled feasibility is never `satisfied`: it is at best
+provisional, and it stays unknown while any hard requirement lacks a declared
+confidence or remains indeterminate.
