@@ -158,6 +158,16 @@ confidence, fails when it lies below, and is otherwise indeterminate. Draws whos
 evidence is missing count as unsatisfied. Sampled feasibility is at best
 provisional, and a hard requirement without a confidence leaves it unknown.
 
+Measured data enters through `ace_study::CalibrationCase`: observations with a
+positive one-sigma measurement uncertainty, the measured article and citation,
+input values reproducing the test conditions, and bounded independent inputs
+allowed to explain the data. A deterministic coordinate golden-section search
+minimizes the sum of squared normalized residuals. The record keeps the prior and
+posterior residuals, the degrees of freedom and whether every posterior residual
+lies within three standard deviations; an unreachable measurement is reported as
+inconsistent rather than forced. `CalibrationRecord::updates` returns only the
+calibrated inputs, with a `calibrated` source referencing the record.
+
 `examples/synthesis/vspaero-transport.json` connects `aircraft.vspaero_wing_polar`
 to the state-driven climb, cruise, descent, approach and reserve phases:
 
