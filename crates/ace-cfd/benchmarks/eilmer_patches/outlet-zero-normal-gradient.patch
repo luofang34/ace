@@ -1,0 +1,56 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/bc.lua
++++ b/src/eilmer/bc.lua
+@@ -1607,7 +1607,7 @@
+                " and not OutFlowBC_SimpleFlux.new{}", 2)
+    end
+    o = o or {}
+-   flag = checkAllowedNames(o, {"label", "group","field_bc"})
++   flag = checkAllowedNames(o, {"label", "group", "field_bc", "zeroNormalViscousGradients"})
+    if not flag then
+       error("Invalid name for item supplied to OutFlowBC_SimpleFlux constructor.", 2)
+    end
+@@ -1618,6 +1618,12 @@
+    o.postConvFluxAction = { SimpleOutflowFlux:new() }
+    o.ghost_cell_data_available = true
+    o.convective_flux_computed_in_bc = true
++   if o.zeroNormalViscousGradients ~= nil and type(o.zeroNormalViscousGradients) ~= 'boolean' then
++      error("zeroNormalViscousGradients must be a boolean", 2)
++   end
++   if o.zeroNormalViscousGradients then
++      o.type = "outflow_simple_flux_zero_normal_gradient"
++   end
+    o.is_configured = true
+    return o
+ end
+--- a/src/eilmer/fluidblock.d
++++ b/src/eilmer/fluidblock.d
+@@ -811,6 +811,26 @@
+                 iface.grad.T[1]=normal*iface.n.y;
+                 iface.grad.T[2]=normal*iface.n.z;
+             }
++            if (iface.is_on_boundary &&
++                bc[iface.bc_id].type == "outflow_simple_flux_zero_normal_gradient") {
++                // This reference condition prescribes normal derivatives, not
++                // zero traction: tangential shear and axisymmetric strain remain.
++                if (myConfig.turb_model.isTurbulent || myConfig.gmodel.n_modes != 0 ||
++                    myConfig.gmodel.n_species != 1 ||
++                    myConfig.spatial_deriv_locn != SpatialDerivLocn.cells) {
++                    throw new Exception("Zero-normal outlet requires laminar single-species, " ~
++                                        "single-temperature flow and cell gradients.");
++                }
++                number[3] normal = [iface.n.x, iface.n.y, iface.n.z];
++                foreach (component; 0 .. 3) {
++                    number derivative = 0.0;
++                    foreach (axis; 0 .. 3) derivative += iface.grad.vel[component][axis]*normal[axis];
++                    foreach (axis; 0 .. 3) iface.grad.vel[component][axis] -= derivative*normal[axis];
++                }
++                number derivative = 0.0;
++                foreach (axis; 0 .. 3) derivative += iface.grad.T[axis]*normal[axis];
++                foreach (axis; 0 .. 3) iface.grad.T[axis] -= derivative*normal[axis];
++            }
+             iface.viscous_flux_calc();
+         }
+     }

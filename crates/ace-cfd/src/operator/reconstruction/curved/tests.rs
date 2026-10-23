@@ -1,0 +1,252 @@
+use super::*;
+use crate::{IdealGas, Mesh, SphereGrid};
+
+fn curved_operator() -> (FlowOperator, SphereGrid) {
+    let grid = SphereGrid {
+        radius: 0.01,
+        outer_radius: 0.02,
+        radial_cells: 24,
+        angular_cells: 24,
+        stretching: 2.0,
+        shock_shape_mach: Some(3.0),
+    };
+    let gas = IdealGas {
+        gamma: 1.4,
+        gas_constant: 287.05,
+        viscosity: 1.8e-5,
+        conductivity: 0.025,
+    };
+    let inflow = Primitive {
+        density: 0.01,
+        velocity: [0.0; 3],
+        pressure: 1000.0,
+    };
+    (
+        FlowOperator::new(Mesh::curved_sphere(grid).unwrap(), gas, inflow, 300.0).unwrap(),
+        grid,
+    )
+}
+
+#[test]
+fn shock_sensor_transitions_keep_curved_viscous_residuals_continuous() {
+    for scheme in [crate::Convection::default(), crate::Convection::Ausmdv] {
+        let (op, grid) = curved_operator();
+        let op = op.with_convection(scheme);
+        for threshold in [0.05, 0.20] {
+            let differences = [1.0e-4, 1.0e-6, 1.0e-8].map(|epsilon| {
+                let residuals = [-1.0, 1.0].map(|sign| {
+                    let ratio = threshold + sign * epsilon;
+                    let pressure = op.inflow.pressure * (1.0 + ratio) / (1.0 - ratio);
+                    let rho = op.inflow.density;
+                    let strain = 1000.0_f64;
+                    let state: Vec<_> = op
+                        .mesh
+                        .cells
+                        .iter()
+                        .enumerate()
+                        .map(|(i, cell)| {
+                            let p = if i % grid.radial_cells < grid.radial_cells / 2 {
+                                op.inflow.pressure
+                            } else {
+                                pressure
+                            };
+                            // Exact conservative means retain regular radial velocity
+                            // and prevent kinetic averaging from shifting the threshold.
+                            let yy = axisymmetry::moment_coordinates(cell)[0][1];
+                            [
+                                rho,
+                                rho * 200.0,
+                                rho * strain * cell.center[1],
+                                0.0,
+                                p / (op.gas.gamma - 1.0)
+                                    + 0.5 * rho * (200.0_f64.powi(2) + strain.powi(2) * yy),
+                            ]
+                        })
+                        .collect();
+                    let mut workspace = op.workspace();
+                    op.prepare(&state, &mut workspace).unwrap();
+                    let id = (grid.angular_cells / 3) * grid.radial_cells + grid.radial_cells / 2;
+                    let expected = ((ratio - 0.05) / 0.15).clamp(0.0, 1.0);
+                    assert!((workspace.shock_sensor[id] - expected).abs() < 1e-12);
+                    op.residual(&state, true).unwrap()
+                });
+                residuals[0]
+                    .iter()
+                    .flatten()
+                    .zip(residuals[1].iter().flatten())
+                    .map(|(a, b)| (a - b).abs())
+                    .fold(0.0_f64, f64::max)
+            });
+            assert!(
+                differences[0] > 0.0
+                    && differences[1] < 0.02 * differences[0]
+                    && differences[2] < 0.02 * differences[1],
+                "{scheme:?}, threshold={threshold}, residual jumps={differences:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn limiter_preserves_affine_fields_in_cell_moment_coordinates() {
+    let (op, grid) = curved_operator();
+    for axial in [4000.0, 6500.0] {
+        let pressure = |x: f64, yy: f64| 1000.0 + axial * x + 2e6 * yy;
+        let state: Vec<_> = op
+            .mesh
+            .cells
+            .iter()
+            .map(|cell| {
+                let [x, yy] = axisymmetry::moment_coordinates(cell)[0];
+                op.gas.conservative(Primitive {
+                    pressure: pressure(x, yy),
+                    ..op.inflow
+                })
+            })
+            .collect();
+        let mut workspace = op.workspace();
+        op.prepare(&state, &mut workspace).unwrap();
+        let mut error = 0.0_f64;
+        let mut unlimited_error = 0.0_f64;
+        for j in 0..3 {
+            for i in 8..16 {
+                let id = j * grid.radial_cells + i;
+                let cell = &op.mesh.cells[id];
+                for face in cell.faces {
+                    for point in op.mesh.faces[face].integration_points() {
+                        let actual = reconstruct(
+                            workspace.primitive[id],
+                            workspace.gradient[id],
+                            cell,
+                            point.center,
+                        );
+                        let exact = pressure(point.center[0], point.center[1] * point.center[1]);
+                        error = error.max((actual.pressure / exact - 1.0).abs());
+                        let mut gradient = workspace.gradient[id];
+                        gradient.limited = std::array::from_fn(|k| gradient.regular[k]);
+                        let unlimited =
+                            reconstruct(workspace.primitive[id], gradient, cell, point.center);
+                        unlimited_error =
+                            unlimited_error.max((unlimited.pressure / exact - 1.0).abs());
+                    }
+                }
+            }
+        }
+        assert!(
+            unlimited_error < 1e-12,
+            "moment gradient error={unlimited_error}"
+        );
+        assert!(
+            error < 1e-12,
+            "affine moment-coordinate pressure error={error}, axial={axial}"
+        );
+    }
+}
+
+#[test]
+fn shock_flattening_preserves_mean_pressure_and_the_face_radius() {
+    let (op, grid) = curved_operator();
+    let rho = op.inflow.density;
+    let strain = 1000.0;
+    let state: Vec<_> = op
+        .mesh
+        .cells
+        .iter()
+        .map(|cell| {
+            let [x, yy] = axisymmetry::moment_coordinates(cell)[0];
+            let pressure = if x < -0.014 { 300.0 } else { 3000.0 };
+            // These are exact conservative means of constant density and v_r=a*r.
+            [
+                rho,
+                0.0,
+                rho * strain * cell.center[1],
+                0.0,
+                pressure / (op.gas.gamma - 1.0) + 0.5 * rho * strain * strain * yy,
+            ]
+        })
+        .collect();
+    let mut workspace = op.workspace();
+    op.prepare(&state, &mut workspace).unwrap();
+    let mut selected = 0_usize;
+    for j in 0..3 {
+        for i in 3..grid.radial_cells - 3 {
+            let id = j * grid.radial_cells + i;
+            if workspace.shock_sensor[id] != 1.0 {
+                continue;
+            }
+            selected = selected.wrapping_add(1);
+            for face_id in op.mesh.cells[id].faces {
+                let face = &op.mesh.faces[face_id];
+                if face.neighbor.is_none() {
+                    continue;
+                }
+                for point in face.integration_points() {
+                    let q = op.face_state(&face.at_point(point), id, true, &workspace);
+                    let pressure_error =
+                        (q.pressure / workspace.primitive[id].pressure - 1.0).abs();
+                    let radial_error = (q.velocity[1] / (strain * point.center[1]) - 1.0).abs();
+                    assert!(
+                        pressure_error < 1e-12 && radial_error < 1e-12,
+                        "cell={id}, pressure={pressure_error}, radial velocity={radial_error}"
+                    );
+                }
+            }
+        }
+    }
+    assert!(
+        selected > 3,
+        "physical pressure jump must trigger the sensor"
+    );
+}
+
+#[test]
+fn shock_flattening_preserves_curved_primitive_bounds() {
+    let (op, _) = curved_operator();
+    for slope in [100.0, 200.0, 500.0] {
+        let state: Vec<_> = op
+            .mesh
+            .cells
+            .iter()
+            .map(|cell| {
+                let [x, y, _] = cell.center;
+                op.gas.conservative(Primitive {
+                    pressure: 1000.0 * (slope * (x + y)).exp(),
+                    velocity: [1000.0 * (x.hypot(y) - 0.01), 0.0, 0.0],
+                    ..op.inflow
+                })
+            })
+            .collect();
+        let mut workspace = op.workspace();
+        op.prepare(&state, &mut workspace).unwrap();
+        let mut active = 0_usize;
+        for (i, cell) in op.mesh.cells.iter().enumerate() {
+            if workspace.shock_sensor[i] == 0.0 {
+                continue;
+            }
+            active = active.wrapping_add(1);
+            let (lower, upper) =
+                bounds(&op, &workspace.primitive, i, workspace.gradient[i].regular);
+            for id in cell.faces {
+                let face = &op.mesh.faces[id];
+                if face.neighbor.is_none() {
+                    continue;
+                }
+                for point in face.integration_points() {
+                    let q = op.face_state(&face.at_point(point), i, true, &workspace);
+                    let values = axisymmetry::components(op.gas, q, point.center[1]);
+                    // Pressure has a separate polynomial/source closure.
+                    for k in 0..4 {
+                        let tolerance = 2e-12 * lower[k].abs().max(upper[k].abs()).max(1.0);
+                        assert!(
+                            values[k] >= lower[k] - tolerance && values[k] <= upper[k] + tolerance,
+                            "cell={i}, component={k}, value={}, bounds={:?}",
+                            values[k],
+                            [lower[k], upper[k]]
+                        );
+                    }
+                }
+            }
+        }
+        assert!(active > 10, "pressure variation must exercise flattening");
+    }
+}

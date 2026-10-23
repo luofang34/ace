@@ -1,0 +1,48 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -1014,6 +1014,10 @@
+                 }
+             }
+ 
++            // Stopping tests, saved loads and snapshots must describe U[0].
++            // The linear solve returned the residual preceding its update.
++            if (!dual_time_stepping) normNew = acceptedSteadyResidualNorm(simTime);
++
+             pseudoSimTime += dt;
+             wallClockElapsed = 1.0e-3*(Clock.currTime() - wallClockStart).total!"msecs"();
+ 
+@@ -2119,6 +2123,31 @@
+     }
+ }
+ 
++
++double acceptedSteadyResidualNorm(double simTime)
++{
++    evalRHS(simTime, 0);
++    size_t nConserved = GlobalConfig.cqi.n;
++    if (GlobalConfig.cqi.n_species > 1) nConserved -= 1;
++    foreach (blk; parallel(localFluidBlocks, 1)) {
++        auto cqi = blk.myConfig.cqi;
++        blk.dotAcc = 0.0;
++        foreach (cell; blk.cells) {
++            foreach (j; 0 .. nConserved) {
++                if (!GlobalConfig.sssOptions.include_turb_quantities_in_residual &&
++                    j >= cqi.rhoturb && j < cqi.rhoturb + cqi.n_turb) continue;
++                double value = cell.dUdt[0][j].re;
++                blk.dotAcc += value * value;
++            }
++        }
++    }
++    double norm = 0.0;
++    foreach (blk; localFluidBlocks) norm += blk.dotAcc;
++    version(mpi_parallel) {
++        MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
++    }
++    return sqrt(norm);
++}
+ 
+ string dot_over_blocks(string dot, string A, string B)
+ {

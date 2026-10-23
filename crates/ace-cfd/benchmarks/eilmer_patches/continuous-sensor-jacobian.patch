@@ -1,0 +1,22 @@
+SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (C) Eilmer contributors and Aircraft Concept Explorer contributors.
+
+--- a/src/eilmer/steadystate_core.d
++++ b/src/eilmer/steadystate_core.d
+@@ -1751,10 +1751,12 @@
+         blk.applyPreReconAction(pseudoSimTime, 0, ftl);
+     }
+ 
+-    // We don't want to switch between flux calculator application while
+-    // doing the Frechet derivative, so we'll only search for shock points
+-    // at ftl = 0, which is when the F(U) evaluation is made.
+-    if (ftl == 0 && GlobalConfig.do_shock_detect && GlobalConfig.frozen_shock_detector == false) { detect_shocks(0, ftl); }
++    // The continuous sensor contributes to the derivative of the blended flux.
++    // Keep binary detection fixed during a Jacobian-vector evaluation.
++    if ((ftl == 0 || GlobalConfig.shock_detector == ShockDetector.NNG) &&
++        GlobalConfig.do_shock_detect && !GlobalConfig.frozen_shock_detector) {
++        detect_shocks(0, ftl);
++    }
+ 
+     // We need to apply the copy_cell_data BIE at this point to allow propagation of
+     // "shocked" cell information (fs.S) to the boundary interface BEFORE the convective
