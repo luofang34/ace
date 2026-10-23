@@ -388,3 +388,21 @@ consistent with ADR-026. Missing evidence counts against satisfaction rather
 than being discarded. Sampled feasibility is never `satisfied`: it is at best
 provisional, and it stays unknown while any hard requirement lacks a declared
 confidence or remains indeterminate.
+
+## ADR-033 — Measured data recalibrates inputs, never outputs
+
+Measurements are first-class evidence that can overturn a prediction. A
+calibration case names its measured article, citation and assumptions, the
+input values that reproduce the test conditions, and the bounded independent
+inputs allowed to explain the observations. Computed outputs are never
+overwritten by measured values, so every downstream result still flows through
+the authoritative graph.
+
+The fit records agreement before and after, the degrees of freedom and whether
+every posterior residual lies within three measurement standard deviations. A
+measurement the model cannot reach inside the declared bounds is reported as
+inconsistent: that is evidence the model form or its bounds are wrong, not a
+value to force. Applying the result is an explicit edit whose source is
+`calibrated` and whose reference is the content-addressed record, so later
+evidence traces back to the measurement that changed it. A calibration is local
+to its article and conditions and does not qualify the model elsewhere.
