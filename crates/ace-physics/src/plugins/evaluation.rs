@@ -29,7 +29,31 @@ pub(super) fn evaluate(
         Kind::WettedArea => measurement(context, false),
         Kind::FuelSizing => fuel_requirement(inputs, context),
         Kind::CgEnvelope => cg_envelope(context),
+        Kind::Production => production(context),
     }
+}
+
+fn production(context: &AnalysisContext<'_>) -> PhysicsResult<PluginOutput> {
+    let bill = context.resources.production.as_ref().ok_or_else(|| {
+        PhysicsError::invalid("production cost", "select the vehicle production bill")
+    })?;
+    let report = crate::evaluate_production(bill, &context.resources.mass_items, context.values)?;
+    result(
+        &report,
+        &[
+            ("unit_cost", report.unit_cost_usd, Unit::Dollar),
+            (
+                "recurring_unit_cost",
+                report.recurring_unit_cost_usd,
+                Unit::Dollar,
+            ),
+            ("first_unit_cost", report.first_unit_cost_usd, Unit::Dollar),
+            ("labor_hours", report.labor_hours, Unit::Hour),
+            ("structure_mass", report.structure_mass_kg, Unit::Kilogram),
+        ],
+        None,
+        true,
+    )
 }
 
 fn cg_envelope(context: &AnalysisContext<'_>) -> PhysicsResult<PluginOutput> {

@@ -16,6 +16,7 @@ pub(super) fn build(kind: Kind, revision: &str) -> PluginSpec {
         Kind::Operations => "vehicle.operations",
         Kind::TripCost => "vehicle.trip_cost",
         Kind::Phase => "vehicle.constant_rate_phase",
+        Kind::Production => "vehicle.production_cost",
     };
     PluginSpec {
         mode: ace_model::AnalysisMode::Scalar,
@@ -72,6 +73,13 @@ fn inputs(kind: Kind) -> BTreeMap<String, ace_model::ScalarPort> {
 fn outputs(kind: Kind) -> BTreeMap<String, ace_model::ScalarPort> {
     use Unit::*;
     let ports: &[(&str, Unit)] = match kind {
+        Kind::Production => &[
+            ("unit_cost", Dollar),
+            ("recurring_unit_cost", Dollar),
+            ("first_unit_cost", Dollar),
+            ("labor_hours", Hour),
+            ("structure_mass", Kilogram),
+        ],
         Kind::ConceptGeometry => &[("part_area", SquareMeter)],
         Kind::CgEnvelope => &[("margin", Meter)],
         Kind::FuelSizing => &[("required_fuel", Kilogram)],

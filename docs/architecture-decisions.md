@@ -406,3 +406,19 @@ value to force. Applying the result is an explicit edit whose source is
 `calibrated` and whose reference is the content-addressed record, so later
 evidence traces back to the measurement that changed it. A calibration is local
 to its article and conditions and does not qualify the model elsewhere.
+
+## ADR-034 — Production cost is a graph output of the bill of materials
+
+Cost at rate is a design objective, not an accounting afterthought. The
+vehicle's production bill references the same mass items that drive mass
+properties, so a structural change propagates to unit cost through ordinary
+invalidation. Materials, processes and bought-in components are catalog data
+with explicit units; learning rates, tooling and labor rates are declared per
+process rather than hidden in a correlation.
+
+The native estimator is conceptual: Wright learning at a constant burdened
+rate and tooling amortized over the declared quantity. Its results are
+approximate, its assumptions travel in the solver contract, and quantities or
+catalog values outside its domain fail rather than extrapolate. Catalog
+choices are currently changed by editing the bill; a typed structural edit for
+the bill is deferred until the transaction vocabulary can carry it.

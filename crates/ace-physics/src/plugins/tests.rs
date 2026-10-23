@@ -3,6 +3,7 @@ use ace_engine::{Session, ValueStatus};
 use ace_model::{Source, VehicleModel};
 use serde_json::{Value, json};
 mod accounting;
+mod production;
 
 fn source() -> Source {
     Source {

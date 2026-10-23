@@ -101,6 +101,9 @@ pub enum Unit {
     /// Power-specific fuel consumption in kilograms per kilowatt hour of shaft work.
     #[serde(rename = "kg/kWh")]
     KilogramPerKilowattHour,
+    /// Labor hours per kilogram of finished structure.
+    #[serde(rename = "h/kg")]
+    HourPerKilogram,
 }
 
 impl Unit {
@@ -138,6 +141,7 @@ impl Unit {
             Self::KilogramPerNewtonSecond => (1.0, [0, -1, 1, 0, 0]),
             Self::KilogramPerJoule => (1.0, [0, -2, 2, 0, 0]),
             Self::KilogramPerKilowattHour => (1.0 / 3.6e6, [0, -2, 2, 0, 0]),
+            Self::HourPerKilogram => (3600.0, [-1, 0, 1, 0, 0]),
         }
     }
 

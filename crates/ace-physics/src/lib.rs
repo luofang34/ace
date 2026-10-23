@@ -8,6 +8,7 @@ mod mass;
 mod mission;
 mod operations;
 mod plugins;
+mod production;
 
 pub use concept::{
     ConceptGeometry, ConceptObject, SurfacePart, concept_section, concept_section_area,
@@ -28,3 +29,4 @@ pub use mission::{
 };
 pub use operations::{AirportResult, OperationsReport, evaluate_operations};
 pub use plugins::register;
+pub use production::{PartCost, ProductionReport, evaluate_production};
