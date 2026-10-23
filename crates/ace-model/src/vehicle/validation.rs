@@ -290,6 +290,15 @@ fn requirements(model: &VehicleModel) -> ModelResult<()> {
         for id in &requirement.geometry {
             reference(&model.geometry, id)?;
         }
+        if requirement
+            .confidence
+            .is_some_and(|value| !(value > 0.0 && value < 1.0))
+        {
+            return Err(ModelError::invalid(
+                name,
+                "confidence must lie strictly between zero and one",
+            ));
+        }
     }
     for objective in model.objectives.values() {
         model.parameter(&objective.metric)?;

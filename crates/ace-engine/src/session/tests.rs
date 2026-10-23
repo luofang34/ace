@@ -427,6 +427,7 @@ fn requirements_preserve_direction_conditions_and_missing_evidence() -> crate::E
             source: source(),
             condition: BTreeMap::new(),
             geometry: Vec::new(),
+            confidence: None,
         },
     );
     let mut session = Session::new(model, Registry::default())?;

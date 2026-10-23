@@ -1,5 +1,12 @@
 //! Bounded vehicle design studies with independent objectives and shared calculation evidence.
 
+mod uncertainty;
+
+pub use uncertainty::{
+    InputDistribution, MetricStatistics, ProbabilityStatus, RequirementProbability,
+    UncertaintyPlan, UncertaintyRecord, UncertaintySample,
+};
+
 mod error;
 mod evaluation;
 mod evidence;

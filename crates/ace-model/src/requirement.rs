@@ -50,6 +50,11 @@ pub struct Requirement {
     /// Semantic objects associated with the requirement.
     #[serde(default)]
     pub geometry: Vec<String>,
+    /// Minimum probability of satisfaction under declared input uncertainty.
+    /// Deterministic evaluation ignores it; uncertainty studies compare it with
+    /// a finite-sample confidence interval.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<f64>,
 }
 
 /// Direction of a separate optimization objective.

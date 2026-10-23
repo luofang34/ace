@@ -20,7 +20,8 @@ pub struct Source {
 pub struct Uncertainty {
     /// Input standard deviation in compatible units.
     pub standard_deviation: Quantity,
-    /// Distribution assumed for a probabilistic study.
+    /// Distribution assumed for a probabilistic study: `normal` about the declared
+    /// value, or `uniform` with the same standard deviation.
     pub distribution: String,
 }
 
@@ -94,13 +95,19 @@ impl Parameter {
         if let Some(expression) = &self.expression {
             expression.dependencies()?;
         }
-        if let Some(uncertainty) = &self.uncertainty
-            && uncertainty.standard_deviation.to(self.unit)?.value < 0.0
-        {
-            return Err(ModelError::invalid(
-                path,
-                "standard deviation cannot be negative",
-            ));
+        if let Some(uncertainty) = &self.uncertainty {
+            if uncertainty.standard_deviation.to(self.unit)?.value < 0.0 {
+                return Err(ModelError::invalid(
+                    path,
+                    "standard deviation cannot be negative",
+                ));
+            }
+            if !matches!(uncertainty.distribution.as_str(), "normal" | "uniform") {
+                return Err(ModelError::invalid(
+                    path,
+                    "uncertainty distribution must be normal or uniform",
+                ));
+            }
         }
         Ok(())
     }
