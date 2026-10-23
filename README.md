@@ -4,6 +4,10 @@ Aircraft Concept Explorer is a deterministic Rust application for early-stage
 fixed-wing aircraft concept studies. One low-fidelity analysis library powers
 both the `aircraft-explorer`/`aex` CLI and its stdio MCP server.
 
+ACE and its workspace libraries are distributed under AGPL-3.0-only; see
+[LICENSE](LICENSE). Incorporated code retains the notices in [NOTICE](NOTICE)
+and any component-specific third-party license files.
+
 It is not a flight simulator or certification tool. Results are conceptual
 estimates and are not suitable for operational flight planning or
 safety-critical decisions.
