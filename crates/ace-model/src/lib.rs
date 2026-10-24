@@ -10,6 +10,7 @@ mod mass;
 mod mission;
 mod operations;
 mod parameter;
+mod production;
 mod requirement;
 mod resources;
 mod solver;
@@ -34,6 +35,7 @@ pub use operations::{
     OperatingScenario, Operations,
 };
 pub use parameter::{Binding, Parameter, Source, Uncertainty};
+pub use production::{Material, Part, Process, Production, PurchasedItem};
 pub use requirement::{DesignVariable, Direction, Objective, Priority, Relation, Requirement};
 pub use solver::{Analysis, AnalysisMode, Closure, Tolerance};
 pub use units::{DimensionalValue, Quantity, Unit};

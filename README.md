@@ -168,6 +168,17 @@ lies within three standard deviations; an unreachable measurement is reported as
 inconsistent rather than forced. `CalibrationRecord::updates` returns only the
 calibrated inputs, with a `calibrated` source referencing the record.
 
+A vehicle's optional `production` bill lists material and process catalogs,
+fabricated parts that take their finished mass from mass items, bought-in
+components, a burdened labor rate and a whole-number production quantity.
+`vehicle.production_cost` consumes it when an analysis selects
+`resources.production` and publishes average unit cost including amortized
+tooling, recurring and first-unit cost, average touch labor and fabricated mass
+as approximate outputs. Labor follows a Wright cumulative-unit learning curve per
+process, summed unit by unit up to one million vehicles. Cost becomes a bindable
+requirement or objective metric like any other output, and mass edits
+invalidate it through the graph.
+
 `examples/synthesis/vspaero-transport.json` connects `aircraft.vspaero_wing_polar`
 to the state-driven climb, cruise, descent, approach and reserve phases:
 

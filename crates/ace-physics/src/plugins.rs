@@ -22,6 +22,7 @@ enum Kind {
     FuelSizing,
     CgEnvelope,
     ConceptGeometry,
+    Production,
 }
 
 struct Native {
@@ -44,6 +45,7 @@ pub fn register(registry: &mut Registry) -> EngineResult<()> {
         Kind::FuelSizing,
         Kind::CgEnvelope,
         Kind::ConceptGeometry,
+        Kind::Production,
     ] {
         registry.register(Arc::new(Native {
             kind,

@@ -43,6 +43,12 @@ pub(super) fn validate(model: &VehicleModel) -> ModelResult<()> {
     missions(model)?;
     requirements(model)?;
     operations(model)?;
+    if let Some(production) = &model.production {
+        production.validate(model)?;
+        for (value, unit) in production.bindings() {
+            binding(model, value, unit)?;
+        }
+    }
     for (name, closure) in &model.closures {
         if closure.tolerances.is_empty()
             || closure.max_iterations == 0

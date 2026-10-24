@@ -28,6 +28,9 @@ pub struct ResourceSelection {
     /// Whether the vehicle's operating case is consumed.
     #[serde(default)]
     pub operations: bool,
+    /// Whether the vehicle's production bill is consumed.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub production: bool,
 }
 
 /// Exact declarative resources retained in calculation evidence.
@@ -53,6 +56,9 @@ pub struct AnalysisResources {
     pub stage_analyses: BTreeMap<String, Analysis>,
     /// Selected operating case.
     pub operations: Option<Operations>,
+    /// Selected production bill.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub production: Option<crate::Production>,
 }
 
 impl AnalysisResources {
@@ -117,6 +123,17 @@ impl AnalysisResources {
         }
         if !resources.loading_cases.is_empty() {
             resources.mass_items.extend(model.mass_items.clone());
+        }
+        if analysis.resources.production {
+            let production = model.production.clone().ok_or_else(|| {
+                ModelError::invalid(
+                    "analysis.resources.production",
+                    "no production bill is defined",
+                )
+            })?;
+            let items: Vec<_> = production.mass_items().map(str::to_owned).collect();
+            select(&model.mass_items, &items, &mut resources.mass_items)?;
+            resources.production = Some(production);
         }
         resources.include_geometry(&model.geometry)?;
         resources.include_phases(model)?;
@@ -277,6 +294,9 @@ impl AnalysisResources {
         }
         if let Some(operations) = &self.operations {
             values.extend(operations.bindings().into_iter().map(|(value, _)| value));
+        }
+        if let Some(production) = &self.production {
+            values.extend(production.bindings().into_iter().map(|(value, _)| value));
         }
         values
     }
