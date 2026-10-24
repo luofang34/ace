@@ -1,6 +1,7 @@
 import {$,element,number,quantity,metric} from './controls.js';
 import {render,configuration,focusConstraint} from './view.js';
 import {inspector} from './inspector.js';
+import {agentTools,registerAgentTools} from './agent.js';
 
 let publication=null,previewPending=null,previewActive=false,previewToken=null;
 const inspection=inspector(()=>publication?.sheet,commit,preview,id=>focusConstraint(publication?.sheet,id,select));
@@ -28,3 +29,5 @@ window.addEventListener('pagehide',()=>events.close());
 
 $('cancel').onclick=async()=>{if(!publication?.job)return;try{await request('/api/cancel',{job_id:publication.job.id});}catch(error){notice(error.message);}};
 $('run').onclick=async()=>{if(!publication)return;try{await request('/api/run',{expected_revision:publication.sheet.revision});}catch(error){notice(error.message);}};
+
+registerAgentTools(agentTools({request,publication:()=>publication})).then(status=>{document.documentElement.dataset.agentTools=status;},error=>notice('Agent tools unavailable: '+error.message));
