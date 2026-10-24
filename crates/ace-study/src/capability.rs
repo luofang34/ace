@@ -1,26 +1,9 @@
 use crate::{StudyError, StudyResult};
 use ace_engine::{Snapshot, ValueRecord, ValueStatus};
+pub use ace_model::CapabilityMap;
 use ace_model::{Quantity, Unit, VehicleModel};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-
-/// Canonical vehicle parameters that supply each fleet-level capability.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(deny_unknown_fields)]
-pub struct CapabilityMap {
-    /// Average production cost per vehicle.
-    pub unit_cost: String,
-    /// Flight time available per sortie.
-    pub endurance: String,
-    /// Transit speed to and from the station.
-    pub cruise_speed: String,
-    /// Operating cost per flight hour, excluding crew stations.
-    pub operating_cost_per_hour: String,
-    /// Probability that a sortie ends with the vehicle lost.
-    pub loss_per_sortie: String,
-    /// Ground time between sorties.
-    pub turnaround: String,
-}
 
 /// Fleet-level capability values in canonical units.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
@@ -122,6 +105,14 @@ impl VehicleCapability {
         capability.validate()?;
         capability.id = crate::record::digest(&capability)?;
         Ok(capability)
+    }
+
+    /// Read the capability map the vehicle model declares for itself.
+    pub fn from_declared(model: &VehicleModel, snapshot: &Snapshot) -> StudyResult<Self> {
+        let map = model.capabilities.as_ref().ok_or_else(|| {
+            StudyError::invalid(&model.id, "the vehicle declares no capability map")
+        })?;
+        Self::from_snapshot(model, snapshot, map)
     }
 
     /// Check physical ranges and the content address.

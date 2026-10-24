@@ -69,6 +69,7 @@ fn model(parameters: BTreeMap<String, Parameter>) -> VehicleModel {
         missions: BTreeMap::new(),
         operations: None,
         production: None,
+        capabilities: None,
         objectives: BTreeMap::new(),
         design_variables: Vec::new(),
     }

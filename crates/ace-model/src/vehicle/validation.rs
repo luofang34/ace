@@ -43,6 +43,9 @@ pub(super) fn validate(model: &VehicleModel) -> ModelResult<()> {
     missions(model)?;
     requirements(model)?;
     operations(model)?;
+    if let Some(map) = &model.capabilities {
+        map.validate(model)?;
+    }
     if let Some(production) = &model.production {
         production.validate(model)?;
         for (value, unit) in production.bindings() {

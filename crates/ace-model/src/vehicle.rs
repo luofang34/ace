@@ -56,6 +56,9 @@ pub struct VehicleModel {
     /// Bill of materials and processes for production cost estimation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub production: Option<crate::Production>,
+    /// Canonical parameters that state this vehicle's fleet-level capabilities.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub capabilities: Option<crate::CapabilityMap>,
     /// Independent optimization objectives.
     #[serde(default)]
     pub objectives: BTreeMap<String, Objective>,

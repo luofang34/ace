@@ -183,6 +183,8 @@ fn edit_target(edit: &ModelEdit) -> String {
         ModelEdit::Objective { id, .. } => format!("objective:{id}"),
         ModelEdit::Operations { .. } => "operations".into(),
         ModelEdit::DesignVariables { .. } => "design_variables".into(),
+        ModelEdit::Production { .. } => "production".into(),
+        ModelEdit::ProductionPart { id, .. } => format!("production.part:{id}"),
     }
 }
 

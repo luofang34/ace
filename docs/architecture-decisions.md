@@ -420,16 +420,17 @@ The native estimator is conceptual: Wright learning at a constant burdened
 rate and tooling amortized over the declared quantity. Its results are
 approximate, its assumptions travel in the solver contract, and quantities or
 catalog values outside its domain fail rather than extrapolate. Catalog
-choices are changed by editing the bill; the bill is not part of the typed
-transaction vocabulary.
+choices are typed transactions: a part's material or process can be swapped,
+or the whole bill replaced, so variant matrices and interactive editing explore
+discrete manufacturing options through the same validated path as geometry.
 
 ## ADR-035 — Systems of vehicles are judged by mission effectiveness per dollar
 
 The unit of comparison above the vehicle is a force structure performing a
 mission, not a single airframe closing its design point. A vehicle enters the
 system layer only as a content-addressed capability record read from an exact
-synthesis snapshot through an explicit parameter map, so every fleet-level
-number traces back to the model revision, build and calculations behind it.
+synthesis snapshot through an explicit parameter map, normally declared by
+the vehicle model itself, so every fleet-level number traces back to the model revision, build and calculations behind it.
 Autonomy, sensors and compute enter as vehicle parameters behind that record;
 mission software is not modelled.
 

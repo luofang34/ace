@@ -120,3 +120,64 @@ fn production_bills_that_reference_unknown_entries_are_invalid() {
             .is_none()
     );
 }
+
+#[test]
+fn catalog_choices_are_typed_transactions_that_reprice_the_vehicle() {
+    use ace_model::{Material, ModelEdit, Part};
+    let mut session = session(model(true));
+    let glass = session.run().unwrap().values["cost.unit"].quantity.unwrap();
+    let mut bill = session.model().production.clone().unwrap();
+    bill.materials.insert(
+        "carbon".into(),
+        Material {
+            cost_per_kg: ace_model::Binding::Constant(
+                Quantity::new(120.0, Unit::DollarPerKilogram).unwrap(),
+            ),
+            buy_to_fly: ace_model::Binding::Constant(Quantity::new(1.5, Unit::Ratio).unwrap()),
+        },
+    );
+    let carbon_wing = Part {
+        mass_item: "wing".into(),
+        material: "carbon".into(),
+        process: "layup".into(),
+        count: 1,
+    };
+    let affected = session
+        .transact(&[
+            ModelEdit::Production { value: Some(bill) },
+            ModelEdit::ProductionPart {
+                id: "wing".into(),
+                value: Some(carbon_wing),
+            },
+        ])
+        .unwrap();
+    assert!(affected.iter().any(|node| node.contains("cost")));
+    let carbon = session.run().unwrap().values["cost.unit"].quantity.unwrap();
+    assert!((carbon.value - glass.value - 10.0 * 1.5 * 80.0).abs() < 1e-6);
+    let unknown = Part {
+        mass_item: "wing".into(),
+        material: "titanium".into(),
+        process: "layup".into(),
+        count: 1,
+    };
+    let revision = session.model().revision;
+    assert!(
+        session
+            .transact(&[ModelEdit::ProductionPart {
+                id: "wing".into(),
+                value: Some(unknown),
+            }])
+            .is_err()
+    );
+    assert_eq!(session.model().revision, revision);
+    let mut bare = model(false);
+    bare.production = None;
+    assert!(
+        ModelEdit::ProductionPart {
+            id: "wing".into(),
+            value: None,
+        }
+        .apply(&mut bare)
+        .is_err()
+    );
+}

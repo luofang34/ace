@@ -177,7 +177,9 @@ tooling, recurring and first-unit cost, average touch labor and fabricated mass
 as approximate outputs. Labor follows a Wright cumulative-unit learning curve per
 process, summed unit by unit up to one million vehicles. Cost becomes a bindable
 requirement or objective metric like any other output, and mass edits
-invalidate it through the graph.
+invalidate it through the graph. The typed `production` and `production_part`
+edits swap a part's material or process, or replace the bill, so variant
+matrices can compare discrete manufacturing choices.
 
 `ace_study::VehicleCapability::from_snapshot` turns a synthesized vehicle into
 a content-addressed capability record: unit cost, endurance, cruise speed,
@@ -203,9 +205,11 @@ cargo run --bin aex -- calibrate examples/system/expendable-uas.json \
 cargo run --bin aex -- campaign examples/system/persistent-surveillance.json --format json
 ```
 
-A campaign file references each fleet's vehicle model relative to itself,
-with optional overrides and the capability parameter map; every vehicle is
-synthesized before the campaign runs. The MCP tools
+A vehicle model may declare `capabilities`, the parameters that answer each
+fleet-level question. A campaign file references each fleet's vehicle model
+relative to itself, with optional overrides and an optional capability map
+that replaces the declared one; every vehicle is synthesized before the
+campaign runs. The MCP tools
 `propagate_vehicle_uncertainty`, `calibrate_vehicle` and
 `evaluate_fleet_campaign` take the same paths and return the same records.
 

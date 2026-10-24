@@ -97,6 +97,18 @@ pub enum ModelEdit {
         /// Replacement bounds.
         values: Vec<DesignVariable>,
     },
+    /// Complete production bill.
+    Production {
+        /// Replacement, or removal of the bill.
+        value: Option<crate::Production>,
+    },
+    /// One fabricated part, such as a material or process choice from the catalog.
+    ProductionPart {
+        /// Part identifier.
+        id: String,
+        /// Replacement, or removal.
+        value: Option<crate::Part>,
+    },
 }
 
 impl ModelEdit {
@@ -121,6 +133,16 @@ impl ModelEdit {
             Self::DesignVariables { values } => {
                 model.design_variables = values.clone();
                 Ok(())
+            }
+            Self::Production { value } => {
+                model.production = value.clone();
+                Ok(())
+            }
+            Self::ProductionPart { id, value } => {
+                let bill = model.production.as_mut().ok_or_else(|| {
+                    crate::ModelError::invalid(id, "no production bill is defined")
+                })?;
+                replace(&mut bill.parts, id, value)
             }
         }
     }

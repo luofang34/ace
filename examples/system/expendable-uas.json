@@ -395,5 +395,13 @@
       "metric": "cost.unit",
       "direction": "min"
     }
+  },
+  "capabilities": {
+    "unit_cost": "cost.unit",
+    "endurance": "flight.endurance",
+    "cruise_speed": "flight.speed",
+    "operating_cost_per_hour": "cost.hourly",
+    "loss_per_sortie": "reliability.loss",
+    "turnaround": "ground.turnaround"
   }
 }
