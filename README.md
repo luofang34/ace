@@ -191,6 +191,24 @@ a tri-state verdict against the required rate, delivered station time, losses
 and mean campaign cost. Only fleets that pass are ranked by station hours per
 dollar, so a cheap fleet cannot win by failing the mission.
 
+The CLI and MCP server expose these evaluations for any synthesis model. The
+`examples/system` vehicles are illustrative, not calibrated price or reliability
+data:
+
+```bash
+cargo run --bin aex -- uncertainty examples/system/expendable-uas.json \
+  --plan examples/system/uas-uncertainty.json --format json
+cargo run --bin aex -- calibrate examples/system/expendable-uas.json \
+  --case examples/system/uas-calibration.json --format json
+cargo run --bin aex -- campaign examples/system/persistent-surveillance.json --format json
+```
+
+A campaign file references each fleet's vehicle model relative to itself,
+with optional overrides and the capability parameter map; every vehicle is
+synthesized before the campaign runs. The MCP tools
+`propagate_vehicle_uncertainty`, `calibrate_vehicle` and
+`evaluate_fleet_campaign` take the same paths and return the same records.
+
 `examples/synthesis/vspaero-transport.json` connects `aircraft.vspaero_wing_polar`
 to the state-driven climb, cruise, descent, approach and reserve phases:
 

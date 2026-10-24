@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "name": "Persistent three-station surveillance (illustrative)",
+  "demand": {
+    "stations": 3,
+    "transit_distance": {
+      "value": 150000,
+      "unit": "m"
+    },
+    "daily_coverage": {
+      "value": 24,
+      "unit": "h"
+    },
+    "days": 90
+  },
+  "environment": {
+    "no_fly_probability": 0.08,
+    "comms_loss_probability": 0.05,
+    "comms_loss_effectiveness": 0.5
+  },
+  "fleets": {
+    "few_patrol": {
+      "vehicle": "patrol-aircraft.json",
+      "capabilities": {
+        "unit_cost": "cost.unit",
+        "endurance": "flight.endurance",
+        "cruise_speed": "flight.speed",
+        "operating_cost_per_hour": "cost.hourly",
+        "loss_per_sortie": "reliability.loss",
+        "turnaround": "ground.turnaround"
+      },
+      "initial_units": 6,
+      "replacement_lead_time": {
+        "value": 4320,
+        "unit": "h"
+      },
+      "max_replacements": 1,
+      "operators_per_station": 3,
+      "operator_cost_per_hour": {
+        "value": 120,
+        "unit": "USD/h"
+      }
+    },
+    "many_uas": {
+      "vehicle": "expendable-uas.json",
+      "capabilities": {
+        "unit_cost": "cost.unit",
+        "endurance": "flight.endurance",
+        "cruise_speed": "flight.speed",
+        "operating_cost_per_hour": "cost.hourly",
+        "loss_per_sortie": "reliability.loss",
+        "turnaround": "ground.turnaround"
+      },
+      "initial_units": 24,
+      "replacement_lead_time": {
+        "value": 336,
+        "unit": "h"
+      },
+      "max_replacements": 200,
+      "operators_per_station": 0.5,
+      "operator_cost_per_hour": {
+        "value": 90,
+        "unit": "USD/h"
+      }
+    }
+  },
+  "daily_success_fraction": 0.8,
+  "required_success_rate": 0.85,
+  "replications": 40,
+  "seed": 2026
+}

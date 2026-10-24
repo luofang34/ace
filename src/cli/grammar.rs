@@ -18,6 +18,23 @@ pub(super) fn command() -> Command {
                 .arg(optional_path("plan").required(true)),
         ))
         .subcommand(common(
+            Command::new("uncertainty")
+                .about("Propagate declared input uncertainty to requirement probabilities")
+                .arg(path("scenario"))
+                .arg(optional_path("plan").required(true)),
+        ))
+        .subcommand(common(
+            Command::new("calibrate")
+                .about("Fit bounded inputs to measured observations")
+                .arg(path("scenario"))
+                .arg(optional_path("case").required(true)),
+        ))
+        .subcommand(output(
+            Command::new("campaign")
+                .about("Compare fleets of synthesized vehicles on a persistent mission")
+                .arg(path("campaign")),
+        ))
+        .subcommand(common(
             Command::new("sheet")
                 .about("Open a local interactive synthesis sheet")
                 .arg(path("scenario"))

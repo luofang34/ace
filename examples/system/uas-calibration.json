@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "name": "endurance-trial",
+  "measurement": {
+    "citation": "Illustrative endurance trial; not a real measurement",
+    "article": "expendable_uas revision 0, serial 0001",
+    "assumptions": [
+      "full usable fuel",
+      "still air at the cruise speed",
+      "fuel burned to the declared unusable residual"
+    ]
+  },
+  "conditions": {
+    "fuel.usable": {
+      "value": 12,
+      "unit": "kg"
+    }
+  },
+  "observations": {
+    "flight.endurance": {
+      "value": {
+        "value": 9.1,
+        "unit": "h"
+      },
+      "standard_deviation": {
+        "value": 0.15,
+        "unit": "h"
+      }
+    }
+  },
+  "parameters": [
+    {
+      "parameter": "fuel.flow",
+      "lower": {
+        "value": 0.00025,
+        "unit": "kg/s"
+      },
+      "upper": {
+        "value": 0.00045,
+        "unit": "kg/s"
+      }
+    }
+  ],
+  "sweeps": 2
+}

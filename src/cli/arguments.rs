@@ -31,6 +31,20 @@ pub(super) enum Command {
         plan: PathBuf,
         common: CommonArgs,
     },
+    Uncertainty {
+        scenario: PathBuf,
+        plan: PathBuf,
+        common: CommonArgs,
+    },
+    Calibrate {
+        scenario: PathBuf,
+        case: PathBuf,
+        common: CommonArgs,
+    },
+    Campaign {
+        campaign: PathBuf,
+        output: OutputArgs,
+    },
     Sheet {
         scenario: PathBuf,
         port: u16,
