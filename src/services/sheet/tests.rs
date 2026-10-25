@@ -116,11 +116,15 @@ fn fixture_blocking() -> (tempfile::TempDir, PathBuf) {
     (directory, path)
 }
 
+/// Detects a hung exchange; generous enough that a loaded host running unoptimized
+/// synthesis never reaches it, so it never decides a behavioral outcome.
+const HANG_GUARD: Duration = Duration::from_secs(600);
+
 /// Behavioral tests must not race the interactive deadlines in unoptimized builds.
 async fn start_unhurried(path: &std::path::Path) -> AexResult<SheetServer> {
     let limits = jobs::JobLimits {
-        preview: Duration::from_secs(600),
-        formal: Duration::from_secs(600),
+        preview: HANG_GUARD,
+        formal: HANG_GUARD,
     };
     start_with_limits(path, 0, &BTreeMap::new(), limits).await
 }
@@ -150,7 +154,7 @@ async fn request(
     );
     stream.write_all(request.as_bytes()).await.unwrap();
     let mut bytes = Vec::new();
-    tokio::time::timeout(Duration::from_secs(30), stream.read_to_end(&mut bytes))
+    tokio::time::timeout(HANG_GUARD, stream.read_to_end(&mut bytes))
         .await
         .unwrap()
         .unwrap();
@@ -173,7 +177,7 @@ async fn events(address: SocketAddr) -> BufReader<TcpStream> {
 }
 
 async fn next_state(events: &mut BufReader<TcpStream>, revision: &str) -> Value {
-    tokio::time::timeout(Duration::from_secs(30), async {
+    tokio::time::timeout(HANG_GUARD, async {
         loop {
             let mut line = String::new();
             assert!(
