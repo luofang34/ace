@@ -1,0 +1,1825 @@
+{
+  "schema_version": 1,
+  "id": "model501_pw812d",
+  "name": "Model 501-10 / Single PW812D",
+  "domain": "fixed_wing",
+  "parameters": {
+    "weight.mtow": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 15875.733,
+        "unit": "kg"
+      }
+    },
+    "weight.oew": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 8291.55,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_payload": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 1905.088,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 5679.096,
+        "unit": "kg"
+      }
+    },
+    "payload.mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 1905.088,
+        "unit": "kg"
+      }
+    },
+    "fuel.loaded": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 5679.095,
+        "unit": "kg"
+      }
+    },
+    "wing.area": {
+      "unit": "m^2",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 84.0,
+        "unit": "m^2"
+      }
+    },
+    "wing.span": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 30.119761,
+        "unit": "m"
+      }
+    },
+    "wing.sweep": {
+      "unit": "deg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 30.0,
+        "unit": "deg"
+      }
+    },
+    "aero.cd0": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.013,
+        "unit": "1"
+      }
+    },
+    "aero.oswald": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.9,
+        "unit": "1"
+      }
+    },
+    "aero.cl_max": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 1.35,
+        "unit": "1"
+      }
+    },
+    "engine.count": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 1,
+        "unit": "1"
+      }
+    },
+    "engine.sizing_factor": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 1.0,
+        "unit": "1"
+      }
+    },
+    "economics.fuel_price": {
+      "unit": "USD/kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 1.0,
+        "unit": "USD/kg"
+      }
+    },
+    "mission.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 300,
+        "unit": "s"
+      }
+    },
+    "phase.path.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 30,
+        "unit": "s"
+      }
+    },
+    "field.elevation": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.0,
+        "unit": "m"
+      }
+    },
+    "field.obstacle_height": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 10.67,
+        "unit": "m"
+      }
+    },
+    "field.braking_coefficient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.3,
+        "unit": "1"
+      }
+    },
+    "field.runway_slope": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.0,
+        "unit": "1"
+      }
+    },
+    "field.headwind": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.0,
+        "unit": "m/s"
+      }
+    },
+    "phase.taxi.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 900,
+        "unit": "s"
+      }
+    },
+    "phase.taxi.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.047486,
+        "unit": "kg/s"
+      }
+    },
+    "phase.taxi.cost_rate": {
+      "unit": "USD/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.taxi.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      }
+    },
+    "phase.taxi.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.taxi.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.taxi.fuel_burn": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.taxi.cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.return_taxi.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 600,
+        "unit": "s"
+      }
+    },
+    "phase.return_taxi.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.047486,
+        "unit": "kg/s"
+      }
+    },
+    "phase.return_taxi.cost_rate": {
+      "unit": "USD/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.return_taxi.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      }
+    },
+    "phase.return_taxi.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.return_taxi.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.return_taxi.fuel_burn": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.return_taxi.cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "phase.taxi.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      }
+    },
+    "phase.takeoff.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 120,
+        "unit": "s"
+      }
+    },
+    "phase.takeoff.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 45,
+        "unit": "m/s"
+      }
+    },
+    "phase.takeoff.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.791428,
+        "unit": "kg/s"
+      }
+    },
+    "phase.takeoff.end_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 10.67,
+        "unit": "m"
+      }
+    },
+    "phase.takeoff.end_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 77.167,
+        "unit": "m/s"
+      }
+    },
+    "phase.landing.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 180,
+        "unit": "s"
+      }
+    },
+    "phase.landing.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 40,
+        "unit": "m/s"
+      }
+    },
+    "phase.landing.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.094971,
+        "unit": "kg/s"
+      }
+    },
+    "phase.landing.end_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.0,
+        "unit": "m"
+      }
+    },
+    "phase.landing.end_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.0,
+        "unit": "m/s"
+      }
+    },
+    "phase.initial_climb.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 3048.0,
+        "unit": "m"
+      }
+    },
+    "phase.initial_climb.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 125.715,
+        "unit": "m/s"
+      }
+    },
+    "phase.initial_climb.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 40000,
+        "unit": "m"
+      }
+    },
+    "phase.outbound.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 10668.0,
+        "unit": "m"
+      }
+    },
+    "phase.outbound.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 183.852,
+        "unit": "m/s"
+      }
+    },
+    "phase.outbound.climb_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 180000,
+        "unit": "m"
+      }
+    },
+    "phase.return.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 11887.2,
+        "unit": "m"
+      }
+    },
+    "phase.return.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 182.943,
+        "unit": "m/s"
+      }
+    },
+    "phase.return.climb_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 180000,
+        "unit": "m"
+      }
+    },
+    "phase.destination_descent.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 0.0,
+        "unit": "m"
+      }
+    },
+    "phase.destination_descent.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 77.167,
+        "unit": "m/s"
+      }
+    },
+    "phase.descent.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 200000,
+        "unit": "m"
+      }
+    },
+    "phase.descent.idle_thrust": {
+      "unit": "N",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 1709.5,
+        "unit": "N"
+      }
+    },
+    "phase.final_descent.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 914.4,
+        "unit": "m"
+      }
+    },
+    "phase.final_descent.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 92.6,
+        "unit": "m/s"
+      }
+    },
+    "mission.outbound_distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 3500,
+        "unit": "nmi"
+      }
+    },
+    "mission.return_distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "expression": {
+        "op": "reference",
+        "parameter": "mission.outbound_distance"
+      }
+    },
+    "mission.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "expression": {
+        "op": "add",
+        "left": {
+          "op": "reference",
+          "parameter": "mission.outbound_distance"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "mission.return_distance"
+        }
+      }
+    },
+    "phase.arrival.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "expression": {
+        "op": "reference",
+        "parameter": "phase.descent.path_distance"
+      }
+    },
+    "phase.alternate.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 4572.0,
+        "unit": "m"
+      }
+    },
+    "phase.alternate.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 154.689,
+        "unit": "m/s"
+      }
+    },
+    "phase.alternate.climb_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 40000,
+        "unit": "m"
+      }
+    },
+    "phase.alternate.descent_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 60000,
+        "unit": "m"
+      }
+    },
+    "phase.alternate.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 200,
+        "unit": "nmi"
+      }
+    },
+    "phase.alternate.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.alternate.distance"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "phase.alternate.speed"
+        }
+      }
+    },
+    "phase.reserve.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 457.2,
+        "unit": "m"
+      }
+    },
+    "phase.reserve.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 87.455,
+        "unit": "m/s"
+      }
+    },
+    "phase.reserve.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade",
+      "value": {
+        "value": 2700,
+        "unit": "s"
+      }
+    },
+    "mission.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "mission.flown_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "mission.block_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "mission.reserve_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "mission.remaining_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "mission.final_mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "mission.fuel_cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.stall_speed_clean": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.stall_speed_landing": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.best_glide_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.minimum_power_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.maximum_level_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.maximum_lift_to_drag": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.service_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.absolute_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.takeoff_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    },
+    "performance.landing_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "owner": "model501_trade"
+    }
+  },
+  "analyses": {
+    "taxi_out": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.taxi.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.taxi.fuel_flow",
+        "cost_rate": "phase.taxi.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.taxi.duration",
+        "distance": "phase.taxi.distance",
+        "fuel_burn": "phase.taxi.fuel_burn",
+        "cost": "phase.taxi.cost"
+      }
+    },
+    "return_taxi": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.return_taxi.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.return_taxi.fuel_flow",
+        "cost_rate": "phase.return_taxi.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.return_taxi.duration",
+        "distance": "phase.return_taxi.distance",
+        "fuel_burn": "phase.return_taxi.fuel_burn",
+        "cost": "phase.return_taxi.cost"
+      }
+    },
+    "takeoff": {
+      "plugin": "aircraft.ground_estimate_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "fuel_flow": "phase.takeoff.fuel_flow",
+        "fuel_price": "economics.fuel_price"
+      },
+      "outputs": {}
+    },
+    "landing": {
+      "plugin": "aircraft.ground_estimate_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "fuel_flow": "phase.landing.fuel_flow",
+        "fuel_price": "economics.fuel_price"
+      },
+      "outputs": {}
+    },
+    "path": {
+      "plugin": "aircraft.deck_energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "level": {
+      "plugin": "aircraft.deck_level_flight_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "cruise": {
+      "plugin": "aircraft.deck_route_cruise_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "mission": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.duration",
+        "distance": "mission.flown_distance",
+        "block_fuel": "mission.block_fuel",
+        "reserve_fuel": "mission.reserve_fuel",
+        "remaining_fuel": "mission.remaining_fuel",
+        "final_mass": "mission.final_mass",
+        "cost": "mission.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "delivery"
+        ]
+      }
+    },
+    "performance": {
+      "plugin": "aircraft.performance_envelope",
+      "version": "1",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "sweep": "wing.sweep",
+        "maximum_takeoff_mass": "weight.mtow",
+        "operating_empty_mass": "weight.oew",
+        "maximum_payload_mass": "weight.maximum_payload",
+        "maximum_fuel_mass": "weight.maximum_fuel",
+        "takeoff_mass": "weight.mtow",
+        "landing_mass": "weight.mtow",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "field_elevation": "field.elevation",
+        "obstacle_height": "field.obstacle_height",
+        "braking_coefficient": "field.braking_coefficient",
+        "runway_slope": "field.runway_slope",
+        "headwind": "field.headwind"
+      },
+      "outputs": {
+        "stall_speed_clean": "performance.stall_speed_clean",
+        "stall_speed_landing": "performance.stall_speed_landing",
+        "best_glide_speed": "performance.best_glide_speed",
+        "minimum_power_speed": "performance.minimum_power_speed",
+        "maximum_level_speed": "performance.maximum_level_speed",
+        "maximum_lift_to_drag": "performance.maximum_lift_to_drag",
+        "service_ceiling": "performance.service_ceiling",
+        "absolute_ceiling": "performance.absolute_ceiling",
+        "takeoff_field_length": "performance.takeoff_field_length",
+        "landing_field_length": "performance.landing_field_length"
+      },
+      "resources": {
+        "catalog": [
+          "polars",
+          "limits",
+          "engine"
+        ]
+      }
+    }
+  },
+  "requirements": {
+    "useful_payload": {
+      "name": "Useful payload",
+      "metric": "payload.mass",
+      "relation": "ge",
+      "target": {
+        "value": 4200,
+        "unit": "lb"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/designs/model501/baseline/requirements.yaml"
+      }
+    },
+    "payload_delivery_empty_return": {
+      "name": "Payload delivery and empty return",
+      "metric": "mission.flown_distance",
+      "relation": "ge",
+      "target": {
+        "value": 7000,
+        "unit": "nmi"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/designs/model501/baseline/requirements.yaml"
+      }
+    },
+    "remaining_fuel": {
+      "name": "Fuel remaining after reserve",
+      "metric": "mission.remaining_fuel",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/designs/model501/baseline/requirements.yaml"
+      }
+    },
+    "service_ceiling": {
+      "name": "Service ceiling",
+      "metric": "performance.service_ceiling",
+      "relation": "ge",
+      "target": {
+        "value": 41000,
+        "unit": "ft"
+      },
+      "priority": "soft",
+      "source": {
+        "kind": "user",
+        "reference": "examples/designs/model501/baseline/requirements.yaml"
+      }
+    },
+    "takeoff_field_length": {
+      "name": "Takeoff field length",
+      "metric": "performance.takeoff_field_length",
+      "relation": "le",
+      "target": {
+        "value": 6000,
+        "unit": "ft"
+      },
+      "priority": "soft",
+      "source": {
+        "kind": "user",
+        "reference": "examples/designs/model501/baseline/requirements.yaml"
+      }
+    },
+    "landing_stall_speed": {
+      "name": "Landing stall speed",
+      "metric": "performance.stall_speed_landing",
+      "relation": "le",
+      "target": {
+        "value": 105,
+        "unit": "kt"
+      },
+      "priority": "soft",
+      "source": {
+        "kind": "user",
+        "reference": "examples/designs/model501/baseline/requirements.yaml"
+      }
+    }
+  },
+  "mass_items": {
+    "empty": {
+      "kind": "empty",
+      "mass": "weight.oew",
+      "cg": [
+        {
+          "value": 9.4,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      }
+    },
+    "payload": {
+      "kind": "payload",
+      "mass": "payload.mass",
+      "cg": [
+        {
+          "value": 8.8,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      }
+    },
+    "fuel": {
+      "kind": "fuel",
+      "mass": "fuel.loaded",
+      "cg": [
+        {
+          "value": 9.6,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "capacity": "weight.maximum_fuel"
+    }
+  },
+  "missions": {
+    "delivery": {
+      "name": "3,500 nmi payload delivery and empty return",
+      "stages": [
+        {
+          "id": "outbound_taxi",
+          "kind": "taxi",
+          "analysis": "taxi_out",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "outbound_takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
+        },
+        {
+          "id": "outbound_initial_climb",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.initial_climb.altitude",
+            "target_speed": "phase.initial_climb.speed",
+            "path_distance": "phase.initial_climb.path_distance"
+          }
+        },
+        {
+          "id": "outbound_climb",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.outbound.altitude",
+            "target_speed": "phase.outbound.speed",
+            "path_distance": "phase.outbound.climb_distance"
+          }
+        },
+        {
+          "id": "outbound_cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.outbound_distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "destination_descent",
+          "kind": "descent",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.destination_descent.altitude",
+            "target_speed": "phase.destination_descent.speed",
+            "path_distance": "phase.descent.path_distance",
+            "idle_thrust": "phase.descent.idle_thrust"
+          }
+        },
+        {
+          "id": "destination_landing",
+          "kind": "landing",
+          "analysis": "landing",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.landing.duration_input",
+            "mean_speed": "phase.landing.speed",
+            "target_altitude": "phase.landing.end_altitude",
+            "target_speed": "phase.landing.end_speed"
+          }
+        },
+        {
+          "id": "return_taxi",
+          "kind": "taxi",
+          "analysis": "return_taxi",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "payload_release": {
+            "payload": "payload.mass"
+          }
+        },
+        {
+          "id": "return_takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
+        },
+        {
+          "id": "return_initial_climb",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.initial_climb.altitude",
+            "target_speed": "phase.initial_climb.speed",
+            "path_distance": "phase.initial_climb.path_distance"
+          }
+        },
+        {
+          "id": "return_climb",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.return.altitude",
+            "target_speed": "phase.return.speed",
+            "path_distance": "phase.return.climb_distance"
+          }
+        },
+        {
+          "id": "return_cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "final_descent",
+          "kind": "descent",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.final_descent.altitude",
+            "target_speed": "phase.final_descent.speed",
+            "path_distance": "phase.descent.path_distance",
+            "idle_thrust": "phase.descent.idle_thrust"
+          }
+        }
+      ],
+      "branches": {
+        "reserve": {
+          "from_stage": "final_descent",
+          "stages": [
+            {
+              "id": "alternate_climb",
+              "kind": "climb",
+              "analysis": "path",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.alternate.altitude",
+                "target_speed": "phase.alternate.speed",
+                "path_distance": "phase.alternate.climb_distance"
+              }
+            },
+            {
+              "id": "alternate",
+              "kind": "cruise",
+              "analysis": "level",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.alternate.duration_input"
+              }
+            },
+            {
+              "id": "alternate_descent",
+              "kind": "descent",
+              "analysis": "path",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.reserve.altitude",
+                "target_speed": "phase.reserve.speed",
+                "path_distance": "phase.alternate.descent_distance",
+                "idle_thrust": "phase.descent.idle_thrust"
+              }
+            },
+            {
+              "id": "hold",
+              "kind": "reserve",
+              "analysis": "level",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.reserve.duration_input"
+              }
+            }
+          ]
+        }
+      },
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
+    }
+  },
+  "catalog": {
+    "polars": {
+      "kind": "aerodynamic_polars",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "document": {
+        "model": "aero.parabolic_polar",
+        "clean": {
+          "cd0": 0.013,
+          "oswald_efficiency": 0.9,
+          "cl_max": 1.35,
+          "mach_critical": 0.75,
+          "wave_drag": {
+            "coefficient": 0.3,
+            "exponent": 2.4
+          }
+        },
+        "takeoff": {
+          "cd0": 0.03,
+          "oswald_efficiency": 0.82,
+          "cl_max": 1.85
+        },
+        "landing": {
+          "cd0": 0.06,
+          "oswald_efficiency": 0.78,
+          "cl_max": 2.05
+        }
+      }
+    },
+    "limits": {
+      "kind": "operating_limits",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "document": {
+        "maximum_operating_mach": 0.78,
+        "maximum_operating_altitude": "45000 ft",
+        "maximum_load_factor": 2.5,
+        "minimum_load_factor": -1.0
+      }
+    },
+    "engine": {
+      "kind": "turbofan_engine",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "Model 501-10 Model 501-10 / Single PW812D (examples/designs/model501); conceptual trade data",
+        "revision": null
+      },
+      "document": {
+        "id": "engine.pratt_whitney_pw812d_concept",
+        "version": 1,
+        "type": "turbofan_engine",
+        "model": "propulsion.turbofan_simple_deck",
+        "metadata": {
+          "display_name": "Pratt & Whitney Canada PW812D conceptual deck",
+          "source": "Pratt & Whitney PW800 product data and EASA TCDS E.081; thrust, dimensions, and dry mass are source data; TSFC, lapse, bypass ratio, and installation losses are conceptual assumptions",
+          "confidence": "low"
+        },
+        "parameters": {
+          "sea_level_static_thrust": "60.62 kN",
+          "dry_mass": "1233 kg",
+          "bypass_ratio": 5.0,
+          "dimensions": {
+            "overall_length": "2.874 m",
+            "maximum_diameter": "1.109 m"
+          },
+          "thrust_lapse": {
+            "altitude_exponent": 0.7,
+            "mach_linear_coefficient": 0.28,
+            "minimum_fraction": 0.12
+          },
+          "tsfc": {
+            "sea_level_takeoff": "0.050 kg/N/hr",
+            "cruise_reference": "0.058 kg/N/hr",
+            "cruise_reference_altitude": "35000 ft",
+            "cruise_reference_mach": 0.75
+          },
+          "installation": {
+            "thrust_loss_fraction": 0.06,
+            "nacelle_drag_area": "0.42 m^2"
+          },
+          "limits": {
+            "maximum_mach": 0.85,
+            "maximum_altitude": "51000 ft"
+          }
+        }
+      }
+    }
+  },
+  "operations": null,
+  "objectives": {},
+  "design_variables": []
+}

@@ -89,3 +89,19 @@ Inspect the top view for equal-and-opposite center edges, section reflex,
 engine-envelope placement, the wetted-area component table, and VSPAERO
 reference quantities. OpenVSP improves geometry and low-order aerodynamic
 evidence; it does not make the structural screen authoritative.
+
+## Vehicle models
+
+Each candidate directory also holds `vehicle.json`, the candidate in the
+vehicle model with its catalog engine deck. Flown on deck-backed phases, the
+3,500 nmi delivery with a 3,500 nmi empty return runs out of fuel for every
+candidate. The return distance follows the outbound distance, so
+
+```bash
+aex payload-range examples/designs/model501/candidates/model501_pw812d/vehicle.json \
+  --distance mission.outbound_distance --remaining mission.remaining_fuel \
+  --maximum-takeoff-mass weight.mtow --maximum-payload weight.maximum_payload
+```
+
+solves each candidate's delivery radius with reserves: about 1,800 nmi for the
+PW812D, 1,510 nmi for the twin PW306D1 and 1,270 nmi for the Passport 20.
