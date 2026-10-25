@@ -16,15 +16,28 @@ pub(super) fn trim_wing_lift_fraction(
             "a CG-dependent point needs a horizontal tail and fuselage geometry",
         )
     })?;
-    let arm = stations.tail_aerodynamic_center_m - stations.wing_aerodynamic_center_m;
-    let fraction = (stations.tail_aerodynamic_center_m - center_of_gravity_m) / arm;
-    if !(fraction.is_finite() && fraction > 0.0) {
+    wing_lift_fraction(
+        center_of_gravity_m,
+        stations.wing_aerodynamic_center_m,
+        stations.tail_aerodynamic_center_m,
+    )
+}
+
+/// Wing share of the weight from moments about the tail aerodynamic center, for
+/// stations measured from one longitudinal datum.
+pub(crate) fn wing_lift_fraction(
+    center_of_gravity_m: f64,
+    wing_aerodynamic_center_m: f64,
+    tail_aerodynamic_center_m: f64,
+) -> AexResult<f64> {
+    let arm = tail_aerodynamic_center_m - wing_aerodynamic_center_m;
+    let fraction = (tail_aerodynamic_center_m - center_of_gravity_m) / arm;
+    if !(fraction.is_finite() && fraction > 0.0 && arm > 0.0) {
         return Err(AexError::validation(
             "CG_OUTSIDE_TRIM_RANGE",
             "condition.center_of_gravity",
             format!(
-                "CG at {center_of_gravity_m:.3} m is not ahead of the tail aerodynamic center at {:.3} m",
-                stations.tail_aerodynamic_center_m
+                "CG at {center_of_gravity_m:.3} m is not ahead of the tail aerodynamic center at {tail_aerodynamic_center_m:.3} m, or the tail is not behind the wing"
             ),
         ));
     }
