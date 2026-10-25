@@ -58,25 +58,6 @@ pub(super) struct PointRequestCondition {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct ConstraintRequest {
-    pub(super) scenario_path: String,
-    pub(super) units: Option<String>,
-    #[serde(default)]
-    pub(super) strict: bool,
-    pub(super) wing_loading: WingLoadingRequest,
-    #[serde(default)]
-    pub(super) overrides: BTreeMap<String, String>,
-    pub(super) artifact_path: Option<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct WingLoadingRequest {
-    pub(super) start: String,
-    pub(super) stop: String,
-    pub(super) count: u32,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ReportRequest {
     pub(super) run_id: Option<String>,
     pub(super) scenario_path: Option<String>,
@@ -85,17 +66,6 @@ pub(super) struct ReportRequest {
     pub(super) format: String,
     #[serde(default)]
     pub(super) sections: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct PayloadRangeRequest {
-    pub(super) scenario_path: String,
-    pub(super) units: Option<String>,
-    #[serde(default)]
-    pub(super) strict: bool,
-    #[serde(default)]
-    pub(super) overrides: BTreeMap<String, String>,
-    pub(super) artifact_path: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]

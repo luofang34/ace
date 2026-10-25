@@ -151,17 +151,6 @@ fn analysis(matches: &ArgMatches) -> Result<AnalyzeCommand, Error> {
             cg: optional(args, "cg"),
             configuration: required(args, "configuration")?,
         })),
-        "constraints" => Ok(AnalyzeCommand::Constraints(ConstraintArgs {
-            scenario,
-            common,
-            start: required(args, "start")?,
-            stop: required(args, "stop")?,
-            count: required(args, "count")?,
-        })),
-        "payload-range" => Ok(AnalyzeCommand::PayloadRange(ScenarioArgs {
-            scenario,
-            common,
-        })),
         "performance" => Ok(AnalyzeCommand::Performance(PerformanceArgs {
             scenario,
             mass: optional(args, "mass"),
@@ -201,8 +190,6 @@ fn plot(args: &ArgMatches) -> Result<PlotArgs, Error> {
         "power-curves" => PlotKind::PowerCurves,
         "thrust-curves" => PlotKind::ThrustCurves,
         "climb-envelope" => PlotKind::ClimbEnvelope,
-        "payload-range" => PlotKind::PayloadRange,
-        "constraints" => PlotKind::Constraints,
         "mission-mass" => PlotKind::MissionMass,
         "requirement-margins" => PlotKind::RequirementMargins,
         value => return Err(invalid(format!("unknown plot kind {value}"))),
