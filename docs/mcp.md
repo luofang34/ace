@@ -11,10 +11,6 @@ structured JSON output for:
 - `calculate_point_performance`
 - `generate_report`
 - `list_analysis_backends`
-- `load_design_study`
-- `run_design_study`
-- `query_design_study`
-- `promote_study_candidate`
 
 `get_capabilities` returns the same manifest as `aex capabilities --format
 json`. Agents can discover legal document/profile types, configurations,
@@ -66,41 +62,6 @@ calibrated updates with their provenance. `evaluate_fleet_campaign` takes
 `campaign_path`, synthesizes every referenced vehicle into a capability record
 and returns each fleet's success interval, verdict and cost, together with the
 most cost-effective passing fleet. Domain failures are `isError` tool results.
-
-## Design studies
-
-`load_design_study` resolves and validates the study and its relative or
-embedded baseline. `run_design_study` performs deterministic grid or seeded
-evolutionary search with native analysis. The result contains bounded Pareto
-and selected-candidate summaries, its immutable archive reference, reuse
-counts, and a trade-space chart when applicable. A complete rectangular
-two-variable grid returns a row-major objective surface and feasible mask.
-Evolutionary, higher-dimensional, conditional, or incomplete spaces remain
-Pareto scatter and return `IRREGULAR_TRADE_SPACE`; higher-dimensional
-objective scatter also returns `STUDY_CHART_PROJECTED` with displayed and
-omitted objective IDs. Supplying `artifact_path` writes the chart as SVG and
-fails with `STUDY_CHART_UNAVAILABLE` when no chart can be formed.
-
-The service checkpoints immutable archives throughout a run. Repeating a
-completed study returns the same archive and reuses every evaluation. If only
-an incomplete checkpoint exists, execution continues from its candidate set,
-generation, population, and random-number state without duplicating evidence.
-Feasible candidates always rank ahead of candidates that fail a hard
-constraint.
-
-`query_design_study` accepts a study ID, optional archive ID, and optional
-result limit and returns the same archive-backed summaries and chart contract
-as execution. An archive ID is required when multiple study, baseline, or
-evaluator revisions share one study ID; omission returns
-`AMBIGUOUS_STUDY_ARCHIVE` instead of guessing. Supplying a candidate ID
-retrieves its full immutable evidence record. Retrieval verifies that archive,
-candidate, evaluation, study, and feasibility identities agree.
-
-Promotion requires a feasible recorded candidate and selects the archive that
-exactly matches the current study, baseline, and evaluator, even when another
-revision shares the study ID. `promote_study_candidate` writes exactly one
-canonical editable design to the requested design root; intermediate
-candidates remain descriptors and evidence, not directories.
 
 ## Vehicle editing
 

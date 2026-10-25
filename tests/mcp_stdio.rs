@@ -66,14 +66,18 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
                 "vehicle_payload_range",
                 "chart_vehicle_analysis",
                 "list_analysis_backends",
+            ] {
+                assert!(tools.iter().any(|tool| tool.name == expected));
+            }
+            // Scenario design studies are replaced by vehicle studies and promotion.
+            for retired in [
                 "load_design_study",
                 "run_design_study",
                 "query_design_study",
                 "promote_study_candidate",
             ] {
-                assert!(tools.iter().any(|tool| tool.name == expected));
+                assert!(!tools.iter().any(|tool| tool.name == retired), "{retired}");
             }
-            assert!(tools.len() >= 18);
 
             concept_flow::run(&client).await?;
             client.cancel().await?;
@@ -82,7 +86,7 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn study_tools_reuse_evidence_and_promote_one_design() -> Result<(), Box<dyn Error>> {
+fn vehicle_study_tools_archive_and_promote_one_candidate() -> Result<(), Box<dyn Error>> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
@@ -91,135 +95,39 @@ fn study_tools_reuse_evidence_and_promote_one_design() -> Result<(), Box<dyn Err
             let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
             command.args(["mcp", "serve"]);
             command.current_dir(temporary.path());
-            command.env(
-                "ACE_OPENVSP_EXECUTABLE",
-                "/path/that/does/not/contain/vspscript",
-            );
             let client = ().serve(TokioChildProcess::new(command)?).await?;
-            let executed = run_study_tools(&client, temporary.path()).await?;
-            query_and_promote_study(&client, temporary.path(), &executed).await?;
+            let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172");
+            let archive = call_tool(
+                &client,
+                "study_vehicle",
+                json!({
+                    "vehicle_path": root.join("vehicle.json"),
+                    "plan_path": root.join("vehicle-study.json")
+                }),
+            )
+            .await?;
+            assert_eq!(archive["candidates"].as_array().map(Vec::len), Some(81));
+            let candidate = archive["provisional_pareto"][0]
+                .as_str()
+                .ok_or_else(|| io::Error::other("missing Pareto candidate"))?
+                .to_owned();
+            let archive_path = temporary.path().join("archive.json");
+            std::fs::write(&archive_path, serde_json::to_vec(&archive)?)?;
+            let save_as = temporary.path().join("selected.json");
+            let promoted = call_tool(
+                &client,
+                "promote_vehicle_candidate",
+                json!({
+                    "archive_path": archive_path,
+                    "candidate_id": candidate,
+                    "save_as": save_as
+                }),
+            )
+            .await?;
+            assert!(save_as.is_file(), "{promoted}");
             client.cancel().await?;
             Ok(())
         })
-}
-
-struct ExecutedStudy {
-    study_path: PathBuf,
-    candidate_id: String,
-    evaluation_id: String,
-    archive_id: String,
-}
-
-async fn run_study_tools(
-    client: &rmcp::service::RunningService<rmcp::RoleClient, ()>,
-    root: &std::path::Path,
-) -> Result<ExecutedStudy, Box<dyn Error>> {
-    let study_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/study.yaml");
-    let chart_path = root.join("trade.svg");
-    let loaded = call_tool(
-        client,
-        "load_design_study",
-        json!({ "study_path": study_path }),
-    )
-    .await?;
-    assert_eq!(loaded["study_id"], "c172-local-design-space");
-    assert_eq!(loaded["variable_count"], 4);
-
-    let first = call_tool(
-        client,
-        "run_design_study",
-        json!({
-            "study_path": study_path,
-            "artifact_path": chart_path
-        }),
-    )
-    .await?;
-    assert_eq!(first["result"]["evaluated_candidates"], 81);
-    assert_eq!(first["result"]["complete"], true);
-    assert!(first["chart_spec"].is_object());
-    assert!(chart_path.is_file());
-    let candidate_id = first["result"]["selected_candidates"][0]["candidate"]["candidate_id"]
-        .as_str()
-        .ok_or_else(|| io::Error::other("missing selected candidate id"))?
-        .to_owned();
-    let evaluation_id = first["result"]["selected_candidates"][0]["evidence_id"]
-        .as_str()
-        .ok_or_else(|| io::Error::other("missing selected evidence id"))?
-        .to_owned();
-    let archive_id = first["result"]["archive_id"]
-        .as_str()
-        .ok_or_else(|| io::Error::other("missing archive id"))?
-        .to_owned();
-
-    let second = call_tool(
-        client,
-        "run_design_study",
-        json!({ "study_path": study_path }),
-    )
-    .await?;
-    assert_eq!(
-        first["result"]["archive_id"],
-        second["result"]["archive_id"]
-    );
-    assert_eq!(second["result"]["reused_evaluations"], 81);
-    Ok(ExecutedStudy {
-        study_path,
-        candidate_id,
-        evaluation_id,
-        archive_id,
-    })
-}
-
-async fn query_and_promote_study(
-    client: &rmcp::service::RunningService<rmcp::RoleClient, ()>,
-    root: &std::path::Path,
-    executed: &ExecutedStudy,
-) -> Result<(), Box<dyn Error>> {
-    let queried = call_tool(
-        client,
-        "query_design_study",
-        json!({
-            "study_id": "c172-local-design-space",
-            "archive_id": executed.archive_id,
-            "limit": 3
-        }),
-    )
-    .await?;
-    assert_eq!(queried["result"]["archive_id"], executed.archive_id);
-    assert!(queried["chart_spec"].is_object());
-    let evidence = call_tool(
-        client,
-        "query_design_study",
-        json!({
-            "study_id": "c172-local-design-space",
-            "archive_id": executed.archive_id,
-            "candidate_id": &executed.candidate_id
-        }),
-    )
-    .await?;
-    assert_eq!(evidence["evaluation_id"], executed.evaluation_id);
-
-    let design_root = root.join("designs");
-    let promoted = call_tool(
-        client,
-        "promote_study_candidate",
-        json!({
-            "study_path": &executed.study_path,
-            "candidate_id": &executed.candidate_id,
-            "design_id": "mcp-study-selection",
-            "display_name": "MCP Study Selection",
-            "design_root": design_root
-        }),
-    )
-    .await?;
-    assert_eq!(promoted["source_candidate_id"], executed.candidate_id);
-    assert!(
-        design_root
-            .join("mcp-study-selection/scenario.yaml")
-            .is_file()
-    );
-    assert!(!root.join(".ace/studies/candidates").exists());
-    Ok(())
 }
 
 async fn call_tool(

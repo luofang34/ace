@@ -124,6 +124,7 @@ impl ValidityDomainProvider for EngineProfile {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn scenario_domains(scenario: &ResolvedScenario) -> AexResult<Vec<ModelValidityDomain>> {
     Ok(scenario_domain_registrations(scenario)?
         .into_iter()

@@ -1,17 +1,4 @@
-use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
-
 use serde::Serialize;
-
-use crate::domain::diagnostic::AexResult;
-use crate::domain::quantity::QuantityOutput;
-use crate::domain::result::{
-    MassPropertiesAnalysis, MissionPowerScreen, RequirementEvaluation, StructuralScreen,
-};
-use crate::domain::schema::ResolvedScenario;
-use crate::domain::validity::MetricValidity;
-
-pub(crate) use crate::domain::result::ResultProvenance;
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct BackendDescriptor {
@@ -33,82 +20,7 @@ pub(crate) struct BackendTopologyCapabilities {
     pub(crate) delegated_relationship_kinds: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct GeometryMetrics {
-    pub(crate) wing_area: QuantityOutput,
-    pub(crate) wing_span: QuantityOutput,
-    pub(crate) mean_aerodynamic_chord: QuantityOutput,
-    pub(crate) horizontal_tail_area: QuantityOutput,
-    pub(crate) vertical_tail_area: QuantityOutput,
-    pub(crate) wetted_area: QuantityOutput,
-    pub(crate) aspect_ratio: f64,
-    pub(crate) center_body_leading_edge_sweep: Option<QuantityOutput>,
-    pub(crate) center_body_trailing_edge_sweep: Option<QuantityOutput>,
-    pub(crate) edge_alignment_error: Option<QuantityOutput>,
-    pub(crate) independent_planform_angle_count: Option<u32>,
-    pub(crate) estimated_usable_internal_volume: Option<QuantityOutput>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct GeometryOutput {
-    pub(crate) metrics: GeometryMetrics,
-    pub(crate) artifact_path: Option<PathBuf>,
-    pub(crate) provenance: ResultProvenance,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct PolarPoint {
-    pub(crate) angle_of_attack_deg: Option<f64>,
-    pub(crate) lift_coefficient: f64,
-    pub(crate) drag_coefficient: f64,
-    pub(crate) pitching_moment_coefficient: Option<f64>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct StabilitySummary {
-    pub(crate) pitching_moment_slope_per_deg: Option<f64>,
-    pub(crate) statically_stable: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) neutral_point: Option<QuantityOutput>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) minimum_static_margin: Option<f64>,
-    pub(crate) note: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct AnalysisOutput {
-    pub(crate) metrics: BTreeMap<String, QuantityOutput>,
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
-    pub(crate) polar: Vec<PolarPoint>,
-    pub(crate) stability: StabilitySummary,
-    pub(crate) structural_screen: Option<StructuralScreen>,
-    pub(crate) mission_power_screen: Option<MissionPowerScreen>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) mass_properties: Option<MassPropertiesAnalysis>,
-    pub(crate) requirements: Vec<RequirementEvaluation>,
-    pub(crate) feasible: Option<bool>,
-    pub(crate) failed_constraints: Vec<String>,
-    pub(crate) provenance: ResultProvenance,
-}
-
-pub(crate) struct GeometryRequest<'a> {
-    pub(crate) scenario: &'a ResolvedScenario,
-    pub(crate) artifact_path: Option<&'a Path>,
-}
-
-pub(crate) struct AnalysisRequest<'a> {
-    pub(crate) scenario: &'a ResolvedScenario,
-    pub(crate) geometry: &'a GeometryOutput,
-}
-
+/// A backend that reports its identity and topology support.
 pub(crate) trait GeometryBackend: Send + Sync {
     fn descriptor(&self) -> BackendDescriptor;
-
-    fn generate_geometry_blocking(&self, request: GeometryRequest<'_>)
-    -> AexResult<GeometryOutput>;
-}
-
-pub(crate) trait AnalysisBackend: Send + Sync {
-    fn analyze_blocking(&self, request: AnalysisRequest<'_>) -> AexResult<AnalysisOutput>;
 }
