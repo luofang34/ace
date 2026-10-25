@@ -92,6 +92,16 @@ impl AexMcpServer {
     }
 
     #[tool(
+        description = "Chart one analysis of a synthesized vehicle (constraint diagram) from its run evidence, optionally writing SVG"
+    )]
+    fn chart_vehicle_analysis(
+        &self,
+        Parameters(request): Parameters<synthesis::ChartRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::chart(request)
+    }
+
+    #[tool(
         description = "Explain a vehicle parameter: declaration, value, producing calculation, upstream producers, consumers and margins"
     )]
     fn explain_vehicle_value(
@@ -308,7 +318,7 @@ impl AexMcpServer {
             )
             .map_err(mcp_error)?;
         enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
-        let chart = constraints(&scenario, &result);
+        let chart = constraints(&scenario.name, &result);
         if let Some(path) = &request.artifact_path {
             render_svg_blocking(&chart, Path::new(path)).map_err(mcp_error)?;
         }

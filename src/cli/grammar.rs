@@ -66,7 +66,15 @@ pub(super) fn command() -> Command {
                     "maximum-takeoff-mass",
                     "Maximum takeoff mass parameter",
                 ))
-                .arg(role("maximum-payload", "Maximum payload mass parameter")),
+                .arg(role("maximum-payload", "Maximum payload mass parameter"))
+                .arg(optional_path("artifact")),
+        ))
+        .subcommand(common(
+            Command::new("chart")
+                .about("Chart one analysis of a synthesized vehicle from its run evidence")
+                .arg(path("vehicle"))
+                .arg(Arg::new("analysis").required(true))
+                .arg(optional_path("artifact")),
         ))
         .subcommand(common(
             Command::new("uncertainty")

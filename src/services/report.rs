@@ -161,7 +161,7 @@ fn concept_charts(
             4,
             "sizing",
             "Locates the selected design against conceptual constraints.",
-            constraints(scenario, constraint_result),
+            constraints(&scenario.name, constraint_result),
         ),
         report_chart(
             5,
