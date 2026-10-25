@@ -330,3 +330,59 @@ fn out_of_domain_fixtures_fail_explicitly_through_validity_domains() -> Result<(
     }
     Ok(())
 }
+
+fn model501(candidate: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples/designs/model501/candidates")
+        .join(candidate)
+        .join("vehicle.json")
+}
+
+#[test]
+fn model501_engine_trade_ranks_candidates_by_delivery_radius() -> Result<(), Box<dyn Error>> {
+    // Native screening L/D from the example README, and a delivery-radius band per engine.
+    let candidates = [
+        ("model501_pw812d", 24.23, 1_600.0..=2_000.0),
+        ("model501_twin_pw306d1", 23.55, 1_350.0..=1_650.0),
+        ("model501_passport20", 23.08, 1_100.0..=1_450.0),
+    ];
+    let mut radii = Vec::new();
+    for (candidate, lift_to_drag, band) in candidates {
+        let output = cargo_bin_cmd!("aex")
+            .arg("synthesize")
+            .arg(model501(candidate))
+            .args(["--format", "json"])
+            .assert()
+            .success()
+            .get_output()
+            .clone();
+        let result: Value = serde_json::from_slice(&output.stdout)?;
+        let ratio = value(&result, "performance.maximum_lift_to_drag")?;
+        assert!((ratio - lift_to_drag).abs() < 0.01, "{candidate} {ratio}");
+        // 3,500 nmi out with payload and 3,500 nmi back empty exceeds every fuel load.
+        let mission = &result["snapshot"]["values"]["mission.remaining_fuel"];
+        assert_eq!(mission["status"], "failed", "{candidate}");
+        let message = mission["message"].as_str().unwrap_or_default();
+        assert!(message.contains("fuel shortfall"), "{candidate}: {message}");
+        let output = cargo_bin_cmd!("aex")
+            .arg("payload-range")
+            .arg(model501(candidate))
+            .args(["--distance", "mission.outbound_distance"])
+            .args(["--remaining", "mission.remaining_fuel"])
+            .args(["--maximum-takeoff-mass", "weight.mtow"])
+            .args(["--maximum-payload", "weight.maximum_payload"])
+            .args(["--format", "json"])
+            .assert()
+            .success()
+            .get_output()
+            .clone();
+        let corners: Value = serde_json::from_slice(&output.stdout)?;
+        let radius = corners["points"][0]["range"]["value"]
+            .as_f64()
+            .ok_or("missing radius")?;
+        assert!(band.contains(&radius), "{candidate} {radius}");
+        radii.push(radius);
+    }
+    assert!(radii[0] > radii[1] && radii[1] > radii[2], "{radii:?}");
+    Ok(())
+}
