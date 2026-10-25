@@ -10,13 +10,10 @@ use crate::cli::{
 };
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
-use crate::domain::result::{MissionResult, PerformanceSummary, RequirementEvaluation};
 use crate::domain::warning::enforce_strict;
 use crate::mcp::serve_stdio;
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::report::LIMITATION;
-use crate::services::report::markdown_report;
-use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
 use crate::storage::run_store::RunAttribution;
 
 use super::output::{emit_blocking, emit_canonical_blocking, emit_scenario_blocking};
@@ -29,20 +26,6 @@ struct AnalysisEnvelope<T: Serialize> {
     completion_status: String,
     warning_count: usize,
     result: T,
-}
-
-#[derive(Debug, Serialize)]
-struct MissionEnvelope {
-    scenario_name: String,
-    run_id: String,
-    completion_status: String,
-    hard_requirements_passed: bool,
-    warning_count: usize,
-    mission: MissionResult,
-    performance: PerformanceSummary,
-    requirements: Vec<RequirementEvaluation>,
-    limitation: &'static str,
-    report_markdown: String,
 }
 
 pub(super) async fn execute(command: Command) -> AexResult<()> {
@@ -103,7 +86,6 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
 fn execute_analysis(service: &ApplicationService, analysis: AnalyzeCommand) -> AexResult<()> {
     match analysis {
         AnalyzeCommand::Point(arguments) => execute_point(service, arguments),
-        AnalyzeCommand::Mission(arguments) => execute_mission(service, arguments),
         AnalyzeCommand::Constraints(arguments) => execute_constraints(service, arguments),
         AnalyzeCommand::PayloadRange(arguments) => execute_payload_range(service, arguments),
         AnalyzeCommand::Performance(arguments) => execute_performance(service, arguments),
@@ -155,57 +137,6 @@ fn execute_point(service: &ApplicationService, arguments: PointArgs) -> AexResul
             completion_status: "completed".to_owned(),
             warning_count: result.warnings.len(),
             result,
-        },
-        &arguments.common.output,
-        &arguments.scenario,
-    )
-}
-
-fn execute_mission(service: &ApplicationService, arguments: ScenarioArgs) -> AexResult<()> {
-    let overrides = arguments.common.override_map();
-    let (scenario, mission) = service.mission_blocking(&arguments.scenario, &overrides)?;
-    let (_, performance) = service.performance_blocking(&arguments.scenario, &overrides)?;
-    let (_, payload_range) = service.payload_range_blocking(&arguments.scenario, &overrides)?;
-    let requirements =
-        evaluate_requirements(&scenario, &mission, &performance, Some(&payload_range))?;
-    enforce_strict(arguments.common.strict, &mission.warnings)?;
-    let run = service.persist_blocking(
-        &scenario,
-        "mission",
-        &mission,
-        &mission.warnings,
-        arguments.common.seed,
-        RunAttribution::with_mass_properties(),
-    )?;
-    let headline_passed = hard_requirements_passed(
-        mission.completed,
-        &scenario.requirements.items,
-        &requirements,
-    );
-    let report_markdown = markdown_report(
-        &scenario,
-        &run.run_id,
-        &mission,
-        &performance,
-        &requirements,
-    )?;
-    emit_scenario_blocking(
-        &MissionEnvelope {
-            scenario_name: scenario.name,
-            run_id: run.run_id,
-            completion_status: if mission.completed {
-                "completed"
-            } else {
-                "incomplete"
-            }
-            .to_owned(),
-            hard_requirements_passed: headline_passed,
-            warning_count: mission.warnings.len(),
-            mission,
-            performance,
-            requirements,
-            limitation: LIMITATION,
-            report_markdown,
         },
         &arguments.common.output,
         &arguments.scenario,

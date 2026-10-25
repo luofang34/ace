@@ -36,11 +36,6 @@ pub(crate) struct PointCondition {
     pub(crate) configuration: String,
 }
 
-pub(crate) struct MissionSupportingAnalysis {
-    pub(crate) performance: PerformanceSummary,
-    pub(crate) payload_range: Option<PayloadRangeResult>,
-}
-
 #[derive(Clone)]
 pub(crate) struct ApplicationService {
     resolver: ScenarioResolver,
@@ -161,24 +156,6 @@ impl ApplicationService {
         Ok((scenario, result))
     }
 
-    pub(crate) fn mission_supporting_analysis_blocking(
-        &self,
-        scenario: &ResolvedScenario,
-        mission: &MissionResult,
-    ) -> AexResult<MissionSupportingAnalysis> {
-        let mut performance = PointAnalyzer::new(scenario.clone()).summary(Some(mission))?;
-        prepend_scenario_warnings(scenario, &mut performance.warnings);
-        let payload_range = if requires_payload_range(scenario) {
-            Some(PayloadRangeAnalyzer::new(scenario.clone()).analyze()?)
-        } else {
-            None
-        };
-        Ok(MissionSupportingAnalysis {
-            performance,
-            payload_range,
-        })
-    }
-
     pub(crate) fn constraints_blocking(
         &self,
         path: &Path,
@@ -271,14 +248,4 @@ impl ApplicationService {
 
 fn prepend_scenario_warnings(scenario: &ResolvedScenario, warnings: &mut Vec<Diagnostic>) {
     warnings.splice(0..0, scenario.warnings.iter().cloned());
-}
-
-fn requires_payload_range(scenario: &ResolvedScenario) -> bool {
-    scenario.requirements.items.iter().any(|requirement| {
-        requirement.severity == "hard"
-            && matches!(
-                requirement.metric.as_str(),
-                "performance.full_payload_range" | "performance.zero_payload_ferry_range"
-            )
-    })
 }

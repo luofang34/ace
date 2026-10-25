@@ -135,7 +135,6 @@ fn analysis() -> Command {
                         .default_value("clean"),
                 ),
         ))
-        .subcommand(common(Command::new("mission").arg(path("scenario"))))
         .subcommand(common(Command::new("payload-range").arg(path("scenario"))))
         .subcommand(common(
             Command::new("performance")

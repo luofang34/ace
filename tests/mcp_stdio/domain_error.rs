@@ -20,7 +20,7 @@ fn x15_domain_failure_is_an_actionable_tool_result() -> Result<(), Box<dyn Error
             let result = client
                 .call_tool(CallToolRequestParams {
                     meta: None,
-                    name: "simulate_mission".into(),
+                    name: "resolve_scenario".into(),
                     arguments: Some(arguments(json!({"scenario_path": scenario("x15")}))?),
                     task: None,
                 })

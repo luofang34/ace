@@ -2,7 +2,6 @@ mod capabilities;
 mod design;
 mod domain_error;
 mod handler;
-mod mission;
 mod output;
 mod parameters;
 mod report;
@@ -35,7 +34,7 @@ use parameters::{
 use schema::{
     AutoRefineDesignRequest, CompareDesignsRequest, CompareRequest, ConstraintRequest,
     CreateDesignRequest, EvaluateFeasibilityRequest, ExplainRequest, GetProfileRequest,
-    ListProfilesRequest, LoadStudyRequest, MissionRequest, PayloadRangeRequest, PointRequest,
+    ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest, PointRequest,
     PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
     ScenarioRequest, UpdateDesignRequest, ValidateDocumentRequest,
 };
@@ -301,14 +300,6 @@ impl AexMcpServer {
             Path::new(&request.scenario_path),
             request.units.as_deref(),
         )
-    }
-
-    #[tool(description = "Simulate an ordered quasi-steady mission with mass continuity")]
-    fn simulate_mission(
-        &self,
-        Parameters(request): Parameters<MissionRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        mission::simulate(&self.service, request)
     }
 
     #[tool(description = "Generate structured constraint data and an optional SVG artifact")]

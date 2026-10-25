@@ -57,7 +57,7 @@ fn json_error(directory: &Path, arguments: &[&str]) -> Result<Value, Box<dyn Err
 }
 
 #[test]
-fn point_and_mission_share_resolve_time_domain_rejection() -> Result<(), Box<dyn Error>> {
+fn point_and_resolution_share_resolve_time_domain_rejection() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     let scenario = create_sr71_probe(temporary.path())?;
     let path = scenario.to_string_lossy().into_owned();
@@ -75,14 +75,11 @@ fn point_and_mission_share_resolve_time_domain_rejection() -> Result<(), Box<dyn
             "json",
         ],
     )?;
-    let mission_error = json_error(
-        temporary.path(),
-        &["analyze", "mission", &path, "--format", "json"],
-    )?;
+    let resolve_error = json_error(temporary.path(), &["resolve", &path, "--format", "json"])?;
 
-    assert_eq!(point_error["error"], mission_error["error"]);
-    assert_eq!(mission_error["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
-    let violations = mission_error["error"]["context"]["violations"]
+    assert_eq!(point_error["error"], resolve_error["error"]);
+    assert_eq!(resolve_error["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
+    let violations = resolve_error["error"]["context"]["violations"]
         .as_array()
         .ok_or("missing model-domain violations")?;
     assert_eq!(violations.len(), 2);

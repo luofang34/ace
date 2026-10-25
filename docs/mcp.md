@@ -9,7 +9,6 @@ structured JSON output for:
 - `get_profile`
 - `resolve_scenario`
 - `calculate_point_performance`
-- `simulate_mission`
 - `generate_constraint_diagram`
 - `generate_payload_range`
 - `compare_scenarios`
@@ -61,15 +60,9 @@ inclusive model bound; it is a hint and the tool never mutates or reruns the
 request. Malformed tool arguments and transport failures remain JSON-RPC
 protocol errors.
 
-`simulate_mission` defaults to `detail: false`. It resolves and simulates once,
-persists the complete canonical result, and returns a compact response with
-`run_id`, completion and hard-requirement verdicts, totals, a per-segment
-table, diagnostics, and a `generate_report` retrieval reference. The default
-B777 response is guarded below 8 KiB. Set `detail: true` to retain the full
-mission fields at the response root; the returned retrieval arguments load
-that identical stored detail without rerunning analysis. The
-`hard_requirements_passed` headline is true only when the mission completes
-and every hard requirement passes.
+`synthesize_vehicle` runs every declared vehicle mission phase by phase with
+mass, fuel and CG carried across stages, and returns its requirement margins,
+closures and per-phase calculation evidence.
 
 ## Vehicle evidence and fleet campaigns
 

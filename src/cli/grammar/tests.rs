@@ -36,14 +36,7 @@ fn output_extensions_select_the_serialization_and_conflicting_formats_fail() {
 #[test]
 fn commands_parse_using_the_public_grammar() {
     for arguments in [
-        vec![
-            "aex",
-            "analyze",
-            "mission",
-            "scenario.yaml",
-            "--format",
-            "json",
-        ],
+        vec!["aex", "synthesize", "vehicle.json", "--format", "json"],
         vec![
             "aex",
             "study",
