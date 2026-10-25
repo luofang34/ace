@@ -109,6 +109,13 @@ pub enum ModelEdit {
         /// Replacement, or removal.
         value: Option<crate::Part>,
     },
+    /// One reusable catalog entry, such as a propulsion profile.
+    CatalogEntry {
+        /// Entry identifier.
+        id: String,
+        /// Replacement, or removal.
+        value: Option<crate::CatalogEntry>,
+    },
 }
 
 impl ModelEdit {
@@ -144,6 +151,7 @@ impl ModelEdit {
                 })?;
                 replace(&mut bill.parts, id, value)
             }
+            Self::CatalogEntry { id, value } => replace(&mut model.catalog, id, value),
         }
     }
 }

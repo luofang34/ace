@@ -37,6 +37,12 @@ pub(super) fn validate(model: &VehicleModel) -> ModelResult<()> {
         for name in &analysis.requirements {
             reference(&model.requirements, name)?;
         }
+        for name in &analysis.resources.catalog {
+            reference(&model.catalog, name)?;
+        }
+    }
+    for (id, entry) in &model.catalog {
+        entry.validate(id)?;
     }
     geometry(model)?;
     mass(model)?;
