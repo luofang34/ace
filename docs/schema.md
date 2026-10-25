@@ -60,11 +60,7 @@ Wing `area`, `span`, and `aspect_ratio` are individually optional, but every
 aircraft supplies at least two. The resolver derives the missing value from
 `aspect_ratio = span² / area`. A fully declared rounded triple may differ by
 at most 0.5%; the resolved aspect ratio is normalized from area and span.
-Larger discrepancies return `INCONSISTENT_WING_PLANFORM`. A sweep of one or
-two planform fields completes the dependent values before resolution while
-keeping the requested sweep variables unchanged in its result rows.
-Aspect-ratio linear sweep bounds are dimensionless bare numbers; `1` is also
-accepted as an explicit unit.
+Larger discrepancies return `INCONSISTENT_WING_PLANFORM`.
 
 Requirement documents may select a shipped, versioned conceptual template:
 
@@ -491,8 +487,7 @@ creation.
 
 Constraint results add `stall_wing_loading_limit_n_m2`; the carpet feasible
 mask is true only where wing loading does not exceed that limit and plotted
-loading meets the controlling analyzer boundary. Sweep rows add the
-requirements-based `feasible` verdict used by two-variable sweep surfaces.
+loading meets the controlling analyzer boundary.
 Complete rectangular grid-study archives expose an objective surface through
 their returned chart. Irregular or evolutionary archives remain scatter plots
 with `IRREGULAR_TRADE_SPACE`.

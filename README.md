@@ -366,7 +366,10 @@ and 128 MiB per archive. Points retain hard-constraint status and exact calculat
 inputs; sparse samples do not imply a continuous payload-range boundary.
 
 A plan uses `schema_version: 1`, a positive `max_evaluations`, and a `method`.
-The `grid` method provides unit-bearing samples in `axes`; `refine` provides
+The `grid` method maps each studied variable in `axes` to a list of unit-bearing
+samples or to a range `{start, stop, count, spacing}` whose `count` samples
+include both endpoints in the start unit, with `linear` (default) or
+`logarithmic` spacing; `refine` provides
 `levels` and an optional `variables` list, then halves coordinate steps around
 the retained Pareto designs. Both methods enforce the vehicle's declared bounds
 and reuse unaffected calculations. Refinement is a bounded search, not a global
@@ -379,8 +382,12 @@ comparison evidence; `provisional_pareto` is separate. Unknown constraints,
 unmatched mandatory contexts, failed closures, and hard violations are excluded
 from both fronts. Soft violations remain visible without excluding a design.
 Use `StudyArchive::snapshot` to verify and restore a candidate's evidence for
-`ace_sheet::project`. The MCP `study_vehicle` tool accepts `vehicle_path`,
-`plan_path`, and optional overrides through the same service.
+`ace_sheet::project`. `--chart METRIC` adds a `chart` with the chart
+specification of that output: a line over one studied variable, or a carpet
+masked by feasibility over a complete two-variable grid; `--artifact PATH`
+also writes it as SVG. The MCP `study_vehicle` tool accepts `vehicle_path`,
+`plan_path`, optional overrides, `chart_metric` and `artifact_path` through the
+same service.
 
 ## Quick start
 

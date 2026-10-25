@@ -1,38 +1,6 @@
 use serde_json::Value;
 
-use crate::domain::diagnostic::{AexError, AexResult};
-use crate::services::sweep::SweepVariable;
-
-use super::schema::SweepVariableRequest;
-
-pub(super) fn sweep_variable(request: SweepVariableRequest) -> AexResult<SweepVariable> {
-    if let Some(values) = request.values {
-        if values.is_empty() {
-            return Err(AexError::validation(
-                "EMPTY_SWEEP_VALUES",
-                request.path,
-                "explicit value list cannot be empty",
-            ));
-        }
-        return Ok(SweepVariable {
-            path: request.path,
-            values,
-        });
-    }
-    let start = request.start.ok_or_else(|| {
-        AexError::validation("MISSING_SWEEP_START", &request.path, "start is required")
-    })?;
-    let stop = request.stop.ok_or_else(|| {
-        AexError::validation("MISSING_SWEEP_STOP", &request.path, "stop is required")
-    })?;
-    SweepVariable::linear(
-        request.path,
-        &start,
-        &stop,
-        request.count.unwrap_or(25),
-        request.logarithmic.unwrap_or(false),
-    )
-}
+use crate::domain::diagnostic::AexResult;
 
 pub(super) fn parse_wing_loading(raw: &str) -> AexResult<f64> {
     crate::cli::commands::parse_wing_loading(raw)

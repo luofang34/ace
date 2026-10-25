@@ -15,7 +15,6 @@ pub(crate) mod requirements;
 pub(crate) mod resolver;
 pub(crate) mod sheet;
 pub(crate) mod study;
-pub(crate) mod sweep;
 pub(crate) mod synthesis;
 pub(crate) mod system;
 pub(crate) mod validator;

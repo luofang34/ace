@@ -47,48 +47,6 @@ fn warning_present(value: &Value) -> bool {
 }
 
 #[test]
-fn sweep_propagates_profile_warnings_and_promotes_them_in_strict_mode() -> Result<(), Box<dyn Error>>
-{
-    let temporary = TempDir::new()?;
-    let project = create_atypical_c172(temporary.path())?;
-    let scenario = project.join("scenario.yaml");
-    let scenario_text = scenario.to_string_lossy().into_owned();
-    let arguments = [
-        "sweep",
-        scenario_text.as_str(),
-        "--var",
-        "aircraft.geometry.wing.area=15 m^2:16 m^2:2",
-        "--metric",
-        "geometry.wing_area",
-        "--format",
-        "json",
-    ];
-    let output = command(temporary.path()).args(arguments).assert().success();
-    let result: Value = serde_json::from_slice(&output.get_output().stdout)?;
-    assert!(warning_present(&result["result"]["warnings"]));
-    assert!(
-        result["result"]["rows"]
-            .as_array()
-            .is_some_and(|rows| rows.iter().all(|row| warning_present(&row["warnings"])))
-    );
-
-    let strict = command(temporary.path())
-        .args(arguments)
-        .arg("--strict")
-        .assert()
-        .failure();
-    assert!(strict.get_output().stderr.is_empty());
-    let error: Value = serde_json::from_slice(&strict.get_output().stdout)?;
-    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
-    assert!(
-        error["error"]["message"]
-            .as_str()
-            .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
-    );
-    Ok(())
-}
-
-#[test]
 fn plots_share_strict_policy_and_retain_requirement_warnings() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     let project = create_atypical_c172(temporary.path())?;

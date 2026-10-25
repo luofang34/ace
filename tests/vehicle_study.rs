@@ -141,3 +141,42 @@ fn mcp_vehicle_study_matches_cli_and_preserves_hashes() -> Result<(), Box<dyn Er
         Ok(())
     })
 }
+
+#[test]
+fn generated_two_input_grids_chart_an_output_over_the_complete_grid() -> Result<(), Box<dyn Error>>
+{
+    let directory = tempfile::tempdir()?;
+    let plan = directory.path().join("grid.json");
+    let artifact = directory.path().join("casm.svg");
+    std::fs::write(
+        &plan,
+        serde_json::to_vec(
+            &json!({"schema_version":1,"max_evaluations":4,"method":{"kind":"grid","axes":{
+            "wing.span":{"start":{"value":34,"unit":"m"},"stop":{"value":36,"unit":"m"},"count":2},
+            "payload.mass":{"start":{"value":18000,"unit":"kg"},"stop":{"value":24000,"unit":"kg"},
+                "count":2,"spacing":"logarithmic"}}}}),
+        )?,
+    )?;
+    let output = cargo_bin_cmd!("aex")
+        .arg("study")
+        .arg(example("transport.json"))
+        .arg("--plan")
+        .arg(&plan)
+        .args(["--chart", "economics.casm", "--artifact"])
+        .arg(&artifact)
+        .args(["--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let result: serde_json::Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(result["candidates"].as_array().map(Vec::len), Some(4));
+    let spec = &result["chart"]["spec"];
+    assert_eq!(spec["chart_type"], "carpet");
+    assert_eq!(spec["x"]["label"], "payload.mass");
+    assert_eq!(spec["y"]["values"], json!([34.0, 36.0]));
+    assert_eq!(spec["surface"]["values"].as_array().map(Vec::len), Some(4));
+    assert_eq!(spec["surface"]["unit"], "USD/nmi");
+    assert!(std::fs::metadata(&artifact)?.len() > 100);
+    Ok(())
+}

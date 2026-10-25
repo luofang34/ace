@@ -1,9 +1,7 @@
-use std::collections::BTreeMap;
-
 use crate::domain::diagnostic::AexError;
 use crate::domain::schema::RawWing;
 
-use super::{AREA_PATH, ASPECT_RATIO_PATH, SPAN_PATH, complete_planform_overrides, resolve_wing};
+use super::resolve_wing;
 
 fn raw_wing(area: Option<f64>, span: Option<f64>, aspect_ratio: Option<f64>) -> RawWing {
     RawWing {
@@ -93,46 +91,6 @@ fn generated_planforms_close_for_all_input_pairs() -> Result<(), Box<dyn std::er
                 assert_closed(&resolve_wing(&wing)?);
             }
         }
-    }
-    Ok(())
-}
-
-#[test]
-fn sweep_completion_closes_every_planform_variable_combination()
--> Result<(), Box<dyn std::error::Error>> {
-    let baseline = resolve_wing(&raw_wing(Some(16.0), Some(8.0), Some(4.0)))?;
-    let cases = [
-        BTreeMap::from([(AREA_PATH.to_owned(), "20 m^2".to_owned())]),
-        BTreeMap::from([(SPAN_PATH.to_owned(), "10 m".to_owned())]),
-        BTreeMap::from([(ASPECT_RATIO_PATH.to_owned(), "5".to_owned())]),
-        BTreeMap::from([
-            (AREA_PATH.to_owned(), "20 m^2".to_owned()),
-            (SPAN_PATH.to_owned(), "10 m".to_owned()),
-        ]),
-        BTreeMap::from([
-            (AREA_PATH.to_owned(), "20 m^2".to_owned()),
-            (ASPECT_RATIO_PATH.to_owned(), "5".to_owned()),
-        ]),
-        BTreeMap::from([
-            (SPAN_PATH.to_owned(), "10 m".to_owned()),
-            (ASPECT_RATIO_PATH.to_owned(), "5".to_owned()),
-        ]),
-    ];
-
-    for overrides in cases {
-        let completed = complete_planform_overrides(&overrides, &baseline)?;
-        let wing = resolve_wing(&RawWing {
-            area: completed.get(AREA_PATH).cloned(),
-            span: completed.get(SPAN_PATH).cloned(),
-            aspect_ratio: completed
-                .get(ASPECT_RATIO_PATH)
-                .map(|value| value.parse::<f64>())
-                .transpose()?,
-            sweep_quarter_chord: "0 deg".to_owned(),
-            center_body_edge_sweep: None,
-            aerodynamic_center: None,
-        })?;
-        assert_closed(&wing);
     }
     Ok(())
 }

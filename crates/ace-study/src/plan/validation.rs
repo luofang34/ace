@@ -50,7 +50,8 @@ pub(super) fn validate(plan: &StudyPlan, model: &VehicleModel) -> StudyResult<()
         for variable in selected {
             let values = axes
                 .get(&variable.name)
-                .ok_or_else(|| StudyError::invalid(&variable.name, "missing axis"))?;
+                .ok_or_else(|| StudyError::invalid(&variable.name, "missing axis"))?
+                .samples(&variable.name)?;
             if values.is_empty() {
                 return Err(StudyError::invalid(
                     &variable.name,
@@ -58,7 +59,7 @@ pub(super) fn validate(plan: &StudyPlan, model: &VehicleModel) -> StudyResult<()
                 ));
             }
             for value in values {
-                sample(model, &variable, *value)?;
+                sample(model, &variable, value)?;
             }
         }
     }

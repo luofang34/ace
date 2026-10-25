@@ -29,7 +29,7 @@ mod variants;
 mod verification;
 
 pub use error::{StudyError, StudyResult};
-pub use plan::{SearchMethod, StudyPlan};
+pub use plan::{Axis, AxisRange, SearchMethod, Spacing, StudyPlan};
 pub use record::{
     Candidate, CandidateState, Feasibility, ObjectiveValue, StopReason, StudyArchive,
 };

@@ -30,7 +30,11 @@ fn grid(values: &[f64], budget: u32) -> StudyPlan {
         method: SearchMethod::Grid {
             axes: BTreeMap::from([(
                 "x".into(),
-                values.iter().map(|value| q(*value, Unit::Meter)).collect(),
+                values
+                    .iter()
+                    .map(|value| q(*value, Unit::Meter))
+                    .collect::<Vec<_>>()
+                    .into(),
             )]),
         },
     }
@@ -106,7 +110,8 @@ fn equivalent_units_are_deduplicated_and_budget_does_not_claim_grid_exhaustion()
                     q(1.0, Unit::Foot),
                     q(0.3048, Unit::Meter),
                     q(2.0, Unit::Foot),
-                ],
+                ]
+                .into(),
             )]),
         },
     };
@@ -183,7 +188,7 @@ fn leaving_a_required_context_cannot_make_a_candidate_feasible() {
         method: SearchMethod::Grid {
             axes: BTreeMap::from([(
                 "mode".into(),
-                vec![q(0.0, Unit::Ratio), q(1.0, Unit::Ratio)],
+                vec![q(0.0, Unit::Ratio), q(1.0, Unit::Ratio)].into(),
             )]),
         },
     };
@@ -300,7 +305,7 @@ fn invalid_plans_reject_out_of_bounds_wrong_units_and_computed_variables() {
         schema_version: 1,
         max_evaluations: 1,
         method: SearchMethod::Grid {
-            axes: BTreeMap::from([("x".into(), vec![q(1.0, Unit::Kilogram)])]),
+            axes: BTreeMap::from([("x".into(), vec![q(1.0, Unit::Kilogram)].into())]),
         },
     };
     assert!(wrong.validate(&baseline).is_err());
@@ -341,11 +346,12 @@ fn multi_axis_grid_evaluates_the_full_cartesian_product() {
                         q(0.0, Unit::Meter),
                         q(1.0, Unit::Meter),
                         q(2.0, Unit::Meter),
-                    ],
+                    ]
+                    .into(),
                 ),
                 (
                     "mode".into(),
-                    vec![q(0.0, Unit::Ratio), q(1.0, Unit::Ratio)],
+                    vec![q(0.0, Unit::Ratio), q(1.0, Unit::Ratio)].into(),
                 ),
             ]),
         },

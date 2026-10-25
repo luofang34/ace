@@ -18,7 +18,6 @@ aex analyze performance SCENARIO [--mass VALUE] [--landing-mass VALUE]
 aex analyze mission SCENARIO
 aex analyze constraints SCENARIO
 aex analyze payload-range SCENARIO
-aex sweep SCENARIO --var PATH=START:STOP:COUNT --metric METRIC
 aex compare SCENARIO... --metric METRIC
 aex profile list|show|validate
 aex plot drag-polar|power-curves|thrust-curves|climb-envelope
@@ -87,7 +86,7 @@ and keep their normal text output.
 
 A point speed below stall returns `SPEED_BELOW_STALL` with
 `context.minimum_flyable_speed_m_s` for the requested altitude, mass and
-configuration, so sweep scripts can read the per-altitude minimum speed instead
+configuration, so scripts can read the per-altitude minimum speed instead
 of searching for it.
 
 Scenario validation and every analysis entry point run the same registered

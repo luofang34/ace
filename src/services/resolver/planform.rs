@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{RawWing, Wing};
@@ -45,45 +43,6 @@ pub(super) fn resolve_wing(raw: &RawWing) -> AexResult<Wing> {
             Dimension::Length,
         )?,
     })
-}
-
-pub(crate) fn complete_planform_overrides(
-    overrides: &BTreeMap<String, String>,
-    baseline: &Wing,
-) -> AexResult<BTreeMap<String, String>> {
-    let mut completed = overrides.clone();
-    let area = override_quantity(overrides, AREA_PATH, Dimension::Area)?;
-    let span = override_quantity(overrides, SPAN_PATH, Dimension::Length)?;
-    let aspect_ratio = overrides
-        .get(ASPECT_RATIO_PATH)
-        .map(|value| {
-            value
-                .parse::<f64>()
-                .map_err(|source| {
-                    AexError::validation("INVALID_OVERRIDE", ASPECT_RATIO_PATH, source.to_string())
-                })
-                .and_then(|value| positive(value, ASPECT_RATIO_PATH))
-        })
-        .transpose()?;
-    match (area, span, aspect_ratio) {
-        (None, None, None) | (Some(_), Some(_), Some(_)) => {}
-        (Some(area), Some(span), None) => insert_ratio(&mut completed, span.powi(2) / area),
-        (Some(area), None, Some(ratio)) => insert_span(&mut completed, (area * ratio).sqrt()),
-        (None, Some(span), Some(ratio)) => insert_area(&mut completed, span.powi(2) / ratio),
-        (Some(area), None, None) => {
-            insert_ratio(&mut completed, baseline.aspect_ratio);
-            insert_span(&mut completed, (area * baseline.aspect_ratio).sqrt());
-        }
-        (None, Some(span), None) => {
-            insert_area(&mut completed, baseline.area_m2);
-            insert_ratio(&mut completed, span.powi(2) / baseline.area_m2);
-        }
-        (None, None, Some(ratio)) => {
-            insert_area(&mut completed, baseline.area_m2);
-            insert_span(&mut completed, (baseline.area_m2 * ratio).sqrt());
-        }
-    }
-    Ok(completed)
 }
 
 fn resolve_planform(
@@ -138,29 +97,6 @@ fn validate_declared_ratio(declared: f64, resolved: f64) -> AexResult<()> {
             ),
         ))
     }
-}
-
-fn override_quantity(
-    overrides: &BTreeMap<String, String>,
-    path: &str,
-    dimension: Dimension,
-) -> AexResult<Option<f64>> {
-    overrides
-        .get(path)
-        .map(|value| parse_quantity(value, dimension).and_then(|value| positive(value, path)))
-        .transpose()
-}
-
-fn insert_area(overrides: &mut BTreeMap<String, String>, value: f64) {
-    overrides.insert(AREA_PATH.to_owned(), format!("{value:.12} m^2"));
-}
-
-fn insert_span(overrides: &mut BTreeMap<String, String>, value: f64) {
-    overrides.insert(SPAN_PATH.to_owned(), format!("{value:.12} m"));
-}
-
-fn insert_ratio(overrides: &mut BTreeMap<String, String>, value: f64) {
-    overrides.insert(ASPECT_RATIO_PATH.to_owned(), format!("{value:.12}"));
 }
 
 #[cfg(test)]

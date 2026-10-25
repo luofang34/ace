@@ -20,10 +20,9 @@ use rmcp::handler::server::wrapper::{Json, Parameters};
 use rmcp::{ErrorData, handler::server::router::tool::ToolRouter, tool, tool_router};
 use serde_json::{Value, json};
 
-use crate::charts::generators::{constraints, payload_range, sweep};
+use crate::charts::generators::{constraints, payload_range};
 use crate::charts::renderer::render_svg_blocking;
 
-use crate::domain::diagnostic::AexResult;
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::warning::enforce_strict;
 use crate::services::analysis::{ApplicationService, PointCondition};
@@ -32,14 +31,13 @@ use domain_error::mcp_error;
 use output::{ObjectOutput, json_output, json_output_for_scenario, json_output_for_units};
 use parameters::{
     dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
-    sweep_variable,
 };
 use schema::{
     AutoRefineDesignRequest, CompareDesignsRequest, CompareRequest, ConstraintRequest,
     CreateDesignRequest, EvaluateFeasibilityRequest, ExplainRequest, GetProfileRequest,
     ListProfilesRequest, LoadStudyRequest, MissionRequest, PayloadRangeRequest, PointRequest,
     PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
-    ScenarioRequest, SweepRequest, UpdateDesignRequest, ValidateDocumentRequest,
+    ScenarioRequest, UpdateDesignRequest, ValidateDocumentRequest,
 };
 
 #[derive(Clone)]
@@ -341,39 +339,6 @@ impl AexMcpServer {
                 "chart_spec": chart,
                 "artifact_path": request.artifact_path,
             }),
-            Path::new(&request.scenario_path),
-            request.units.as_deref(),
-        )
-    }
-
-    #[tool(description = "Run a deterministic one- or two-dimensional parameter sweep")]
-    fn run_parameter_sweep(
-        &self,
-        Parameters(request): Parameters<SweepRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let variables = request
-            .variables
-            .into_iter()
-            .map(sweep_variable)
-            .collect::<AexResult<Vec<_>>>()
-            .map_err(mcp_error)?;
-        let result = self
-            .service
-            .sweep_blocking(
-                Path::new(&request.scenario_path),
-                &variables,
-                &request.metrics,
-            )
-            .map_err(mcp_error)?;
-        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
-        let chart = request
-            .metrics
-            .first()
-            .map(|metric| sweep(&result, metric))
-            .transpose()
-            .map_err(mcp_error)?;
-        json_output_for_scenario(
-            json!({ "result": result, "chart_spec": chart }),
             Path::new(&request.scenario_path),
             request.units.as_deref(),
         )
