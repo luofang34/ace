@@ -52,11 +52,11 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
             );
             let client = ().serve(TokioChildProcess::new(command)?).await?;
             let tools = client.list_all_tools().await?;
-            assert!(
-                tools
-                    .iter()
-                    .any(|tool| tool.name == "generate_payload_range")
-            );
+            // Scenario constraint and payload-range tools are replaced by vehicle analyses.
+            assert!(!tools.iter().any(|tool| matches!(
+                tool.name.as_ref(),
+                "generate_payload_range" | "generate_constraint_diagram"
+            )));
             for expected in [
                 "synthesize_vehicle",
                 "study_vehicle",

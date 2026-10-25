@@ -5,8 +5,7 @@ use serde::Serialize;
 use serde_json::Value;
 
 use crate::cli::{
-    AnalyzeCommand, Command, ConstraintArgs, McpCommand, PerformanceArgs, PointArgs,
-    ProfileCommand, ReportArgs, ScenarioArgs,
+    AnalyzeCommand, Command, McpCommand, PerformanceArgs, PointArgs, ProfileCommand, ReportArgs,
 };
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
@@ -146,8 +145,6 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
 fn execute_analysis(service: &ApplicationService, analysis: AnalyzeCommand) -> AexResult<()> {
     match analysis {
         AnalyzeCommand::Point(arguments) => execute_point(service, arguments),
-        AnalyzeCommand::Constraints(arguments) => execute_constraints(service, arguments),
-        AnalyzeCommand::PayloadRange(arguments) => execute_payload_range(service, arguments),
         AnalyzeCommand::Performance(arguments) => execute_performance(service, arguments),
     }
 }
@@ -185,63 +182,6 @@ fn execute_point(service: &ApplicationService, arguments: PointArgs) -> AexResul
     let run = service.persist_blocking(
         &scenario,
         "point",
-        &result,
-        &result.warnings,
-        arguments.common.seed,
-        RunAttribution::default(),
-    )?;
-    emit_scenario_blocking(
-        &AnalysisEnvelope {
-            scenario_name: scenario.name,
-            run_id: run.run_id,
-            completion_status: "completed".to_owned(),
-            warning_count: result.warnings.len(),
-            result,
-        },
-        &arguments.common.output,
-        &arguments.scenario,
-    )
-}
-
-fn execute_constraints(service: &ApplicationService, arguments: ConstraintArgs) -> AexResult<()> {
-    let start = parse_wing_loading(&arguments.start)?;
-    let stop = parse_wing_loading(&arguments.stop)?;
-    let (scenario, result) = service.constraints_blocking(
-        &arguments.scenario,
-        &arguments.common.override_map(),
-        start,
-        stop,
-        arguments.count,
-    )?;
-    enforce_strict(arguments.common.strict, &result.warnings)?;
-    let run = service.persist_blocking(
-        &scenario,
-        "constraints",
-        &result,
-        &result.warnings,
-        arguments.common.seed,
-        RunAttribution::default(),
-    )?;
-    emit_scenario_blocking(
-        &AnalysisEnvelope {
-            scenario_name: scenario.name,
-            run_id: run.run_id,
-            completion_status: "completed".to_owned(),
-            warning_count: result.warnings.len(),
-            result,
-        },
-        &arguments.common.output,
-        &arguments.scenario,
-    )
-}
-
-fn execute_payload_range(service: &ApplicationService, arguments: ScenarioArgs) -> AexResult<()> {
-    let (scenario, result) =
-        service.payload_range_blocking(&arguments.scenario, &arguments.common.override_map())?;
-    enforce_strict(arguments.common.strict, &result.warnings)?;
-    let run = service.persist_blocking(
-        &scenario,
-        "payload-range",
         &result,
         &result.warnings,
         arguments.common.seed,
@@ -354,28 +294,6 @@ fn service_blocking() -> AexResult<ApplicationService> {
         source,
     })?;
     Ok(ApplicationService::filesystem(current.join("runs")))
-}
-
-pub(crate) fn parse_wing_loading(raw: &str) -> AexResult<f64> {
-    let (number, unit) = raw.split_once(char::is_whitespace).ok_or_else(|| {
-        AexError::validation(
-            "AMBIGUOUS_UNITLESS_VALUE",
-            "wing_loading",
-            "wing loading requires units",
-        )
-    })?;
-    let value = number.parse::<f64>().map_err(|source| {
-        AexError::validation("INVALID_WING_LOADING", "wing_loading", source.to_string())
-    })?;
-    match unit.trim() {
-        "N/m^2" | "N/m2" => Ok(value),
-        "lbf/ft^2" | "psf" => Ok(value * 47.880_258_98),
-        other => Err(AexError::validation(
-            "INCOMPATIBLE_UNITS",
-            "wing_loading",
-            format!("unsupported unit {other}"),
-        )),
-    }
 }
 
 fn pretty_json(value: &Value) -> AexResult<String> {
