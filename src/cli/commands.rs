@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde_json::Value;
 
 use crate::cli::{
-    AnalyzeCommand, Command, CompareArgs, ConstraintArgs, McpCommand, PerformanceArgs, PointArgs,
+    AnalyzeCommand, Command, ConstraintArgs, McpCommand, PerformanceArgs, PointArgs,
     ProfileCommand, ReportArgs, ScenarioArgs,
 };
 use crate::domain::diagnostic::{AexError, AexResult};
@@ -43,7 +43,13 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             emit_scenario_blocking(&result, &common.output, &scenario)
         }
         Command::Analyze { analysis } => execute_analysis(&service, analysis),
-        Command::Compare(arguments) => execute_compare(&service, arguments),
+        Command::Compare(arguments) => {
+            let result = crate::services::vehicle_comparison::compare_blocking(
+                &arguments.vehicles,
+                &arguments.metrics,
+            )?;
+            emit_canonical_blocking(&result, &arguments.output)
+        }
         Command::Profile { profile } => execute_profile(&service, profile),
         Command::Plot(arguments) => execute_plot(&service, arguments),
         Command::Report(arguments) => execute_report(&service, arguments),
@@ -231,19 +237,6 @@ fn execute_performance(service: &ApplicationService, arguments: PerformanceArgs)
         &arguments.common.output,
         &arguments.scenario,
     )
-}
-
-fn execute_compare(service: &ApplicationService, arguments: CompareArgs) -> AexResult<()> {
-    let result = service.compare_blocking(&arguments.scenarios, &arguments.metrics)?;
-    enforce_strict(arguments.strict, &result.warnings)?;
-    let scenario = arguments.scenarios.first().ok_or_else(|| {
-        AexError::validation(
-            "MISSING_COMPARISON_SCENARIO",
-            "scenarios",
-            "at least one scenario is required",
-        )
-    })?;
-    emit_scenario_blocking(&result, &arguments.output, scenario)
 }
 
 fn execute_profile(service: &ApplicationService, command: ProfileCommand) -> AexResult<()> {

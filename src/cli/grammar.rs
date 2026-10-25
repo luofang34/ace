@@ -50,9 +50,9 @@ pub(super) fn command() -> Command {
         .subcommand(analysis())
         .subcommand(output(
             Command::new("compare")
-                .arg(path("scenarios").num_args(1..))
-                .arg(repeated("metric", true))
-                .arg(flag("strict")),
+                .about("Synthesize vehicles and tabulate named parameters with their verdicts")
+                .arg(path("vehicles").num_args(1..))
+                .arg(repeated("metric", true)),
         ))
         .subcommand(profiles())
         .subcommand(plot())

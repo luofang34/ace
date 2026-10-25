@@ -32,10 +32,9 @@ use parameters::{
     dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
 };
 use schema::{
-    AutoRefineDesignRequest, CompareDesignsRequest, CompareRequest, ConstraintRequest,
-    CreateDesignRequest, EvaluateFeasibilityRequest, ExplainRequest, GetProfileRequest,
-    ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest, PointRequest,
-    PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
+    AutoRefineDesignRequest, ConstraintRequest, CreateDesignRequest, EvaluateFeasibilityRequest,
+    ExplainRequest, GetProfileRequest, ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest,
+    PointRequest, PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
     ScenarioRequest, UpdateDesignRequest, ValidateDocumentRequest,
 };
 
@@ -74,6 +73,16 @@ impl AexMcpServer {
         Parameters(request): Parameters<synthesis::StudyRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
         synthesis::study(request)
+    }
+
+    #[tool(
+        description = "Synthesize vehicles and tabulate named parameters with provenance, margins and feasibility"
+    )]
+    fn compare_vehicles(
+        &self,
+        Parameters(request): Parameters<synthesis::CompareRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::compare(request)
     }
 
     #[tool(description = "Discover accepted vocabulary, models, warnings, and backends")]
@@ -333,48 +342,6 @@ impl AexMcpServer {
             Path::new(&request.scenario_path),
             request.units.as_deref(),
         )
-    }
-
-    #[tool(description = "Compare selected metrics across aircraft scenarios")]
-    fn compare_scenarios(
-        &self,
-        Parameters(request): Parameters<CompareRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let paths: Vec<PathBuf> = request
-            .scenario_paths
-            .into_iter()
-            .map(PathBuf::from)
-            .collect();
-        let result = self
-            .service
-            .compare_blocking(&paths, &request.metrics)
-            .map_err(mcp_error)?;
-        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
-        let path = paths
-            .first()
-            .ok_or_else(|| ErrorData::invalid_params("scenario_paths must not be empty", None))?;
-        json_output_for_scenario(result, path, request.units.as_deref())
-    }
-
-    #[tool(description = "Compare selected conceptual metrics across editable designs")]
-    fn compare_designs(
-        &self,
-        Parameters(request): Parameters<CompareDesignsRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let paths = request
-            .design_paths
-            .into_iter()
-            .map(PathBuf::from)
-            .collect::<Vec<_>>();
-        let result = self
-            .service
-            .compare_blocking(&paths, &request.metrics)
-            .map_err(mcp_error)?;
-        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
-        let path = paths
-            .first()
-            .ok_or_else(|| ErrorData::invalid_params("design_paths must not be empty", None))?;
-        json_output_for_scenario(result, path, request.units.as_deref())
     }
 
     #[tool(description = "Explain a persisted result value and its governing low-fidelity model")]

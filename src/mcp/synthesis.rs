@@ -49,3 +49,17 @@ pub(super) fn study(request: StudyRequest) -> Result<Json<ObjectOutput>, ErrorDa
     .map_err(super::domain_error::mcp_error)?;
     canonical_json_output(result)
 }
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct CompareRequest {
+    vehicle_paths: Vec<String>,
+    /// Parameter identifiers reported for every vehicle in its declared unit.
+    metrics: Vec<String>,
+}
+
+pub(super) fn compare(request: CompareRequest) -> Result<Json<ObjectOutput>, ErrorData> {
+    let paths: Vec<_> = request.vehicle_paths.iter().map(Into::into).collect();
+    let result = crate::services::vehicle_comparison::compare_blocking(&paths, &request.metrics)
+        .map_err(super::domain_error::mcp_error)?;
+    canonical_json_output(result)
+}

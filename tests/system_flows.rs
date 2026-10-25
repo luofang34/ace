@@ -71,6 +71,46 @@ fn campaign_ranks_only_fleets_that_meet_the_mission() -> Result<(), Box<dyn Erro
 }
 
 #[test]
+fn comparison_keeps_each_vehicle_unit_verdict_and_provenance() -> Result<(), Box<dyn Error>> {
+    let uas = text(example("expendable-uas.json"))?;
+    let patrol = text(example("patrol-aircraft.json"))?;
+    let result = cli(&[
+        "compare",
+        &uas,
+        &patrol,
+        "--metric",
+        "cost.unit",
+        "--metric",
+        "flight.endurance",
+    ])?;
+    assert_eq!(
+        result["metrics"],
+        serde_json::json!(["cost.unit", "flight.endurance"])
+    );
+    let vehicles = result["vehicles"].as_array().ok_or("missing vehicles")?;
+    assert_eq!(vehicles.len(), 2);
+    for vehicle in vehicles {
+        assert_eq!(vehicle["completed"], true);
+        assert_eq!(vehicle["values"]["cost.unit"]["quantity"]["unit"], "USD");
+        assert!(vehicle["values"]["cost.unit"]["run_id"].is_string());
+        assert!(vehicle["margins"].is_object());
+    }
+    assert_eq!(
+        vehicles[0]["values"]["flight.endurance"]["quantity"]["value"],
+        10.0
+    );
+    let unknown = cargo_bin_cmd!("aex")
+        .args(["compare", &uas, "--metric", "wing.span", "--format", "json"])
+        .assert()
+        .failure()
+        .get_output()
+        .clone();
+    let error: Value = serde_json::from_slice(&unknown.stdout)?;
+    assert_eq!(error["error"]["code"], "UNKNOWN_COMPARISON_METRIC");
+    Ok(())
+}
+
+#[test]
 fn mcp_exposes_the_same_system_evaluations() -> Result<(), Box<dyn Error>> {
     use rmcp::{ServiceExt, model::CallToolRequestParams, transport::TokioChildProcess};
     tokio::runtime::Builder::new_current_thread()
@@ -85,6 +125,7 @@ fn mcp_exposes_the_same_system_evaluations() -> Result<(), Box<dyn Error>> {
                 "propagate_vehicle_uncertainty",
                 "calibrate_vehicle",
                 "evaluate_fleet_campaign",
+                "compare_vehicles",
             ] {
                 assert!(tools.iter().any(|tool| tool.name == name), "{name}");
             }
@@ -111,6 +152,16 @@ fn mcp_exposes_the_same_system_evaluations() -> Result<(), Box<dyn Error>> {
             )
             .await?;
             assert_eq!(campaign["preferred"], "many_uas");
+            let comparison = call(
+                "compare_vehicles",
+                serde_json::json!({"vehicle_paths": [example("expendable-uas.json"),
+                    example("patrol-aircraft.json")], "metrics": ["flight.endurance"]}),
+            )
+            .await?;
+            assert_eq!(
+                comparison["vehicles"][1]["values"]["flight.endurance"]["quantity"]["value"],
+                24.0
+            );
             let calibration = call(
                 "calibrate_vehicle",
                 serde_json::json!({"vehicle_path": example("expendable-uas.json"),
