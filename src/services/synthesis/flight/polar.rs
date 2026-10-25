@@ -1,4 +1,7 @@
-use super::parameters::{FlightModel, positive};
+use super::{
+    parameters::{FlightModel, positive},
+    powerplant::Powerplant,
+};
 use crate::{
     backends::openvsp::polar::{MACH, PORTS},
     domain::aerodynamics::PolarTable,
@@ -7,11 +10,14 @@ use ace_engine::SolverError;
 use ace_model::{Quantity, Unit};
 use std::collections::BTreeMap;
 
-pub(super) fn model(inputs: &BTreeMap<String, Quantity>) -> Result<FlightModel, SolverError> {
+pub(super) fn model(
+    inputs: &BTreeMap<String, Quantity>,
+    powerplant: Powerplant,
+) -> Result<FlightModel, SolverError> {
     let mut base = inputs.clone();
     // The table supplies k directly; this value only satisfies the shared native constructor.
     base.insert("oswald".into(), Quantity::new(1.0, Unit::Ratio)?);
-    let mut model = FlightModel::new(&base)?;
+    let mut model = FlightModel::with_powerplant(&base, powerplant)?;
     model.aero.cl_max = model
         .aero
         .cl_max

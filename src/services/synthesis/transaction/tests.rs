@@ -203,13 +203,15 @@ fn advertised_flight_phase_ids_are_the_registered_unique_variants() {
     let ids = flight_phase_ids();
     let unique = ids.iter().collect::<std::collections::BTreeSet<_>>();
     assert_eq!(unique.len(), ids.len());
-    assert_eq!(ids.len(), 13);
+    assert_eq!(ids.len(), 19);
     for id in [
         "aircraft.ground_estimate_phase",
         "aircraft.level_flight_phase",
         "aircraft.vspaero_route_cruise_phase",
         "aircraft.propeller_energy_path_phase",
         "aircraft.vspaero_propeller_level_flight_phase",
+        "aircraft.deck_energy_path_phase",
+        "aircraft.vspaero_deck_route_cruise_phase",
     ] {
         assert!(ids.iter().any(|item| item == id), "{id}");
     }

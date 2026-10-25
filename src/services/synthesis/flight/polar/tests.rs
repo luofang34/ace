@@ -2,6 +2,10 @@ use super::*;
 use crate::models::atmosphere::Isa1976;
 use crate::services::synthesis::flight::{integration, tests};
 
+fn native(inputs: &BTreeMap<String, Quantity>) -> FlightModel {
+    model(inputs, Powerplant::new(inputs).unwrap()).unwrap()
+}
+
 fn inputs() -> BTreeMap<String, Quantity> {
     let mut inputs = tests::inputs();
     inputs.remove("oswald");
@@ -20,7 +24,7 @@ fn inputs() -> BTreeMap<String, Quantity> {
 
 #[test]
 fn interpolated_solver_drag_drives_mass_ode_without_extrapolation() {
-    let model = model(&inputs()).unwrap();
+    let model = native(&inputs());
     let mut state = tests::state(70_000.0);
     let air = Isa1976::new(0.0).evaluate(10_000.0).unwrap();
     let speed = 0.65 * air.speed_of_sound_m_s;
@@ -50,7 +54,7 @@ fn interpolated_solver_drag_drives_mass_ode_without_extrapolation() {
 
 #[test]
 fn low_mach_interpolates_from_the_incompressible_sample() {
-    let model = model(&inputs()).unwrap();
+    let model = native(&inputs());
     let air = Isa1976::new(0.0).evaluate(1_000.0).unwrap();
     for (mach, k) in [(0.10, 0.019), (0.15, 0.0195), (0.2, 0.02)] {
         let mut state = tests::state(3_000.0);
@@ -77,7 +81,7 @@ fn low_mach_interpolates_from_the_incompressible_sample() {
 fn sampled_cl_limit_is_enforced_independently_of_user_stall_limit() {
     let mut inputs = inputs();
     inputs.insert("cl_limit".into(), Quantity::new(0.1, Unit::Ratio).unwrap());
-    let model = model(&inputs).unwrap();
+    let model = native(&inputs);
     assert!(
         integration::evaluate(
             &model,

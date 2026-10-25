@@ -3,8 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use ace_model::{AnalysisResources, CatalogEntry, Quantity};
-use serde::de::DeserializeOwned;
+use ace_model::{AnalysisResources, Quantity};
 
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::schema::{
@@ -13,13 +12,11 @@ use crate::domain::schema::{
     Propulsion, RawAerodynamics, RawLimits, RawProfile, Requirements, ResolvedScenario, Wing,
 };
 use crate::domain::topology::AircraftTopology;
-use crate::services::profile_resolution::{parse_engine_profile, parse_propeller_profile};
+use crate::services::profile_resolution::parse_propeller_profile;
 use crate::services::resolver::{resolve_aerodynamics, resolve_limits};
-
-/// Catalog kinds this adapter reads, besides engine profile kinds.
-pub(super) const POLARS: &str = "aerodynamic_polars";
-pub(super) const LIMITS: &str = "operating_limits";
-pub(super) const PROPELLER: &str = "propeller";
+use crate::services::synthesis::catalog::{
+    LIMITS, POLARS, PROPELLER, document, engine, optional_document,
+};
 
 /// Build the resolved aircraft, field and propulsion inputs for one evaluation.
 pub(super) fn scenario(
@@ -115,56 +112,11 @@ pub(super) fn scenario(
     })
 }
 
-fn engine(resources: &AnalysisResources) -> AexResult<EngineProfile> {
-    let mut engines = resources
-        .catalog
-        .values()
-        .filter(|entry| !matches!(entry.kind.as_str(), POLARS | LIMITS | PROPELLER));
-    let entry = engines.next().ok_or_else(|| missing("engine profile"))?;
-    if engines.next().is_some() {
-        return Err(invalid("select exactly one engine profile"));
-    }
-    let raw: RawProfile = decode(entry)?;
-    if raw.kind != entry.kind {
-        return Err(invalid("catalog kind differs from the profile type"));
-    }
-    parse_engine_profile(raw)
-}
-
 fn engine_id(engine: &EngineProfile) -> &str {
     match engine {
         EngineProfile::Piston(profile) => &profile.id,
         EngineProfile::Turbofan(profile) => &profile.id,
     }
-}
-
-fn document<T: DeserializeOwned>(resources: &AnalysisResources, kind: &str) -> AexResult<T> {
-    optional_document(resources, kind)?.ok_or_else(|| missing(kind))
-}
-
-fn optional_document<T: DeserializeOwned>(
-    resources: &AnalysisResources,
-    kind: &str,
-) -> AexResult<Option<T>> {
-    let mut entries = resources
-        .catalog
-        .values()
-        .filter(|entry| entry.kind == kind);
-    let entry = entries.next();
-    if entries.next().is_some() {
-        return Err(invalid(&format!("select at most one {kind} entry")));
-    }
-    entry.map(decode).transpose()
-}
-
-fn decode<T: DeserializeOwned>(entry: &CatalogEntry) -> AexResult<T> {
-    serde_json::from_value(entry.document.clone()).map_err(|source| {
-        AexError::validation(
-            "INVALID_CATALOG_DOCUMENT",
-            entry.kind.clone(),
-            source.to_string(),
-        )
-    })
 }
 
 fn port_value(inputs: &BTreeMap<String, Quantity>, port: &str) -> AexResult<f64> {
@@ -215,8 +167,4 @@ fn missing(what: &str) -> AexError {
         what.to_owned(),
         "required by the performance envelope",
     )
-}
-
-fn invalid(message: &str) -> AexError {
-    AexError::validation("INVALID_PERFORMANCE_CATALOG", "catalog", message.to_owned())
 }

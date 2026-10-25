@@ -102,14 +102,20 @@ A synthesis mission stage's `kind` is free text (for example `loiter` or `patrol
 - `aircraft.vspaero_level_flight_phase`
 - `aircraft.propeller_level_flight_phase`
 - `aircraft.vspaero_propeller_level_flight_phase`
+- `aircraft.deck_level_flight_phase`
+- `aircraft.vspaero_deck_level_flight_phase`
 - `aircraft.route_cruise_phase`
 - `aircraft.vspaero_route_cruise_phase`
 - `aircraft.propeller_route_cruise_phase`
 - `aircraft.vspaero_propeller_route_cruise_phase`
+- `aircraft.deck_route_cruise_phase`
+- `aircraft.vspaero_deck_route_cruise_phase`
 - `aircraft.energy_path_phase`
 - `aircraft.vspaero_energy_path_phase`
 - `aircraft.propeller_energy_path_phase`
 - `aircraft.vspaero_propeller_energy_path_phase`
+- `aircraft.deck_energy_path_phase`
+- `aircraft.vspaero_deck_energy_path_phase`
 
 ## Backends
 
