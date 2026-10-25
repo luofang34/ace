@@ -18,6 +18,7 @@ pub(super) enum Command {
         analysis: AnalyzeCommand,
     },
     Compare(CompareArgs),
+    PayloadRange(PayloadRangeArgs),
     Profile {
         profile: ProfileCommand,
     },
@@ -134,6 +135,16 @@ pub(super) struct ConstraintArgs {
     pub(super) stop: String,
     pub(super) count: u32,
     pub(super) common: CommonArgs,
+}
+
+#[derive(Debug)]
+pub(super) struct PayloadRangeArgs {
+    pub(super) vehicle: PathBuf,
+    pub(super) distance: String,
+    pub(super) remaining: String,
+    pub(super) maximum_takeoff_mass: String,
+    pub(super) maximum_payload: String,
+    pub(super) output: OutputArgs,
 }
 
 #[derive(Debug)]

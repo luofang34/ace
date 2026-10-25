@@ -50,6 +50,18 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             )?;
             emit_canonical_blocking(&result, &arguments.output)
         }
+        Command::PayloadRange(arguments) => {
+            let result = crate::services::vehicle_payload_range::compute_blocking(
+                &arguments.vehicle,
+                &crate::services::vehicle_payload_range::PayloadRangeRoles {
+                    distance: &arguments.distance,
+                    remaining: &arguments.remaining,
+                    maximum_takeoff_mass: &arguments.maximum_takeoff_mass,
+                    maximum_payload: &arguments.maximum_payload,
+                },
+            )?;
+            emit_canonical_blocking(&result, &arguments.output)
+        }
         Command::Profile { profile } => execute_profile(&service, profile),
         Command::Plot(arguments) => execute_plot(&service, arguments),
         Command::Report(arguments) => execute_report(&service, arguments),
