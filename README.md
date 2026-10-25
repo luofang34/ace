@@ -431,14 +431,6 @@ cargo run --bin aex -- plot power-curves examples/c172/scenario.yaml \
   --output c172-power.svg --format json
 cargo run --bin aex -- plot payload-range examples/b777/scenario.yaml \
   --output b777-payload-range.svg --format json
-cargo run --bin aex -- sweep examples/c172/scenario.yaml \
-  --var 'aircraft.geometry.wing.area=14 m^2:20 m^2:25' \
-  --metric performance.stall_speed_landing \
-  --metric mission.total_fuel --format json
-cargo run --bin aex -- sweep examples/b777/scenario.yaml \
-  --var 'mission.payload.mass=30000 kg:68000 kg:20' \
-  --metric mission.completed_distance \
-  --metric mission.total_fuel --format json
 ```
 
 Every successful analysis is stored below `runs/<run-id>/` with original and
@@ -454,8 +446,7 @@ cargo run --bin aex -- mcp serve
 ```
 
 The server exposes validation, profile lookup, scenario resolution, point
-performance, mission simulation, constraints, payload-range, one- and
-two-dimensional sweeps, comparison, explanation, report, and editable
+performance, mission simulation, constraints, payload-range, comparison, explanation, report, and editable
 aircraft-design experiment tools. `auto_refine_design` performs a bounded
 native search, requires conceptual aerodynamic, structural, mission-power, and
 requirement gates to pass, writes a new design, and can run an explicit final
