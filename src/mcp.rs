@@ -1,5 +1,4 @@
 mod capabilities;
-mod design;
 mod domain_error;
 mod handler;
 mod output;
@@ -30,9 +29,9 @@ use domain_error::mcp_error;
 use output::{ObjectOutput, json_output, json_output_for_scenario, json_output_for_units};
 use parameters::parse_wing_loading;
 use schema::{
-    AutoRefineDesignRequest, ConstraintRequest, GetProfileRequest, ListProfilesRequest,
-    LoadStudyRequest, PayloadRangeRequest, PointRequest, PromoteStudyCandidateRequest,
-    QueryStudyRequest, ReportRequest, RunStudyRequest, ScenarioRequest, ValidateDocumentRequest,
+    ConstraintRequest, GetProfileRequest, ListProfilesRequest, LoadStudyRequest,
+    PayloadRangeRequest, PointRequest, PromoteStudyCandidateRequest, QueryStudyRequest,
+    ReportRequest, RunStudyRequest, ScenarioRequest, ValidateDocumentRequest,
 };
 
 #[derive(Clone)]
@@ -100,6 +99,16 @@ impl AexMcpServer {
         Parameters(request): Parameters<synthesis::EditRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
         synthesis::edit(request)
+    }
+
+    #[tool(
+        description = "Verify a vehicle study archive and write one feasible candidate as a new vehicle file"
+    )]
+    fn promote_vehicle_candidate(
+        &self,
+        Parameters(request): Parameters<synthesis::PromoteRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::promote(request)
     }
 
     #[tool(description = "Discover accepted vocabulary, models, warnings, and backends")]
@@ -203,16 +212,6 @@ impl AexMcpServer {
             ));
         }
         json_output(profile)
-    }
-
-    #[tool(
-        description = "Auto-refine a fixed-wing concept until requirements and conceptual aero-structural screens converge"
-    )]
-    fn auto_refine_design(
-        &self,
-        Parameters(request): Parameters<AutoRefineDesignRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        design::refine(&self.service, request)
     }
 
     #[tool(

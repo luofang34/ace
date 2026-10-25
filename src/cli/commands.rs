@@ -76,6 +76,15 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             emit_canonical_blocking(&result, &common.output)
         }
         command @ Command::Edit { .. } => super::vehicle::edit_blocking(command),
+        Command::Promote {
+            archive,
+            candidate,
+            save_as,
+            output,
+        } => emit_canonical_blocking(
+            &crate::services::vehicle_promotion::promote_blocking(&archive, &candidate, &save_as)?,
+            &output,
+        ),
         Command::Explain {
             scenario,
             parameter,
