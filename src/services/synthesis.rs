@@ -9,7 +9,7 @@ use serde::Serialize;
 
 use crate::domain::diagnostic::{AexError, AexResult};
 
-mod catalog;
+pub(crate) mod catalog;
 mod flight;
 mod geometry;
 mod kernel;

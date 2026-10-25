@@ -65,6 +65,20 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             )?;
             emit_canonical_blocking(&result, &arguments.output)
         }
+        Command::Catalog {
+            vehicle,
+            entry,
+            output,
+        } => match entry {
+            Some(entry) => emit_canonical_blocking(
+                &crate::services::vehicle_catalog::show_blocking(&vehicle, &entry)?,
+                &output,
+            ),
+            None => emit_canonical_blocking(
+                &crate::services::vehicle_catalog::list_blocking(&vehicle)?,
+                &output,
+            ),
+        },
         Command::Chart {
             vehicle,
             analysis,

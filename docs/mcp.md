@@ -117,6 +117,9 @@ the chart as SVG.
 `generate_report` takes `vehicle_path` and returns the same report as
 `aex report --vehicle`.
 
+`vehicle_catalog` takes `vehicle_path` and an optional `entry`, and returns
+the same listing or entry as `aex catalog`.
+
 `chart_vehicle_analysis` takes `vehicle_path`, `analysis`, optional
 `artifact_path` and `overrides`, and returns the same chart as `aex chart`.
 

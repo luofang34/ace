@@ -62,6 +62,11 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             artifact: optional(args, "artifact"),
             output: output(args)?,
         })),
+        "catalog" => Ok(Command::Catalog {
+            vehicle: required(args, "vehicle")?,
+            entry: optional(args, "entry"),
+            output: output(args)?,
+        }),
         "chart" => Ok(Command::Chart {
             vehicle: required(args, "vehicle")?,
             analysis: required(args, "analysis")?,

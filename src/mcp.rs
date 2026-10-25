@@ -85,6 +85,16 @@ impl AexMcpServer {
     }
 
     #[tool(
+        description = "List a vehicle's catalog entries (engine, propeller, polar and limit documents), or show one, with whether native analyses decode it and which analyses select it"
+    )]
+    fn vehicle_catalog(
+        &self,
+        Parameters(request): Parameters<synthesis::CatalogRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::catalog(request)
+    }
+
+    #[tool(
         description = "Chart one analysis of a synthesized vehicle (constraint diagram) from its run evidence, optionally writing SVG"
     )]
     fn chart_vehicle_analysis(

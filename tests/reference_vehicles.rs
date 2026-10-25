@@ -432,3 +432,43 @@ fn vehicle_report_states_the_verdict_margins_and_evidence_charts() -> Result<(),
         .failure();
     Ok(())
 }
+
+#[test]
+fn vehicle_catalog_lists_and_shows_decoded_entries() -> Result<(), Box<dyn Error>> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/vehicle.json");
+    let output = cargo_bin_cmd!("aex")
+        .arg("catalog")
+        .arg(&path)
+        .args(["--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let listing: Value = serde_json::from_slice(&output.stdout)?;
+    let entries = listing["entries"].as_array().ok_or("missing entries")?;
+    assert_eq!(entries.len(), 4);
+    assert!(
+        entries
+            .iter()
+            .all(|entry| entry["check"]["status"] == "decoded")
+    );
+    let output = cargo_bin_cmd!("aex")
+        .arg("catalog")
+        .arg(&path)
+        .arg("propeller")
+        .args(["--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let shown: Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(shown["kind"], "propeller");
+    assert!(shown["document"]["parameters"].is_object());
+    cargo_bin_cmd!("aex")
+        .arg("catalog")
+        .arg(&path)
+        .arg("missing")
+        .assert()
+        .failure();
+    Ok(())
+}
