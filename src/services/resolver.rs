@@ -10,8 +10,8 @@ use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::schema::{
     AeroConfiguration, Aerodynamics, Aircraft, AircraftDocument, AircraftLimits, ConceptMetadata,
     EngineProfile, FieldConditions, Mission, MissionDocument, PropellerProfile, Propulsion,
-    RawAeroConfiguration, RawFieldConditions, RequirementsDocument, ResolvedScenario,
-    ScenarioDocument,
+    RawAeroConfiguration, RawAerodynamics, RawFieldConditions, RawLimits, RequirementsDocument,
+    ResolvedScenario, ScenarioDocument,
 };
 use crate::domain::topology::AircraftTopology;
 use crate::services::assumptions::collect_all_assumptions;
@@ -176,25 +176,8 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
         &raw.propulsion_architecture,
     )?;
     let mass = mass::resolve(&raw.mass, &topology, &geometry, &wing, &raw.category)?;
-    let aerodynamics = Aerodynamics {
-        model: raw.aerodynamics.model,
-        clean: resolve_aero(raw.aerodynamics.clean, "clean")?,
-        takeoff: resolve_aero(raw.aerodynamics.takeoff, "takeoff")?,
-        landing: resolve_aero(raw.aerodynamics.landing, "landing")?,
-    };
-    let limits = AircraftLimits {
-        maximum_operating_speed_m_s: optional_quantity(
-            raw.limits.maximum_operating_speed.as_deref(),
-            Dimension::Speed,
-        )?,
-        maximum_operating_mach: raw.limits.maximum_operating_mach,
-        maximum_operating_altitude_m: optional_quantity(
-            raw.limits.maximum_operating_altitude.as_deref(),
-            Dimension::Length,
-        )?,
-        maximum_load_factor: raw.limits.maximum_load_factor,
-        minimum_load_factor: raw.limits.minimum_load_factor,
-    };
+    let aerodynamics = resolve_aerodynamics(raw.aerodynamics)?;
+    let limits = resolve_limits(&raw.limits)?;
     Ok(Aircraft {
         id: raw.id,
         name: raw.name,
@@ -222,6 +205,33 @@ pub(crate) fn resolve_aircraft(document: AircraftDocument) -> AexResult<Aircraft
             )?,
         },
         limits,
+    })
+}
+
+/// Resolve the clean, takeoff and landing polars of one aerodynamic data set.
+pub(crate) fn resolve_aerodynamics(raw: RawAerodynamics) -> AexResult<Aerodynamics> {
+    Ok(Aerodynamics {
+        model: raw.model,
+        clean: resolve_aero(raw.clean, "clean")?,
+        takeoff: resolve_aero(raw.takeoff, "takeoff")?,
+        landing: resolve_aero(raw.landing, "landing")?,
+    })
+}
+
+/// Resolve declared airframe operating limits; absent limits stay absent.
+pub(crate) fn resolve_limits(raw: &RawLimits) -> AexResult<AircraftLimits> {
+    Ok(AircraftLimits {
+        maximum_operating_speed_m_s: optional_quantity(
+            raw.maximum_operating_speed.as_deref(),
+            Dimension::Speed,
+        )?,
+        maximum_operating_mach: raw.maximum_operating_mach,
+        maximum_operating_altitude_m: optional_quantity(
+            raw.maximum_operating_altitude.as_deref(),
+            Dimension::Length,
+        )?,
+        maximum_load_factor: raw.maximum_load_factor,
+        minimum_load_factor: raw.minimum_load_factor,
     })
 }
 
