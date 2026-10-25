@@ -15,6 +15,7 @@ pub(crate) mod sheet;
 pub(crate) mod synthesis;
 pub(crate) mod system;
 pub(crate) mod validator;
+pub(crate) mod vehicle_catalog;
 pub(crate) mod vehicle_chart;
 pub(crate) mod vehicle_comparison;
 pub(crate) mod vehicle_document;

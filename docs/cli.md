@@ -18,6 +18,7 @@ aex edit VEHICLE [--edits FILE] [--set PARAMETER=VALUE]... [--expected-revision 
 aex compare VEHICLE... --metric PARAMETER
 aex payload-range VEHICLE --distance P --remaining P --maximum-takeoff-mass P --maximum-payload P [--artifact SVG]
 aex chart VEHICLE ANALYSIS [--artifact SVG]
+aex catalog VEHICLE [ENTRY]
 aex report --vehicle VEHICLE [--format markdown|json]
 aex uncertainty VEHICLE --plan PLAN
 aex calibrate VEHICLE --case CASE
@@ -46,6 +47,12 @@ the payload-against-range chart as SVG.
 `aex chart` synthesizes the vehicle and charts one declared analysis from its
 run details; `aircraft.constraint_diagram` analyses draw the constraint curves
 and feasible loading region. Other plugins return `UNSUPPORTED_ANALYSIS_CHART`.
+
+`aex catalog` lists the vehicle's catalog entries with their kind, version,
+source, the analyses that select them, and a check status: `decoded` (with the
+profile id or polar model) when a native analysis reads and resolves the
+document, `rejected` with the decoding error, or `unchecked` for kinds no native
+analysis reads. Naming an entry also returns its document.
 
 `aex report --vehicle` synthesizes the vehicle and reports its feasibility,
 hard requirements counted as satisfied, failed or unknown, every requirement
