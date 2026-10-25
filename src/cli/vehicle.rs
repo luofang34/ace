@@ -73,3 +73,45 @@ pub(super) fn system_blocking(command: Command) -> AexResult<()> {
         )),
     }
 }
+
+/// Apply an edit file and `--set` assignments to a vehicle as one revision.
+pub(super) fn edit_blocking(command: Command) -> AexResult<()> {
+    let Command::Edit {
+        scenario,
+        edits,
+        expected_revision,
+        save_as,
+        common,
+    } = command
+    else {
+        return Err(AexError::validation(
+            "UNSUPPORTED_COMMAND",
+            "command",
+            "not a vehicle edit command",
+        ));
+    };
+    let edits: Vec<ace_model::ModelEdit> = match &edits {
+        Some(path) => {
+            let content = std::fs::read_to_string(path).map_err(|source| AexError::Read {
+                path: path.clone(),
+                source,
+            })?;
+            serde_yaml::from_str(&content).map_err(|source| AexError::Yaml {
+                path: path.clone(),
+                source,
+            })?
+        }
+        None => Vec::new(),
+    };
+    let updates = common.override_map();
+    let outcome = crate::services::vehicle_edit::edit_blocking(
+        &scenario,
+        &crate::services::vehicle_edit::VehicleEdit {
+            edits: &edits,
+            updates: &updates,
+            expected_revision,
+            save_as: save_as.as_deref(),
+        },
+    )?;
+    emit_canonical_blocking(&outcome, &common.output)
+}

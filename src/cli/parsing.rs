@@ -34,6 +34,13 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             artifact: optional(args, "artifact"),
             common: common(args)?,
         }),
+        "edit" => Ok(Command::Edit {
+            scenario: required(args, "scenario")?,
+            edits: optional(args, "edits"),
+            expected_revision: optional(args, "expected-revision"),
+            save_as: optional(args, "save-as"),
+            common: common(args)?,
+        }),
         "explain" => Ok(Command::Explain {
             scenario: required(args, "scenario")?,
             parameter: required(args, "parameter")?,

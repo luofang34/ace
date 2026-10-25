@@ -12,7 +12,6 @@ use tokio::task::JoinHandle;
 mod api;
 mod assets;
 mod jobs;
-mod persistence;
 mod study;
 mod worker;
 
@@ -88,7 +87,7 @@ pub(crate) async fn start_with_limits(
     let path = path.to_path_buf();
     let overrides = overrides.clone();
     let (session, file) = tokio::task::spawn_blocking(move || {
-        let file = persistence::DocumentFile::open_blocking(path)?;
+        let file = crate::services::vehicle_document::DocumentFile::open_blocking(path)?;
         let session = super::synthesis::create_session_blocking(file.model().clone(), &overrides)?;
         Ok::<_, AexError>((session, file))
     })

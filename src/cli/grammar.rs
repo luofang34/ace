@@ -20,6 +20,18 @@ pub(super) fn command() -> Command {
                 .arg(optional_path("artifact").requires("chart")),
         ))
         .subcommand(common(
+            Command::new("edit")
+                .about("Apply typed edits and parameter assignments as one validated revision")
+                .arg(path("scenario"))
+                .arg(optional_path("edits"))
+                .arg(
+                    Arg::new("expected-revision")
+                        .long("expected-revision")
+                        .value_parser(value_parser!(u64)),
+                )
+                .arg(optional_path("save-as")),
+        ))
+        .subcommand(common(
             Command::new("explain")
                 .about("Explain a vehicle parameter from its calculation evidence")
                 .arg(path("scenario"))
