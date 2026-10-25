@@ -2,6 +2,7 @@
 
 mod artifact;
 mod capability;
+mod catalog;
 mod contract;
 mod edit;
 mod error;
@@ -20,6 +21,7 @@ mod vehicle;
 
 pub use artifact::{Artifact, GeneratorIdentity};
 pub use capability::CapabilityMap;
+pub use catalog::CatalogEntry;
 pub use contract::{
     ContractError, DomainBound, DomainLimit, DomainVariable, PortMeaning, ScalarPort,
     ValidityDomain,

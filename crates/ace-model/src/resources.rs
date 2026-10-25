@@ -31,6 +31,9 @@ pub struct ResourceSelection {
     /// Whether the vehicle's production bill is consumed.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub production: bool,
+    /// Catalog entries interpreted by the solver.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub catalog: Vec<String>,
 }
 
 /// Exact declarative resources retained in calculation evidence.
@@ -59,6 +62,9 @@ pub struct AnalysisResources {
     /// Selected production bill.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub production: Option<crate::Production>,
+    /// Selected catalog entries.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub catalog: BTreeMap<String, crate::CatalogEntry>,
 }
 
 impl AnalysisResources {
@@ -135,6 +141,11 @@ impl AnalysisResources {
             select(&model.mass_items, &items, &mut resources.mass_items)?;
             resources.production = Some(production);
         }
+        select(
+            &model.catalog,
+            &analysis.resources.catalog,
+            &mut resources.catalog,
+        )?;
         resources.include_geometry(&model.geometry)?;
         resources.include_phases(model)?;
         resources.include_frames(&model.geometry)?;
@@ -185,6 +196,7 @@ impl AnalysisResources {
             self.sections.extend(phase.sections);
             self.mass_items.extend(phase.mass_items);
             self.loading_cases.extend(phase.loading_cases);
+            self.catalog.extend(phase.catalog);
             if phase.operations.is_some() {
                 self.operations = phase.operations;
             }
@@ -221,6 +233,11 @@ impl AnalysisResources {
             &self.loading_cases,
             &analysis.resources.loading_cases,
             &mut result.loading_cases,
+        )?;
+        select(
+            &self.catalog,
+            &analysis.resources.catalog,
+            &mut result.catalog,
         )?;
         if !result.loading_cases.is_empty() {
             result.mass_items.extend(self.mass_items.clone());

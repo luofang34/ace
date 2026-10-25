@@ -53,6 +53,9 @@ pub struct VehicleModel {
     pub missions: BTreeMap<String, Mission>,
     /// Operations and economics for the operating case.
     pub operations: Option<Operations>,
+    /// Reusable typed data selected by analyses, such as propulsion profiles.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub catalog: BTreeMap<String, crate::CatalogEntry>,
     /// Bill of materials and processes for production cost estimation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub production: Option<crate::Production>,
