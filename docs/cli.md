@@ -7,7 +7,26 @@ aircraft-explorer
 aex
 ```
 
-Primary commands:
+Vehicle commands:
+
+```text
+aex synthesize VEHICLE
+aex study VEHICLE --plan PLAN [--chart PARAMETER [--artifact SVG]]
+aex explain VEHICLE PARAMETER [--depth N]
+aex compare VEHICLE... --metric PARAMETER
+aex uncertainty VEHICLE --plan PLAN
+aex calibrate VEHICLE --case CASE
+aex campaign CAMPAIGN
+aex sheet VEHICLE [--port PORT]
+```
+
+`aex explain` synthesizes the vehicle and returns the parameter's declaration,
+value record and producing calculation (solver identity, contract, consumed
+inputs and details), the producers of those inputs up to `--depth` levels
+(default 2, at most 16), the analyses and expressions that read the parameter,
+and its requirement margins.
+
+Scenario commands:
 
 ```text
 aex capabilities
@@ -17,7 +36,6 @@ aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE) [--ma
 aex analyze performance SCENARIO [--mass VALUE] [--landing-mass VALUE]
 aex analyze constraints SCENARIO
 aex analyze payload-range SCENARIO
-aex compare VEHICLE... --metric PARAMETER
 aex profile list|show|validate
 aex plot drag-polar|power-curves|thrust-curves|climb-envelope
          |payload-range|constraints|mission-mass|requirement-margins SCENARIO

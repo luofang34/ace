@@ -126,6 +126,7 @@ fn mcp_exposes_the_same_system_evaluations() -> Result<(), Box<dyn Error>> {
                 "calibrate_vehicle",
                 "evaluate_fleet_campaign",
                 "compare_vehicles",
+                "explain_vehicle_value",
             ] {
                 assert!(tools.iter().any(|tool| tool.name == name), "{name}");
             }
@@ -161,6 +162,16 @@ fn mcp_exposes_the_same_system_evaluations() -> Result<(), Box<dyn Error>> {
             assert_eq!(
                 comparison["vehicles"][1]["values"]["flight.endurance"]["quantity"]["value"],
                 24.0
+            );
+            let explanation = call(
+                "explain_vehicle_value",
+                serde_json::json!({"vehicle_path": example("expendable-uas.json"),
+                    "parameter": "cost.unit"}),
+            )
+            .await?;
+            assert_eq!(
+                explanation["calculation"]["plugin"]["id"],
+                "vehicle.production_cost"
             );
             let calibration = call(
                 "calibrate_vehicle",

@@ -28,13 +28,11 @@ use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::validator::{error_validation, validate_document_value};
 use domain_error::mcp_error;
 use output::{ObjectOutput, json_output, json_output_for_scenario, json_output_for_units};
-use parameters::{
-    dotted_value, governing_equations, infer_result_unit, input_dependencies, parse_wing_loading,
-};
+use parameters::parse_wing_loading;
 use schema::{
     AutoRefineDesignRequest, ConstraintRequest, CreateDesignRequest, EvaluateFeasibilityRequest,
-    ExplainRequest, GetProfileRequest, ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest,
-    PointRequest, PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
+    GetProfileRequest, ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest, PointRequest,
+    PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
     ScenarioRequest, UpdateDesignRequest, ValidateDocumentRequest,
 };
 
@@ -83,6 +81,16 @@ impl AexMcpServer {
         Parameters(request): Parameters<synthesis::CompareRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
         synthesis::compare(request)
+    }
+
+    #[tool(
+        description = "Explain a vehicle parameter: declaration, value, producing calculation, upstream producers, consumers and margins"
+    )]
+    fn explain_vehicle_value(
+        &self,
+        Parameters(request): Parameters<synthesis::ExplainRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::explain(request)
     }
 
     #[tool(description = "Discover accepted vocabulary, models, warnings, and backends")]
@@ -342,28 +350,6 @@ impl AexMcpServer {
             Path::new(&request.scenario_path),
             request.units.as_deref(),
         )
-    }
-
-    #[tool(description = "Explain a persisted result value and its governing low-fidelity model")]
-    fn explain_result(
-        &self,
-        Parameters(request): Parameters<ExplainRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let (manifest, result) = self
-            .service
-            .load_run_blocking(&request.run_id)
-            .map_err(mcp_error)?;
-        let value = dotted_value(&result, &request.result_path);
-        json_output(json!({
-            "value": value,
-            "units": infer_result_unit(&request.result_path),
-            "governing_equations": governing_equations(&request.result_path),
-            "source_models": manifest.get("models"),
-            "input_dependencies": input_dependencies(&request.result_path),
-            "active_assumptions": [],
-            "warnings": [],
-            "local_sensitivity": null,
-        }))
     }
 
     #[tool(description = "Generate an organized concept-design report or immutable-run report")]
