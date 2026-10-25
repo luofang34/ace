@@ -1,0 +1,1050 @@
+{
+  "schema_version": 1,
+  "id": "x15_class_fixture",
+  "name": "X-15-Class Model-Envelope Fixture",
+  "domain": "fixed_wing",
+  "parameters": {
+    "weight.mtow": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 15420,
+        "unit": "kg"
+      }
+    },
+    "weight.oew": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 6620,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_payload": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 300,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 8500,
+        "unit": "kg"
+      }
+    },
+    "wing.area": {
+      "unit": "m^2",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 18.58,
+        "unit": "m^2"
+      }
+    },
+    "wing.span": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 6.82,
+        "unit": "m"
+      }
+    },
+    "wing.sweep": {
+      "unit": "deg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 23.0,
+        "unit": "deg"
+      }
+    },
+    "payload.mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 250,
+        "unit": "kg"
+      }
+    },
+    "fuel.loaded": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 8500,
+        "unit": "kg"
+      }
+    },
+    "aero.cd0": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 0.021,
+        "unit": "1"
+      }
+    },
+    "aero.oswald": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 0.75,
+        "unit": "1"
+      }
+    },
+    "aero.cl_max": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 1.1,
+        "unit": "1"
+      }
+    },
+    "engine.count": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 1,
+        "unit": "1"
+      }
+    },
+    "engine.sizing_factor": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 1.0,
+        "unit": "1"
+      }
+    },
+    "economics.fuel_price": {
+      "unit": "USD/kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 1.0,
+        "unit": "USD/kg"
+      }
+    },
+    "mission.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 10,
+        "unit": "s"
+      }
+    },
+    "phase.path.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 5,
+        "unit": "s"
+      }
+    },
+    "field.elevation": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 0.0,
+        "unit": "m"
+      }
+    },
+    "field.obstacle_height": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 10.67,
+        "unit": "m"
+      }
+    },
+    "field.braking_coefficient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 0.3,
+        "unit": "1"
+      }
+    },
+    "field.runway_slope": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 0.0,
+        "unit": "1"
+      }
+    },
+    "field.headwind": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 0.0,
+        "unit": "m/s"
+      }
+    },
+    "phase.boost.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 31120.08,
+        "unit": "m"
+      }
+    },
+    "phase.boost.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 1976.966,
+        "unit": "m/s"
+      }
+    },
+    "phase.boost.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 150000,
+        "unit": "m"
+      }
+    },
+    "mission.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 200,
+        "unit": "nmi"
+      }
+    },
+    "phase.glide.target_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 6096.0,
+        "unit": "m"
+      }
+    },
+    "phase.glide.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 252.826,
+        "unit": "m/s"
+      }
+    },
+    "phase.glide.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 150000,
+        "unit": "m"
+      }
+    },
+    "phase.glide.idle_thrust": {
+      "unit": "N",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "value": {
+        "value": 0.0,
+        "unit": "N"
+      }
+    },
+    "phase.arrival.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture",
+      "expression": {
+        "op": "reference",
+        "parameter": "phase.glide.path_distance"
+      }
+    },
+    "mission.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "mission.flown_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "mission.block_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "mission.reserve_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "mission.remaining_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "mission.final_mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "mission.fuel_cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.stall_speed_clean": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.stall_speed_landing": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.best_glide_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.minimum_power_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.maximum_level_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.maximum_lift_to_drag": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.service_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.absolute_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.takeoff_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    },
+    "performance.landing_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "x15_fixture"
+    }
+  },
+  "analyses": {
+    "path": {
+      "plugin": "aircraft.deck_energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "cruise": {
+      "plugin": "aircraft.deck_route_cruise_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "mission": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.duration",
+        "distance": "mission.flown_distance",
+        "block_fuel": "mission.block_fuel",
+        "reserve_fuel": "mission.reserve_fuel",
+        "remaining_fuel": "mission.remaining_fuel",
+        "final_mass": "mission.final_mass",
+        "cost": "mission.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "speed_run"
+        ]
+      }
+    },
+    "performance": {
+      "plugin": "aircraft.performance_envelope",
+      "version": "1",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "sweep": "wing.sweep",
+        "maximum_takeoff_mass": "weight.mtow",
+        "operating_empty_mass": "weight.oew",
+        "maximum_payload_mass": "weight.maximum_payload",
+        "maximum_fuel_mass": "weight.maximum_fuel",
+        "takeoff_mass": "weight.mtow",
+        "landing_mass": "weight.mtow",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "field_elevation": "field.elevation",
+        "obstacle_height": "field.obstacle_height",
+        "braking_coefficient": "field.braking_coefficient",
+        "runway_slope": "field.runway_slope",
+        "headwind": "field.headwind"
+      },
+      "outputs": {
+        "stall_speed_clean": "performance.stall_speed_clean",
+        "stall_speed_landing": "performance.stall_speed_landing",
+        "best_glide_speed": "performance.best_glide_speed",
+        "minimum_power_speed": "performance.minimum_power_speed",
+        "maximum_level_speed": "performance.maximum_level_speed",
+        "maximum_lift_to_drag": "performance.maximum_lift_to_drag",
+        "service_ceiling": "performance.service_ceiling",
+        "absolute_ceiling": "performance.absolute_ceiling",
+        "takeoff_field_length": "performance.takeoff_field_length",
+        "landing_field_length": "performance.landing_field_length"
+      },
+      "resources": {
+        "catalog": [
+          "polars",
+          "limits",
+          "engine"
+        ]
+      }
+    }
+  },
+  "requirements": {
+    "pilot_payload": {
+      "name": "Pilot payload",
+      "metric": "payload.mass",
+      "relation": "ge",
+      "target": {
+        "value": 200,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/x15/requirements.yaml"
+      }
+    },
+    "peak_altitude": {
+      "name": "Peak altitude",
+      "metric": "performance.service_ceiling",
+      "relation": "ge",
+      "target": {
+        "value": 250000,
+        "unit": "ft"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/x15/requirements.yaml"
+      }
+    },
+    "remaining_fuel": {
+      "name": "Propellant remaining",
+      "metric": "mission.remaining_fuel",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/x15/requirements.yaml"
+      }
+    }
+  },
+  "mass_items": {
+    "empty": {
+      "kind": "empty",
+      "mass": "weight.oew",
+      "cg": [
+        {
+          "value": 7.5,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      }
+    },
+    "payload": {
+      "kind": "payload",
+      "mass": "payload.mass",
+      "cg": [
+        {
+          "value": 3.0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      }
+    },
+    "fuel": {
+      "kind": "fuel",
+      "mass": "fuel.loaded",
+      "cg": [
+        {
+          "value": 7.8,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "capacity": "weight.maximum_fuel"
+    }
+  },
+  "missions": {
+    "speed_run": {
+      "name": "X-15 air-launched speed mission",
+      "stages": [
+        {
+          "id": "boost_climb",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.boost.altitude",
+            "target_speed": "phase.boost.speed",
+            "path_distance": "phase.boost.path_distance"
+          }
+        },
+        {
+          "id": "speed_run",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "glide_descent",
+          "kind": "descent",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.glide.target_altitude",
+            "target_speed": "phase.glide.speed",
+            "path_distance": "phase.glide.path_distance",
+            "idle_thrust": "phase.glide.idle_thrust"
+          }
+        }
+      ],
+      "conditions": {
+        "altitude": {
+          "value": 13716.0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 236.056,
+          "unit": "m/s"
+        }
+      }
+    }
+  },
+  "catalog": {
+    "polars": {
+      "kind": "aerodynamic_polars",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "document": {
+        "model": "aero.parabolic_polar",
+        "clean": {
+          "cd0": 0.021,
+          "oswald_efficiency": 0.75,
+          "cl_max": 1.1,
+          "mach_critical": 0.95,
+          "wave_drag": {
+            "coefficient": 0.01,
+            "exponent": 0.35
+          }
+        },
+        "takeoff": {
+          "cd0": 0.03,
+          "oswald_efficiency": 0.7,
+          "cl_max": 1.2
+        },
+        "landing": {
+          "cd0": 0.055,
+          "oswald_efficiency": 0.65,
+          "cl_max": 1.25
+        }
+      }
+    },
+    "limits": {
+      "kind": "operating_limits",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "document": {
+        "maximum_operating_mach": 6.7,
+        "maximum_operating_altitude": "354000 ft",
+        "maximum_load_factor": 7.33,
+        "minimum_load_factor": -3.0
+      }
+    },
+    "engine": {
+      "kind": "rocket_engine",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "X-15-class model-envelope fixture (examples/x15); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "document": {
+        "id": "engine.xlr99_class",
+        "version": 2,
+        "type": "rocket_engine",
+        "model": "propulsion.table_deck",
+        "metadata": {
+          "display_name": "Reaction Motors XLR99",
+          "source": "NASA X-15 program histories report 57,000 lbf maximum thrust and more than 13,000 lb/min propellant flow for the throttleable XLR99. The constant 263 s table value reproduces those public full-power anchors through T/(Isp*g0); the deck does not model mixture ratio or nozzle performance variation.",
+          "confidence": "medium"
+        },
+        "parameters": {
+          "dry_mass": "413 kg",
+          "installation": {
+            "thrust_loss_fraction": 0.0,
+            "nacelle_drag_area": "0.0 m^2"
+          },
+          "table_deck": {
+            "axes": {
+              "mach": [
+                0.0,
+                6.7
+              ],
+              "altitude": [
+                "0 ft",
+                "354000 ft"
+              ]
+            },
+            "modes": {
+              "takeoff": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      253549,
+                      253549
+                    ],
+                    [
+                      253549,
+                      253549
+                    ]
+                  ]
+                },
+                "specific_impulse": {
+                  "unit": "s",
+                  "values": [
+                    [
+                      263,
+                      263
+                    ],
+                    [
+                      263,
+                      263
+                    ]
+                  ]
+                }
+              },
+              "climb": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      253549,
+                      253549
+                    ],
+                    [
+                      253549,
+                      253549
+                    ]
+                  ]
+                },
+                "specific_impulse": {
+                  "unit": "s",
+                  "values": [
+                    [
+                      263,
+                      263
+                    ],
+                    [
+                      263,
+                      263
+                    ]
+                  ]
+                }
+              },
+              "cruise": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      253549,
+                      253549
+                    ],
+                    [
+                      253549,
+                      253549
+                    ]
+                  ]
+                },
+                "specific_impulse": {
+                  "unit": "s",
+                  "values": [
+                    [
+                      263,
+                      263
+                    ],
+                    [
+                      263,
+                      263
+                    ]
+                  ]
+                }
+              },
+              "economy": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      253549,
+                      253549
+                    ],
+                    [
+                      253549,
+                      253549
+                    ]
+                  ]
+                },
+                "specific_impulse": {
+                  "unit": "s",
+                  "values": [
+                    [
+                      263,
+                      263
+                    ],
+                    [
+                      263,
+                      263
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "operations": null,
+  "objectives": {},
+  "design_variables": []
+}
