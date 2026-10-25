@@ -1026,6 +1026,212 @@
         "revision": null
       },
       "owner": "c172_reference"
+    },
+    "geometry.wing_aerodynamic_center": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 3.1725,
+        "unit": "m"
+      }
+    },
+    "geometry.tail_aerodynamic_center": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 7.2975,
+        "unit": "m"
+      }
+    },
+    "loading.mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "loading.cg_x": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "loading.cg_y": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "loading.cg_z": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "loading.minimum_cg_x": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "loading.maximum_cg_x": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.mach": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.stall_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.lift_coefficient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.drag_coefficient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.lift_to_drag": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.thrust_required": {
+      "unit": "N",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.power_required": {
+      "unit": "W",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.excess_thrust": {
+      "unit": "N",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.excess_power": {
+      "unit": "W",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.rate_of_climb": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.climb_gradient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.fuel_flow_required": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.fuel_flow_maximum_power": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "cruise_point.trim_wing_lift_fraction": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
     }
   },
   "analyses": {
@@ -1248,6 +1454,78 @@
           "propeller"
         ]
       }
+    },
+    "loading": {
+      "plugin": "vehicle.mass_properties",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "mass": "loading.mass",
+        "cg_x": "loading.cg_x",
+        "cg_y": "loading.cg_y",
+        "cg_z": "loading.cg_z",
+        "minimum_cg_x": "loading.minimum_cg_x",
+        "maximum_cg_x": "loading.maximum_cg_x"
+      },
+      "resources": {
+        "mass_items": [
+          "empty",
+          "payload",
+          "fuel"
+        ]
+      }
+    },
+    "cruise_point": {
+      "plugin": "aircraft.trimmed_operating_point",
+      "version": "1",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "sweep": "wing.sweep",
+        "maximum_takeoff_mass": "weight.mtow",
+        "operating_empty_mass": "weight.oew",
+        "maximum_payload_mass": "weight.maximum_payload",
+        "maximum_fuel_mass": "weight.maximum_fuel",
+        "takeoff_mass": "weight.mtow",
+        "landing_mass": "weight.mtow",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "field_elevation": "field.elevation",
+        "obstacle_height": "field.obstacle_height",
+        "braking_coefficient": "field.braking_coefficient",
+        "runway_slope": "field.runway_slope",
+        "headwind": "field.headwind",
+        "altitude": "phase.cruise.altitude",
+        "true_airspeed": "phase.cruise.speed",
+        "mass": "loading.mass",
+        "center_of_gravity": "loading.cg_x",
+        "wing_aerodynamic_center": "geometry.wing_aerodynamic_center",
+        "tail_aerodynamic_center": "geometry.tail_aerodynamic_center"
+      },
+      "outputs": {
+        "mach": "cruise_point.mach",
+        "stall_speed": "cruise_point.stall_speed",
+        "lift_coefficient": "cruise_point.lift_coefficient",
+        "drag_coefficient": "cruise_point.drag_coefficient",
+        "lift_to_drag": "cruise_point.lift_to_drag",
+        "thrust_required": "cruise_point.thrust_required",
+        "power_required": "cruise_point.power_required",
+        "excess_thrust": "cruise_point.excess_thrust",
+        "excess_power": "cruise_point.excess_power",
+        "rate_of_climb": "cruise_point.rate_of_climb",
+        "climb_gradient": "cruise_point.climb_gradient",
+        "fuel_flow_required": "cruise_point.fuel_flow_required",
+        "fuel_flow_maximum_power": "cruise_point.fuel_flow_maximum_power",
+        "trim_wing_lift_fraction": "cruise_point.trim_wing_lift_fraction"
+      },
+      "resources": {
+        "catalog": [
+          "polars",
+          "limits",
+          "engine",
+          "propeller"
+        ]
+      }
     }
   },
   "requirements": {
@@ -1348,6 +1626,20 @@
         "kind": "user",
         "reference": "examples/c172/requirements.yaml"
       }
+    },
+    "cruise_excess_power": {
+      "name": "Trimmed cruise held at takeoff mass",
+      "metric": "cruise_point.excess_power",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "W"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
     }
   },
   "mass_items": {
@@ -1356,7 +1648,7 @@
       "mass": "weight.oew",
       "cg": [
         {
-          "value": 4.15,
+          "value": 3.05,
           "unit": "m"
         },
         {
@@ -1379,7 +1671,7 @@
       "mass": "payload.mass",
       "cg": [
         {
-          "value": 3.4,
+          "value": 3.25,
           "unit": "m"
         },
         {
@@ -1402,7 +1694,7 @@
       "mass": "fuel.loaded",
       "cg": [
         {
-          "value": 3.2,
+          "value": 3.15,
           "unit": "m"
         },
         {

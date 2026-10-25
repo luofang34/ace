@@ -46,6 +46,7 @@ fn c172_vehicle_flies_its_mission_with_reference_performance() -> Result<(), Box
     assert_eq!(result["margins"]["stall_speed_landing"]["status"], "PASS");
     assert_eq!(result["margins"]["service_ceiling"]["status"], "FAIL");
     assert_constraint_diagram_met(&result, 600.0..=700.0)?;
+    assert_trimmed_cruise_held(&result, 0.5..=3.0)?;
     Ok(())
 }
 
@@ -70,6 +71,19 @@ fn assert_constraint_diagram_met(
         assert!((1.0..=2.0).contains(&ratio), "{parameter} {ratio}");
         assert_ne!(result["margins"][requirement]["status"], "FAIL");
     }
+    Ok(())
+}
+
+/// The CG-trimmed cruise point at takeoff mass climbs, with the tail carrying a small download.
+fn assert_trimmed_cruise_held(
+    result: &Value,
+    rate_of_climb: std::ops::RangeInclusive<f64>,
+) -> Result<(), Box<dyn Error>> {
+    let climb = value(result, "cruise_point.rate_of_climb")?;
+    assert!(rate_of_climb.contains(&climb), "{climb}");
+    let fraction = value(result, "cruise_point.trim_wing_lift_fraction")?;
+    assert!((1.0..=1.05).contains(&fraction), "{fraction}");
+    assert_eq!(result["margins"]["cruise_excess_power"]["status"], "PASS");
     Ok(())
 }
 
@@ -125,6 +139,7 @@ fn b777_vehicle_flies_its_mission_on_the_tabulated_engine_deck() -> Result<(), B
         assert_eq!(result["margins"][requirement]["status"], "PASS");
     }
     assert_constraint_diagram_met(&result, 7_500.0..=8_200.0)?;
+    assert_trimmed_cruise_held(&result, 2.0..=15.0)?;
     let runs = result["snapshot"]["runs"].to_string();
     assert!(runs.contains("aircraft.deck_energy_path_phase"));
     Ok(())
