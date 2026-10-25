@@ -295,18 +295,16 @@ impl AexMcpServer {
         )
     }
 
-    #[tool(description = "Generate an organized concept-design report or immutable-run report")]
+    #[tool(
+        description = "Report a synthesized vehicle's verdict, margins and evidence charts, or a stored scenario run"
+    )]
     fn generate_report(
         &self,
         Parameters(request): Parameters<ReportRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let scenario_path = request.scenario_path.clone();
         let units = request.units.clone();
         let value = report::generate_report_blocking(&self.service, request).map_err(mcp_error)?;
-        match scenario_path {
-            Some(path) => json_output_for_scenario(value, Path::new(&path), units.as_deref()),
-            None => json_output_for_units(value, units.as_deref()),
-        }
+        json_output_for_units(value, units.as_deref())
     }
 }
 

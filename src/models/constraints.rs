@@ -17,6 +17,7 @@ pub(crate) struct ConstraintTargets {
 }
 
 impl ConstraintTargets {
+    #[cfg(test)]
     /// Scenario cruise speed and requirement items, with conceptual defaults when absent.
     pub(crate) fn from_scenario(scenario: &ResolvedScenario) -> Self {
         Self {
@@ -37,6 +38,7 @@ impl ConstraintAnalyzer {
         Self { scenario }
     }
 
+    #[cfg(test)]
     pub(crate) fn analyze(
         &self,
         start_n_m2: f64,
@@ -240,6 +242,7 @@ fn takeoff_constraint(
     }
 }
 
+#[cfg(test)]
 fn design_speed(scenario: &ResolvedScenario) -> f64 {
     scenario
         .mission
@@ -268,6 +271,7 @@ fn installed_loading(scenario: &ResolvedScenario) -> f64 {
     }
 }
 
+#[cfg(test)]
 fn landing_stall_requirement(scenario: &ResolvedScenario) -> f64 {
     scenario
         .requirements
@@ -277,6 +281,7 @@ fn landing_stall_requirement(scenario: &ResolvedScenario) -> f64 {
         .map_or(30.0, |item| item.required)
 }
 
+#[cfg(test)]
 fn takeoff_distance_requirement(scenario: &ResolvedScenario) -> f64 {
     scenario
         .requirements

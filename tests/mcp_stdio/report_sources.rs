@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn unavailable_openvsp_preflights_before_mutation() -> Result<(), Box<dyn Error>> {
+fn scenario_concept_reports_are_retired_without_side_effects() -> Result<(), Box<dyn Error>> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
@@ -10,19 +10,15 @@ fn unavailable_openvsp_preflights_before_mutation() -> Result<(), Box<dyn Error>
             let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
             command.args(["mcp", "serve"]);
             command.current_dir(temporary.path());
-            command.env(
-                "ACE_OPENVSP_EXECUTABLE",
-                "/path/that/does/not/contain/vspscript",
-            );
             let client = ().serve(TokioChildProcess::new(command)?).await?;
 
+            // A scenario path is no longer a report source; vehicle reports replace it.
             let response = client
                 .call_tool(CallToolRequestParams {
                     meta: None,
                     name: "generate_report".into(),
                     arguments: Some(arguments(json!({
                         "scenario_path": scenario("c172"),
-                        "backend": "openvsp",
                         "format": "json"
                     }))?),
                     task: None,
@@ -35,7 +31,9 @@ fn unavailable_openvsp_preflights_before_mutation() -> Result<(), Box<dyn Error>
                     .structured_content
                     .as_ref()
                     .map(|content| &content["code"]),
-                Some(&serde_json::Value::String("BACKEND_UNAVAILABLE".to_owned()))
+                Some(&serde_json::Value::String(
+                    "MISSING_REPORT_SOURCE".to_owned()
+                ))
             );
             assert_eq!(std::fs::read_dir(temporary.path())?.count(), 0);
             client.cancel().await?;

@@ -153,8 +153,8 @@ does not declare returns `UNKNOWN_COMPARISON_METRIC`.
 the same corners as `aex payload-range`; an optional `artifact_path` writes
 the chart as SVG.
 
-`generate_report` also accepts `vehicle_path` in place of `scenario_path` or
-`run_id`, and returns the same report as `aex report --vehicle`.
+`generate_report` takes `vehicle_path` and returns the same report as
+`aex report --vehicle`.
 
 `chart_vehicle_analysis` takes `vehicle_path`, `analysis`, optional
 `artifact_path` and `overrides`, and returns the same chart as `aex chart`.
@@ -187,9 +187,9 @@ an OpenVSP installation.
 The structural screen is a sizing guardrail rather than substantiation. It does
 not cover detailed loads, joints, buckling, fatigue, flutter, or aeroelasticity.
 
-`generate_report` accepts either a `scenario_path` for an organized concept
-report or a `run_id` for an immutable run report. Concept reports include
-decision-first sections and ordered chart specifications. See
+`generate_report` accepts either a `vehicle_path` for a concept report or a
+`run_id` for an immutable run report. Concept reports include decision-first
+sections and ordered chart specifications. See
 [concept-design reports](concept-reports.md).
 
 `list_analysis_backends` reports availability, disciplines, fidelity levels,
