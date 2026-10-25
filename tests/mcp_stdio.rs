@@ -64,7 +64,7 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
                 "update_design_parameters",
                 "evaluate_feasibility",
                 "auto_refine_design",
-                "compare_designs",
+                "compare_vehicles",
                 "list_analysis_backends",
                 "load_design_study",
                 "run_design_study",

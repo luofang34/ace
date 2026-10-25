@@ -1,7 +1,6 @@
 pub(crate) mod analysis;
 pub(crate) mod assumptions;
 pub(crate) mod capabilities;
-pub(crate) mod comparison;
 pub(crate) mod design_experiments;
 pub(crate) mod drawing;
 pub(crate) mod model_preflight;
@@ -18,4 +17,5 @@ pub(crate) mod study;
 pub(crate) mod synthesis;
 pub(crate) mod system;
 pub(crate) mod validator;
+pub(crate) mod vehicle_comparison;
 pub(crate) mod vehicle_study;
