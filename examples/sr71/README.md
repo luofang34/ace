@@ -25,3 +25,9 @@ remaining surrogate:
 
 Guardrail tests assert that remaining unsupported or extrapolated conditions
 are explicit and never silently produce a valid result.
+
+`vehicle.json` states the same aircraft and sortie in the vehicle model. Its
+supersonic climb targets 78,000 ft, above the flight phases' declared altitude
+domain, so the mission stops at that stage's domain check; the performance
+envelope stops at the registered structural-screen domain. Every mission and
+performance requirement stays `UNKNOWN`.

@@ -296,3 +296,37 @@ fn vehicle_constraint_and_payload_range_charts_render_from_run_evidence()
     assert!(std::fs::read_to_string(&corners)?.starts_with("<svg"));
     Ok(())
 }
+
+#[test]
+fn out_of_domain_fixtures_fail_explicitly_through_validity_domains() -> Result<(), Box<dyn Error>> {
+    for name in ["sr71", "x15"] {
+        let result = synthesize(name)?;
+        assert_eq!(result["completed"], false, "{name}");
+        assert_eq!(result["assessment"]["feasibility"], "unknown", "{name}");
+        let values = &result["snapshot"]["values"];
+        // The declared cruise or boost altitude lies above the flight phases' domain.
+        let mission = &values["mission.block_fuel"];
+        assert_eq!(mission["status"], "failed", "{name}");
+        let message = mission["message"].as_str().unwrap_or_default();
+        assert!(
+            message.contains("outside solver domain") && message.contains("target_altitude"),
+            "{name}: {message}"
+        );
+        // The airframe itself lies outside the registered conceptual model domains.
+        let ceiling = &values["performance.service_ceiling"];
+        assert_eq!(ceiling["status"], "failed", "{name}");
+        let message = ceiling["message"].as_str().unwrap_or_default();
+        assert!(
+            message.contains("MODEL_DOMAIN_UNSUPPORTED"),
+            "{name}: {message}"
+        );
+        for (requirement, margin) in result["margins"].as_object().ok_or("margins")? {
+            let status = margin["status"].as_str().unwrap_or_default();
+            assert!(
+                requirement.contains("payload") || status == "UNKNOWN",
+                "{name} {requirement} reported {status} without evidence"
+            );
+        }
+    }
+    Ok(())
+}

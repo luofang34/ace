@@ -1,0 +1,1632 @@
+{
+  "schema_version": 1,
+  "id": "sr71a_class_fixture",
+  "name": "SR-71A-Class Model-Envelope Fixture",
+  "domain": "fixed_wing",
+  "parameters": {
+    "weight.mtow": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 78020,
+        "unit": "kg"
+      }
+    },
+    "weight.oew": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 30617,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_payload": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 1600,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 46180,
+        "unit": "kg"
+      }
+    },
+    "wing.area": {
+      "unit": "m^2",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 170.0,
+        "unit": "m^2"
+      }
+    },
+    "wing.span": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 16.94,
+        "unit": "m"
+      }
+    },
+    "wing.sweep": {
+      "unit": "deg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 45.0,
+        "unit": "deg"
+      }
+    },
+    "payload.mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 1200,
+        "unit": "kg"
+      }
+    },
+    "fuel.loaded": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 46180,
+        "unit": "kg"
+      }
+    },
+    "aero.cd0": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0.012,
+        "unit": "1"
+      }
+    },
+    "aero.oswald": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0.72,
+        "unit": "1"
+      }
+    },
+    "aero.cl_max": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 1.05,
+        "unit": "1"
+      }
+    },
+    "engine.count": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 2,
+        "unit": "1"
+      }
+    },
+    "engine.sizing_factor": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 1.0,
+        "unit": "1"
+      }
+    },
+    "economics.fuel_price": {
+      "unit": "USD/kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 1.0,
+        "unit": "USD/kg"
+      }
+    },
+    "mission.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 120,
+        "unit": "s"
+      }
+    },
+    "phase.path.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 20,
+        "unit": "s"
+      }
+    },
+    "field.elevation": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0.0,
+        "unit": "m"
+      }
+    },
+    "field.obstacle_height": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 10.67,
+        "unit": "m"
+      }
+    },
+    "field.braking_coefficient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0.3,
+        "unit": "1"
+      }
+    },
+    "field.runway_slope": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0.0,
+        "unit": "1"
+      }
+    },
+    "field.headwind": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0.0,
+        "unit": "m/s"
+      }
+    },
+    "phase.taxi.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 600,
+        "unit": "s"
+      }
+    },
+    "phase.taxi.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      }
+    },
+    "phase.taxi.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 0.5,
+        "unit": "kg/s"
+      }
+    },
+    "phase.taxi.cost_rate": {
+      "unit": "USD/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.taxi.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      }
+    },
+    "phase.takeoff.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 60,
+        "unit": "s"
+      }
+    },
+    "phase.takeoff.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 60,
+        "unit": "m/s"
+      }
+    },
+    "phase.takeoff.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 8.0,
+        "unit": "kg/s"
+      }
+    },
+    "phase.takeoff.end_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 10.67,
+        "unit": "m"
+      }
+    },
+    "phase.takeoff.end_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 113.178,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_subsonic.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 7315.2,
+        "unit": "m"
+      }
+    },
+    "phase.climb_subsonic.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 249.181,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_subsonic.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 120000,
+        "unit": "m"
+      }
+    },
+    "phase.cruise.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 23774.4,
+        "unit": "m"
+      }
+    },
+    "phase.cruise.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 944.223,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_supersonic.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 885.209,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_supersonic.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 400000,
+        "unit": "m"
+      }
+    },
+    "phase.descent.target_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 7620.0,
+        "unit": "m"
+      }
+    },
+    "phase.descent.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 278.703,
+        "unit": "m/s"
+      }
+    },
+    "phase.descent.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 300000,
+        "unit": "m"
+      }
+    },
+    "phase.descent.idle_thrust": {
+      "unit": "N",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 15000,
+        "unit": "N"
+      }
+    },
+    "mission.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "value": {
+        "value": 2000,
+        "unit": "nmi"
+      }
+    },
+    "phase.arrival.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture",
+      "expression": {
+        "op": "reference",
+        "parameter": "phase.descent.path_distance"
+      }
+    },
+    "phase.taxi.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "phase.taxi.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "phase.taxi.fuel_burn": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "phase.taxi.cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "mission.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "mission.flown_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "mission.block_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "mission.reserve_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "mission.remaining_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "mission.final_mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "mission.fuel_cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.stall_speed_clean": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.stall_speed_landing": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.best_glide_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.minimum_power_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.maximum_level_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.maximum_lift_to_drag": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.service_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.absolute_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.takeoff_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    },
+    "performance.landing_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "owner": "sr71_fixture"
+    }
+  },
+  "analyses": {
+    "taxi_out": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.taxi.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.taxi.fuel_flow",
+        "cost_rate": "phase.taxi.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.taxi.duration",
+        "distance": "phase.taxi.distance",
+        "fuel_burn": "phase.taxi.fuel_burn",
+        "cost": "phase.taxi.cost"
+      }
+    },
+    "takeoff": {
+      "plugin": "aircraft.ground_estimate_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "fuel_flow": "phase.takeoff.fuel_flow",
+        "fuel_price": "economics.fuel_price"
+      },
+      "outputs": {}
+    },
+    "path": {
+      "plugin": "aircraft.deck_energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "cruise": {
+      "plugin": "aircraft.deck_route_cruise_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "mission": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.duration",
+        "distance": "mission.flown_distance",
+        "block_fuel": "mission.block_fuel",
+        "reserve_fuel": "mission.reserve_fuel",
+        "remaining_fuel": "mission.remaining_fuel",
+        "final_mass": "mission.final_mass",
+        "cost": "mission.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "sortie"
+        ]
+      }
+    },
+    "performance": {
+      "plugin": "aircraft.performance_envelope",
+      "version": "1",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "sweep": "wing.sweep",
+        "maximum_takeoff_mass": "weight.mtow",
+        "operating_empty_mass": "weight.oew",
+        "maximum_payload_mass": "weight.maximum_payload",
+        "maximum_fuel_mass": "weight.maximum_fuel",
+        "takeoff_mass": "weight.mtow",
+        "landing_mass": "weight.mtow",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "field_elevation": "field.elevation",
+        "obstacle_height": "field.obstacle_height",
+        "braking_coefficient": "field.braking_coefficient",
+        "runway_slope": "field.runway_slope",
+        "headwind": "field.headwind"
+      },
+      "outputs": {
+        "stall_speed_clean": "performance.stall_speed_clean",
+        "stall_speed_landing": "performance.stall_speed_landing",
+        "best_glide_speed": "performance.best_glide_speed",
+        "minimum_power_speed": "performance.minimum_power_speed",
+        "maximum_level_speed": "performance.maximum_level_speed",
+        "maximum_lift_to_drag": "performance.maximum_lift_to_drag",
+        "service_ceiling": "performance.service_ceiling",
+        "absolute_ceiling": "performance.absolute_ceiling",
+        "takeoff_field_length": "performance.takeoff_field_length",
+        "landing_field_length": "performance.landing_field_length"
+      },
+      "resources": {
+        "catalog": [
+          "polars",
+          "limits",
+          "engine"
+        ]
+      }
+    }
+  },
+  "requirements": {
+    "mission_radius": {
+      "name": "Mission radius",
+      "metric": "mission.flown_distance",
+      "relation": "ge",
+      "target": {
+        "value": 2000,
+        "unit": "nmi"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/sr71/requirements.yaml"
+      }
+    },
+    "payload": {
+      "name": "Payload",
+      "metric": "payload.mass",
+      "relation": "ge",
+      "target": {
+        "value": 1000,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/sr71/requirements.yaml"
+      }
+    },
+    "service_ceiling": {
+      "name": "Service ceiling",
+      "metric": "performance.service_ceiling",
+      "relation": "ge",
+      "target": {
+        "value": 80000,
+        "unit": "ft"
+      },
+      "priority": "soft",
+      "source": {
+        "kind": "user",
+        "reference": "examples/sr71/requirements.yaml"
+      }
+    },
+    "remaining_fuel": {
+      "name": "Fuel remaining",
+      "metric": "mission.remaining_fuel",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/sr71/requirements.yaml"
+      }
+    }
+  },
+  "mass_items": {
+    "empty": {
+      "kind": "empty",
+      "mass": "weight.oew",
+      "cg": [
+        {
+          "value": 17.0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      }
+    },
+    "payload": {
+      "kind": "payload",
+      "mass": "payload.mass",
+      "cg": [
+        {
+          "value": 12.0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      }
+    },
+    "fuel": {
+      "kind": "fuel",
+      "mass": "fuel.loaded",
+      "cg": [
+        {
+          "value": 17.5,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "capacity": "weight.maximum_fuel"
+    }
+  },
+  "missions": {
+    "sortie": {
+      "name": "SR-71 operational reconnaissance sortie",
+      "stages": [
+        {
+          "id": "taxi_out",
+          "kind": "taxi",
+          "analysis": "taxi_out",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
+        },
+        {
+          "id": "subsonic_climb",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.climb_subsonic.altitude",
+            "target_speed": "phase.climb_subsonic.speed",
+            "path_distance": "phase.climb_subsonic.path_distance"
+          }
+        },
+        {
+          "id": "supersonic_climb",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise.altitude",
+            "target_speed": "phase.climb_supersonic.speed",
+            "path_distance": "phase.climb_supersonic.path_distance"
+          }
+        },
+        {
+          "id": "supersonic_cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "descent",
+          "kind": "descent",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.descent.target_altitude",
+            "target_speed": "phase.descent.speed",
+            "path_distance": "phase.descent.path_distance",
+            "idle_thrust": "phase.descent.idle_thrust"
+          }
+        }
+      ],
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
+    }
+  },
+  "catalog": {
+    "polars": {
+      "kind": "aerodynamic_polars",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "document": {
+        "model": "aero.polar_table",
+        "clean": {
+          "cd0": 0.012,
+          "oswald_efficiency": 0.72,
+          "cl_max": 1.05,
+          "polar_table": {
+            "mach": [
+              0.0,
+              0.85,
+              1.15,
+              2.0,
+              3.2,
+              3.3
+            ],
+            "cd0": [
+              0.012,
+              0.013,
+              0.035,
+              0.022,
+              0.0145,
+              0.015
+            ],
+            "cl_max": [
+              1.05,
+              1.0,
+              0.85,
+              0.7,
+              0.6,
+              0.58
+            ],
+            "oswald_efficiency": [
+              0.72,
+              0.68,
+              0.5,
+              0.4,
+              0.34,
+              0.33
+            ]
+          }
+        },
+        "takeoff": {
+          "cd0": 0.016,
+          "oswald_efficiency": 0.4,
+          "cl_max": 1.2
+        },
+        "landing": {
+          "cd0": 0.03,
+          "oswald_efficiency": 0.4,
+          "cl_max": 1.25
+        }
+      }
+    },
+    "limits": {
+      "kind": "operating_limits",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "document": {
+        "maximum_operating_mach": 3.3,
+        "maximum_operating_altitude": "85000 ft",
+        "maximum_load_factor": 3.0,
+        "minimum_load_factor": -1.0
+      }
+    },
+    "engine": {
+      "kind": "turbojet_engine",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "SR-71A-class model-envelope fixture (examples/sr71); conceptual surrogate data, not a reference design",
+        "revision": null
+      },
+      "document": {
+        "id": "engine.pw_j58_class",
+        "version": 2,
+        "type": "turbojet_engine",
+        "model": "propulsion.table_deck",
+        "metadata": {
+          "display_name": "P&W J58-Class Afterburning Turbojet",
+          "source": "NASA YF-12 propulsion research reports identify the J58 afterburning turbojet and its installed inlet/nozzle system; NASA's YF-12 engine research history gives 32,500 lbf as the static thrust anchor. The remaining installed net-thrust and TSFC cells are a conceptual interpolation deck calibrated to the SR-71 fixture's subsonic and Mach 3.2 fuel-flow guardrails, not released manufacturer performance data.",
+          "confidence": "low"
+        },
+        "parameters": {
+          "dry_mass": "2700 kg",
+          "installation": {
+            "thrust_loss_fraction": 0.0,
+            "nacelle_drag_area": "0.0 m^2"
+          },
+          "table_deck": {
+            "axes": {
+              "mach": [
+                0.0,
+                0.85,
+                1.15,
+                2.0,
+                3.2,
+                3.3
+              ],
+              "altitude": [
+                "0 ft",
+                "25000 ft",
+                "50000 ft",
+                "78000 ft",
+                "85000 ft"
+              ]
+            },
+            "modes": {
+              "takeoff": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      144600,
+                      132000,
+                      122000,
+                      152000,
+                      202000,
+                      205000
+                    ],
+                    [
+                      108000,
+                      101000,
+                      98000,
+                      128000,
+                      175000,
+                      178000
+                    ],
+                    [
+                      65000,
+                      69000,
+                      74000,
+                      98000,
+                      142000,
+                      145000
+                    ],
+                    [
+                      22000,
+                      30000,
+                      44000,
+                      70000,
+                      110000,
+                      112000
+                    ],
+                    [
+                      18000,
+                      25000,
+                      38000,
+                      63000,
+                      101000,
+                      103000
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.105,
+                      0.095,
+                      0.105,
+                      0.125,
+                      0.175,
+                      0.18
+                    ],
+                    [
+                      0.08,
+                      0.05,
+                      0.075,
+                      0.11,
+                      0.17,
+                      0.175
+                    ],
+                    [
+                      0.075,
+                      0.065,
+                      0.08,
+                      0.105,
+                      0.18,
+                      0.185
+                    ],
+                    [
+                      0.08,
+                      0.07,
+                      0.09,
+                      0.11,
+                      0.194,
+                      0.2
+                    ],
+                    [
+                      0.085,
+                      0.075,
+                      0.095,
+                      0.115,
+                      0.2,
+                      0.205
+                    ]
+                  ]
+                }
+              },
+              "climb": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      144600,
+                      132000,
+                      122000,
+                      152000,
+                      202000,
+                      205000
+                    ],
+                    [
+                      108000,
+                      101000,
+                      98000,
+                      128000,
+                      175000,
+                      178000
+                    ],
+                    [
+                      65000,
+                      69000,
+                      74000,
+                      98000,
+                      142000,
+                      145000
+                    ],
+                    [
+                      22000,
+                      30000,
+                      44000,
+                      70000,
+                      110000,
+                      112000
+                    ],
+                    [
+                      18000,
+                      25000,
+                      38000,
+                      63000,
+                      101000,
+                      103000
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.105,
+                      0.095,
+                      0.105,
+                      0.125,
+                      0.175,
+                      0.18
+                    ],
+                    [
+                      0.08,
+                      0.05,
+                      0.075,
+                      0.11,
+                      0.17,
+                      0.175
+                    ],
+                    [
+                      0.075,
+                      0.065,
+                      0.08,
+                      0.105,
+                      0.18,
+                      0.185
+                    ],
+                    [
+                      0.08,
+                      0.07,
+                      0.09,
+                      0.11,
+                      0.194,
+                      0.2
+                    ],
+                    [
+                      0.085,
+                      0.075,
+                      0.095,
+                      0.115,
+                      0.2,
+                      0.205
+                    ]
+                  ]
+                }
+              },
+              "cruise": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      144600,
+                      132000,
+                      122000,
+                      152000,
+                      202000,
+                      205000
+                    ],
+                    [
+                      108000,
+                      101000,
+                      98000,
+                      128000,
+                      175000,
+                      178000
+                    ],
+                    [
+                      65000,
+                      69000,
+                      74000,
+                      98000,
+                      142000,
+                      145000
+                    ],
+                    [
+                      22000,
+                      30000,
+                      44000,
+                      70000,
+                      110000,
+                      112000
+                    ],
+                    [
+                      18000,
+                      25000,
+                      38000,
+                      63000,
+                      101000,
+                      103000
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.105,
+                      0.095,
+                      0.105,
+                      0.125,
+                      0.175,
+                      0.18
+                    ],
+                    [
+                      0.08,
+                      0.05,
+                      0.075,
+                      0.11,
+                      0.17,
+                      0.175
+                    ],
+                    [
+                      0.075,
+                      0.065,
+                      0.08,
+                      0.105,
+                      0.18,
+                      0.185
+                    ],
+                    [
+                      0.08,
+                      0.07,
+                      0.09,
+                      0.11,
+                      0.194,
+                      0.2
+                    ],
+                    [
+                      0.085,
+                      0.075,
+                      0.095,
+                      0.115,
+                      0.2,
+                      0.205
+                    ]
+                  ]
+                }
+              },
+              "economy": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      144600,
+                      132000,
+                      122000,
+                      152000,
+                      202000,
+                      205000
+                    ],
+                    [
+                      108000,
+                      101000,
+                      98000,
+                      128000,
+                      175000,
+                      178000
+                    ],
+                    [
+                      65000,
+                      69000,
+                      74000,
+                      98000,
+                      142000,
+                      145000
+                    ],
+                    [
+                      22000,
+                      30000,
+                      44000,
+                      70000,
+                      110000,
+                      112000
+                    ],
+                    [
+                      18000,
+                      25000,
+                      38000,
+                      63000,
+                      101000,
+                      103000
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.105,
+                      0.095,
+                      0.105,
+                      0.125,
+                      0.175,
+                      0.18
+                    ],
+                    [
+                      0.08,
+                      0.05,
+                      0.075,
+                      0.11,
+                      0.17,
+                      0.175
+                    ],
+                    [
+                      0.075,
+                      0.065,
+                      0.08,
+                      0.105,
+                      0.18,
+                      0.185
+                    ],
+                    [
+                      0.08,
+                      0.07,
+                      0.09,
+                      0.11,
+                      0.194,
+                      0.2
+                    ],
+                    [
+                      0.085,
+                      0.075,
+                      0.095,
+                      0.115,
+                      0.2,
+                      0.205
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "operations": null,
+  "objectives": {},
+  "design_variables": []
+}
