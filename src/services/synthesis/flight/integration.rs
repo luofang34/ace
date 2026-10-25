@@ -93,9 +93,13 @@ fn rate(
         },
     )
     .map_err(external)?;
-    let available = model
-        .powerplant
-        .available_thrust(atmosphere.density_kg_m3, speed);
+    let point = Operating {
+        altitude,
+        speed,
+        mach: speed / atmosphere.speed_of_sound_m_s,
+        mode: OperatingMode::Cruise,
+    };
+    let available = model.powerplant.available_thrust(atmosphere, &point)?;
     if aero.lift_coefficient > model.aero.cl_max
         || aero.drag_n > available
         || aero.model.validity_status != "valid"
@@ -105,14 +109,6 @@ fn rate(
             aero.lift_coefficient, aero.drag_n, aero.model.validity_status
         )));
     }
-    let flow = model.powerplant.fuel_flow(
-        aero.drag_n,
-        &Operating {
-            altitude,
-            speed,
-            mach: speed / atmosphere.speed_of_sound_m_s,
-            mode: OperatingMode::Cruise,
-        },
-    )?;
+    let flow = model.powerplant.fuel_flow(aero.drag_n, &point)?;
     Ok((flow, aero))
 }

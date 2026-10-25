@@ -14,7 +14,15 @@ pub(super) struct FlightModel {
 }
 
 impl FlightModel {
+    #[cfg(test)]
     pub fn new(inputs: &BTreeMap<String, Quantity>) -> Result<Self, SolverError> {
+        Self::with_powerplant(inputs, Powerplant::new(inputs)?)
+    }
+
+    pub fn with_powerplant(
+        inputs: &BTreeMap<String, Quantity>,
+        powerplant: Powerplant,
+    ) -> Result<Self, SolverError> {
         use Unit::*;
         let area = positive(inputs, "area", SquareMeter)?;
         let span = positive(inputs, "span", Meter)?;
@@ -38,7 +46,7 @@ impl FlightModel {
                 wave_drag: None,
                 polar_table: None,
             },
-            powerplant: Powerplant::new(inputs)?,
+            powerplant,
             fuel_price,
             maximum_step: positive(inputs, "maximum_step", Second)?,
         })

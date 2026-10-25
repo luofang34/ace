@@ -21,9 +21,21 @@ pub(super) enum PhaseKind {
     GroundEstimate,
 }
 
+/// Installed-propulsion port family of one flight-phase variant.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Propulsion {
+    /// Constant `available_thrust` and `tsfc` ports.
+    Thrust,
+    /// Shaft power, propeller efficiency, BSFC and lapse ports.
+    Propeller,
+    /// Engine count and sizing ports over the selected catalog turbofan deck.
+    Deck,
+}
+
 pub(super) struct FlightPhase {
     spec: PluginSpec,
     kind: PhaseKind,
+    propulsion: Propulsion,
     vspaero: bool,
 }
 
@@ -55,10 +67,11 @@ impl FlightPhase {
         };
         Self {
             kind,
+            propulsion: Propulsion::Thrust,
             vspaero: false,
             spec: PluginSpec {
                 mode: ace_model::AnalysisMode::Phase,
-                domain: contract::domain(kind, false, false),
+                domain: contract::domain(kind, Propulsion::Thrust, false),
                 identity: PluginIdentity {
                     id: id.into(),
                     version: "1".into(),
@@ -79,24 +92,51 @@ impl FlightPhase {
     }
 
     /// Replaces the thrust/TSFC ports with shaft power, propeller efficiency and BSFC.
-    pub fn propeller(mut self) -> Self {
+    pub fn propeller(self) -> Self {
+        self.with_propulsion(
+            Propulsion::Propeller,
+            "propeller_",
+            &[
+                ("shaft_power", Unit::Watt),
+                ("propeller_efficiency", Unit::Ratio),
+                ("bsfc", Unit::KilogramPerKilowattHour),
+                ("power_lapse_exponent", Unit::Ratio),
+            ],
+        )
+    }
+
+    /// Replaces the thrust/TSFC ports with a catalog turbofan deck, so thrust and
+    /// fuel flow follow mode, altitude and Mach.
+    pub fn deck(self) -> Self {
+        self.with_propulsion(
+            Propulsion::Deck,
+            "deck_",
+            &[
+                ("engine_count", Unit::Ratio),
+                ("sizing_factor", Unit::Ratio),
+            ],
+        )
+    }
+
+    fn with_propulsion(
+        mut self,
+        propulsion: Propulsion,
+        prefix: &str,
+        ports: &[(&str, Unit)],
+    ) -> Self {
+        self.propulsion = propulsion;
         self.spec.identity.id = self
             .spec
             .identity
             .id
-            .replace("aircraft.", "aircraft.propeller_");
+            .replace("aircraft.", &format!("aircraft.{prefix}"));
         for port in ["tsfc", "available_thrust"] {
             self.spec.inputs.remove(port);
         }
-        for (port, unit) in [
-            ("shaft_power", Unit::Watt),
-            ("propeller_efficiency", Unit::Ratio),
-            ("bsfc", Unit::KilogramPerKilowattHour),
-            ("power_lapse_exponent", Unit::Ratio),
-        ] {
-            self.spec.inputs.insert(port.into(), unit.into());
+        for (port, unit) in ports {
+            self.spec.inputs.insert((*port).into(), (*unit).into());
         }
-        self.spec.domain = contract::domain(self.kind, true, self.vspaero);
+        self.spec.domain = contract::domain(self.kind, propulsion, self.vspaero);
         self
     }
 
@@ -115,11 +155,7 @@ impl FlightPhase {
                 .inputs
                 .insert(port.into(), contract::polar_port(port));
         }
-        phase.spec.domain = contract::domain(
-            phase.kind,
-            phase.spec.inputs.contains_key("shaft_power"),
-            true,
-        );
+        phase.spec.domain = contract::domain(phase.kind, phase.propulsion, true);
         phase
     }
 }
@@ -146,10 +182,14 @@ impl AnalysisPlugin for FlightPhase {
         if matches!(self.kind, PhaseKind::GroundEstimate) {
             return ground::evaluate(inputs, state);
         }
+        let powerplant = match self.propulsion {
+            Propulsion::Deck => powerplant::Powerplant::deck(inputs, &context.resources)?,
+            Propulsion::Thrust | Propulsion::Propeller => powerplant::Powerplant::new(inputs)?,
+        };
         let model = if self.vspaero {
-            polar::model(inputs)?
+            polar::model(inputs, powerplant)?
         } else {
-            parameters::FlightModel::new(inputs)?
+            parameters::FlightModel::with_powerplant(inputs, powerplant)?
         };
         match self.kind {
             PhaseKind::EnergyPath => path::evaluate(&model, state, context.registry.control()),

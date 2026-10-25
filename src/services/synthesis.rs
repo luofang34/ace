@@ -9,6 +9,7 @@ use serde::Serialize;
 
 use crate::domain::diagnostic::{AexError, AexResult};
 
+mod catalog;
 mod flight;
 mod geometry;
 mod kernel;
@@ -97,6 +98,8 @@ fn flight_phases() -> Vec<flight::FlightPhase> {
             FlightPhase::with_vspaero(kind),
             FlightPhase::with_kind(kind).propeller(),
             FlightPhase::with_kind(kind).propeller().vspaero(),
+            FlightPhase::with_kind(kind).deck(),
+            FlightPhase::with_kind(kind).deck().vspaero(),
         ]);
     }
     phases

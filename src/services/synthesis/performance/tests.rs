@@ -32,14 +32,14 @@ fn evaluate(name: &str) -> PluginOutput {
         (
             "polars".to_owned(),
             entry(
-                inputs::POLARS,
+                crate::services::synthesis::catalog::POLARS,
                 yaml(&format!("{name}/aircraft.yaml"), "aircraft.aerodynamics"),
             ),
         ),
         (
             "limits".to_owned(),
             entry(
-                inputs::LIMITS,
+                crate::services::synthesis::catalog::LIMITS,
                 yaml(&format!("{name}/aircraft.yaml"), "aircraft.limits"),
             ),
         ),
@@ -49,7 +49,10 @@ fn evaluate(name: &str) -> PluginOutput {
     catalog.insert("engine".into(), entry(&kind, engine));
     if aircraft.propulsion.propeller_profile.is_some() {
         let propeller = yaml(&format!("{name}/profiles/propeller.yaml"), "profile");
-        catalog.insert("propeller".into(), entry(inputs::PROPELLER, propeller));
+        catalog.insert(
+            "propeller".into(),
+            entry(crate::services::synthesis::catalog::PROPELLER, propeller),
+        );
     }
     let field = &scenario.mission.field;
     let mass = &aircraft.mass;
