@@ -150,3 +150,72 @@ fn b777_vehicle_study_leaves_only_underpowered_climbs_unresolved() -> Result<(),
     }
     Ok(())
 }
+
+/// Range in nautical miles at each loading corner, in design, payload, fuel, ferry order.
+fn payload_range(name: &str) -> Result<Vec<(f64, Value)>, Box<dyn Error>> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join(name)
+        .join("vehicle.json");
+    let output = cargo_bin_cmd!("aex")
+        .arg("payload-range")
+        .arg(path)
+        .args(["--distance", "mission.distance"])
+        .args(["--remaining", "mission.remaining_fuel"])
+        .args(["--maximum-takeoff-mass", "weight.mtow"])
+        .args(["--maximum-payload", "weight.maximum_payload"])
+        .args(["--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let result: Value = serde_json::from_slice(&output.stdout)?;
+    let points = result["points"].as_array().ok_or("missing points")?;
+    let ids: Vec<_> = points.iter().map(|point| point["id"].clone()).collect();
+    assert_eq!(ids, ["design", "maximum_payload", "maximum_fuel", "ferry"]);
+    points
+        .iter()
+        .map(|point| {
+            assert_eq!(point["range"]["unit"], "nmi");
+            let range = point["range"]["value"].as_f64().ok_or("missing range")?;
+            Ok((range, point.clone()))
+        })
+        .collect()
+}
+
+#[test]
+fn c172_payload_range_flies_its_loading_corners() -> Result<(), Box<dyn Error>> {
+    let points = payload_range("c172")?;
+    let [design, payload, fuel, ferry] = [0, 1, 2, 3].map(|index| points[index].0);
+    // MTOM leaves no fuel at maximum payload, so that corner cannot fly.
+    assert_eq!(payload, 0.0);
+    assert!(points[1].1["note"].as_str().is_some());
+    // The design mission completes at 350 nmi with fuel to spare.
+    assert!(
+        design > 350.0 && fuel > design && ferry > fuel,
+        "{design} {fuel} {ferry}"
+    );
+    assert!(ferry < 1_000.0, "{ferry}");
+    Ok(())
+}
+
+#[test]
+fn b777_payload_range_brackets_the_scenario_corners() -> Result<(), Box<dyn Error>> {
+    let points = payload_range("b777")?;
+    // Representative-cruise scenario corners for the same loadings, nmi.
+    let scenario = [9_203.0, 7_905.0, 10_315.0, 11_206.0];
+    for ((range, point), expected) in points.iter().zip(scenario) {
+        assert!(
+            (range / expected - 1.0).abs() < 0.1,
+            "{range} vs {expected}"
+        );
+        let width = point["bracket_width"]["value"]
+            .as_f64()
+            .ok_or("missing width")?;
+        assert!(width <= 1e-3 * range, "{width}");
+    }
+    let [design, payload, fuel, ferry] = [0, 1, 2, 3].map(|index| points[index].0);
+    assert!(payload < design && design < fuel && fuel < ferry);
+    assert!(design > 7_300.0, "{design}");
+    Ok(())
+}

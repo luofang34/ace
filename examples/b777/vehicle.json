@@ -591,9 +591,19 @@
         "revision": null
       },
       "owner": "b777_reference",
-      "value": {
-        "value": 3000,
-        "unit": "nmi"
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "mission.distance"
+        },
+        "right": {
+          "op": "constant",
+          "value": {
+            "value": 0.410958904109589,
+            "unit": "1"
+          }
+        }
       }
     },
     "phase.cruise_1.duration_input": {
@@ -650,9 +660,19 @@
         "revision": null
       },
       "owner": "b777_reference",
-      "value": {
-        "value": 3000,
-        "unit": "nmi"
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "mission.distance"
+        },
+        "right": {
+          "op": "constant",
+          "value": {
+            "value": 0.410958904109589,
+            "unit": "1"
+          }
+        }
       }
     },
     "phase.cruise_2.duration_input": {
