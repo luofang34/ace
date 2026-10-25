@@ -18,6 +18,7 @@ aex edit VEHICLE [--edits FILE] [--set PARAMETER=VALUE]... [--expected-revision 
 aex compare VEHICLE... --metric PARAMETER
 aex payload-range VEHICLE --distance P --remaining P --maximum-takeoff-mass P --maximum-payload P [--artifact SVG]
 aex chart VEHICLE ANALYSIS [--artifact SVG]
+aex report --vehicle VEHICLE [--format markdown|json]
 aex uncertainty VEHICLE --plan PLAN
 aex calibrate VEHICLE --case CASE
 aex campaign CAMPAIGN
@@ -45,6 +46,12 @@ the payload-against-range chart as SVG.
 `aex chart` synthesizes the vehicle and charts one declared analysis from its
 run details; `aircraft.constraint_diagram` analyses draw the constraint curves
 and feasible loading region. Other plugins return `UNSUPPORTED_ANALYSIS_CHART`.
+
+`aex report --vehicle` synthesizes the vehicle and reports its feasibility,
+hard requirements counted as satisfied, failed or unknown, every requirement
+margin, and the charts its evidence supports: requirement margins, each
+constraint diagram, and mission mass by stage. Failed analyses contribute no
+chart. `aex report RUN_ID` reports a stored scenario run.
 
 Scenario commands:
 

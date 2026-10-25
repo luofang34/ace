@@ -271,7 +271,20 @@ fn execute_report(service: &ApplicationService, arguments: ReportArgs) -> AexRes
             arguments.format,
         ));
     }
-    let (manifest, result) = service.load_run_blocking(&arguments.run_id)?;
+    if let Some(vehicle) = &arguments.vehicle {
+        let report =
+            crate::services::vehicle_report::report_blocking(vehicle, &Default::default())?;
+        return if arguments.format == "json" {
+            emit_blocking(&report, &arguments.output)
+        } else {
+            emit_blocking(
+                &crate::services::vehicle_report::markdown(&report)?,
+                &arguments.output,
+            )
+        };
+    }
+    let run_id = arguments.run_id.as_deref().unwrap_or_default();
+    let (manifest, result) = service.load_run_blocking(run_id)?;
     if arguments.format == "json" {
         return emit_blocking(
             &serde_json::json!({ "manifest": manifest, "result": result }),
@@ -280,7 +293,7 @@ fn execute_report(service: &ApplicationService, arguments: ReportArgs) -> AexRes
     }
     let report = format!(
         "# Analysis run {}\n\n{}\n\n## Manifest\n\n```json\n{}\n```\n\n## Results\n\n```json\n{}\n```\n",
-        arguments.run_id,
+        run_id,
         LIMITATION,
         pretty_json(&manifest)?,
         pretty_json(&result)?,

@@ -61,6 +61,8 @@ pub(super) struct PointRequestCondition {
 pub(super) struct ReportRequest {
     pub(super) run_id: Option<String>,
     pub(super) scenario_path: Option<String>,
+    /// Report on a synthesized vehicle file.
+    pub(super) vehicle_path: Option<String>,
     pub(super) units: Option<String>,
     pub(super) backend: Option<String>,
     pub(super) format: String,
