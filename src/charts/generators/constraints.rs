@@ -1,17 +1,17 @@
 use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec, SurfaceSpec};
 use crate::domain::result::ConstraintResult;
-use crate::domain::schema::ResolvedScenario;
 
 const LOADING_AXIS_POINTS: u32 = 48;
 
-pub(crate) fn constraints(scenario: &ResolvedScenario, result: &ConstraintResult) -> ChartSpec {
+/// Constraint curves and the feasible loading region of the design called `name`.
+pub(crate) fn constraints(name: &str, result: &ConstraintResult) -> ChartSpec {
     let (loading_label, loading_unit) = axis_parts(&result.y_axis);
     let required = required_loading(result);
     let loading_values = loading_axis(result, &required);
     let (values, feasible_mask) = surface_values(result, &required, &loading_values);
     ChartSpec {
         chart_type: "carpet".to_owned(),
-        title: format!("{}: constraint diagram", scenario.name),
+        title: format!("{name}: constraint diagram"),
         x: AxisSpec {
             label: "Wing loading".to_owned(),
             unit: "N/m^2".to_owned(),

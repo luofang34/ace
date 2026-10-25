@@ -12,7 +12,7 @@ use super::constraints;
 fn b777_chart() -> Result<(ConstraintResult, ChartSpec), Box<dyn std::error::Error>> {
     let scenario = example_scenario("b777")?;
     let result = ConstraintAnalyzer::new(scenario.clone()).analyze(300.0, 9000.0, 80)?;
-    let chart = constraints(&scenario, &result);
+    let chart = constraints(&scenario.name, &result);
     Ok((result, chart))
 }
 

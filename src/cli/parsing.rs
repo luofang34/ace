@@ -59,8 +59,15 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             remaining: required(args, "remaining")?,
             maximum_takeoff_mass: required(args, "maximum-takeoff-mass")?,
             maximum_payload: required(args, "maximum-payload")?,
+            artifact: optional(args, "artifact"),
             output: output(args)?,
         })),
+        "chart" => Ok(Command::Chart {
+            vehicle: required(args, "vehicle")?,
+            analysis: required(args, "analysis")?,
+            artifact: optional(args, "artifact"),
+            common: common(args)?,
+        }),
         "uncertainty" => Ok(Command::Uncertainty {
             scenario: required(args, "scenario")?,
             plan: required(args, "plan")?,
