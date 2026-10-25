@@ -11,9 +11,7 @@ use crate::backends::native::native_topology_violations;
 use crate::backends::openvsp::openvsp_topology_violations;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::services::analysis::ApplicationService;
-use crate::storage::design_store::{
-    CreateDesignSpec, DesignRecord, create_design_blocking, update_parameters_blocking,
-};
+use crate::storage::design_store::{CreateDesignSpec, DesignRecord, create_design_blocking};
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct BackendEvaluation {
@@ -94,15 +92,6 @@ impl ApplicationService {
         })?;
         self.resolve_blocking(&design.scenario_path, &BTreeMap::new())?;
         Ok(design)
-    }
-
-    pub(crate) fn update_design_parameters_blocking(
-        &self,
-        scenario_path: &Path,
-        updates: &BTreeMap<String, String>,
-    ) -> AexResult<DesignRecord> {
-        self.resolve_blocking(scenario_path, updates)?;
-        update_parameters_blocking(scenario_path, updates)
     }
 
     pub(crate) fn evaluate_feasibility_blocking(

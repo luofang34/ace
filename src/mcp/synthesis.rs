@@ -85,3 +85,34 @@ pub(super) fn explain(request: ExplainRequest) -> Result<Json<ObjectOutput>, Err
     .map_err(super::domain_error::mcp_error)?;
     canonical_json_output(result)
 }
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct EditRequest {
+    vehicle_path: String,
+    /// Typed structural declarations, applied before `updates`.
+    #[serde(default)]
+    #[schemars(with = "Vec<serde_json::Value>")]
+    edits: Vec<ace_model::ModelEdit>,
+    /// Parameter assignments such as `{"wing.span": "37 m"}`.
+    #[serde(default)]
+    updates: BTreeMap<String, String>,
+    /// Refuse the edit unless the file is at this model revision.
+    expected_revision: Option<u64>,
+    /// Write the edited vehicle to this new file instead of replacing the source.
+    save_as: Option<String>,
+}
+
+pub(super) fn edit(request: EditRequest) -> Result<Json<ObjectOutput>, ErrorData> {
+    let save_as = request.save_as.as_deref().map(Path::new);
+    let result = crate::services::vehicle_edit::edit_blocking(
+        Path::new(&request.vehicle_path),
+        &crate::services::vehicle_edit::VehicleEdit {
+            edits: &request.edits,
+            updates: &request.updates,
+            expected_revision: request.expected_revision,
+            save_as,
+        },
+    )
+    .map_err(super::domain_error::mcp_error)?;
+    canonical_json_output(result)
+}

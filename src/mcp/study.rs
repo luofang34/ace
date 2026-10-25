@@ -102,7 +102,7 @@ pub(super) fn promote(
     json_output(json!({
         "design": design,
         "source_candidate_id": request.candidate_id,
-        "next_actions": ["evaluate_feasibility", "generate_report"],
+        "next_actions": ["generate_report"],
     }))
 }
 

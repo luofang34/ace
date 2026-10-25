@@ -60,9 +60,7 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
             for expected in [
                 "synthesize_vehicle",
                 "study_vehicle",
-                "create_design",
-                "update_design_parameters",
-                "evaluate_feasibility",
+                "edit_vehicle",
                 "auto_refine_design",
                 "compare_vehicles",
                 "list_analysis_backends",

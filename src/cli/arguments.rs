@@ -32,6 +32,13 @@ pub(super) enum Command {
         artifact: Option<PathBuf>,
         common: CommonArgs,
     },
+    Edit {
+        scenario: PathBuf,
+        edits: Option<PathBuf>,
+        expected_revision: Option<u64>,
+        save_as: Option<PathBuf>,
+        common: CommonArgs,
+    },
     Explain {
         scenario: PathBuf,
         parameter: String,
