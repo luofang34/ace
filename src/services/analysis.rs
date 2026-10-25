@@ -8,11 +8,10 @@ use serde_json::Value;
 use crate::backends::registry::BackendRegistry;
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::result::{
-    ConstraintResult, MissionResult, PayloadRangeResult, PerformanceSummary, PointPerformanceResult,
+    MissionResult, PayloadRangeResult, PerformanceSummary, PointPerformanceResult,
 };
 use crate::domain::schema::{RawProfile, ResolvedScenario};
 use crate::models::atmosphere::scenario_atmosphere;
-use crate::models::constraints::ConstraintAnalyzer;
 use crate::models::mission::MissionSimulator;
 use crate::models::payload_range::PayloadRangeAnalyzer;
 use crate::models::performance::PointAnalyzer;
@@ -153,21 +152,6 @@ impl ApplicationService {
     ) -> AexResult<(ResolvedScenario, MissionResult)> {
         let scenario = self.resolve_blocking(path, overrides)?;
         let result = MissionSimulator::new(scenario.clone()).simulate()?;
-        Ok((scenario, result))
-    }
-
-    pub(crate) fn constraints_blocking(
-        &self,
-        path: &Path,
-        overrides: &BTreeMap<String, String>,
-        start_n_m2: f64,
-        stop_n_m2: f64,
-        count: u32,
-    ) -> AexResult<(ResolvedScenario, ConstraintResult)> {
-        let scenario = self.resolve_blocking(path, overrides)?;
-        let mut result =
-            ConstraintAnalyzer::new(scenario.clone()).analyze(start_n_m2, stop_n_m2, count)?;
-        prepend_scenario_warnings(&scenario, &mut result.warnings);
         Ok((scenario, result))
     }
 

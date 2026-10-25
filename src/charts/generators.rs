@@ -1,9 +1,7 @@
 use crate::charts::spec::{Annotation, AxisSpec, ChartSpec, SeriesSpec};
 use crate::domain::diagnostic::{AexResult, Diagnostic};
 use crate::domain::quantity::KNOT_M_S;
-use crate::domain::result::{
-    MissionResult, PayloadRangeResult, RequirementEvaluation, RequirementStatus,
-};
+use crate::domain::result::{MissionResult, RequirementEvaluation, RequirementStatus};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
@@ -221,46 +219,6 @@ pub(crate) fn climb_envelope(scenario: &ResolvedScenario) -> AexResult<ChartSpec
         annotations: Vec::new(),
         warnings,
     })
-}
-
-pub(crate) fn payload_range(scenario: &ResolvedScenario, result: &PayloadRangeResult) -> ChartSpec {
-    let x_values = result
-        .points
-        .iter()
-        .map(|point| point.range.display_value)
-        .collect();
-    let payloads = result.points.iter().map(|point| point.payload_kg).collect();
-    ChartSpec {
-        chart_type: "line".to_owned(),
-        title: format!("{}: payload-range", scenario.name),
-        x: AxisSpec {
-            label: "Range".to_owned(),
-            unit: "nmi".to_owned(),
-            values: x_values,
-        },
-        y: AxisSpec {
-            label: "Payload".to_owned(),
-            unit: "kg".to_owned(),
-            values: Vec::new(),
-        },
-        surface: None,
-        series: vec![SeriesSpec {
-            id: "payload".to_owned(),
-            label: "Payload".to_owned(),
-            unit: "kg".to_owned(),
-            values: payloads,
-        }],
-        annotations: result
-            .points
-            .iter()
-            .map(|point| Annotation {
-                x: point.range.display_value,
-                y: point.payload_kg,
-                label: point.id.clone(),
-            })
-            .collect(),
-        warnings: result.warnings.clone(),
-    }
 }
 
 pub(crate) fn mission_mass(scenario: &ResolvedScenario, result: &MissionResult) -> ChartSpec {
