@@ -24,8 +24,8 @@ fn entry(kind: &str, document: serde_json::Value) -> CatalogEntry {
     }
 }
 
-/// Vehicle-port and catalog form of a legacy example, evaluated by the envelope plugin.
-fn evaluate(name: &str) -> PluginOutput {
+/// Vehicle-port and catalog form of a legacy example.
+fn fixture(name: &str) -> (BTreeMap<String, Quantity>, AnalysisResources) {
     let scenario = crate::test_support::example_scenario(name).unwrap();
     let aircraft = &scenario.aircraft;
     let mut catalog = BTreeMap::from([
@@ -83,18 +83,144 @@ fn evaluate(name: &str) -> PluginOutput {
         .zip(values)
         .map(|((port, unit), value)| ((*port).to_owned(), Quantity::new(value, *unit).unwrap()))
         .collect();
+    let resources = AnalysisResources {
+        catalog,
+        ..AnalysisResources::default()
+    };
+    (inputs, resources)
+}
+
+fn run(
+    plugin: &dyn AnalysisPlugin,
+    inputs: &BTreeMap<String, Quantity>,
+    resources: AnalysisResources,
+) -> Result<PluginOutput, SolverError> {
     let registry = Registry::default();
     let context = AnalysisContext {
-        resources: AnalysisResources {
-            catalog,
-            ..AnalysisResources::default()
-        },
-        values: &inputs,
+        resources,
+        values: inputs,
         registry: &registry,
     };
-    PerformanceEnvelope::new()
-        .evaluate(&inputs, &context)
-        .unwrap()
+    plugin.evaluate(inputs, &context)
+}
+
+/// The envelope plugin on a legacy example.
+fn evaluate(name: &str) -> PluginOutput {
+    let (inputs, resources) = fixture(name);
+    run(&PerformanceEnvelope::new(), &inputs, resources).unwrap()
+}
+
+/// The constraint plugin on a legacy example, with the scenario's own targets.
+fn diagram(
+    name: &str,
+    targets: crate::models::constraints::ConstraintTargets,
+) -> Result<PluginOutput, SolverError> {
+    let (mut inputs, resources) = fixture(name);
+    for (port, value, unit) in [
+        (
+            "design_speed",
+            targets.design_speed_m_s,
+            Unit::MeterPerSecond,
+        ),
+        (
+            "landing_stall_speed_limit",
+            targets.landing_stall_speed_m_s,
+            Unit::MeterPerSecond,
+        ),
+        (
+            "takeoff_distance_limit",
+            targets.takeoff_distance_m,
+            Unit::Meter,
+        ),
+        ("wing_loading_minimum", 300.0, Unit::Pascal),
+        ("wing_loading_maximum", 9_000.0, Unit::Pascal),
+    ] {
+        inputs.insert(port.into(), Quantity::new(value, unit).unwrap());
+    }
+    run(&ConstraintDiagram::new(), &inputs, resources)
+}
+
+#[test]
+fn vehicle_constraint_diagram_reproduces_the_scenario_diagram() {
+    use crate::models::constraints::{ConstraintAnalyzer, ConstraintTargets};
+    for name in ["c172", "b777"] {
+        let scenario = crate::test_support::example_scenario(name).unwrap();
+        let targets = ConstraintTargets::from_scenario(&scenario);
+        let legacy = ConstraintAnalyzer::new(scenario)
+            .analyze(300.0, 9_000.0, 80)
+            .unwrap();
+        let output = diagram(name, targets).unwrap();
+        let curves = &output.details["diagram"]["constraints"];
+        for (curve, expected) in &legacy.constraints {
+            let actual = curves[curve].as_array().unwrap();
+            assert_eq!(actual.len(), expected.len());
+            for (actual, expected) in actual.iter().zip(expected) {
+                let actual = actual.as_f64().unwrap();
+                assert!(
+                    (actual - expected).abs() <= 1e-9 * expected.abs().max(1.0),
+                    "{name} {curve}"
+                );
+            }
+        }
+        let stall = output.values["stall_wing_loading_limit"].value;
+        assert!((stall - legacy.stall_wing_loading_limit_n_m2).abs() <= 1e-9 * stall);
+        let selected = output.values["selected_wing_loading"].value;
+        assert!((selected - legacy.selected_wing_loading_n_m2).abs() <= 1e-9 * selected);
+        assert_eq!(
+            output.details["diagram"]["active_controlling_constraint"],
+            legacy.active_controlling_constraint.as_str()
+        );
+        let required = output.details["required_loading_at_selection"]
+            .as_f64()
+            .unwrap();
+        let ratio = output.values["installed_to_required_loading"].value;
+        assert!(
+            (ratio * required - legacy.selected_loading).abs() <= 1e-9 * legacy.selected_loading
+        );
+    }
+}
+
+#[test]
+fn constraint_diagram_takes_no_default_targets_or_inverted_ranges() {
+    let targets = crate::models::constraints::ConstraintTargets {
+        design_speed_m_s: 120.0,
+        landing_stall_speed_m_s: 70.0,
+        takeoff_distance_m: 3_000.0,
+    };
+    let (mut inputs, resources) = fixture("b777");
+    inputs.insert(
+        "landing_stall_speed_limit".into(),
+        Quantity::new(70.0, Unit::MeterPerSecond).unwrap(),
+    );
+    inputs.insert(
+        "takeoff_distance_limit".into(),
+        Quantity::new(3_000.0, Unit::Meter).unwrap(),
+    );
+    inputs.insert(
+        "wing_loading_minimum".into(),
+        Quantity::new(300.0, Unit::Pascal).unwrap(),
+    );
+    inputs.insert(
+        "wing_loading_maximum".into(),
+        Quantity::new(9_000.0, Unit::Pascal).unwrap(),
+    );
+    let Err(SolverError::Failed(message)) = run(&ConstraintDiagram::new(), &inputs, resources)
+    else {
+        panic!("a missing design speed must not fall back to a default");
+    };
+    assert!(message.contains("design_speed"), "{message}");
+    assert!(diagram("b777", targets).is_ok());
+    let (mut inputs, resources) = fixture("b777");
+    for (port, value, unit) in [
+        ("design_speed", 120.0, Unit::MeterPerSecond),
+        ("landing_stall_speed_limit", 70.0, Unit::MeterPerSecond),
+        ("takeoff_distance_limit", 3_000.0, Unit::Meter),
+        ("wing_loading_minimum", 9_000.0, Unit::Pascal),
+        ("wing_loading_maximum", 300.0, Unit::Pascal),
+    ] {
+        inputs.insert(port.into(), Quantity::new(value, unit).unwrap());
+    }
+    assert!(run(&ConstraintDiagram::new(), &inputs, resources).is_err());
 }
 
 #[test]
