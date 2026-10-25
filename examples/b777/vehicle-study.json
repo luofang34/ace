@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "max_evaluations": 81,
+  "method": {
+    "kind": "grid",
+    "axes": {
+      "wing.area": [
+        {
+          "value": 410.0,
+          "unit": "m^2"
+        },
+        {
+          "value": 436.8,
+          "unit": "m^2"
+        },
+        {
+          "value": 465.0,
+          "unit": "m^2"
+        }
+      ],
+      "wing.span": [
+        {
+          "value": 62.7,
+          "unit": "m"
+        },
+        {
+          "value": 64.8,
+          "unit": "m"
+        },
+        {
+          "value": 66.75,
+          "unit": "m"
+        }
+      ],
+      "engine.sizing_factor": [
+        {
+          "value": 0.92,
+          "unit": "1"
+        },
+        {
+          "value": 1.0,
+          "unit": "1"
+        },
+        {
+          "value": 1.08,
+          "unit": "1"
+        }
+      ],
+      "weight.maximum_fuel": [
+        {
+          "value": 138000,
+          "unit": "kg"
+        },
+        {
+          "value": 145538,
+          "unit": "kg"
+        },
+        {
+          "value": 153000,
+          "unit": "kg"
+        }
+      ]
+    }
+  }
+}
