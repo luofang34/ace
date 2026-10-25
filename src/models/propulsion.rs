@@ -1,6 +1,6 @@
 use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 pub(crate) use crate::domain::propulsion::PropulsionMode as OperatingMode;
-use crate::domain::propulsion::{TableFuelValue, TablePropulsionDeck};
+use crate::domain::propulsion::TablePropulsionDeck;
 use crate::domain::result::{AerodynamicState, AtmosphereState, ModelMetadata, PropulsionState};
 use crate::domain::schema::{
     EngineProfile, PistonProfile, PropellerProfile, ResolvedScenario, SimpleTurbofanDeck,
@@ -254,14 +254,7 @@ fn evaluate_table_turbofan(
 #[derive(Debug)]
 pub(crate) struct RequiredThrustFuelFlow {
     pub(crate) flow_kg_s: f64,
-    pub(crate) basis: ThrustFuelBasis,
     pub(crate) warnings: Vec<Diagnostic>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ThrustFuelBasis {
-    Tsfc,
-    SpecificImpulse,
 }
 
 pub(crate) fn fuel_flow_for_required_thrust(
@@ -275,10 +268,6 @@ pub(crate) fn fuel_flow_for_required_thrust(
         let point = table_deck::evaluate(deck, mode, altitude_m, mach)?;
         return Ok(RequiredThrustFuelFlow {
             flow_kg_s: point.fuel.flow_for_thrust(thrust_n),
-            basis: match point.fuel {
-                TableFuelValue::TsfcKgNHr(_) => ThrustFuelBasis::Tsfc,
-                TableFuelValue::SpecificImpulseS(_) => ThrustFuelBasis::SpecificImpulse,
-            },
             warnings: point.warnings,
         });
     }
@@ -295,7 +284,6 @@ pub(crate) fn fuel_flow_for_required_thrust(
     };
     Ok(RequiredThrustFuelFlow {
         flow_kg_s: tsfc * thrust_n / 3600.0,
-        basis: ThrustFuelBasis::Tsfc,
         warnings: Vec::new(),
     })
 }

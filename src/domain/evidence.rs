@@ -13,12 +13,12 @@ pub(crate) mod archive;
 mod mass_properties;
 mod workflow;
 
+#[cfg(test)]
 pub(crate) use archive::StudyArchive;
 pub(crate) use mass_properties::MassPropertiesEvidence;
-pub(crate) use workflow::{
-    CandidateOutcome, CandidateSummary, OptimizerCheckpoint, StudyArchiveWorkflow, StudyLoadResult,
-    StudyRunResult, StudyTradeSurface,
-};
+#[cfg(test)]
+pub(crate) use workflow::CandidateOutcome;
+pub(crate) use workflow::StudyArchiveWorkflow;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

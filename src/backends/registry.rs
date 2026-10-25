@@ -45,10 +45,6 @@ impl BackendRegistry {
         }
     }
 
-    pub(crate) fn native(&self) -> &NativeBackend {
-        &self.native
-    }
-
     pub(crate) fn openvsp(&self) -> AexResult<&OpenVspBackend> {
         self.openvsp
             .as_ref()

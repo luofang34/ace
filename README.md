@@ -481,15 +481,14 @@ Configure an MCP client to launch:
 cargo run --bin aex -- mcp serve
 ```
 
-The server exposes validation, profile lookup, scenario resolution, point
-performance, constraints, payload-range, report, and editable
-aircraft-design experiment tools. Portable studies can be loaded, run or resumed, queried
-by immutable evidence ID, and explicitly promoted into one editable design.
-The shared capability manifest advertises versioned light-aircraft and
-transport requirement templates with achieved metrics and provenance.
-Study execution stores content-addressed evaluations and checkpoints under
-`.ace/studies/`; it does not generate candidate directories. The server writes
-protocol messages only to stdout; diagnostics use `tracing` on stderr.
+The server exposes vehicle synthesis, study, promotion, editing, comparison,
+payload-range, chart and report tools, plus validation, profile lookup,
+scenario resolution and point performance. Vehicle studies return verifiable
+archives, and one feasible candidate is promoted explicitly into a new vehicle
+file. The shared capability manifest advertises versioned light-aircraft and
+transport requirement templates with achieved metrics and provenance. The
+server writes protocol messages only to stdout; diagnostics use `tracing` on
+stderr.
 
 Native conceptual geometry and performance analysis are always available.
 OpenVSP is discovered automatically when its headless `vspscript` executable

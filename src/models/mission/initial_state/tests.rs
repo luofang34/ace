@@ -2,7 +2,6 @@ use std::io;
 
 use crate::domain::schema::{MissionInitialState, SegmentKind};
 use crate::models::mission::MissionSimulator;
-use crate::models::mission_power;
 use crate::services::resolver::usable_initial_fuel_kg;
 use crate::test_support::example_scenario;
 
@@ -109,33 +108,5 @@ fn zero_initial_fuel_is_a_valid_depleted_start() -> Result<(), Box<dyn std::erro
 
     assert!((mission.initial_takeoff_mass_kg - empty_mass).abs() < 1.0e-8);
     assert!(mission.fuel_exhausted);
-    Ok(())
-}
-
-#[test]
-fn mission_power_uses_the_simulated_inherited_speed() -> Result<(), Box<dyn std::error::Error>> {
-    let mut scenario = example_scenario("c172")?;
-    let cruise = scenario
-        .mission
-        .segments
-        .iter_mut()
-        .find(|segment| segment.kind == SegmentKind::Cruise)
-        .ok_or_else(|| io::Error::other("C172 mission has no cruise"))?;
-    cruise.distance_m = Some(100.0);
-    cruise.true_airspeed_m_s = None;
-    cruise.indicated_airspeed_m_s = None;
-    cruise.mach = None;
-    scenario.mission.segments = vec![cruise.clone()];
-    let mut state = state_with_fuel(None, Some(1.0));
-    state.true_airspeed_m_s = Some(60.0);
-    scenario.mission.initial_state = Some(state);
-
-    let mission = MissionSimulator::new(scenario.clone()).simulate()?;
-    let screen = mission_power::evaluate(&scenario, &mission)?;
-    let point = screen
-        .points
-        .first()
-        .ok_or_else(|| io::Error::other("mission-power point is missing"))?;
-    assert!((point.true_airspeed.value - 60.0).abs() < 1.0e-8);
     Ok(())
 }

@@ -50,6 +50,8 @@ pub(crate) fn evaluate_requirements(
     Ok(evaluations)
 }
 
+/// Headline verdict over scenario requirement evaluations, used by the requirement tests.
+#[cfg(test)]
 pub(crate) fn hard_requirements_passed(
     mission_completed: bool,
     declared: &[Requirement],
@@ -59,6 +61,7 @@ pub(crate) fn hard_requirements_passed(
     mission_completed && passed == total
 }
 
+#[cfg(test)]
 pub(crate) fn hard_requirement_counts(
     declared: &[Requirement],
     evaluations: &[RequirementEvaluation],
@@ -73,23 +76,12 @@ pub(crate) fn hard_requirement_counts(
     (passed, total)
 }
 
-pub(crate) fn failed_hard_requirement_ids(
-    declared: &[Requirement],
-    evaluations: &[RequirementEvaluation],
-) -> Vec<String> {
-    declared
-        .iter()
-        .filter(|requirement| requirement.severity == "hard")
-        .filter(|requirement| !requirement_passed(requirement, evaluations))
-        .map(|requirement| requirement.id.clone())
-        .collect()
-}
-
+#[cfg(test)]
 fn requirement_passed(requirement: &Requirement, evaluations: &[RequirementEvaluation]) -> bool {
     evaluations.iter().any(|evaluation| {
         evaluation.id == requirement.id
             && evaluation.metric == requirement.metric
-            && evaluation.is_passed()
+            && evaluation.resolved_status() == crate::domain::result::RequirementStatus::Pass
     })
 }
 
