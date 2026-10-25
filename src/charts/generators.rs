@@ -14,10 +14,12 @@ use crate::models::performance::PointAnalyzer;
 mod constraints;
 mod study;
 mod vehicle_payload_range;
+mod vehicle_report;
 
 pub(crate) use constraints::constraints;
 pub(crate) use study::study;
 pub(crate) use vehicle_payload_range::vehicle_payload_range;
+pub(crate) use vehicle_report::{vehicle_mission_mass, vehicle_requirement_margins};
 
 pub(crate) fn drag_polar(scenario: &ResolvedScenario) -> AexResult<ChartSpec> {
     let config = &scenario.aircraft.aerodynamics.clean;

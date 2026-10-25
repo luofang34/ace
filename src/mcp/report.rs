@@ -13,20 +13,46 @@ pub(super) fn generate_report_blocking(
     request: ReportRequest,
 ) -> AexResult<Value> {
     validate_format(&request.format)?;
-    match (&request.scenario_path, &request.run_id) {
-        (Some(_), Some(_)) => Err(AexError::validation(
+    let sources = [
+        &request.scenario_path,
+        &request.run_id,
+        &request.vehicle_path,
+    ];
+    if sources.iter().filter(|source| source.is_some()).count() > 1 {
+        return Err(AexError::validation(
             "AMBIGUOUS_REPORT_SOURCE",
             "report",
-            "provide scenario_path or run_id, not both",
-        )),
-        (Some(scenario_path), None) => concept_report(service, scenario_path, &request),
+            "provide exactly one of vehicle_path, scenario_path or run_id",
+        ));
+    }
+    if let Some(vehicle_path) = &request.vehicle_path {
+        return vehicle_report(vehicle_path, &request);
+    }
+    match (&request.scenario_path, &request.run_id) {
+        (Some(scenario_path), _) => concept_report(service, scenario_path, &request),
         (None, Some(run_id)) => run_report(service, run_id, &request),
         (None, None) => Err(AexError::validation(
             "MISSING_REPORT_SOURCE",
             "report",
-            "provide scenario_path for a concept report or run_id for a run report",
+            "provide vehicle_path, scenario_path or run_id",
         )),
     }
+}
+
+fn vehicle_report(vehicle_path: &str, request: &ReportRequest) -> AexResult<Value> {
+    let report = crate::services::vehicle_report::report_blocking(
+        Path::new(vehicle_path),
+        &Default::default(),
+    )?;
+    let content = (request.format == "markdown")
+        .then(|| crate::services::vehicle_report::markdown(&report))
+        .transpose()?;
+    Ok(json!({
+        "format": request.format,
+        "sections": request.sections,
+        "content": content,
+        "report": report,
+    }))
 }
 
 fn concept_report(
