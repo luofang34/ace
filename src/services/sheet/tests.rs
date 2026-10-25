@@ -204,7 +204,7 @@ async fn shutdown_with_events(server: SheetServer, events: &mut BufReader<TcpStr
     // An unread publication can fill the socket and intentionally reach the shutdown deadline.
     let drain = async {
         let mut tail = Vec::new();
-        tokio::time::timeout(Duration::from_secs(5), events.read_to_end(&mut tail))
+        tokio::time::timeout(HANG_GUARD, events.read_to_end(&mut tail))
             .await
             .unwrap()
             .unwrap();
