@@ -34,6 +34,12 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             artifact: optional(args, "artifact"),
             common: common(args)?,
         }),
+        "explain" => Ok(Command::Explain {
+            scenario: required(args, "scenario")?,
+            parameter: required(args, "parameter")?,
+            depth: required(args, "depth")?,
+            common: common(args)?,
+        }),
         "uncertainty" => Ok(Command::Uncertainty {
             scenario: required(args, "scenario")?,
             plan: required(args, "plan")?,

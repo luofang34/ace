@@ -444,7 +444,7 @@ cargo run --bin aex -- mcp serve
 ```
 
 The server exposes validation, profile lookup, scenario resolution, point
-performance, constraints, payload-range, explanation, report, and editable
+performance, constraints, payload-range, report, and editable
 aircraft-design experiment tools. `auto_refine_design` performs a bounded
 native search, requires conceptual aerodynamic, structural, mission-power, and
 requirement gates to pass, writes a new design, and can run an explicit final

@@ -63,3 +63,25 @@ pub(super) fn compare(request: CompareRequest) -> Result<Json<ObjectOutput>, Err
         .map_err(super::domain_error::mcp_error)?;
     canonical_json_output(result)
 }
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ExplainRequest {
+    vehicle_path: String,
+    /// Canonical parameter identifier.
+    parameter: String,
+    /// Producer levels to walk upstream, 0 through 16; defaults to 2.
+    depth: Option<u32>,
+    #[serde(default)]
+    overrides: BTreeMap<String, String>,
+}
+
+pub(super) fn explain(request: ExplainRequest) -> Result<Json<ObjectOutput>, ErrorData> {
+    let result = crate::services::vehicle_explanation::explain_blocking(
+        Path::new(&request.vehicle_path),
+        &request.overrides,
+        &request.parameter,
+        request.depth.unwrap_or(2),
+    )
+    .map_err(super::domain_error::mcp_error)?;
+    canonical_json_output(result)
+}
