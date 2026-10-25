@@ -31,6 +31,13 @@ pub(super) fn command() -> Command {
                 )
                 .arg(optional_path("save-as")),
         ))
+        .subcommand(output(
+            Command::new("promote")
+                .about("Write a verified, feasible study candidate as a new vehicle file")
+                .arg(path("archive"))
+                .arg(Arg::new("candidate").required(true))
+                .arg(optional_path("save-as").required(true)),
+        ))
         .subcommand(common(
             Command::new("explain")
                 .about("Explain a vehicle parameter from its calculation evidence")

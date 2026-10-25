@@ -13,6 +13,7 @@ Vehicle commands:
 aex synthesize VEHICLE
 aex study VEHICLE --plan PLAN [--chart PARAMETER [--artifact SVG]]
 aex explain VEHICLE PARAMETER [--depth N]
+aex promote ARCHIVE CANDIDATE --save-as PATH
 aex edit VEHICLE [--edits FILE] [--set PARAMETER=VALUE]... [--expected-revision N] [--save-as PATH]
 aex compare VEHICLE... --metric PARAMETER
 aex uncertainty VEHICLE --plan PLAN

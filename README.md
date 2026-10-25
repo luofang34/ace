@@ -445,13 +445,8 @@ cargo run --bin aex -- mcp serve
 
 The server exposes validation, profile lookup, scenario resolution, point
 performance, constraints, payload-range, report, and editable
-aircraft-design experiment tools. `auto_refine_design` performs a bounded
-native search, requires conceptual aerodynamic, structural, mission-power, and
-requirement gates to pass, writes a new design, and can run an explicit final
-OpenVSP verification. Portable studies can be loaded, run or resumed, queried
+aircraft-design experiment tools. Portable studies can be loaded, run or resumed, queried
 by immutable evidence ID, and explicitly promoted into one editable design.
-Mission simulation is compact by default and returns an immutable run
-reference; `detail: true` or `generate_report` retrieves the full result.
 The shared capability manifest advertises versioned light-aircraft and
 transport requirement templates with achieved metrics and provenance.
 Study execution stores content-addressed evaluations and checkpoints under
