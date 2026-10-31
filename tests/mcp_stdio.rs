@@ -65,6 +65,7 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
                 "compare_vehicles",
                 "vehicle_payload_range",
                 "chart_vehicle_analysis",
+                "vehicle_catalog",
                 "list_analysis_backends",
             ] {
                 assert!(tools.iter().any(|tool| tool.name == expected));
