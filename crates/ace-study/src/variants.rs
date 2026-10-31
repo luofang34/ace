@@ -185,6 +185,7 @@ fn edit_target(edit: &ModelEdit) -> String {
         ModelEdit::DesignVariables { .. } => "design_variables".into(),
         ModelEdit::Production { .. } => "production".into(),
         ModelEdit::ProductionPart { id, .. } => format!("production.part:{id}"),
+        ModelEdit::CatalogEntry { id, .. } => format!("catalog:{id}"),
     }
 }
 

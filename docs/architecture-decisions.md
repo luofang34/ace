@@ -442,3 +442,15 @@ ADR-026. Cost effectiveness ranks only fleets that pass; a ratio is never
 allowed to buy back a failed mission. Loss rates, prices and environment
 probabilities are inputs whose provenance is the user's responsibility, and
 outcomes are never better than the evidence behind their capabilities.
+
+## ADR-036 — Reusable solver data lives in the vehicle catalog
+
+Engine, propeller and similar profiles are reusable, versioned data, but a
+vehicle file must stay self-contained so its calculations can be replayed. The
+vehicle model therefore carries a catalog of typed entries (`kind`, `version`,
+source and a kind-specific document). An analysis selects entries explicitly;
+the selected entries enter its resources and thus its calculation evidence and
+invalidation, exactly like missions or the production bill. The model only
+checks the envelope; each solver validates the document kinds it reads and
+rejects shapes it does not support. Catalog entries are edited through typed
+transactions, so swapping an engine profile is an ordinary validated change.
