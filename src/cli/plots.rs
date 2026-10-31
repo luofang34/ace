@@ -87,7 +87,7 @@ fn generate_chart(
         PlotKind::Constraints => {
             let (_, result) =
                 service.constraints_blocking(&arguments.scenario, overrides, 300.0, 9000.0, 80)?;
-            Ok(constraints(scenario, &result))
+            Ok(constraints(&scenario.name, &result))
         }
         PlotKind::MissionMass => {
             let (_, result) = service.mission_blocking(&arguments.scenario, overrides)?;

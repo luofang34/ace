@@ -60,7 +60,25 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
                     maximum_payload: &arguments.maximum_payload,
                 },
             )?;
+            let result = crate::services::vehicle_chart::payload_range_blocking(
+                result,
+                arguments.artifact.as_deref(),
+            )?;
             emit_canonical_blocking(&result, &arguments.output)
+        }
+        Command::Chart {
+            vehicle,
+            analysis,
+            artifact,
+            common,
+        } => {
+            let result = crate::services::vehicle_chart::analysis_blocking(
+                &vehicle,
+                &common.override_map(),
+                &analysis,
+                artifact.as_deref(),
+            )?;
+            emit_canonical_blocking(&result, &common.output)
         }
         Command::Profile { profile } => execute_profile(&service, profile),
         Command::Plot(arguments) => execute_plot(&service, arguments),

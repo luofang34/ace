@@ -19,6 +19,12 @@ pub(super) enum Command {
     },
     Compare(CompareArgs),
     PayloadRange(PayloadRangeArgs),
+    Chart {
+        vehicle: PathBuf,
+        analysis: String,
+        artifact: Option<PathBuf>,
+        common: CommonArgs,
+    },
     Profile {
         profile: ProfileCommand,
     },
@@ -144,6 +150,7 @@ pub(super) struct PayloadRangeArgs {
     pub(super) remaining: String,
     pub(super) maximum_takeoff_mass: String,
     pub(super) maximum_payload: String,
+    pub(super) artifact: Option<PathBuf>,
     pub(super) output: OutputArgs,
 }
 

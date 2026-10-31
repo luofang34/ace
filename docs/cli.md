@@ -16,7 +16,8 @@ aex explain VEHICLE PARAMETER [--depth N]
 aex promote ARCHIVE CANDIDATE --save-as PATH
 aex edit VEHICLE [--edits FILE] [--set PARAMETER=VALUE]... [--expected-revision N] [--save-as PATH]
 aex compare VEHICLE... --metric PARAMETER
-aex payload-range VEHICLE --distance P --remaining P --maximum-takeoff-mass P --maximum-payload P
+aex payload-range VEHICLE --distance P --remaining P --maximum-takeoff-mass P --maximum-payload P [--artifact SVG]
+aex chart VEHICLE ANALYSIS [--artifact SVG]
 aex uncertainty VEHICLE --plan PLAN
 aex calibrate VEHICLE --case CASE
 aex campaign CAMPAIGN
@@ -38,7 +39,12 @@ other items. For each loading it brackets and refines the route distance
 `--distance` until `--remaining` (fuel left on the most demanding normal or
 reserve path) reaches zero, to a relative bracket width of 1e-3. A loading with
 no fuel below maximum takeoff mass reports zero range with a note; a mission
-that fails for a reason other than fuel is an error.
+that fails for a reason other than fuel is an error. `--artifact` also writes
+the payload-against-range chart as SVG.
+
+`aex chart` synthesizes the vehicle and charts one declared analysis from its
+run details; `aircraft.constraint_diagram` analyses draw the constraint curves
+and feasible loading region. Other plugins return `UNSUPPORTED_ANALYSIS_CHART`.
 
 Scenario commands:
 

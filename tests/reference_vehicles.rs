@@ -219,3 +219,65 @@ fn b777_payload_range_brackets_the_scenario_corners() -> Result<(), Box<dyn Erro
     assert!(design > 7_300.0, "{design}");
     Ok(())
 }
+
+#[test]
+fn vehicle_constraint_and_payload_range_charts_render_from_run_evidence()
+-> Result<(), Box<dyn Error>> {
+    let directory = tempfile::tempdir()?;
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/b777");
+    let diagram = directory.path().join("constraints.svg");
+    let output = cargo_bin_cmd!("aex")
+        .arg("chart")
+        .arg(root.join("vehicle.json"))
+        .arg("constraints")
+        .arg("--artifact")
+        .arg(&diagram)
+        .args(["--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let chart: Value = serde_json::from_slice(&output.stdout)?;
+    let curves: Vec<_> = chart["spec"]["series"]
+        .as_array()
+        .ok_or("missing series")?
+        .iter()
+        .map(|series| series["id"].clone())
+        .collect();
+    assert_eq!(
+        curves,
+        ["climb_rate", "cruise_speed", "takeoff_distance_approximate"]
+    );
+    let selected = chart["spec"]["annotations"][0]["x"]
+        .as_f64()
+        .ok_or("no annotation")?;
+    assert!((7_500.0..=8_200.0).contains(&selected), "{selected}");
+    assert!(std::fs::read_to_string(&diagram)?.starts_with("<svg"));
+
+    let corners = directory.path().join("payload-range.svg");
+    let output = cargo_bin_cmd!("aex")
+        .arg("payload-range")
+        .arg(root.join("vehicle.json"))
+        .args(["--distance", "mission.distance"])
+        .args(["--remaining", "mission.remaining_fuel"])
+        .args(["--maximum-takeoff-mass", "weight.mtow"])
+        .args(["--maximum-payload", "weight.maximum_payload"])
+        .arg("--artifact")
+        .arg(&corners)
+        .args(["--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let result: Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(result["points"].as_array().map(Vec::len), Some(4));
+    assert_eq!(result["chart"]["spec"]["x"]["unit"], "nmi");
+    assert_eq!(
+        result["chart"]["spec"]["annotations"]
+            .as_array()
+            .map(Vec::len),
+        Some(4)
+    );
+    assert!(std::fs::read_to_string(&corners)?.starts_with("<svg"));
+    Ok(())
+}

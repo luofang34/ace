@@ -73,6 +73,8 @@ pub(super) struct PayloadRangeRequest {
     remaining: String,
     maximum_takeoff_mass: String,
     maximum_payload: String,
+    /// Write the payload-range chart as SVG to this path.
+    artifact_path: Option<String>,
 }
 
 pub(super) fn payload_range(request: PayloadRangeRequest) -> Result<Json<ObjectOutput>, ErrorData> {
@@ -84,6 +86,34 @@ pub(super) fn payload_range(request: PayloadRangeRequest) -> Result<Json<ObjectO
             maximum_takeoff_mass: &request.maximum_takeoff_mass,
             maximum_payload: &request.maximum_payload,
         },
+    )
+    .and_then(|result| {
+        crate::services::vehicle_chart::payload_range_blocking(
+            result,
+            request.artifact_path.as_deref().map(std::path::Path::new),
+        )
+    })
+    .map_err(super::domain_error::mcp_error)?;
+    canonical_json_output(result)
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct ChartRequest {
+    vehicle_path: String,
+    /// Analysis identifier declared by the vehicle.
+    analysis: String,
+    /// Write the chart as SVG to this path.
+    artifact_path: Option<String>,
+    #[serde(default)]
+    overrides: BTreeMap<String, String>,
+}
+
+pub(super) fn chart(request: ChartRequest) -> Result<Json<ObjectOutput>, ErrorData> {
+    let result = crate::services::vehicle_chart::analysis_blocking(
+        request.vehicle_path.as_ref(),
+        &request.overrides,
+        &request.analysis,
+        request.artifact_path.as_deref().map(std::path::Path::new),
     )
     .map_err(super::domain_error::mcp_error)?;
     canonical_json_output(result)
