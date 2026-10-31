@@ -3,7 +3,6 @@
 #![cfg(test)]
 
 use std::error::Error;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use assert_cmd::cargo::cargo_bin_cmd;
@@ -220,23 +219,21 @@ fn calibration_bands_cover_both_aircraft_classes() -> Result<(), Box<dyn Error>>
 }
 
 #[test]
-fn payload_range_plot_writes_an_svg_artifact() -> Result<(), Box<dyn Error>> {
+fn scenario_constraint_and_payload_range_commands_are_retired() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
-    let artifact = temporary.path().join("payload-range.svg");
     let b777_path = scenario("b777");
-    command(temporary.path())
-        .args([
-            "plot",
-            "payload-range",
-            &b777_path.to_string_lossy(),
-            "--output",
-            &artifact.to_string_lossy(),
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success();
-    assert!(fs::metadata(&artifact)?.len() > 100);
+    let b777 = b777_path.to_string_lossy();
+    for arguments in [
+        vec!["analyze", "constraints", b777.as_ref()],
+        vec!["analyze", "payload-range", b777.as_ref()],
+        vec!["plot", "constraints", b777.as_ref()],
+        vec!["plot", "payload-range", b777.as_ref()],
+    ] {
+        command(temporary.path())
+            .args(&arguments)
+            .assert()
+            .failure();
+    }
     Ok(())
 }
 

@@ -2,7 +2,6 @@ mod capabilities;
 mod domain_error;
 mod handler;
 mod output;
-mod parameters;
 mod report;
 mod schema;
 pub(crate) mod serialization;
@@ -18,20 +17,16 @@ use rmcp::handler::server::wrapper::{Json, Parameters};
 use rmcp::{ErrorData, handler::server::router::tool::ToolRouter, tool, tool_router};
 use serde_json::{Value, json};
 
-use crate::charts::generators::{constraints, payload_range};
-use crate::charts::renderer::render_svg_blocking;
-
 use crate::domain::quantity::{Dimension, parse_quantity};
 use crate::domain::warning::enforce_strict;
 use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::validator::{error_validation, validate_document_value};
 use domain_error::mcp_error;
 use output::{ObjectOutput, json_output, json_output_for_scenario, json_output_for_units};
-use parameters::parse_wing_loading;
 use schema::{
-    ConstraintRequest, GetProfileRequest, ListProfilesRequest, LoadStudyRequest,
-    PayloadRangeRequest, PointRequest, PromoteStudyCandidateRequest, QueryStudyRequest,
-    ReportRequest, RunStudyRequest, ScenarioRequest, ValidateDocumentRequest,
+    GetProfileRequest, ListProfilesRequest, LoadStudyRequest, PointRequest,
+    PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
+    ScenarioRequest, ValidateDocumentRequest,
 };
 
 #[derive(Clone)]
@@ -300,39 +295,6 @@ impl AexMcpServer {
         )
     }
 
-    #[tool(description = "Generate structured constraint data and an optional SVG artifact")]
-    fn generate_constraint_diagram(
-        &self,
-        Parameters(request): Parameters<ConstraintRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let start = parse_wing_loading(&request.wing_loading.start).map_err(mcp_error)?;
-        let stop = parse_wing_loading(&request.wing_loading.stop).map_err(mcp_error)?;
-        let (scenario, result) = self
-            .service
-            .constraints_blocking(
-                Path::new(&request.scenario_path),
-                &request.overrides,
-                start,
-                stop,
-                request.wing_loading.count,
-            )
-            .map_err(mcp_error)?;
-        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
-        let chart = constraints(&scenario.name, &result);
-        if let Some(path) = &request.artifact_path {
-            render_svg_blocking(&chart, Path::new(path)).map_err(mcp_error)?;
-        }
-        json_output_for_scenario(
-            json!({
-                "result": result,
-                "chart_spec": chart,
-                "artifact_path": request.artifact_path,
-            }),
-            Path::new(&request.scenario_path),
-            request.units.as_deref(),
-        )
-    }
-
     #[tool(description = "Generate an organized concept-design report or immutable-run report")]
     fn generate_report(
         &self,
@@ -345,31 +307,6 @@ impl AexMcpServer {
             Some(path) => json_output_for_scenario(value, Path::new(&path), units.as_deref()),
             None => json_output_for_units(value, units.as_deref()),
         }
-    }
-
-    #[tool(description = "Generate payload-range data, chart specification, and optional SVG")]
-    fn generate_payload_range(
-        &self,
-        Parameters(request): Parameters<PayloadRangeRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let (scenario, result) = self
-            .service
-            .payload_range_blocking(Path::new(&request.scenario_path), &request.overrides)
-            .map_err(mcp_error)?;
-        enforce_strict(request.strict, &result.warnings).map_err(mcp_error)?;
-        let chart = payload_range(&scenario, &result);
-        if let Some(path) = &request.artifact_path {
-            render_svg_blocking(&chart, Path::new(path)).map_err(mcp_error)?;
-        }
-        json_output_for_scenario(
-            json!({
-                "result": result,
-                "chart_spec": chart,
-                "artifact_path": request.artifact_path,
-            }),
-            Path::new(&request.scenario_path),
-            request.units.as_deref(),
-        )
     }
 }
 

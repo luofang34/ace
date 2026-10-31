@@ -9,8 +9,6 @@ structured JSON output for:
 - `get_profile`
 - `resolve_scenario`
 - `calculate_point_performance`
-- `generate_constraint_diagram`
-- `generate_payload_range`
 - `generate_report`
 - `list_analysis_backends`
 - `load_design_study`
@@ -37,7 +35,7 @@ field overrides the project. MCP and CLI responses share the same presentation
 serializer: canonical values remain SI, while Aviation-US display metadata uses
 kt, ft, lb, and nmi according to quantity semantics.
 
-Scenario resolution, point, constraint, and payload-range
+Scenario resolution and point
 requests accept optional `strict` (default `false`). The shared
 CLI/MCP [strict warning policy](strict-warning-policy.md) returns
 `STRICT_WARNING_FAILURE` when a registered promotable warning is present;

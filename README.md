@@ -256,7 +256,7 @@ power-to-weight) over the largest cruise, climb or approximate takeoff
 requirement at the design wing loading, and the stall limit over the design
 wing loading. The sampled curves, feasible mask and active constraint are kept
 in the run details. The curves use sea-level dynamic pressure at the design
-speed, as in the scenario `analyze constraints` command.
+speed. `aex chart VEHICLE ANALYSIS --artifact SVG` draws them.
 
 Rate-based operations require one currency, price year and cost scope. Native
 rates use USD, block hours, cycles, turnaround time and annual ownership cost.
@@ -452,8 +452,10 @@ miles, speeds use knots, altitudes use feet, and masses use pounds:
 ```bash
 cargo run --bin aex -- plot power-curves examples/c172/scenario.yaml \
   --output c172-power.svg --format json
-cargo run --bin aex -- plot payload-range examples/b777/scenario.yaml \
-  --output b777-payload-range.svg --format json
+cargo run --bin aex -- payload-range examples/b777/vehicle.json \
+  --distance mission.distance --remaining mission.remaining_fuel \
+  --maximum-takeoff-mass weight.mtow --maximum-payload weight.maximum_payload \
+  --artifact b777-payload-range.svg --format json
 ```
 
 Every successful analysis is stored below `runs/<run-id>/` with original and
