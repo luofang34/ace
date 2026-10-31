@@ -20,3 +20,9 @@ known gaps documented in `docs/llm-workflow-evaluation.md`:
 Guardrail tests assert honest `unsupported` diagnostics for the remaining
 inexpressible trajectory, plus physical engine-off behavior, air-launch state,
 and rocket mass flow.
+
+`vehicle.json` states the air-launched record speed flight (Mach 6.7 near
+102,100 ft) in the vehicle model. The boost target lies above the flight
+phases' declared altitude domain, so the mission stops at that stage's domain
+check; the performance envelope stops at the registered structural, ISA and
+polar domains. Mission and performance requirements stay `UNKNOWN`.
