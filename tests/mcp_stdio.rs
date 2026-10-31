@@ -11,12 +11,12 @@ use rmcp::model::CallToolRequestParams;
 use rmcp::transport::TokioChildProcess;
 use serde_json::json;
 
-#[path = "mcp_stdio/backend_preflight.rs"]
-mod backend_preflight;
 #[path = "mcp_stdio/concept_flow.rs"]
 mod concept_flow;
 #[path = "mcp_stdio/domain_error.rs"]
 mod domain_error;
+#[path = "mcp_stdio/report_sources.rs"]
+mod report_sources;
 
 fn scenario(name: &str) -> String {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

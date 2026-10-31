@@ -60,11 +60,9 @@ pub(super) struct PointRequestCondition {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ReportRequest {
     pub(super) run_id: Option<String>,
-    pub(super) scenario_path: Option<String>,
     /// Report on a synthesized vehicle file.
     pub(super) vehicle_path: Option<String>,
     pub(super) units: Option<String>,
-    pub(super) backend: Option<String>,
     pub(super) format: String,
     #[serde(default)]
     pub(super) sections: Vec<String>,
