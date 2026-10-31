@@ -222,7 +222,8 @@ impl PlotKind {
 
 #[derive(Debug)]
 pub(super) struct ReportArgs {
-    pub(super) run_id: String,
+    pub(super) run_id: Option<String>,
+    pub(super) vehicle: Option<PathBuf>,
     pub(super) format: String,
     pub(super) output: OutputArgs,
 }

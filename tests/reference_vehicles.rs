@@ -386,3 +386,49 @@ fn model501_engine_trade_ranks_candidates_by_delivery_radius() -> Result<(), Box
     assert!(radii[0] > radii[1] && radii[1] > radii[2], "{radii:?}");
     Ok(())
 }
+
+#[test]
+fn vehicle_report_states_the_verdict_margins_and_evidence_charts() -> Result<(), Box<dyn Error>> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/b777/vehicle.json");
+    let output = cargo_bin_cmd!("aex")
+        .arg("report")
+        .arg("--vehicle")
+        .arg(&path)
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    // Markdown is emitted as one JSON string, like the stored-run report.
+    let text: String = serde_json::from_slice(&output.stdout)?;
+    assert!(
+        text.starts_with("# B777-300ER-Class Reference Aircraft"),
+        "{text}"
+    );
+    assert!(text.contains("- Feasibility: provisional"), "{text}");
+    assert!(text.contains("| takeoff_field_length | PASS |"), "{text}");
+    let output = cargo_bin_cmd!("aex")
+        .arg("report")
+        .arg("--vehicle")
+        .arg(&path)
+        .args(["--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let report: Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(report["decision"]["hard_failed"], 0);
+    assert_eq!(report["decision"]["hard_unknown"], 0);
+    let sections: Vec<_> = report["charts"]
+        .as_array()
+        .ok_or("missing charts")?
+        .iter()
+        .map(|chart| chart["section"].clone())
+        .collect();
+    assert_eq!(sections, ["decision", "sizing", "mission"]);
+    cargo_bin_cmd!("aex")
+        .args(["report", "some-run", "--vehicle"])
+        .arg(&path)
+        .assert()
+        .failure();
+    Ok(())
+}

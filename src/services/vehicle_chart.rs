@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use ace_engine::ValueStatus;
+use ace_engine::{RunRecord, ValueStatus};
 use serde::Serialize;
 
 use crate::charts::generators::{constraints, vehicle_payload_range};
@@ -78,33 +78,17 @@ pub(crate) fn analysis_blocking(
             ),
         ));
     }
-    let plugin = run
-        .plugin
-        .as_ref()
-        .map(|identity| identity.id.clone())
-        .unwrap_or_default();
-    let spec = match plugin.as_str() {
-        "aircraft.constraint_diagram" => {
-            let diagram: ConstraintResult = serde_json::from_value(run.details["diagram"].clone())
-                .map_err(|source| {
-                    AexError::analysis(
-                        "INVALID_ANALYSIS_EVIDENCE",
-                        format!("{analysis} details are not a constraint diagram: {source}"),
-                    )
-                })?;
-            constraints(&session.model().name, &diagram)
-        }
-        _ => {
-            return Err(AexError::validation(
-                "UNSUPPORTED_ANALYSIS_CHART",
-                analysis.to_owned(),
-                format!(
-                    "{plugin} has no chart; charted plugins: {}",
-                    CHARTED_PLUGINS.join(", ")
-                ),
-            ));
-        }
-    };
+    let plugin = plugin_id(run);
+    let spec = run_chart(&session.model().name, analysis, run)?.ok_or_else(|| {
+        AexError::validation(
+            "UNSUPPORTED_ANALYSIS_CHART",
+            analysis.to_owned(),
+            format!(
+                "{plugin} has no chart; charted plugins: {}",
+                CHARTED_PLUGINS.join(", ")
+            ),
+        )
+    })?;
     if let Some(artifact) = artifact {
         render_svg_blocking(&spec, artifact)?;
     }
@@ -115,6 +99,34 @@ pub(crate) fn analysis_blocking(
         spec,
         artifact_path: artifact.map(Path::to_path_buf),
     })
+}
+
+fn plugin_id(run: &RunRecord) -> String {
+    run.plugin
+        .as_ref()
+        .map(|identity| identity.id.clone())
+        .unwrap_or_default()
+}
+
+/// The chart drawn from one run's recorded details, or `None` for a plugin without one.
+pub(crate) fn run_chart(
+    name: &str,
+    analysis: &str,
+    run: &RunRecord,
+) -> AexResult<Option<ChartSpec>> {
+    match plugin_id(run).as_str() {
+        "aircraft.constraint_diagram" => {
+            let diagram: ConstraintResult = serde_json::from_value(run.details["diagram"].clone())
+                .map_err(|source| {
+                    AexError::analysis(
+                        "INVALID_ANALYSIS_EVIDENCE",
+                        format!("{analysis} details are not a constraint diagram: {source}"),
+                    )
+                })?;
+            Ok(Some(constraints(name, &diagram)))
+        }
+        _ => Ok(None),
+    }
 }
 
 /// Attach and render the payload-range chart when an artifact path is given.
