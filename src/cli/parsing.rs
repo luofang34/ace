@@ -41,6 +41,12 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             save_as: optional(args, "save-as"),
             common: common(args)?,
         }),
+        "promote" => Ok(Command::Promote {
+            archive: required(args, "archive")?,
+            candidate: required(args, "candidate")?,
+            save_as: required(args, "save-as")?,
+            output: output(args)?,
+        }),
         "explain" => Ok(Command::Explain {
             scenario: required(args, "scenario")?,
             parameter: required(args, "parameter")?,

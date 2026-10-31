@@ -116,3 +116,22 @@ pub(super) fn edit(request: EditRequest) -> Result<Json<ObjectOutput>, ErrorData
     .map_err(super::domain_error::mcp_error)?;
     canonical_json_output(result)
 }
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct PromoteRequest {
+    /// Study archive JSON returned by `study_vehicle`.
+    archive_path: String,
+    candidate_id: String,
+    /// New vehicle file; an existing file is never replaced.
+    save_as: String,
+}
+
+pub(super) fn promote(request: PromoteRequest) -> Result<Json<ObjectOutput>, ErrorData> {
+    let result = crate::services::vehicle_promotion::promote_blocking(
+        Path::new(&request.archive_path),
+        &request.candidate_id,
+        Path::new(&request.save_as),
+    )
+    .map_err(super::domain_error::mcp_error)?;
+    canonical_json_output(result)
+}
