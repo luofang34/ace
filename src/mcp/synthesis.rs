@@ -65,6 +65,31 @@ pub(super) fn compare(request: CompareRequest) -> Result<Json<ObjectOutput>, Err
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct PayloadRangeRequest {
+    vehicle_path: String,
+    /// Route-distance parameter the mission flies.
+    distance: String,
+    /// Fuel-remaining parameter that reaches zero at the range limit.
+    remaining: String,
+    maximum_takeoff_mass: String,
+    maximum_payload: String,
+}
+
+pub(super) fn payload_range(request: PayloadRangeRequest) -> Result<Json<ObjectOutput>, ErrorData> {
+    let result = crate::services::vehicle_payload_range::compute_blocking(
+        request.vehicle_path.as_ref(),
+        &crate::services::vehicle_payload_range::PayloadRangeRoles {
+            distance: &request.distance,
+            remaining: &request.remaining,
+            maximum_takeoff_mass: &request.maximum_takeoff_mass,
+            maximum_payload: &request.maximum_payload,
+        },
+    )
+    .map_err(super::domain_error::mcp_error)?;
+    canonical_json_output(result)
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ExplainRequest {
     vehicle_path: String,
     /// Canonical parameter identifier.

@@ -50,6 +50,24 @@ pub(super) fn command() -> Command {
                         .value_parser(value_parser!(u32)),
                 ),
         ))
+        .subcommand(output(
+            Command::new("payload-range")
+                .about("Fly a vehicle's mission at its loading corners and solve each range")
+                .arg(path("vehicle"))
+                .arg(role(
+                    "distance",
+                    "Route-distance parameter the mission flies",
+                ))
+                .arg(role(
+                    "remaining",
+                    "Fuel-remaining parameter that reaches zero at the range",
+                ))
+                .arg(role(
+                    "maximum-takeoff-mass",
+                    "Maximum takeoff mass parameter",
+                ))
+                .arg(role("maximum-payload", "Maximum payload mass parameter")),
+        ))
         .subcommand(common(
             Command::new("uncertainty")
                 .about("Propagate declared input uncertainty to requirement probabilities")
@@ -284,6 +302,10 @@ fn directory() -> Arg {
 
 fn flag(name: &'static str) -> Arg {
     Arg::new(name).long(name).action(ArgAction::SetTrue)
+}
+
+fn role(name: &'static str, help: &'static str) -> Arg {
+    Arg::new(name).long(name).required(true).help(help)
 }
 
 fn repeated(name: &'static str, required: bool) -> Arg {
