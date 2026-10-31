@@ -12,6 +12,7 @@ use crate::domain::diagnostic::{AexError, AexResult};
 mod flight;
 mod geometry;
 mod kernel;
+mod performance;
 mod vspaero;
 mod weight;
 
@@ -62,6 +63,7 @@ pub(crate) fn create_session_blocking(
     let mut registry = Registry::default();
     ace_physics::register(&mut registry)?;
     registry.register(Arc::new(weight::WeightPlugin::new()))?;
+    registry.register(Arc::new(performance::PerformanceEnvelope::new()))?;
     for phase in flight_phases() {
         registry.register(Arc::new(phase))?;
     }
