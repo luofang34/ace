@@ -2,15 +2,16 @@ import {$,element,number,quantity,traceButton,metric,badge,empty,current,panel,i
 import {arrangement,sectionSvg,chart} from './drawing.js';
 import {missionStates} from './trajectory.js';
 import {studyPlots} from './study.js';
+import {parseObj,mountViewer} from './viewer.js';
 
 export function render(publication,{select,commit,preview}){
   const sheet=publication.sheet,model=sheet.model;$('title').textContent=model.name;$('identity').textContent=`${model.domain} · revision ${sheet.revision} · ${model.id}`;
   $('cancel').disabled=publication.job?.state!=='running';$('run').disabled=publication.activity==='computing';$('activity').textContent=publication.activity.toUpperCase();$('activity').className='badge '+publication.activity;
   $('saved').textContent=publication.saved_digest===sheet.snapshot.model_digest?'Saved':'Unsaved';$('save').disabled=publication.activity!=='ready';
-  const geometry=panel(sheet,'vehicle.geometry_envelopes'),mass=panel(sheet,'vehicle.mass_properties'),mission=panel(sheet,'vehicle.mission_sequence'),operations=panel(sheet,'vehicle.trip_cost')||panel(sheet,'vehicle.operations');
+  const geometry=panel(sheet,'vehicle.geometry_envelopes'),mass=panel(sheet,'vehicle.mass_properties'),mission=panel(sheet,'vehicle.mission_sequence'),operations=panel(sheet,'vehicle.trip_cost')||panel(sheet,'vehicle.operations'),kernel=panel(sheet,'vehicle.openvsp_geometry');
   requirements(sheet,select);statements(sheet,mass,operations,select);plots(geometry,mission,select);massProperties(mass,select,preferredFocus(sheet,'loading'));missionStates(sheet,mission,select,()=>massProperties(mass,select));closures(sheet,select);
-  arrangement($('arrangement'),geometry?.details,sheet,select,preview,commit);criticalSections(sheet,geometry,select,preferredFocus(sheet,'sections'));
-  for(const [id,results] of [['arrangement',[geometry]],['mass',[mass]],['mission',[mission]],['sections',[geometry]],['statement',[mass,operations]],['plots',[geometry,mission]]]){const stale=results.some(result=>result&&(result.historical||['stale','blocked','unavailable','nonconverged'].includes(result.status)));$(id).classList.toggle('stale-panel',stale);$(id).title=stale?'Historical evidence; current results are unavailable':'';}
+  arrangement($('arrangement'),geometry?.details,sheet,select,preview,commit);criticalSections(sheet,geometry,select,preferredFocus(sheet,'sections'));kernelGeometry(sheet,kernel,select);
+  for(const [id,results] of [['arrangement',[geometry]],['mass',[mass]],['mission',[mission]],['sections',[geometry]],['statement',[mass,operations]],['plots',[geometry,mission]],['kernel',[kernel]]]){const stale=results.some(result=>result&&(result.historical||['stale','blocked','unavailable','nonconverged'].includes(result.status)));$(id).classList.toggle('stale-panel',stale);$(id).title=stale?'Historical evidence; current results are unavailable':'';}
   studyPlots(publication);
   configuration(sheet,select,commit,preview);
   $('execution').textContent=`Execution: ${sheet.assessment.execution} · Feasibility: ${sheet.assessment.feasibility} · Evidence: ${sheet.assessment.evidence} · ${sheet.snapshot.executed.length} nodes updated · ${sheet.snapshot.model_digest.slice(0,12)} · ${sheet.panels.filter(p=>p.status==='approximate').length} approximate analyses`;
@@ -58,6 +59,24 @@ function criticalSections(sheet,geometry,select,focus){const node=$('sections');
   const sections=[...geometry.details.sections];sections.sort((a,b)=>{const rank=id=>preferred.includes(id)?preferred.indexOf(id):-1;return (rank(a.id)<0?Infinity:rank(a.id))-(rank(b.id)<0?Infinity:rank(b.id));});
   if(preferred.length)node.append(element('div','Constraint sections · '+focus.name,'muted'));
   for(const section of sections.slice(0,4)){const item=element('div',undefined,'section-item'),text=element('div');const target=section.clearance?'clearance:'+section.clearance:sheet.model.sections[section.id]?'section:'+section.id:'run:'+geometry.run_id;text.append(traceButton(section.id,target,select),element('div',section.reason,'muted'),element('div',`${['x','y','z'][section.axis]} = ${number(section.station_m,3)} m`,'muted'));item.append(sectionSvg(section,geometry.details,select),text);node.append(item);}
+}
+
+const ARTIFACT_EXTENSIONS={'model/step':'step','model/obj':'obj','application/xml':'vsp3'};
+let kernelView=null;
+function disposeKernelView(){if(!kernelView)return;kernelView.viewer.dispose();for(const url of kernelView.urls)URL.revokeObjectURL(url);kernelView=null;}
+function kernelGeometry(sheet,kernel,select){const node=$('kernel');
+  const run=kernel&&sheet.snapshot.runs.find(run=>run.id===kernel.run_id),tessellation=run?.artifacts.find(artifact=>artifact.media_type==='model/obj');
+  if(!tessellation?.text){disposeKernelView();empty(node,kernel?'Kernel tessellation is unavailable for this run':'Add a vehicle.openvsp_geometry analysis to render kernel surfaces');return;}
+  if(kernelView?.runId!==kernel.run_id){disposeKernelView();node.replaceChildren();const stage=element('div',undefined,'kernel-stage'),aside=element('div',undefined,'kernel-aside');node.append(stage,aside);
+    let viewer;try{viewer=mountViewer(stage,parseObj(tessellation.text));}catch(error){empty(node,'Kernel tessellation unreadable: '+error.message);return;}
+    kernelView={runId:kernel.run_id,viewer,aside,urls:[]};}
+  const aside=kernelView.aside;aside.replaceChildren();for(const url of kernelView.urls)URL.revokeObjectURL(url);kernelView.urls=[];
+  for(const [name,value] of Object.entries(run.outputs))aside.append(metric(name,number(value.value,1),'parameter:'+name,select,value.unit));
+  const components=run.details?.components||[];if(components.length)aside.append(element('div','Intersected components','subheading'));
+  for(const component of components){const row=element('div',undefined,'component');row.append(traceButton(component.id,'geometry:'+component.id,select),element('span',`${number(component.wetted_area_m2,1)} m² · ${number(component.volume_m3,1)} m³`));aside.append(row);}
+  aside.append(element('div','Interchange artifacts','subheading'));const links=element('div');
+  for(const artifact of run.artifacts){const extension=ARTIFACT_EXTENSIONS[artifact.media_type];if(!extension)continue;const url=URL.createObjectURL(new Blob([artifact.text],{type:artifact.media_type}));kernelView.urls.push(url);const link=element('a',`${extension.toUpperCase()} · ${(artifact.text.length/1024).toFixed(0)} KB`);link.href=url;link.download=`${sheet.model.id}-r${sheet.model.revision}.${extension}`;link.title=artifact.schema+' · sha256 '+artifact.digest.slice(0,12);links.append(link);}
+  aside.append(links,element('div',run.details?.method||'',  'muted'));
 }
 
 function preferredFocus(sheet,kind){for(const id of sheet.attention){const focus=sheet.focus[id];if(focus&&(kind==='loading'?focus.loading:focus.sections.length))return {...focus,name:sheet.model.requirements[id].name};}return null;}
