@@ -69,10 +69,7 @@ pub(crate) fn create_session_blocking(
     vspaero::register_blocking(&model, &mut registry)?;
     kernel::register_blocking(&model, &mut registry)?;
     let mut session = Session::new(model, registry)?;
-    let updates = overrides
-        .iter()
-        .map(|(name, value)| Ok((name.clone(), parse_quantity(name, value)?)))
-        .collect::<AexResult<BTreeMap<_, _>>>()?;
+    let updates = parse_updates(overrides)?;
     session.edit(
         &updates,
         Source {
@@ -109,6 +106,16 @@ pub(crate) fn flight_phase_ids() -> Vec<String> {
     flight_phases()
         .iter()
         .map(|phase| phase.spec().identity.id.clone())
+        .collect()
+}
+
+/// Parse `name = "value unit"` assignments into checked quantities.
+pub(crate) fn parse_updates(
+    assignments: &BTreeMap<String, String>,
+) -> AexResult<BTreeMap<String, Quantity>> {
+    assignments
+        .iter()
+        .map(|(name, value)| Ok((name.clone(), parse_quantity(name, value)?)))
         .collect()
 }
 

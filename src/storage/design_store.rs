@@ -1,10 +1,9 @@
 use std::collections::BTreeMap;
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
-use tempfile::{Builder, NamedTempFile};
+use tempfile::Builder;
 
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::schema::ScenarioDocument;
@@ -58,21 +57,6 @@ pub(crate) fn create_design_blocking(spec: CreateDesignSpec<'_>) -> AexResult<De
         display_name: spec.display_name.to_owned(),
         scenario_path: target.join("scenario.yaml"),
         parameters: spec.parameters.clone(),
-    })
-}
-
-pub(crate) fn update_parameters_blocking(
-    scenario_path: &Path,
-    updates: &BTreeMap<String, String>,
-) -> AexResult<DesignRecord> {
-    let mut document: ScenarioDocument = read_yaml_blocking(scenario_path)?;
-    document.scenario.overrides.extend(updates.clone());
-    write_yaml_atomic_blocking(scenario_path, &document)?;
-    Ok(DesignRecord {
-        design_id: document.scenario.id,
-        display_name: document.scenario.name,
-        scenario_path: scenario_path.to_path_buf(),
-        parameters: document.scenario.overrides,
     })
 }
 
@@ -159,32 +143,6 @@ fn write_yaml_blocking<T: Serialize>(path: &Path, value: &T) -> AexResult<()> {
         path: path.to_path_buf(),
         source,
     })
-}
-
-fn write_yaml_atomic_blocking<T: Serialize>(path: &Path, value: &T) -> AexResult<()> {
-    let parent = path.parent().unwrap_or_else(|| Path::new("."));
-    let serialized = serde_yaml::to_string(value).map_err(|source| AexError::Yaml {
-        path: path.to_path_buf(),
-        source,
-    })?;
-    let mut temporary = NamedTempFile::new_in(parent).map_err(|source| AexError::Write {
-        path: parent.to_path_buf(),
-        source,
-    })?;
-    temporary
-        .write_all(serialized.as_bytes())
-        .and_then(|()| temporary.flush())
-        .map_err(|source| AexError::Write {
-            path: temporary.path().to_path_buf(),
-            source,
-        })?;
-    temporary
-        .persist(path)
-        .map(|_| ())
-        .map_err(|error| AexError::Write {
-            path: path.to_path_buf(),
-            source: error.error,
-        })
 }
 
 fn validate_design_id(design_id: &str) -> AexResult<()> {

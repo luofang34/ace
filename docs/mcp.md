@@ -12,9 +12,6 @@ structured JSON output for:
 - `generate_constraint_diagram`
 - `generate_payload_range`
 - `generate_report`
-- `create_design`
-- `update_design_parameters`
-- `evaluate_feasibility`
 - `auto_refine_design`
 - `list_analysis_backends`
 - `load_design_study`
@@ -108,34 +105,23 @@ revision shares the study ID. `promote_study_candidate` writes exactly one
 canonical editable design to the requested design root; intermediate
 candidates remain descriptors and evidence, not directories.
 
-## Design experiments
+## Vehicle editing
 
-`create_design` copies a canonical baseline into an editable design directory.
-Use `baseline: "c172"` or `baseline: "transport"`, or provide
-`source_scenario_path`. Initial `parameters` and later
-`update_design_parameters.updates` are dotted paths such as:
-
-```json
-{
-  "aircraft.geometry.wing.area": "18.0 m^2",
-  "aircraft.geometry.wing.aspect_ratio": "8.4",
-  "aircraft.geometry.wing.span": "12.296341 m",
-  "aircraft.mass.maximum_fuel_mass": "165 kg",
-  "mission.payload.mass": "240 kg"
-}
-```
-
-Physical values retain explicit units. Dimensionless values are strings in the
-MCP request and are restored to numeric YAML scalars by the scenario resolver.
-The canonical aircraft, mission, requirements, profiles, and design overrides
-remain YAML data; OpenVSP parameter identifiers never enter the interface.
-Sequence entries use stable IDs rather than array positions, for example
-`mission.segments.outbound_cruise.mach`.
+`edit_vehicle` takes `vehicle_path`, typed `edits` (the `ModelEdit`
+declarations), `updates` such as `{"wing.span": "37 m"}`, an optional
+`expected_revision` and an optional `save_as` path. Edits and assignments are
+validated and applied as one transaction, so the file advances by exactly one
+model revision. Assigning a computed output returns `COMPUTED_PARAMETER`; a
+file at another revision returns `REVISION_CONFLICT`; a file changed during the
+edit returns `EXTERNAL_EDIT`. `save_as` writes a new file and never replaces an
+existing one. The response carries the saved path, revision, model digest,
+affected graph nodes, completion, assessment and requirement margins.
 
 `payload_drop` mission segments remove declared payload mass without treating
 it as fuel burn. This supports payload-out/empty-return radius studies.
 
-`evaluate_feasibility` defaults to `backend: "native"`. Its baseline contains
+Scenario feasibility evaluations behind `auto_refine_design` and reports
+default to the native backend. Their baseline contains
 native geometry, weight closure, drag polar, Breguet estimates, mission
 performance, field lengths, ceiling, requirement margins, and failed
 constraints. Every geometry or analysis block contains its method, backend,
@@ -143,7 +129,7 @@ assumptions, validity range, units, and warnings.
 
 Supported evaluations include `status: "completed"`. If the resolved
 component graph uses a canonical component or relationship the selected
-backend cannot represent, the tool returns `status: "unsupported"`,
+backend cannot represent, the evaluation returns `status: "unsupported"`,
 `feasible: null`, code `UNSUPPORTED_BACKEND_TOPOLOGY`, the backend and
 topology path, deterministic lists of unsupported kinds, and
 `unsupported_features` for count, parameter, or endpoint-shape conflicts. It

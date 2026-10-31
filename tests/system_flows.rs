@@ -127,6 +127,7 @@ fn mcp_exposes_the_same_system_evaluations() -> Result<(), Box<dyn Error>> {
                 "evaluate_fleet_campaign",
                 "compare_vehicles",
                 "explain_vehicle_value",
+                "edit_vehicle",
             ] {
                 assert!(tools.iter().any(|tool| tool.name == name), "{name}");
             }
@@ -173,6 +174,17 @@ fn mcp_exposes_the_same_system_evaluations() -> Result<(), Box<dyn Error>> {
                 explanation["calculation"]["plugin"]["id"],
                 "vehicle.production_cost"
             );
+            let directory = tempfile::tempdir()?;
+            let variant = directory.path().join("variant.json");
+            let edited = call(
+                "edit_vehicle",
+                serde_json::json!({"vehicle_path": example("expendable-uas.json"),
+                    "updates": {"build.quantity": "10 1"}, "expected_revision": 0,
+                    "save_as": variant}),
+            )
+            .await?;
+            assert_eq!(edited["revision"], 1);
+            assert!(variant.exists());
             let calibration = call(
                 "calibrate_vehicle",
                 serde_json::json!({"vehicle_path": example("expendable-uas.json"),

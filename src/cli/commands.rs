@@ -75,6 +75,7 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             let result = crate::services::vehicle_study::chart_blocking(archive, chart, artifact)?;
             emit_canonical_blocking(&result, &common.output)
         }
+        command @ Command::Edit { .. } => super::vehicle::edit_blocking(command),
         Command::Explain {
             scenario,
             parameter,
