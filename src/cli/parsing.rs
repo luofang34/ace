@@ -125,7 +125,6 @@ fn analysis(matches: &ArgMatches) -> Result<AnalyzeCommand, Error> {
             stop: required(args, "stop")?,
             count: required(args, "count")?,
         })),
-        "mission" => Ok(AnalyzeCommand::Mission(ScenarioArgs { scenario, common })),
         "payload-range" => Ok(AnalyzeCommand::PayloadRange(ScenarioArgs {
             scenario,
             common,

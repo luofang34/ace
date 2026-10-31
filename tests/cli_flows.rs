@@ -65,41 +65,6 @@ fn json_output(arguments: &[&str]) -> Result<Value, Box<dyn Error>> {
     Ok(serde_json::from_slice(&output.get_output().stdout)?)
 }
 
-fn scenario_with_initial_fuel(
-    field: &str,
-    value: serde_yaml::Value,
-) -> Result<TempDir, Box<dyn Error>> {
-    let temporary = TempDir::new()?;
-    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172");
-    fs::create_dir(temporary.path().join("profiles"))?;
-    for relative in [
-        "aircraft.yaml",
-        "requirements.yaml",
-        "scenario.yaml",
-        "profiles/engine.yaml",
-        "profiles/propeller.yaml",
-    ] {
-        let destination = temporary.path().join(relative);
-        fs::copy(source.join(relative), destination)?;
-    }
-    let mut mission: serde_yaml::Value =
-        serde_yaml::from_str(&fs::read_to_string(source.join("mission.yaml"))?)?;
-    let mission_mapping = mission["mission"]
-        .as_mapping_mut()
-        .ok_or("mission envelope must be a mapping")?;
-    let mut initial_state = serde_yaml::Mapping::new();
-    initial_state.insert(serde_yaml::Value::String(field.to_owned()), value);
-    mission_mapping.insert(
-        serde_yaml::Value::String("initial_state".to_owned()),
-        serde_yaml::Value::Mapping(initial_state),
-    );
-    fs::write(
-        temporary.path().join("mission.yaml"),
-        serde_yaml::to_string(&mission)?,
-    )?;
-    Ok(temporary)
-}
-
 fn assert_strict_typical_failure(
     directory: &Path,
     arguments: &[&str],
@@ -134,45 +99,6 @@ fn validates_both_reference_projects() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn zero_initial_fuel_representations_are_equivalent() -> Result<(), Box<dyn Error>> {
-    let by_mass =
-        scenario_with_initial_fuel("fuel_mass", serde_yaml::Value::String("0 kg".to_owned()))?;
-    let by_fraction = scenario_with_initial_fuel(
-        "fuel_fraction",
-        serde_yaml::Value::Number(serde_yaml::Number::from(0)),
-    )?;
-    let mass_path = by_mass.path().join("scenario.yaml");
-    let fraction_path = by_fraction.path().join("scenario.yaml");
-    let mass = json_output(&[
-        "analyze",
-        "mission",
-        &mass_path.to_string_lossy(),
-        "--format",
-        "json",
-    ])?;
-    let fraction = json_output(&[
-        "analyze",
-        "mission",
-        &fraction_path.to_string_lossy(),
-        "--format",
-        "json",
-    ])?;
-    for field in [
-        "completed",
-        "initial_takeoff_mass_kg",
-        "reserve_fuel_remaining_kg",
-        "failed_segment",
-        "fuel_exhausted",
-    ] {
-        assert_eq!(
-            mass["mission"][field], fraction["mission"][field],
-            "{field}"
-        );
-    }
-    Ok(())
-}
-
-#[test]
 fn model501_engine_trade_examples_resolve() {
     let temporary = TempDir::new();
     assert!(temporary.is_ok());
@@ -193,38 +119,6 @@ fn model501_engine_trade_examples_resolve() {
                 .success();
         }
     }
-}
-
-#[test]
-fn mission_outputs_use_nautical_mile_display() -> Result<(), Box<dyn Error>> {
-    for name in ["c172", "b777"] {
-        let scenario_path = scenario(name);
-        let path = scenario_path.to_string_lossy();
-        let result = json_output(&["analyze", "mission", &path, "--format", "json"])?;
-        assert_eq!(result["mission"]["completed"], true);
-        assert_eq!(result["hard_requirements_passed"], true);
-        assert_eq!(result["mission"]["total_distance"]["display_unit"], "nmi");
-        assert_eq!(result["mission"]["landing_fuel"]["unit"], "kg");
-        assert_eq!(result["mission"]["landing_fuel"]["display_unit"], "lb");
-        assert!(
-            result["mission"]["segments"]
-                .as_array()
-                .is_some_and(|items| !items.is_empty())
-        );
-        assert!(
-            result["requirements"]
-                .as_array()
-                .is_some_and(|items| items.iter().any(|item| {
-                    item["metric"]
-                        .as_str()
-                        .is_some_and(|metric| metric.starts_with("performance.achieved_cruise_"))
-                }))
-        );
-        assert!(result["report_markdown"].as_str().is_some_and(|report| {
-            report.contains("Achieved cruise") && report.contains("Landing fuel")
-        }));
-    }
-    Ok(())
 }
 
 #[test]

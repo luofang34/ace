@@ -13,16 +13,10 @@ use serde_json::json;
 
 #[path = "mcp_stdio/backend_preflight.rs"]
 mod backend_preflight;
-#[path = "mcp_stdio/compact_mission.rs"]
-mod compact_mission;
 #[path = "mcp_stdio/concept_flow.rs"]
 mod concept_flow;
 #[path = "mcp_stdio/domain_error.rs"]
 mod domain_error;
-#[path = "mcp_stdio/fixtures.rs"]
-mod fixtures;
-
-use fixtures::{fuel_exhaustion_scenario, no_cruise_scenario};
 
 fn scenario(name: &str) -> String {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -58,7 +52,6 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
             );
             let client = ().serve(TokioChildProcess::new(command)?).await?;
             let tools = client.list_all_tools().await?;
-            assert!(tools.iter().any(|tool| tool.name == "simulate_mission"));
             assert!(
                 tools
                     .iter()
@@ -83,64 +76,6 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
             assert!(tools.len() >= 18);
 
             concept_flow::run(&client).await?;
-            client.cancel().await?;
-            Ok(())
-        })
-}
-
-#[test]
-fn mission_verdict_is_completion_gated_in_mcp() -> Result<(), Box<dyn Error>> {
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?
-        .block_on(async {
-            let temporary = tempfile::tempdir()?;
-            let mut command = tokio::process::Command::new(assert_cmd::cargo::cargo_bin!("aex"));
-            command.args(["mcp", "serve"]);
-            command.current_dir(temporary.path());
-            let client = ().serve(TokioChildProcess::new(command)?).await?;
-
-            let incomplete = fuel_exhaustion_scenario(&temporary.path().join("incomplete"))?;
-            for (fixture, completed, hard_passed) in
-                [(scenario("c172"), true, true), (incomplete, false, false)]
-            {
-                let result = call_tool(
-                    &client,
-                    "simulate_mission",
-                    json!({
-                        "scenario_path": fixture,
-                        "detail": true,
-                        "overrides": {}
-                    }),
-                )
-                .await?;
-                assert_eq!(result["completed"], completed);
-                assert_eq!(result["hard_requirements_passed"], hard_passed);
-                assert_eq!(result.get("landing_fuel").is_some(), completed);
-                if !completed {
-                    assert!(result["warnings"].as_array().is_some_and(|warnings| {
-                        warnings
-                            .iter()
-                            .all(|warning| warning["code"] != "LOW_LANDING_FUEL")
-                    }));
-                }
-            }
-
-            let no_cruise = no_cruise_scenario(&temporary.path().join("no-cruise"))?;
-            let result = call_tool(
-                &client,
-                "simulate_mission",
-                json!({ "scenario_path": no_cruise, "detail": true, "overrides": {} }),
-            )
-            .await?;
-            assert_eq!(result["completed"], true);
-            assert_eq!(result["hard_requirements_passed"], false);
-            assert!(
-                result["segments"]
-                    .as_array()
-                    .is_some_and(|segments| !segments.is_empty())
-            );
-
             client.cancel().await?;
             Ok(())
         })

@@ -28,18 +28,6 @@ pub(super) async fn run(client: &Client) -> Result<(), Box<dyn Error>> {
 }
 
 async fn reports(client: &Client) -> Result<(), Box<dyn Error>> {
-    let mission = call_tool(
-        client,
-        "simulate_mission",
-        json!({
-            "scenario_path": scenario("c172"), "detail": true, "overrides": {}
-        }),
-    )
-    .await?;
-    assert_eq!(mission["completed"], true);
-    assert_eq!(mission["total_distance"]["display_unit"], "nmi");
-    assert_eq!(mission["landing_fuel"]["unit"], "kg");
-    assert_eq!(mission["landing_fuel"]["display_unit"], "lb");
     let backends = call_tool(client, "list_analysis_backends", json!({})).await?;
     assert_eq!(backends["backends"][0]["id"], "native");
     assert_eq!(backends["backends"][0]["available"], true);

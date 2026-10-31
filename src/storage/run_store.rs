@@ -72,15 +72,6 @@ pub(crate) struct RunAttribution<'a> {
     pub(crate) model_usage: RunModelUsage,
 }
 
-impl RunAttribution<'_> {
-    pub(crate) const fn with_mass_properties() -> Self {
-        Self {
-            artifacts: &[],
-            model_usage: RunModelUsage::with_mass_properties(),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub(crate) struct FileRunStore {
     root: PathBuf,

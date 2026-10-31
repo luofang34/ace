@@ -15,7 +15,6 @@ aex validate DOCUMENT
 aex resolve SCENARIO
 aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE) [--mass VALUE] [--cg VALUE]
 aex analyze performance SCENARIO [--mass VALUE] [--landing-mass VALUE]
-aex analyze mission SCENARIO
 aex analyze constraints SCENARIO
 aex analyze payload-range SCENARIO
 aex compare SCENARIO... --metric METRIC

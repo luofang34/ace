@@ -118,13 +118,7 @@ fn workflows_reproduce_the_documented_envelope_failures() -> Result<(), Box<dyn 
         )?;
         let analysis = failed_json(
             temporary.path(),
-            &[
-                "analyze",
-                "mission",
-                &scenario.to_string_lossy(),
-                "--format",
-                "json",
-            ],
+            &["resolve", &scenario.to_string_lossy(), "--format", "json"],
         )?;
         assert_eq!(validation, analysis);
         assert_eq!(validation["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");

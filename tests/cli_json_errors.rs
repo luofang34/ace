@@ -40,13 +40,7 @@ fn failed_json(arguments: &[&str]) -> Result<Value, Box<dyn Error>> {
 #[test]
 fn analysis_failure_is_one_structured_json_object() -> Result<(), Box<dyn Error>> {
     let scenario = repository_path("examples/x15/scenario.yaml");
-    let result = failed_json(&[
-        "analyze",
-        "mission",
-        &scenario.to_string_lossy(),
-        "--format",
-        "json",
-    ])?;
+    let result = failed_json(&["resolve", &scenario.to_string_lossy(), "--format", "json"])?;
 
     assert_eq!(result["error"]["code"], "MODEL_DOMAIN_UNSUPPORTED");
     assert!(
@@ -130,8 +124,7 @@ fn non_finite_conditions_fail_before_analysis_and_serialize_cleanly() -> Result<
     let scenario = repository_path("examples/b777/scenario.yaml");
     for value in [".nan", ".inf", "-.inf"] {
         let result = failed_json(&[
-            "analyze",
-            "mission",
+            "resolve",
             &scenario.to_string_lossy(),
             "--set",
             &format!("mission.segments.cruise_1.mach={value}"),

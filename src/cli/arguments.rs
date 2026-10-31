@@ -74,7 +74,6 @@ pub(super) struct DrawingArgs {
 #[derive(Debug)]
 pub(super) enum AnalyzeCommand {
     Point(PointArgs),
-    Mission(ScenarioArgs),
     Constraints(ConstraintArgs),
     PayloadRange(ScenarioArgs),
     Performance(PerformanceArgs),
