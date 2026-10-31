@@ -3,11 +3,15 @@ use super::{
     parameters::{positive, read},
 };
 use crate::{
-    domain::schema::{SimpleTurbofanDeck, TurbofanProfile},
-    models::propulsion,
+    domain::{
+        result::AtmosphereState,
+        schema::{EngineProfile, SimpleTurbofanDeck, TurbofanProfile},
+    },
+    models::propulsion::{self, PropulsionQuery},
+    services::synthesis::catalog,
 };
 use ace_engine::SolverError;
-use ace_model::{Quantity, Unit};
+use ace_model::{AnalysisResources, Quantity, Unit};
 use std::collections::BTreeMap;
 
 const SEA_LEVEL_DENSITY_KG_M3: f64 = 1.225;
@@ -25,6 +29,12 @@ pub(super) enum Powerplant {
         efficiency: f64,
         bsfc_kg_j: f64,
         lapse_exponent: f64,
+    },
+    /// Catalog turbofan deck, scaled by engine count and sizing factor.
+    Deck {
+        engine: Box<TurbofanProfile>,
+        engine_count: u32,
+        sizing_factor: f64,
     },
 }
 
@@ -63,34 +73,93 @@ impl Powerplant {
         })
     }
 
-    pub fn available_thrust(&self, density: f64, speed: f64) -> f64 {
+    /// The selected turbofan profile with its installed count and sizing ports.
+    pub fn deck(
+        inputs: &BTreeMap<String, Quantity>,
+        resources: &AnalysisResources,
+    ) -> Result<Self, SolverError> {
+        let EngineProfile::Turbofan(engine) = catalog::engine(resources).map_err(external)? else {
+            return Err(SolverError::Failed(
+                "deck-backed flight phases need a turbofan engine profile".into(),
+            ));
+        };
+        let count = positive(inputs, "engine_count", Unit::Ratio)?;
+        if count.fract() != 0.0 || count > 16.0 {
+            return Err(SolverError::Failed(
+                "engine count must be a whole number from 1 through 16".into(),
+            ));
+        }
+        Ok(Self::Deck {
+            engine: Box::new(engine),
+            engine_count: count as u32,
+            sizing_factor: positive(inputs, "sizing_factor", Unit::Ratio)?,
+        })
+    }
+
+    /// Full-throttle thrust; a deck point outside its tabulated or declared range fails.
+    pub fn available_thrust(
+        &self,
+        atmosphere: &AtmosphereState,
+        point: &Operating,
+    ) -> Result<f64, SolverError> {
         match self {
             Self::Thrust {
                 available_thrust, ..
-            } => *available_thrust,
+            } => Ok(*available_thrust),
             Self::Propeller {
                 shaft_power,
                 efficiency,
                 lapse_exponent,
                 ..
+            } => Ok(efficiency
+                * shaft_power
+                * (atmosphere.density_kg_m3 / SEA_LEVEL_DENSITY_KG_M3).powf(*lapse_exponent)
+                / point.speed),
+            Self::Deck {
+                engine,
+                engine_count,
+                sizing_factor,
             } => {
-                efficiency * shaft_power * (density / SEA_LEVEL_DENSITY_KG_M3).powf(*lapse_exponent)
-                    / speed
+                let state = propulsion::installed_turbofan(
+                    engine,
+                    *engine_count,
+                    *sizing_factor,
+                    atmosphere,
+                    PropulsionQuery {
+                        altitude_m: point.altitude,
+                        true_airspeed_m_s: point.speed,
+                        mach: point.mach,
+                        throttle: 1.0,
+                        mode: point.mode,
+                    },
+                )
+                .map_err(external)?;
+                if state.model.validity_status != "valid" {
+                    return Err(SolverError::Failed(format!(
+                        "engine deck {} {} outside its range at {} m, Mach {}",
+                        engine.id, state.model.validity_status, point.altitude, point.mach
+                    )));
+                }
+                state
+                    .thrust_available_n
+                    .ok_or_else(|| SolverError::Failed("turbofan deck reported no thrust".into()))
             }
         }
     }
 
     pub fn fuel_flow(&self, thrust: f64, point: &Operating) -> Result<f64, SolverError> {
         match self {
-            Self::Thrust { engine, .. } => Ok(propulsion::fuel_flow_for_required_thrust(
-                engine,
-                point.altitude,
-                point.mach,
-                point.mode,
-                thrust,
-            )
-            .map_err(external)?
-            .flow_kg_s),
+            Self::Thrust { engine, .. } | Self::Deck { engine, .. } => {
+                Ok(propulsion::fuel_flow_for_required_thrust(
+                    engine,
+                    point.altitude,
+                    point.mach,
+                    point.mode,
+                    thrust,
+                )
+                .map_err(external)?
+                .flow_kg_s)
+            }
             Self::Propeller {
                 efficiency,
                 bsfc_kg_j,
@@ -102,6 +171,9 @@ impl Powerplant {
     pub fn basis(&self) -> &'static str {
         match self {
             Self::Thrust { .. } => "constant installed thrust limit and TSFC",
+            Self::Deck { .. } => {
+                "catalog turbofan deck by mode, altitude and Mach, times engine count, sizing factor and (1 - installation loss); fuel from deck TSFC at required thrust; no extrapolation"
+            }
             Self::Propeller { .. } => {
                 "shaft power P*(rho/rho0)^n; thrust available eta*P/V; fuel BSFC*T*V/eta; constant propeller efficiency and BSFC; no propeller map, static thrust or power-setting BSFC variation"
             }

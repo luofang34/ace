@@ -1,7 +1,7 @@
-use super::PhaseKind;
+use super::{PhaseKind, Propulsion};
 use ace_model::{DomainBound, DomainLimit, DomainVariable, ScalarPort, Unit, ValidityDomain};
 
-pub(super) fn domain(kind: PhaseKind, propeller: bool, polar: bool) -> ValidityDomain {
+pub(super) fn domain(kind: PhaseKind, propulsion: Propulsion, polar: bool) -> ValidityDomain {
     use Unit::*;
     let mut bounds = vec![nonnegative(input("fuel_price"), DollarPerKilogram)];
     if matches!(kind, PhaseKind::GroundEstimate) {
@@ -22,7 +22,7 @@ pub(super) fn domain(kind: PhaseKind, propeller: bool, polar: bool) -> ValidityD
         ] {
             bounds.push(DomainBound::positive(input(name), unit));
         }
-        propulsion(&mut bounds, propeller);
+        installed(&mut bounds, propulsion);
         if polar {
             for name in crate::backends::openvsp::polar::PORTS {
                 bounds.push(DomainBound::positive(input(name), Ratio));
@@ -47,29 +47,34 @@ pub(super) fn domain(kind: PhaseKind, propeller: bool, polar: bool) -> ValidityD
     ] }
 }
 
-fn propulsion(bounds: &mut Vec<DomainBound>, propeller: bool) {
+fn installed(bounds: &mut Vec<DomainBound>, propulsion: Propulsion) {
     use Unit::*;
-    if propeller {
-        for (name, unit) in [("shaft_power", Watt), ("bsfc", KilogramPerJoule)] {
-            bounds.push(DomainBound::positive(input(name), unit));
+    match propulsion {
+        Propulsion::Propeller => {
+            for (name, unit) in [("shaft_power", Watt), ("bsfc", KilogramPerJoule)] {
+                bounds.push(DomainBound::positive(input(name), unit));
+            }
+            let mut efficiency = DomainBound::positive(input("propeller_efficiency"), Ratio);
+            efficiency.upper = Some(DomainLimit {
+                value: 1.0,
+                inclusive: true,
+            });
+            bounds.push(efficiency);
+            bounds.push(DomainBound::closed(
+                input("power_lapse_exponent"),
+                Ratio,
+                0.0,
+                3.0,
+            ));
         }
-        let mut efficiency = DomainBound::positive(input("propeller_efficiency"), Ratio);
-        efficiency.upper = Some(DomainLimit {
-            value: 1.0,
-            inclusive: true,
-        });
-        bounds.push(efficiency);
-        bounds.push(DomainBound::closed(
-            input("power_lapse_exponent"),
-            Ratio,
-            0.0,
-            3.0,
-        ));
-    } else {
-        bounds.extend([
+        Propulsion::Deck => bounds.extend([
+            DomainBound::closed(input("engine_count"), Ratio, 1.0, 16.0),
+            DomainBound::positive(input("sizing_factor"), Ratio),
+        ]),
+        Propulsion::Thrust => bounds.extend([
             DomainBound::positive(input("available_thrust"), Newton),
             DomainBound::positive(input("tsfc"), KilogramPerNewtonSecond),
-        ]);
+        ]),
     }
 }
 
