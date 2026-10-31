@@ -17,7 +17,7 @@ aex analyze point SCENARIO --altitude VALUE (--speed VALUE | --mach VALUE) [--ma
 aex analyze performance SCENARIO [--mass VALUE] [--landing-mass VALUE]
 aex analyze constraints SCENARIO
 aex analyze payload-range SCENARIO
-aex compare SCENARIO... --metric METRIC
+aex compare VEHICLE... --metric PARAMETER
 aex profile list|show|validate
 aex plot drag-polar|power-curves|thrust-curves|climb-envelope
          |payload-range|constraints|mission-mass|requirement-margins SCENARIO

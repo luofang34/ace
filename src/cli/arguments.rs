@@ -119,9 +119,8 @@ pub(super) struct ConstraintArgs {
 
 #[derive(Debug)]
 pub(super) struct CompareArgs {
-    pub(super) scenarios: Vec<PathBuf>,
+    pub(super) vehicles: Vec<PathBuf>,
     pub(super) metrics: Vec<String>,
-    pub(super) strict: bool,
     pub(super) output: OutputArgs,
 }
 

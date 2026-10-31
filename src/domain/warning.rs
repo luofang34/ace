@@ -73,11 +73,6 @@ warning_registry! {
         false,
         "A result depends on a geometry station estimated by layout correlation rather than declared."
     ),
-    CrossClassComparison => (
-        "CROSS_CLASS_COMPARISON",
-        false,
-        "A comparison mixes propulsion classes with non-equivalent loading metrics."
-    ),
     CruiseAltitudeLimitExceeded => (
         "CRUISE_ALTITUDE_LIMIT_EXCEEDED",
         false,

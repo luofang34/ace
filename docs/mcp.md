@@ -11,14 +11,12 @@ structured JSON output for:
 - `calculate_point_performance`
 - `generate_constraint_diagram`
 - `generate_payload_range`
-- `compare_scenarios`
 - `explain_result`
 - `generate_report`
 - `create_design`
 - `update_design_parameters`
 - `evaluate_feasibility`
 - `auto_refine_design`
-- `compare_designs`
 - `list_analysis_backends`
 - `load_design_study`
 - `run_design_study`
@@ -44,8 +42,8 @@ field overrides the project. MCP and CLI responses share the same presentation
 serializer: canonical values remain SI, while Aviation-US display metadata uses
 kt, ft, lb, and nmi according to quantity semantics.
 
-Scenario resolution, point, mission, constraint, payload-range, and
-comparison requests accept optional `strict` (default `false`). The shared
+Scenario resolution, point, constraint, and payload-range
+requests accept optional `strict` (default `false`). The shared
 CLI/MCP [strict warning policy](strict-warning-policy.md) returns
 `STRICT_WARNING_FAILURE` when a registered promotable warning is present;
 advisory warnings remain in successful responses.
@@ -159,8 +157,14 @@ protocol, the tool returns an error and does not return a native-only response.
 Known backend unavailability is rejected before native analysis, refinement
 search, design creation, or artifact creation.
 
-Scenario and design comparisons and study constraints and objectives accept
-the `feasibility.hard_constraints_passed` metric.
+Study constraints and objectives accept the
+`feasibility.hard_constraints_passed` metric.
+
+`compare_vehicles` takes `vehicle_paths` and `metrics` (parameter identifiers),
+synthesizes each vehicle and returns, per vehicle, its digest, completion,
+feasibility, requirement margins and each metric's value record in the
+vehicle's declared unit with the producing calculation. A metric the vehicle
+does not declare returns `UNKNOWN_COMPARISON_METRIC`.
 
 `auto_refine_design` runs a deterministic bounded native search over wing area,
 aspect ratio, propulsion sizing, and fuel capacity. Wing span remains consistent

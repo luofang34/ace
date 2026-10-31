@@ -52,9 +52,8 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             analysis: analysis(args)?,
         }),
         "compare" => Ok(Command::Compare(CompareArgs {
-            scenarios: many(args, "scenarios"),
+            vehicles: many(args, "vehicles"),
             metrics: many(args, "metric"),
-            strict: args.get_flag("strict"),
             output: output(args)?,
         })),
         "profile" => Ok(Command::Profile {

@@ -87,7 +87,7 @@ fn plots_share_strict_policy_and_retain_requirement_warnings() -> Result<(), Box
 }
 
 #[test]
-fn study_validation_and_comparison_retain_profile_warnings() -> Result<(), Box<dyn Error>> {
+fn study_validation_retains_profile_warnings() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     let project = create_atypical_c172(temporary.path())?;
     let validation = command(temporary.path())
@@ -102,51 +102,5 @@ fn study_validation_and_comparison_retain_profile_warnings() -> Result<(), Box<d
     let result: Value = serde_json::from_slice(&validation.get_output().stdout)?;
     assert!(warning_present(&result["warnings"]));
 
-    let stock = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/c172/scenario.yaml");
-    let comparison = command(temporary.path())
-        .args([
-            "compare",
-            &project.join("scenario.yaml").to_string_lossy(),
-            &stock.to_string_lossy(),
-            "--metric",
-            "performance.wing_loading",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success();
-    let result: Value = serde_json::from_slice(&comparison.get_output().stdout)?;
-    let warning = result["warnings"]
-        .as_array()
-        .and_then(|warnings| {
-            warnings
-                .iter()
-                .find(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
-        })
-        .ok_or("comparison dropped profile warning")?;
-    assert_eq!(warning["context"]["scenario_id"], "c172-atypical-profile");
-    Ok(())
-}
-
-#[test]
-fn comparison_strict_mode_uses_the_shared_policy() -> Result<(), Box<dyn Error>> {
-    let temporary = TempDir::new()?;
-    let project = create_atypical_c172(temporary.path())?;
-    let scenario = project.join("scenario.yaml");
-    let strict = command(temporary.path())
-        .args([
-            "compare",
-            &scenario.to_string_lossy(),
-            &scenario.to_string_lossy(),
-            "--metric",
-            "performance.wing_loading",
-            "--strict",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .failure();
-    let error: Value = serde_json::from_slice(&strict.get_output().stdout)?;
-    assert_eq!(error["error"]["code"], "STRICT_WARNING_FAILURE");
     Ok(())
 }
