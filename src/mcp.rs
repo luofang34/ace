@@ -5,7 +5,6 @@ mod output;
 mod report;
 mod schema;
 pub(crate) mod serialization;
-mod study;
 mod synthesis;
 mod system;
 mod transport;
@@ -24,9 +23,8 @@ use crate::services::validator::{error_validation, validate_document_value};
 use domain_error::mcp_error;
 use output::{ObjectOutput, json_output, json_output_for_scenario, json_output_for_units};
 use schema::{
-    GetProfileRequest, ListProfilesRequest, LoadStudyRequest, PointRequest,
-    PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
-    ScenarioRequest, ValidateDocumentRequest,
+    GetProfileRequest, ListProfilesRequest, PointRequest, ReportRequest, ScenarioRequest,
+    ValidateDocumentRequest,
 };
 
 #[derive(Clone)]
@@ -130,38 +128,6 @@ impl AexMcpServer {
     fn get_capabilities(&self) -> Result<Json<ObjectOutput>, ErrorData> {
         capabilities::get(&self.service)
     }
-    #[tool(description = "Load and validate a portable aircraft design study")]
-    fn load_design_study(
-        &self,
-        Parameters(request): Parameters<LoadStudyRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        study::load(&self.service, request)
-    }
-
-    #[tool(description = "Run or resume a descriptor-based multi-objective design study")]
-    fn run_design_study(
-        &self,
-        Parameters(request): Parameters<RunStudyRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        study::run(&self.service, request)
-    }
-
-    #[tool(description = "Query bounded Pareto and selected-candidate study evidence")]
-    fn query_design_study(
-        &self,
-        Parameters(request): Parameters<QueryStudyRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        study::query(&self.service, request)
-    }
-
-    #[tool(description = "Promote a feasible study candidate into an editable design")]
-    fn promote_study_candidate(
-        &self,
-        Parameters(request): Parameters<PromoteStudyCandidateRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        study::promote(&self.service, request)
-    }
-
     #[tool(description = "Validate a supported portable document")]
     fn validate_document(
         &self,

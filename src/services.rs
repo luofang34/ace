@@ -12,7 +12,6 @@ pub(crate) mod requirement_resolution;
 pub(crate) mod requirements;
 pub(crate) mod resolver;
 pub(crate) mod sheet;
-pub(crate) mod study;
 pub(crate) mod synthesis;
 pub(crate) mod system;
 pub(crate) mod validator;

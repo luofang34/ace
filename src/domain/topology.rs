@@ -97,39 +97,6 @@ impl AircraftTopology {
             .iter()
             .any(|component| component.kind == kind)
     }
-
-    pub(crate) fn unsupported_component_kinds(&self, supported: &[String]) -> Vec<String> {
-        unsupported_values(
-            self.components.iter().map(|component| &component.kind),
-            supported,
-        )
-    }
-
-    pub(crate) fn unsupported_relationship_kinds(&self, supported: &[String]) -> Vec<String> {
-        unsupported_values(
-            self.relationships
-                .iter()
-                .map(|relationship| &relationship.kind),
-            supported,
-        )
-    }
-}
-
-fn unsupported_values<'a>(
-    values: impl Iterator<Item = &'a String>,
-    supported: &[String],
-) -> Vec<String> {
-    let supported = supported
-        .iter()
-        .map(String::as_str)
-        .collect::<BTreeSet<_>>();
-    values
-        .map(String::as_str)
-        .filter(|value| !supported.contains(value))
-        .map(str::to_owned)
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect()
 }
 
 fn validate_topology(topology: &RawAircraftTopology) -> AexResult<()> {

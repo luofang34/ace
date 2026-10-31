@@ -31,22 +31,3 @@ relationships:
         );
     }
 }
-
-#[test]
-fn canonical_kind_can_be_unsupported_by_a_backend() -> Result<(), Box<dyn std::error::Error>> {
-    let raw: RawAircraftTopology = serde_yaml::from_str(
-        r#"
-version: 1
-components:
-  - { id: fuselage, kind: fuselage }
-  - { id: twin_boom, kind: boom, count: 2 }
-relationships:
-  - { kind: attached_to, source: twin_boom, target: fuselage }
-"#,
-    )?;
-    let topology = AircraftTopology::resolve(Some(raw), "twin_boom", 1, false)?;
-    let unsupported = topology.unsupported_component_kinds(&["fuselage".to_owned()]);
-
-    assert_eq!(unsupported, ["boom"]);
-    Ok(())
-}

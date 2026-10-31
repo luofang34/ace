@@ -10,10 +10,7 @@ use crate::test_support::{
     example_scenario, low_landing_fuel_sr71_scenario, set_inferred_configuration,
 };
 
-use super::{
-    evaluate_requirements, failed_hard_requirement_ids, hard_requirement_counts,
-    hard_requirements_passed,
-};
+use super::{evaluate_requirements, hard_requirement_counts, hard_requirements_passed};
 
 fn declared(id: &str, severity: &str) -> Requirement {
     Requirement {
@@ -64,10 +61,6 @@ fn headline_verdict_requires_completion_and_every_hard_requirement() {
     assert!(!hard_requirements_passed(true, &declared, &failing));
     assert!(!hard_requirements_passed(true, &declared, &[]));
     assert_eq!(hard_requirement_counts(&declared, &passing), (1, 1));
-    assert_eq!(
-        failed_hard_requirement_ids(&declared, &[]),
-        ["range".to_owned()]
-    );
 }
 
 #[test]

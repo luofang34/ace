@@ -1,9 +1,7 @@
 use crate::models::atmosphere::Isa1976;
 use crate::test_support::example_scenario;
 
-use super::{
-    OperatingMode, PropulsionQuery, ThrustFuelBasis, evaluate, fuel_flow_for_required_thrust,
-};
+use super::{OperatingMode, PropulsionQuery, evaluate, fuel_flow_for_required_thrust};
 
 #[test]
 fn piston_power_and_turbofan_thrust_lapse_with_altitude() {
@@ -239,7 +237,6 @@ fn j58_subsonic_required_thrust_flow_is_in_calibration_band()
         (3.0..=5.0).contains(&tonnes_per_hour),
         "J58 subsonic flow was {tonnes_per_hour} t/hr at {required_thrust} N"
     );
-    assert_eq!(flow.basis, ThrustFuelBasis::Tsfc);
     assert!(flow.warnings.is_empty());
     let high_speed = fuel_flow_for_required_thrust(
         profile,
@@ -284,7 +281,12 @@ fn xlr99_full_throttle_uses_public_thrust_and_flow_anchors()
     };
     let required =
         fuel_flow_for_required_thrust(profile, altitude_m, 0.5, OperatingMode::Climb, thrust)?;
-    assert_eq!(required.basis, ThrustFuelBasis::SpecificImpulse);
+    // A rocket burns propellant at T / (Isp g0); the XLR99 table implies Isp near 280 s.
+    let specific_impulse = thrust / (required.flow_kg_s * 9.806_65);
+    assert!(
+        (200.0..=400.0).contains(&specific_impulse),
+        "{specific_impulse}"
+    );
     Ok(())
 }
 
