@@ -126,6 +126,18 @@ fn propeller_efficiency(profile: &PropellerProfile, speed_m_s: f64, mode: Operat
     (base * mode_factor).min(profile.maximum_efficiency)
 }
 
+/// Full-throttle installed state of `engine_count` sized copies of one turbofan
+/// profile, independent of a resolved scenario.
+pub(crate) fn installed_turbofan(
+    profile: &TurbofanProfile,
+    engine_count: u32,
+    sizing_factor: f64,
+    atmosphere: &AtmosphereState,
+    query: PropulsionQuery,
+) -> AexResult<PropulsionState> {
+    evaluate_turbofan(profile, engine_count, sizing_factor, atmosphere, query)
+}
+
 fn evaluate_turbofan(
     profile: &TurbofanProfile,
     engine_count: u32,

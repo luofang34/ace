@@ -197,9 +197,17 @@ fn rate(model: &FlightModel, path: &Path, mass: f64, fraction: f64) -> Result<Ra
     let acceleration = speed * (path.target_speed - path.speed) / path.length;
     let thrust = aero.drag_n + mass * (GRAVITY_M_S2 * path.sin_gamma + acceleration);
     let engine_thrust = path.idle_thrust.map_or(thrust, |idle| thrust.max(idle));
-    let available = model
-        .powerplant
-        .available_thrust(atmosphere.density_kg_m3, speed);
+    let point = Operating {
+        altitude,
+        speed,
+        mach: speed / atmosphere.speed_of_sound_m_s,
+        mode: if path.sin_gamma > 0.0 {
+            OperatingMode::Climb
+        } else {
+            OperatingMode::Cruise
+        },
+    };
+    let available = model.powerplant.available_thrust(&atmosphere, &point)?;
     if aero.lift_coefficient > model.aero.cl_max
         || aero.model.validity_status != "valid"
         || !(0.0..=available).contains(&engine_thrust)
@@ -214,19 +222,7 @@ fn rate(model: &FlightModel, path: &Path, mass: f64, fraction: f64) -> Result<Ra
             aero.lift_coefficient, aero.model.validity_status
         )));
     }
-    let flow = model.powerplant.fuel_flow(
-        engine_thrust,
-        &Operating {
-            altitude,
-            speed,
-            mach: speed / atmosphere.speed_of_sound_m_s,
-            mode: if path.sin_gamma > 0.0 {
-                OperatingMode::Climb
-            } else {
-                OperatingMode::Cruise
-            },
-        },
-    )?;
+    let flow = model.powerplant.fuel_flow(engine_thrust, &point)?;
     Ok(Rate {
         burn_per_meter: flow / speed,
         thrust,

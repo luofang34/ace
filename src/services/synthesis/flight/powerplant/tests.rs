@@ -66,9 +66,17 @@ fn propeller_level_flight_matches_closed_form_shaft_power_fuel_equation() {
 #[test]
 fn shaft_power_lapse_limits_thrust_available_at_altitude() {
     let point = |n| Powerplant::new(&inputs(260_000.0, n)).unwrap();
-    let rho = 0.6 * SEA_LEVEL_DENSITY_KG_M3;
-    assert!((point(0.0).available_thrust(rho, 50.0) - 0.8 * 260_000.0 / 50.0).abs() < 1e-9);
-    assert!((point(1.0).available_thrust(rho, 50.0) - 0.6 * 0.8 * 260_000.0 / 50.0).abs() < 1e-9);
+    let air = Isa1976::new(0.0).evaluate(5_000.0).unwrap();
+    let sigma = air.density_kg_m3 / SEA_LEVEL_DENSITY_KG_M3;
+    let at = Operating {
+        altitude: 5_000.0,
+        speed: 50.0,
+        mach: 50.0 / air.speed_of_sound_m_s,
+        mode: propulsion::OperatingMode::Cruise,
+    };
+    let thrust = |n| point(n).available_thrust(&air, &at).unwrap();
+    assert!((thrust(0.0) - 0.8 * 260_000.0 / 50.0).abs() < 1e-9);
+    assert!((thrust(1.0) - sigma * 0.8 * 260_000.0 / 50.0).abs() < 1e-9);
     let climb = state(&[
         ("speed", 50.0, Unit::MeterPerSecond),
         ("altitude", 0.0, Unit::Meter),
@@ -111,4 +119,106 @@ fn propeller_inputs_are_validated_and_variants_expose_power_ports() {
         assert!(!spec.inputs.contains_key(removed));
     }
     assert!(spec.inputs.contains_key("k_020"));
+}
+
+fn catalog_engine(example: &str) -> AnalysisResources {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join(example)
+        .join("profiles/engine.yaml");
+    let text = std::fs::read_to_string(path).unwrap();
+    let value: serde_yaml::Value = serde_yaml::from_str(&text).unwrap();
+    let document = serde_json::to_value(value).unwrap()["profile"].clone();
+    let entry = ace_model::CatalogEntry {
+        kind: document["type"].as_str().unwrap().into(),
+        version: 1,
+        source: ace_model::Source {
+            kind: "test".into(),
+            reference: format!("examples/{example}"),
+            revision: None,
+        },
+        document,
+    };
+    AnalysisResources {
+        catalog: BTreeMap::from([("engine".to_owned(), entry)]),
+        ..AnalysisResources::default()
+    }
+}
+
+fn installation(count: f64, sizing: f64) -> BTreeMap<String, Quantity> {
+    BTreeMap::from([
+        (
+            "engine_count".into(),
+            Quantity::new(count, Unit::Ratio).unwrap(),
+        ),
+        (
+            "sizing_factor".into(),
+            Quantity::new(sizing, Unit::Ratio).unwrap(),
+        ),
+    ])
+}
+
+fn deck_point(altitude: f64, mach: f64) -> (AtmosphereState, Operating) {
+    let air = Isa1976::new(0.0).evaluate(altitude).unwrap();
+    let speed = mach * air.speed_of_sound_m_s;
+    let point = Operating {
+        altitude,
+        speed,
+        mach,
+        mode: propulsion::OperatingMode::Cruise,
+    };
+    (air, point)
+}
+
+#[test]
+fn catalog_deck_thrust_and_fuel_follow_the_tabulated_engine() {
+    let deck = Powerplant::deck(&installation(2.0, 1.1), &catalog_engine("b777")).unwrap();
+    // 35 000 ft and Mach 0.9 are grid nodes of the GE90-class table.
+    let (air, point) = deck_point(35_000.0 * 0.3048, 0.9);
+    let thrust = deck.available_thrust(&air, &point).unwrap();
+    let expected = 161_361.853_992 * 2.0 * 1.1 * (1.0 - 0.03);
+    assert!((thrust - expected).abs() < 1e-6 * expected);
+    let flow = deck.fuel_flow(200_000.0, &point).unwrap();
+    assert!((flow - 0.0372 * 200_000.0 / 3600.0).abs() < 1e-12);
+    assert!(deck.basis().contains("deck"));
+}
+
+#[test]
+fn catalog_deck_rejects_extrapolation_piston_engines_and_fractional_counts() {
+    let deck = Powerplant::deck(&installation(2.0, 1.0), &catalog_engine("b777")).unwrap();
+    for (altitude, mach) in [(15_000.0, 0.8), (10_000.0, 0.95)] {
+        let (air, point) = deck_point(altitude, mach);
+        let Err(SolverError::Failed(message)) = deck.available_thrust(&air, &point) else {
+            panic!("deck point at {altitude} m, Mach {mach} must not extrapolate");
+        };
+        assert!(message.contains("outside its range"), "{message}");
+    }
+    assert!(Powerplant::deck(&installation(2.0, 1.0), &catalog_engine("c172")).is_err());
+    assert!(Powerplant::deck(&installation(1.5, 1.0), &catalog_engine("b777")).is_err());
+    assert!(Powerplant::deck(&installation(2.0, 1.0), &AnalysisResources::default()).is_err());
+}
+
+#[test]
+fn deck_variants_replace_constant_thrust_ports_with_installation_ports() {
+    for phase in [
+        FlightPhase::with_kind(PhaseKind::RouteCruise).deck(),
+        FlightPhase::with_kind(PhaseKind::RouteCruise)
+            .deck()
+            .vspaero(),
+    ] {
+        let spec = phase.spec();
+        assert!(spec.identity.id.contains("deck_route_cruise_phase"));
+        for removed in ["tsfc", "available_thrust", "shaft_power"] {
+            assert!(!spec.inputs.contains_key(removed));
+        }
+        for port in ["engine_count", "sizing_factor"] {
+            assert_eq!(spec.inputs[port].unit, Unit::Ratio);
+            assert!(
+                spec.domain
+                    .bounds
+                    .iter()
+                    .any(|bound| bound.variable == ace_model::DomainVariable::Input(port.into()))
+            );
+        }
+    }
 }
