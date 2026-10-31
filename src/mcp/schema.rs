@@ -77,15 +77,6 @@ pub(super) struct WingLoadingRequest {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct CompareRequest {
-    pub(super) scenario_paths: Vec<String>,
-    pub(super) units: Option<String>,
-    #[serde(default)]
-    pub(super) strict: bool,
-    pub(super) metrics: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ExplainRequest {
     pub(super) run_id: String,
     pub(super) result_path: String,
@@ -149,15 +140,6 @@ pub(super) struct AutoRefineDesignRequest {
     pub(super) backend: Option<String>,
     pub(super) artifact_path: Option<String>,
     pub(super) max_iterations: Option<u32>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct CompareDesignsRequest {
-    pub(super) design_paths: Vec<String>,
-    pub(super) units: Option<String>,
-    #[serde(default)]
-    pub(super) strict: bool,
-    pub(super) metrics: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]

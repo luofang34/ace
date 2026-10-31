@@ -11,7 +11,6 @@ The wire codes and decisions below are generated from the runtime registry.
 | `CEILING_UNAVAILABLE` | no | No ceiling root lies inside the searchable altitude range, so the ceiling is reported as unavailable. |
 | `CERTIFICATION_USE_NOT_PROHIBITED` | no | Example metadata does not explicitly prohibit certification use. |
 | `CORRELATED_GEOMETRY_STATION` | no | A result depends on a geometry station estimated by layout correlation rather than declared. |
-| `CROSS_CLASS_COMPARISON` | no | A comparison mixes propulsion classes with non-equivalent loading metrics. |
 | `CRUISE_ALTITUDE_LIMIT_EXCEEDED` | no | A declared cruise condition exceeds an aircraft operating limit. |
 | `CRUISE_CAPABILITY_UNAVAILABLE` | no | Installed capability cannot produce a supported achieved-cruise result. |
 | `CRUISE_CONDITION_UNSUPPORTED` | no | A declared cruise condition cannot be evaluated by the selected model. |
