@@ -12,7 +12,6 @@ structured JSON output for:
 - `generate_constraint_diagram`
 - `generate_payload_range`
 - `generate_report`
-- `auto_refine_design`
 - `list_analysis_backends`
 - `load_design_study`
 - `run_design_study`
@@ -120,8 +119,8 @@ affected graph nodes, completion, assessment and requirement margins.
 `payload_drop` mission segments remove declared payload mass without treating
 it as fuel burn. This supports payload-out/empty-return radius studies.
 
-Scenario feasibility evaluations behind `auto_refine_design` and reports
-default to the native backend. Their baseline contains
+Scenario feasibility evaluations behind reports default to the native
+backend. Their baseline contains
 native geometry, weight closure, drag polar, Breguet estimates, mission
 performance, field lengths, ceiling, requirement margins, and failed
 constraints. Every geometry or analysis block contains its method, backend,
@@ -155,20 +154,12 @@ does not declare returns `UNKNOWN_COMPARISON_METRIC`.
 (default 2, at most 16) and `overrides`, and returns the same explanation as
 `aex explain`.
 
-`auto_refine_design` runs a deterministic bounded native search over wing area,
-aspect ratio, propulsion sizing, and fuel capacity. Wing span remains consistent
-with area and aspect ratio, and powerplant dry-mass growth is charged to operating
-empty mass. Convergence requires implemented requirements, mission power margins,
-tail-volume bounds, aspect-ratio bounds, and a conceptual wing-spar packaging
-screen to pass. Mission points retain a 3% installed-reference-power reserve.
-When `backend: "openvsp"` is selected, OpenVSP runs once on the chosen design;
-static pitch stability becomes a final verification gate, and any adapter
-failure is returned without fallback.
-
-Direct design updates obey the same planform identity as file and scenario
-resolution. Provide any two of wing area, span, and aspect ratio to a document;
-when updating a baseline that declares all three, update enough values to keep
-the triple within the 0.5% rounding tolerance.
+`promote_vehicle_candidate` takes `archive_path` (a `study_vehicle` archive),
+`candidate_id` and `save_as`. It verifies the archive and the candidate's
+calculation evidence, requires a satisfied or provisional candidate
+(`CANDIDATE_NOT_FEASIBLE` otherwise) and writes the candidate model to a new
+file without replacing an existing one. A refine study followed by promotion
+is the bounded design search; vehicle closures size coupled quantities.
 
 Geometry dispatch uses the resolved component graph. Legacy configuration
 names still infer the same conventional or lifting-body graph. A lifting-body

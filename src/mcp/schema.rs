@@ -99,18 +99,6 @@ pub(super) struct PayloadRangeRequest {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct AutoRefineDesignRequest {
-    pub(super) scenario_path: String,
-    pub(super) units: Option<String>,
-    pub(super) output_design_id: String,
-    pub(super) display_name: Option<String>,
-    pub(super) design_root: Option<String>,
-    pub(super) backend: Option<String>,
-    pub(super) artifact_path: Option<String>,
-    pub(super) max_iterations: Option<u32>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct LoadStudyRequest {
     pub(super) study_path: String,
 }

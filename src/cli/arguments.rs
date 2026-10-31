@@ -39,6 +39,12 @@ pub(super) enum Command {
         save_as: Option<PathBuf>,
         common: CommonArgs,
     },
+    Promote {
+        archive: PathBuf,
+        candidate: String,
+        save_as: PathBuf,
+        output: OutputArgs,
+    },
     Explain {
         scenario: PathBuf,
         parameter: String,
