@@ -1,0 +1,1564 @@
+{
+  "schema_version": 1,
+  "id": "c172_class_reference",
+  "name": "C172-Class Reference Aircraft",
+  "domain": "fixed_wing",
+  "parameters": {
+    "wing.area": {
+      "unit": "m^2",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 16.17,
+        "unit": "m^2"
+      }
+    },
+    "wing.span": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 11.0,
+        "unit": "m"
+      }
+    },
+    "wing.sweep": {
+      "unit": "deg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.0,
+        "unit": "deg"
+      }
+    },
+    "weight.mtow": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 1111,
+        "unit": "kg"
+      }
+    },
+    "weight.oew": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 767,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_payload": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 376,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 144,
+        "unit": "kg"
+      }
+    },
+    "payload.mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 230,
+        "unit": "kg"
+      }
+    },
+    "fuel.loaded": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 114,
+        "unit": "kg"
+      }
+    },
+    "aero.cd0": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.033,
+        "unit": "1"
+      }
+    },
+    "aero.oswald": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.8,
+        "unit": "1"
+      }
+    },
+    "aero.cl_max": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 1.45,
+        "unit": "1"
+      }
+    },
+    "engine.count": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 1,
+        "unit": "1"
+      }
+    },
+    "engine.sizing_factor": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 1.0,
+        "unit": "1"
+      }
+    },
+    "engine.rated_power": {
+      "unit": "W",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 134000.0,
+        "unit": "W"
+      }
+    },
+    "engine.shaft_power": {
+      "unit": "W",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "engine.rated_power"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "engine.sizing_factor"
+        }
+      }
+    },
+    "engine.bsfc": {
+      "unit": "kg/kWh",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.245,
+        "unit": "kg/kWh"
+      }
+    },
+    "engine.power_lapse_exponent": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 1.0,
+        "unit": "1"
+      }
+    },
+    "propeller.efficiency": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.8,
+        "unit": "1"
+      }
+    },
+    "economics.fuel_price": {
+      "unit": "USD/kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 2.0,
+        "unit": "USD/kg"
+      }
+    },
+    "mission.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 60,
+        "unit": "s"
+      }
+    },
+    "phase.path.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 20,
+        "unit": "s"
+      }
+    },
+    "field.elevation": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.0,
+        "unit": "m"
+      }
+    },
+    "field.obstacle_height": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 15.24,
+        "unit": "m"
+      }
+    },
+    "field.braking_coefficient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.3,
+        "unit": "1"
+      }
+    },
+    "field.runway_slope": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.0,
+        "unit": "1"
+      }
+    },
+    "field.headwind": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.0,
+        "unit": "m/s"
+      }
+    },
+    "phase.taxi.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 600,
+        "unit": "s"
+      }
+    },
+    "phase.taxi.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      }
+    },
+    "phase.taxi.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.001295,
+        "unit": "kg/s"
+      }
+    },
+    "phase.taxi.cost_rate": {
+      "unit": "USD/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.taxi.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      }
+    },
+    "phase.takeoff.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 120,
+        "unit": "s"
+      }
+    },
+    "phase.takeoff.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 30,
+        "unit": "m/s"
+      }
+    },
+    "phase.takeoff.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.010794,
+        "unit": "kg/s"
+      }
+    },
+    "phase.takeoff.end_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 15.24,
+        "unit": "m"
+      }
+    },
+    "phase.takeoff.end_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 33.4389,
+        "unit": "m/s"
+      }
+    },
+    "phase.cruise.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 2438.4,
+        "unit": "m"
+      }
+    },
+    "phase.cruise.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 59.1611,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 30000,
+        "unit": "m"
+      }
+    },
+    "phase.climb.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 43.7277,
+        "unit": "m/s"
+      }
+    },
+    "phase.acceleration.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 10000,
+        "unit": "m"
+      }
+    },
+    "phase.descent.target_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 457.2,
+        "unit": "m"
+      }
+    },
+    "phase.descent.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 56.5888,
+        "unit": "m/s"
+      }
+    },
+    "phase.descent.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 30000,
+        "unit": "m"
+      }
+    },
+    "phase.reserve.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 914.4,
+        "unit": "m"
+      }
+    },
+    "phase.reserve.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 48.8722,
+        "unit": "m/s"
+      }
+    },
+    "phase.reserve.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 2700,
+        "unit": "s"
+      }
+    },
+    "phase.taxi_in.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 300,
+        "unit": "s"
+      }
+    },
+    "phase.taxi_in.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 0.001079,
+        "unit": "kg/s"
+      }
+    },
+    "phase.taxi_in.cost_rate": {
+      "unit": "USD/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.taxi_in.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      }
+    },
+    "mission.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 350,
+        "unit": "nmi"
+      }
+    },
+    "phase.arrival.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "expression": {
+        "op": "reference",
+        "parameter": "phase.descent.path_distance"
+      }
+    },
+    "phase.taxi.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "phase.taxi_in.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "phase.taxi.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "phase.taxi_in.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "phase.taxi.fuel_burn": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "phase.taxi_in.fuel_burn": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "phase.taxi.cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "phase.taxi_in.cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "mission.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "mission.flown_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "mission.block_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "mission.reserve_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "mission.remaining_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "mission.final_mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "mission.fuel_cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.stall_speed_clean": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.stall_speed_landing": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.best_glide_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.minimum_power_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.maximum_level_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.maximum_lift_to_drag": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.service_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.absolute_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.takeoff_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "performance.landing_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    }
+  },
+  "analyses": {
+    "taxi_out": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.taxi.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.taxi.fuel_flow",
+        "cost_rate": "phase.taxi.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.taxi.duration",
+        "distance": "phase.taxi.distance",
+        "fuel_burn": "phase.taxi.fuel_burn",
+        "cost": "phase.taxi.cost"
+      }
+    },
+    "taxi_in": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.taxi_in.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.taxi_in.fuel_flow",
+        "cost_rate": "phase.taxi_in.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.taxi_in.duration",
+        "distance": "phase.taxi_in.distance",
+        "fuel_burn": "phase.taxi_in.fuel_burn",
+        "cost": "phase.taxi_in.cost"
+      }
+    },
+    "takeoff": {
+      "plugin": "aircraft.ground_estimate_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "fuel_flow": "phase.takeoff.fuel_flow",
+        "fuel_price": "economics.fuel_price"
+      },
+      "outputs": {}
+    },
+    "climb": {
+      "plugin": "aircraft.propeller_energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "shaft_power": "engine.shaft_power",
+        "propeller_efficiency": "propeller.efficiency",
+        "bsfc": "engine.bsfc",
+        "power_lapse_exponent": "engine.power_lapse_exponent",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {}
+    },
+    "cruise": {
+      "plugin": "aircraft.propeller_route_cruise_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "shaft_power": "engine.shaft_power",
+        "propeller_efficiency": "propeller.efficiency",
+        "bsfc": "engine.bsfc",
+        "power_lapse_exponent": "engine.power_lapse_exponent",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {}
+    },
+    "descent": {
+      "plugin": "aircraft.propeller_energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "shaft_power": "engine.shaft_power",
+        "propeller_efficiency": "propeller.efficiency",
+        "bsfc": "engine.bsfc",
+        "power_lapse_exponent": "engine.power_lapse_exponent",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {}
+    },
+    "reserve": {
+      "plugin": "aircraft.propeller_level_flight_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "shaft_power": "engine.shaft_power",
+        "propeller_efficiency": "propeller.efficiency",
+        "bsfc": "engine.bsfc",
+        "power_lapse_exponent": "engine.power_lapse_exponent",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {}
+    },
+    "mission": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.duration",
+        "distance": "mission.flown_distance",
+        "block_fuel": "mission.block_fuel",
+        "reserve_fuel": "mission.reserve_fuel",
+        "remaining_fuel": "mission.remaining_fuel",
+        "final_mass": "mission.final_mass",
+        "cost": "mission.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "normal_cruise"
+        ]
+      }
+    },
+    "performance": {
+      "plugin": "aircraft.performance_envelope",
+      "version": "1",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "sweep": "wing.sweep",
+        "maximum_takeoff_mass": "weight.mtow",
+        "operating_empty_mass": "weight.oew",
+        "maximum_payload_mass": "weight.maximum_payload",
+        "maximum_fuel_mass": "weight.maximum_fuel",
+        "takeoff_mass": "weight.mtow",
+        "landing_mass": "weight.mtow",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "field_elevation": "field.elevation",
+        "obstacle_height": "field.obstacle_height",
+        "braking_coefficient": "field.braking_coefficient",
+        "runway_slope": "field.runway_slope",
+        "headwind": "field.headwind"
+      },
+      "outputs": {
+        "stall_speed_clean": "performance.stall_speed_clean",
+        "stall_speed_landing": "performance.stall_speed_landing",
+        "best_glide_speed": "performance.best_glide_speed",
+        "minimum_power_speed": "performance.minimum_power_speed",
+        "maximum_level_speed": "performance.maximum_level_speed",
+        "maximum_lift_to_drag": "performance.maximum_lift_to_drag",
+        "service_ceiling": "performance.service_ceiling",
+        "absolute_ceiling": "performance.absolute_ceiling",
+        "takeoff_field_length": "performance.takeoff_field_length",
+        "landing_field_length": "performance.landing_field_length"
+      },
+      "resources": {
+        "catalog": [
+          "polars",
+          "limits",
+          "engine",
+          "propeller"
+        ]
+      }
+    }
+  },
+  "requirements": {
+    "stall_speed_landing": {
+      "name": "Landing stall speed",
+      "metric": "performance.stall_speed_landing",
+      "relation": "le",
+      "target": {
+        "value": 50,
+        "unit": "kt"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
+    },
+    "payload": {
+      "name": "Payload",
+      "metric": "payload.mass",
+      "relation": "ge",
+      "target": {
+        "value": 200,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
+    },
+    "range": {
+      "name": "Range",
+      "metric": "mission.flown_distance",
+      "relation": "ge",
+      "target": {
+        "value": 350,
+        "unit": "nmi"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
+    },
+    "service_ceiling": {
+      "name": "Service ceiling",
+      "metric": "performance.service_ceiling",
+      "relation": "ge",
+      "target": {
+        "value": 13000,
+        "unit": "ft"
+      },
+      "priority": "soft",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
+    },
+    "remaining_fuel": {
+      "name": "Fuel remaining after reserve",
+      "metric": "mission.remaining_fuel",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
+    }
+  },
+  "mass_items": {
+    "empty": {
+      "kind": "empty",
+      "mass": "weight.oew",
+      "cg": [
+        {
+          "value": 4.15,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      }
+    },
+    "payload": {
+      "kind": "payload",
+      "mass": "payload.mass",
+      "cg": [
+        {
+          "value": 3.4,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      }
+    },
+    "fuel": {
+      "kind": "fuel",
+      "mass": "fuel.loaded",
+      "cg": [
+        {
+          "value": 3.2,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "capacity": "weight.maximum_fuel"
+    }
+  },
+  "missions": {
+    "normal_cruise": {
+      "name": "C172-class normal cruise mission",
+      "stages": [
+        {
+          "id": "taxi_out",
+          "kind": "taxi",
+          "analysis": "taxi_out",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
+        },
+        {
+          "id": "climb",
+          "kind": "climb",
+          "analysis": "climb",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise.altitude",
+            "target_speed": "phase.climb.speed",
+            "path_distance": "phase.climb.path_distance"
+          }
+        },
+        {
+          "id": "accelerate",
+          "kind": "climb",
+          "analysis": "climb",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise.altitude",
+            "target_speed": "phase.cruise.speed",
+            "path_distance": "phase.acceleration.path_distance"
+          }
+        },
+        {
+          "id": "cruise",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "descent",
+          "kind": "descent",
+          "analysis": "descent",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.descent.target_altitude",
+            "target_speed": "phase.descent.speed",
+            "path_distance": "phase.descent.path_distance"
+          }
+        },
+        {
+          "id": "taxi_in",
+          "kind": "taxi",
+          "analysis": "taxi_in",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        }
+      ],
+      "branches": {
+        "reserve": {
+          "from_stage": "descent",
+          "stages": [
+            {
+              "id": "reserve_climb",
+              "kind": "climb",
+              "analysis": "climb",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.reserve.altitude",
+                "target_speed": "phase.reserve.speed",
+                "path_distance": "phase.climb.path_distance"
+              }
+            },
+            {
+              "id": "reserve",
+              "kind": "reserve",
+              "analysis": "reserve",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.reserve.duration_input"
+              }
+            }
+          ]
+        }
+      },
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
+    }
+  },
+  "catalog": {
+    "polars": {
+      "kind": "aerodynamic_polars",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "document": {
+        "model": "aero.parabolic_polar",
+        "clean": {
+          "cd0": 0.031,
+          "additional_cd": 0.002,
+          "oswald_efficiency": 0.8,
+          "cl_max": 1.45
+        },
+        "takeoff": {
+          "cd0": 0.041,
+          "oswald_efficiency": 0.76,
+          "cl_max": 1.75
+        },
+        "landing": {
+          "cd0": 0.062,
+          "oswald_efficiency": 0.72,
+          "cl_max": 2.05
+        }
+      }
+    },
+    "limits": {
+      "kind": "operating_limits",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "document": {
+        "maximum_operating_speed": "163 kt",
+        "maximum_load_factor": 3.8,
+        "minimum_load_factor": -1.52
+      }
+    },
+    "engine": {
+      "kind": "piston_engine",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "document": {
+        "id": "engine.lycoming_io360_class",
+        "version": 1,
+        "type": "piston_engine",
+        "model": "propulsion.piston_prop_simple",
+        "metadata": {
+          "display_name": "IO-360-Class Naturally Aspirated Engine",
+          "source": "representative conceptual profile",
+          "confidence": "medium"
+        },
+        "parameters": {
+          "rated_power": "134 kW",
+          "rated_altitude": "0 ft",
+          "rated_speed": "2700 rpm",
+          "dry_mass": "135 kg",
+          "power_lapse": {
+            "model": "density_power",
+            "exponent": 1.0,
+            "minimum_power_fraction": 0.35
+          },
+          "bsfc": {
+            "takeoff": "0.290 kg/kWh",
+            "cruise": "0.245 kg/kWh",
+            "economy": "0.225 kg/kWh"
+          },
+          "limits": {
+            "maximum_continuous_power_fraction": 0.85,
+            "takeoff_power_time_limit": "5 min",
+            "maximum_altitude": "18000 ft"
+          }
+        }
+      }
+    },
+    "propeller": {
+      "kind": "propeller",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "document": {
+        "id": "propeller.constant_speed_light_aircraft",
+        "version": 1,
+        "type": "propeller",
+        "model": "propulsion.propeller_efficiency_simple",
+        "metadata": {
+          "display_name": "Constant-Speed Light-Aircraft Propeller",
+          "source": "representative conceptual profile",
+          "confidence": "medium"
+        },
+        "parameters": {
+          "diameter": "1.93 m",
+          "blade_count": 2,
+          "static_efficiency": 0.45,
+          "cruise_efficiency": 0.8,
+          "maximum_efficiency": 0.83,
+          "climb_installation_factor": 0.62,
+          "tip_mach_limit": 0.88
+        }
+      }
+    }
+  },
+  "operations": null,
+  "objectives": {
+    "minimize_fuel": {
+      "metric": "mission.block_fuel",
+      "direction": "min"
+    },
+    "minimize_takeoff_distance": {
+      "metric": "performance.takeoff_field_length",
+      "direction": "min"
+    }
+  },
+  "design_variables": [
+    {
+      "parameter": "wing.area",
+      "lower": {
+        "value": 14.5,
+        "unit": "m^2"
+      },
+      "upper": {
+        "value": 18.0,
+        "unit": "m^2"
+      }
+    },
+    {
+      "parameter": "wing.span",
+      "lower": {
+        "value": 10.0,
+        "unit": "m"
+      },
+      "upper": {
+        "value": 12.0,
+        "unit": "m"
+      }
+    },
+    {
+      "parameter": "engine.sizing_factor",
+      "lower": {
+        "value": 1.0,
+        "unit": "1"
+      },
+      "upper": {
+        "value": 1.4,
+        "unit": "1"
+      }
+    },
+    {
+      "parameter": "weight.maximum_fuel",
+      "lower": {
+        "value": 130,
+        "unit": "kg"
+      },
+      "upper": {
+        "value": 158,
+        "unit": "kg"
+      }
+    }
+  ]
+}
