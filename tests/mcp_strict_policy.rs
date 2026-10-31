@@ -117,20 +117,18 @@ fn mcp_promotes_the_same_warning_and_keeps_advisories() -> Result<(), Box<dyn Er
                     .any(|warning| warning["code"] == "PARAMETER_OUTSIDE_TYPICAL")
             }));
 
-            for tool in ["resolve_scenario", "simulate_mission"] {
-                let detail = call_tool_error(
-                    &client,
-                    tool,
-                    json!({"scenario_path": atypical_path, "strict": true}),
-                )
-                .await?;
-                assert_eq!(detail["code"], "STRICT_WARNING_FAILURE");
-                assert!(
-                    detail["message"]
-                        .as_str()
-                        .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
-                );
-            }
+            let detail = call_tool_error(
+                &client,
+                "resolve_scenario",
+                json!({"scenario_path": atypical_path, "strict": true}),
+            )
+            .await?;
+            assert_eq!(detail["code"], "STRICT_WARNING_FAILURE");
+            assert!(
+                detail["message"]
+                    .as_str()
+                    .is_some_and(|message| message.contains("PARAMETER_OUTSIDE_TYPICAL"))
+            );
             client.cancel().await?;
             Ok(())
         })

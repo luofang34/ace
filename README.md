@@ -399,10 +399,8 @@ cargo run --bin aex -- capabilities --format json
 cargo run --bin aex -- validate examples/c172/scenario.yaml --format json
 cargo run --bin aex -- analyze point examples/c172/scenario.yaml \
   --altitude "8000 ft" --speed "115 kt" --format json
-cargo run --bin aex -- analyze mission examples/c172/scenario.yaml --format json
 cargo run --bin aex -- analyze point examples/b777/scenario.yaml \
   --altitude "35000 ft" --mach 0.84 --format json
-cargo run --bin aex -- analyze mission examples/b777/scenario.yaml --format json
 ```
 
 With `--format json`, failures also return one machine-readable
@@ -446,7 +444,7 @@ cargo run --bin aex -- mcp serve
 ```
 
 The server exposes validation, profile lookup, scenario resolution, point
-performance, mission simulation, constraints, payload-range, comparison, explanation, report, and editable
+performance, constraints, payload-range, comparison, explanation, report, and editable
 aircraft-design experiment tools. `auto_refine_design` performs a bounded
 native search, requires conceptual aerodynamic, structural, mission-power, and
 requirement gates to pass, writes a new design, and can run an explicit final

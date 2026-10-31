@@ -69,13 +69,6 @@ fn resolve_point_and_mission_preserve_model_domain_violations() -> Result<(), Bo
                         "condition": {"altitude": "0 m", "true_airspeed": "400 m/s"}
                     }),
                 ),
-                (
-                    "simulate_mission",
-                    json!({
-                        "scenario_path": scenario_path,
-                        "overrides": {"mission.segments.cruise.true_airspeed": "400 m/s"}
-                    }),
-                ),
             ];
 
             for (name, request) in requests {

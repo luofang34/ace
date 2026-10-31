@@ -10,8 +10,7 @@ use crate::charts::generators::{
 use crate::charts::spec::{AxisSpec, ChartSpec, SeriesSpec};
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::result::{
-    ConstraintResult, MissionResult, PayloadRangeResult, PerformanceSummary, RequirementEvaluation,
-    RequirementStatus,
+    ConstraintResult, MissionResult, PayloadRangeResult, PerformanceSummary,
 };
 use crate::domain::schema::{ResolvedScenario, SegmentKind};
 use crate::services::analysis::ApplicationService;
@@ -311,92 +310,6 @@ fn write_chart_index(output: &mut String, charts: &[ReportChart]) -> AexResult<(
             chart.order, chart.specification.title, chart.purpose
         )
         .map_err(format_error)?;
-    }
-    Ok(())
-}
-
-pub(crate) fn markdown_report(
-    scenario: &ResolvedScenario,
-    run_id: &str,
-    mission: &MissionResult,
-    performance: &PerformanceSummary,
-    requirements: &[RequirementEvaluation],
-) -> AexResult<String> {
-    let hard_passed = hard_requirements_passed(
-        mission.completed,
-        &scenario.requirements.items,
-        requirements,
-    );
-    let mut output = String::new();
-    writeln!(output, "# {}", scenario.name).map_err(format_error)?;
-    writeln!(output, "\n- Run ID: `{run_id}`").map_err(format_error)?;
-    writeln!(output, "- Completion: {}", mission.completed).map_err(format_error)?;
-    writeln!(output, "- Hard requirements passed: {hard_passed}").map_err(format_error)?;
-    writeln!(output, "- Warnings: {}", mission.warnings.len()).map_err(format_error)?;
-    writeln!(output, "\n> {LIMITATION}").map_err(format_error)?;
-    writeln!(output, "\n## Primary results").map_err(format_error)?;
-    writeln!(
-        output,
-        "\n- Mission distance: {:.1} nmi",
-        mission.total_distance.display_value
-    )
-    .map_err(format_error)?;
-    writeln!(
-        output,
-        "- Mission fuel: {:.1} kg",
-        mission.total_fuel_burn_kg
-    )
-    .map_err(format_error)?;
-    if let Some(landing_fuel) = &mission.landing_fuel {
-        writeln!(output, "- Landing fuel: {:.1} kg", landing_fuel.value).map_err(format_error)?;
-    }
-    match performance.service_ceiling_m {
-        Some(ceiling) => writeln!(output, "- Service ceiling: {ceiling:.0} m"),
-        None => writeln!(output, "- Service ceiling: unavailable"),
-    }
-    .map_err(format_error)?;
-    write_cruise_performance(&mut output, performance)?;
-    writeln!(output, "\n## Requirements").map_err(format_error)?;
-    for item in requirements {
-        let label = match item.resolved_status() {
-            RequirementStatus::Pass => "PASS",
-            RequirementStatus::Fail => "FAIL",
-            RequirementStatus::Indeterminate => "INDETERMINATE",
-        };
-        if item.resolved_status() == RequirementStatus::Indeterminate {
-            writeln!(output, "\n- {}: {label}", item.id).map_err(format_error)?;
-        } else {
-            writeln!(
-                output,
-                "\n- {}: {label} (margin {:.3})",
-                item.id, item.absolute_margin
-            )
-            .map_err(format_error)?;
-        }
-    }
-    writeln!(output, "\n## Assumptions").map_err(format_error)?;
-    writeln!(
-        output,
-        "\n{} resolved input and profile entries are recorded in the ledger.",
-        scenario.assumptions.len()
-    )
-    .map_err(format_error)?;
-    Ok(output)
-}
-
-fn write_cruise_performance(
-    output: &mut String,
-    performance: &PerformanceSummary,
-) -> AexResult<()> {
-    if let Some(mach) = performance.achieved_cruise_mach {
-        writeln!(output, "- Achieved cruise Mach: {mach:.3}").map_err(format_error)?;
-    }
-    if let Some(excess_power) = performance.minimum_cruise_excess_power_w {
-        writeln!(output, "- Minimum cruise excess power: {excess_power:.0} W")
-            .map_err(format_error)?;
-    }
-    if let Some(feasible) = performance.cruise_feasible {
-        writeln!(output, "- All cruise conditions feasible: {feasible}").map_err(format_error)?;
     }
     Ok(())
 }
