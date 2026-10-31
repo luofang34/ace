@@ -75,6 +75,20 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             let result = crate::services::vehicle_study::chart_blocking(archive, chart, artifact)?;
             emit_canonical_blocking(&result, &common.output)
         }
+        Command::Explain {
+            scenario,
+            parameter,
+            depth,
+            common,
+        } => {
+            let result = crate::services::vehicle_explanation::explain_blocking(
+                &scenario,
+                &common.override_map(),
+                &parameter,
+                depth,
+            )?;
+            emit_canonical_blocking(&result, &common.output)
+        }
         command @ (Command::Uncertainty { .. }
         | Command::Calibrate { .. }
         | Command::Campaign { .. }) => super::vehicle::system_blocking(command),

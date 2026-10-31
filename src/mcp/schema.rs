@@ -77,12 +77,6 @@ pub(super) struct WingLoadingRequest {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct ExplainRequest {
-    pub(super) run_id: String,
-    pub(super) result_path: String,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ReportRequest {
     pub(super) run_id: Option<String>,
     pub(super) scenario_path: Option<String>,

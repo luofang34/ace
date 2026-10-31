@@ -20,6 +20,18 @@ pub(super) fn command() -> Command {
                 .arg(optional_path("artifact").requires("chart")),
         ))
         .subcommand(common(
+            Command::new("explain")
+                .about("Explain a vehicle parameter from its calculation evidence")
+                .arg(path("scenario"))
+                .arg(Arg::new("parameter").required(true))
+                .arg(
+                    Arg::new("depth")
+                        .long("depth")
+                        .default_value("2")
+                        .value_parser(value_parser!(u32)),
+                ),
+        ))
+        .subcommand(common(
             Command::new("uncertainty")
                 .about("Propagate declared input uncertainty to requirement probabilities")
                 .arg(path("scenario"))

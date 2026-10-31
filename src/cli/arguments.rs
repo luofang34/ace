@@ -32,6 +32,12 @@ pub(super) enum Command {
         artifact: Option<PathBuf>,
         common: CommonArgs,
     },
+    Explain {
+        scenario: PathBuf,
+        parameter: String,
+        depth: u32,
+        common: CommonArgs,
+    },
     Uncertainty {
         scenario: PathBuf,
         plan: PathBuf,
