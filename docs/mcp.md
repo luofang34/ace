@@ -11,7 +11,6 @@ structured JSON output for:
 - `calculate_point_performance`
 - `generate_constraint_diagram`
 - `generate_payload_range`
-- `explain_result`
 - `generate_report`
 - `create_design`
 - `update_design_parameters`
@@ -165,6 +164,10 @@ synthesizes each vehicle and returns, per vehicle, its digest, completion,
 feasibility, requirement margins and each metric's value record in the
 vehicle's declared unit with the producing calculation. A metric the vehicle
 does not declare returns `UNKNOWN_COMPARISON_METRIC`.
+
+`explain_vehicle_value` takes `vehicle_path`, `parameter`, optional `depth`
+(default 2, at most 16) and `overrides`, and returns the same explanation as
+`aex explain`.
 
 `auto_refine_design` runs a deterministic bounded native search over wing area,
 aspect ratio, propulsion sizing, and fuel capacity. Wing span remains consistent
