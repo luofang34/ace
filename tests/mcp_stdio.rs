@@ -63,6 +63,7 @@ fn lists_and_invokes_structured_mcp_tools() -> Result<(), Box<dyn Error>> {
                 "edit_vehicle",
                 "promote_vehicle_candidate",
                 "compare_vehicles",
+                "vehicle_payload_range",
                 "list_analysis_backends",
                 "load_design_study",
                 "run_design_study",

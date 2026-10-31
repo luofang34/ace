@@ -53,6 +53,14 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
             depth: required(args, "depth")?,
             common: common(args)?,
         }),
+        "payload-range" => Ok(Command::PayloadRange(PayloadRangeArgs {
+            vehicle: required(args, "vehicle")?,
+            distance: required(args, "distance")?,
+            remaining: required(args, "remaining")?,
+            maximum_takeoff_mass: required(args, "maximum-takeoff-mass")?,
+            maximum_payload: required(args, "maximum-payload")?,
+            output: output(args)?,
+        })),
         "uncertainty" => Ok(Command::Uncertainty {
             scenario: required(args, "scenario")?,
             plan: required(args, "plan")?,

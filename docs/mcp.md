@@ -150,6 +150,10 @@ feasibility, requirement margins and each metric's value record in the
 vehicle's declared unit with the producing calculation. A metric the vehicle
 does not declare returns `UNKNOWN_COMPARISON_METRIC`.
 
+`vehicle_payload_range` takes `vehicle_path` and the `distance`, `remaining`,
+`maximum_takeoff_mass` and `maximum_payload` parameter identifiers and returns
+the same corners as `aex payload-range`.
+
 `explain_vehicle_value` takes `vehicle_path`, `parameter`, optional `depth`
 (default 2, at most 16) and `overrides`, and returns the same explanation as
 `aex explain`.

@@ -82,6 +82,16 @@ impl AexMcpServer {
     }
 
     #[tool(
+        description = "Fly a vehicle's own mission at its design, maximum-payload, maximum-fuel and ferry loadings and solve the route distance where reserve-protected fuel runs out"
+    )]
+    fn vehicle_payload_range(
+        &self,
+        Parameters(request): Parameters<synthesis::PayloadRangeRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::payload_range(request)
+    }
+
+    #[tool(
         description = "Explain a vehicle parameter: declaration, value, producing calculation, upstream producers, consumers and margins"
     )]
     fn explain_vehicle_value(
