@@ -98,6 +98,27 @@ pub(super) fn payload_range(request: PayloadRangeRequest) -> Result<Json<ObjectO
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub(super) struct CatalogRequest {
+    vehicle_path: String,
+    /// Catalog entry identifier; omit to list every entry.
+    entry: Option<String>,
+}
+
+pub(super) fn catalog(request: CatalogRequest) -> Result<Json<ObjectOutput>, ErrorData> {
+    let path = Path::new(&request.vehicle_path);
+    match &request.entry {
+        Some(entry) => canonical_json_output(
+            crate::services::vehicle_catalog::show_blocking(path, entry)
+                .map_err(super::domain_error::mcp_error)?,
+        ),
+        None => canonical_json_output(
+            crate::services::vehicle_catalog::list_blocking(path)
+                .map_err(super::domain_error::mcp_error)?,
+        ),
+    }
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct ChartRequest {
     vehicle_path: String,
     /// Analysis identifier declared by the vehicle.

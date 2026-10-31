@@ -69,6 +69,12 @@ pub(super) fn command() -> Command {
                 .arg(role("maximum-payload", "Maximum payload mass parameter"))
                 .arg(optional_path("artifact")),
         ))
+        .subcommand(output(
+            Command::new("catalog")
+                .about("List a vehicle's catalog entries, or show one, with how native analyses read them")
+                .arg(path("vehicle"))
+                .arg(Arg::new("entry")),
+        ))
         .subcommand(common(
             Command::new("chart")
                 .about("Chart one analysis of a synthesized vehicle from its run evidence")

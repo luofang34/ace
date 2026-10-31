@@ -19,6 +19,11 @@ pub(super) enum Command {
     },
     Compare(CompareArgs),
     PayloadRange(PayloadRangeArgs),
+    Catalog {
+        vehicle: PathBuf,
+        entry: Option<String>,
+        output: OutputArgs,
+    },
     Chart {
         vehicle: PathBuf,
         analysis: String,
