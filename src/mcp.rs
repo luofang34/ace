@@ -13,7 +13,7 @@ mod system;
 mod transport;
 pub(crate) use transport::serve_stdio;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use rmcp::handler::server::wrapper::{Json, Parameters};
 use rmcp::{ErrorData, handler::server::router::tool::ToolRouter, tool, tool_router};
@@ -30,10 +30,9 @@ use domain_error::mcp_error;
 use output::{ObjectOutput, json_output, json_output_for_scenario, json_output_for_units};
 use parameters::parse_wing_loading;
 use schema::{
-    AutoRefineDesignRequest, ConstraintRequest, CreateDesignRequest, EvaluateFeasibilityRequest,
-    GetProfileRequest, ListProfilesRequest, LoadStudyRequest, PayloadRangeRequest, PointRequest,
-    PromoteStudyCandidateRequest, QueryStudyRequest, ReportRequest, RunStudyRequest,
-    ScenarioRequest, UpdateDesignRequest, ValidateDocumentRequest,
+    AutoRefineDesignRequest, ConstraintRequest, GetProfileRequest, ListProfilesRequest,
+    LoadStudyRequest, PayloadRangeRequest, PointRequest, PromoteStudyCandidateRequest,
+    QueryStudyRequest, ReportRequest, RunStudyRequest, ScenarioRequest, ValidateDocumentRequest,
 };
 
 #[derive(Clone)]
@@ -91,6 +90,16 @@ impl AexMcpServer {
         Parameters(request): Parameters<synthesis::ExplainRequest>,
     ) -> Result<Json<ObjectOutput>, ErrorData> {
         synthesis::explain(request)
+    }
+
+    #[tool(
+        description = "Apply typed edits and parameter assignments to a vehicle file as one validated, revision-checked revision"
+    )]
+    fn edit_vehicle(
+        &self,
+        Parameters(request): Parameters<synthesis::EditRequest>,
+    ) -> Result<Json<ObjectOutput>, ErrorData> {
+        synthesis::edit(request)
     }
 
     #[tool(description = "Discover accepted vocabulary, models, warnings, and backends")]
@@ -194,53 +203,6 @@ impl AexMcpServer {
             ));
         }
         json_output(profile)
-    }
-
-    #[tool(description = "Create an editable design from a C172, transport, or scenario baseline")]
-    fn create_design(
-        &self,
-        Parameters(request): Parameters<CreateDesignRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        let display_name = request
-            .display_name
-            .unwrap_or_else(|| request.design_id.clone());
-        let design_root = request
-            .design_root
-            .map_or_else(|| PathBuf::from(".ace/designs"), PathBuf::from);
-        let source = request.source_scenario_path.as_deref().map(Path::new);
-        let design = self
-            .service
-            .create_design_blocking(
-                &request.design_id,
-                &display_name,
-                &design_root,
-                request.baseline.as_deref(),
-                source,
-                &request.parameters,
-            )
-            .map_err(mcp_error)?;
-        json_output(json!({
-            "design": design,
-            "next_actions": ["update_design_parameters", "evaluate_feasibility"],
-        }))
-    }
-
-    #[tool(description = "Update canonical design parameters using backend-neutral dotted paths")]
-    fn update_design_parameters(
-        &self,
-        Parameters(request): Parameters<UpdateDesignRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        design::update(&self.service, request)
-    }
-
-    #[tool(
-        description = "Evaluate conceptual feasibility with native analysis and optional explicit OpenVSP refinement"
-    )]
-    fn evaluate_feasibility(
-        &self,
-        Parameters(request): Parameters<EvaluateFeasibilityRequest>,
-    ) -> Result<Json<ObjectOutput>, ErrorData> {
-        design::evaluate(&self.service, request)
     }
 
     #[tool(

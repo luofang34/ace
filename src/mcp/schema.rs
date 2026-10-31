@@ -99,32 +99,6 @@ pub(super) struct PayloadRangeRequest {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct CreateDesignRequest {
-    pub(super) design_id: String,
-    pub(super) display_name: Option<String>,
-    pub(super) design_root: Option<String>,
-    pub(super) baseline: Option<String>,
-    pub(super) source_scenario_path: Option<String>,
-    #[serde(default)]
-    pub(super) parameters: BTreeMap<String, String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct UpdateDesignRequest {
-    pub(super) scenario_path: String,
-    pub(super) units: Option<String>,
-    pub(super) updates: BTreeMap<String, String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct EvaluateFeasibilityRequest {
-    pub(super) scenario_path: String,
-    pub(super) units: Option<String>,
-    pub(super) backend: Option<String>,
-    pub(super) artifact_path: Option<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct AutoRefineDesignRequest {
     pub(super) scenario_path: String,
     pub(super) units: Option<String>,

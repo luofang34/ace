@@ -1,5 +1,6 @@
-use super::{Publication, persistence::DocumentFile, service_error};
+use super::{Publication, service_error};
 use crate::domain::diagnostic::{AexError, AexResult};
+use crate::services::vehicle_document::DocumentFile;
 use ace_engine::Session;
 use ace_model::{Quantity, Source};
 use serde::{Deserialize, Serialize};
