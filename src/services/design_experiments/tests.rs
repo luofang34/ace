@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use crate::services::analysis::ApplicationService;
 
-use super::FeasibilityResult;
+use super::feasibility::FeasibilityResult;
 
 fn copy_reference_fixture(
     example: &str,
