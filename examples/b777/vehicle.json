@@ -1,0 +1,2136 @@
+{
+  "schema_version": 1,
+  "id": "b777_300er_class_reference",
+  "name": "B777-300ER-Class Reference Aircraft",
+  "domain": "fixed_wing",
+  "parameters": {
+    "wing.area": {
+      "unit": "m^2",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 436.8,
+        "unit": "m^2"
+      }
+    },
+    "wing.span": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 64.8,
+        "unit": "m"
+      }
+    },
+    "wing.sweep": {
+      "unit": "deg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 31.6,
+        "unit": "deg"
+      }
+    },
+    "weight.mtow": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 351534,
+        "unit": "kg"
+      }
+    },
+    "weight.oew": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 167829,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_payload": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 68600,
+        "unit": "kg"
+      }
+    },
+    "weight.maximum_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 145538,
+        "unit": "kg"
+      }
+    },
+    "payload.mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 52000,
+        "unit": "kg"
+      }
+    },
+    "fuel.loaded": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 131705,
+        "unit": "kg"
+      }
+    },
+    "aero.cd0": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.0205,
+        "unit": "1"
+      }
+    },
+    "aero.oswald": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.84,
+        "unit": "1"
+      }
+    },
+    "aero.cl_max": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 1.45,
+        "unit": "1"
+      }
+    },
+    "engine.count": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 2,
+        "unit": "1"
+      }
+    },
+    "engine.sizing_factor": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 1.0,
+        "unit": "1"
+      }
+    },
+    "economics.fuel_price": {
+      "unit": "USD/kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.8,
+        "unit": "USD/kg"
+      }
+    },
+    "mission.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 300,
+        "unit": "s"
+      }
+    },
+    "phase.path.maximum_step": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 30,
+        "unit": "s"
+      }
+    },
+    "field.elevation": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.0,
+        "unit": "m"
+      }
+    },
+    "field.obstacle_height": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 10.67,
+        "unit": "m"
+      }
+    },
+    "field.braking_coefficient": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.3,
+        "unit": "1"
+      }
+    },
+    "field.runway_slope": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.0,
+        "unit": "1"
+      }
+    },
+    "field.headwind": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.0,
+        "unit": "m/s"
+      }
+    },
+    "phase.taxi.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 1200,
+        "unit": "s"
+      }
+    },
+    "phase.taxi.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      }
+    },
+    "phase.taxi.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.551759,
+        "unit": "kg/s"
+      }
+    },
+    "phase.taxi.cost_rate": {
+      "unit": "USD/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "expression": {
+        "op": "multiply",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.taxi.fuel_flow"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "economics.fuel_price"
+        }
+      }
+    },
+    "phase.takeoff.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 120,
+        "unit": "s"
+      }
+    },
+    "phase.takeoff.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 60,
+        "unit": "m/s"
+      }
+    },
+    "phase.takeoff.fuel_flow": {
+      "unit": "kg/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 2.669805,
+        "unit": "kg/s"
+      }
+    },
+    "phase.takeoff.end_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 10.67,
+        "unit": "m"
+      }
+    },
+    "phase.takeoff.end_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 102.889,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_low.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 3048.0,
+        "unit": "m"
+      }
+    },
+    "phase.climb_low.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 149.661,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_low.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 40000,
+        "unit": "m"
+      }
+    },
+    "phase.climb_mid.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 7620.0,
+        "unit": "m"
+      }
+    },
+    "phase.climb_mid.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 216.769,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_mid.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 100000,
+        "unit": "m"
+      }
+    },
+    "phase.climb_high.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 233.383,
+        "unit": "m/s"
+      }
+    },
+    "phase.climb_high.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 130000,
+        "unit": "m"
+      }
+    },
+    "phase.accelerate.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 40000,
+        "unit": "m"
+      }
+    },
+    "phase.step.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 40000,
+        "unit": "m"
+      }
+    },
+    "phase.cruise.mach": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 0.84,
+        "unit": "1"
+      }
+    },
+    "phase.cruise_1.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 10058.4,
+        "unit": "m"
+      }
+    },
+    "phase.cruise_1.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 251.335,
+        "unit": "m/s"
+      }
+    },
+    "phase.cruise_1.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 3000,
+        "unit": "nmi"
+      }
+    },
+    "phase.cruise_1.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.cruise_1.distance"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "phase.cruise_1.speed"
+        }
+      }
+    },
+    "phase.cruise_2.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 10668.0,
+        "unit": "m"
+      }
+    },
+    "phase.cruise_2.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 249.09,
+        "unit": "m/s"
+      }
+    },
+    "phase.cruise_2.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 3000,
+        "unit": "nmi"
+      }
+    },
+    "phase.cruise_2.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.cruise_2.distance"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "phase.cruise_2.speed"
+        }
+      }
+    },
+    "phase.cruise_3.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 11277.6,
+        "unit": "m"
+      }
+    },
+    "phase.cruise_3.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 247.858,
+        "unit": "m/s"
+      }
+    },
+    "phase.descent.target_altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 914.4,
+        "unit": "m"
+      }
+    },
+    "phase.descent.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 134.444,
+        "unit": "m/s"
+      }
+    },
+    "phase.descent.path_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 250000,
+        "unit": "m"
+      }
+    },
+    "phase.descent.idle_thrust": {
+      "unit": "N",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 20000,
+        "unit": "N"
+      }
+    },
+    "mission.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 7300,
+        "unit": "nmi"
+      }
+    },
+    "phase.arrival.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "expression": {
+        "op": "reference",
+        "parameter": "phase.descent.path_distance"
+      }
+    },
+    "phase.alternate.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 4572.0,
+        "unit": "m"
+      }
+    },
+    "phase.alternate.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 193.361,
+        "unit": "m/s"
+      }
+    },
+    "phase.alternate.climb_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 40000,
+        "unit": "m"
+      }
+    },
+    "phase.alternate.descent_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 60000,
+        "unit": "m"
+      }
+    },
+    "phase.alternate.distance": {
+      "unit": "nmi",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 200,
+        "unit": "nmi"
+      }
+    },
+    "phase.alternate.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "expression": {
+        "op": "divide",
+        "left": {
+          "op": "reference",
+          "parameter": "phase.alternate.distance"
+        },
+        "right": {
+          "op": "reference",
+          "parameter": "phase.alternate.speed"
+        }
+      }
+    },
+    "phase.reserve.altitude": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 457.2,
+        "unit": "m"
+      }
+    },
+    "phase.reserve.speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 113.178,
+        "unit": "m/s"
+      }
+    },
+    "phase.reserve.duration_input": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference",
+      "value": {
+        "value": 1800,
+        "unit": "s"
+      }
+    },
+    "phase.taxi.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "phase.taxi.distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "phase.taxi.fuel_burn": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "phase.taxi.cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "mission.duration": {
+      "unit": "s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "mission.flown_distance": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "mission.block_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "mission.reserve_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "mission.remaining_fuel": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "mission.final_mass": {
+      "unit": "kg",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "mission.fuel_cost": {
+      "unit": "USD",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.stall_speed_clean": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.stall_speed_landing": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.best_glide_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.minimum_power_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.maximum_level_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.maximum_lift_to_drag": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.service_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.absolute_ceiling": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.takeoff_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    },
+    "performance.landing_field_length": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "b777_reference"
+    }
+  },
+  "analyses": {
+    "taxi_out": {
+      "plugin": "vehicle.constant_rate_phase",
+      "version": "1",
+      "inputs": {
+        "duration": "phase.taxi.duration_input",
+        "speed": "phase.taxi.speed",
+        "fuel_flow": "phase.taxi.fuel_flow",
+        "cost_rate": "phase.taxi.cost_rate"
+      },
+      "outputs": {
+        "duration": "phase.taxi.duration",
+        "distance": "phase.taxi.distance",
+        "fuel_burn": "phase.taxi.fuel_burn",
+        "cost": "phase.taxi.cost"
+      }
+    },
+    "takeoff": {
+      "plugin": "aircraft.ground_estimate_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "fuel_flow": "phase.takeoff.fuel_flow",
+        "fuel_price": "economics.fuel_price"
+      },
+      "outputs": {}
+    },
+    "path": {
+      "plugin": "aircraft.deck_energy_path_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "phase.path.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "level": {
+      "plugin": "aircraft.deck_level_flight_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "cruise": {
+      "plugin": "aircraft.deck_route_cruise_phase",
+      "version": "1",
+      "mode": "phase",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "cd0": "aero.cd0",
+        "oswald": "aero.oswald",
+        "cl_max": "aero.cl_max",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "fuel_price": "economics.fuel_price",
+        "maximum_step": "mission.maximum_step"
+      },
+      "outputs": {},
+      "resources": {
+        "catalog": [
+          "engine"
+        ]
+      }
+    },
+    "mission": {
+      "plugin": "vehicle.mission_sequence",
+      "version": "1",
+      "inputs": {},
+      "outputs": {
+        "duration": "mission.duration",
+        "distance": "mission.flown_distance",
+        "block_fuel": "mission.block_fuel",
+        "reserve_fuel": "mission.reserve_fuel",
+        "remaining_fuel": "mission.remaining_fuel",
+        "final_mass": "mission.final_mass",
+        "cost": "mission.fuel_cost"
+      },
+      "resources": {
+        "missions": [
+          "long_range"
+        ]
+      }
+    },
+    "performance": {
+      "plugin": "aircraft.performance_envelope",
+      "version": "1",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "sweep": "wing.sweep",
+        "maximum_takeoff_mass": "weight.mtow",
+        "operating_empty_mass": "weight.oew",
+        "maximum_payload_mass": "weight.maximum_payload",
+        "maximum_fuel_mass": "weight.maximum_fuel",
+        "takeoff_mass": "weight.mtow",
+        "landing_mass": "weight.mtow",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "field_elevation": "field.elevation",
+        "obstacle_height": "field.obstacle_height",
+        "braking_coefficient": "field.braking_coefficient",
+        "runway_slope": "field.runway_slope",
+        "headwind": "field.headwind"
+      },
+      "outputs": {
+        "stall_speed_clean": "performance.stall_speed_clean",
+        "stall_speed_landing": "performance.stall_speed_landing",
+        "best_glide_speed": "performance.best_glide_speed",
+        "minimum_power_speed": "performance.minimum_power_speed",
+        "maximum_level_speed": "performance.maximum_level_speed",
+        "maximum_lift_to_drag": "performance.maximum_lift_to_drag",
+        "service_ceiling": "performance.service_ceiling",
+        "absolute_ceiling": "performance.absolute_ceiling",
+        "takeoff_field_length": "performance.takeoff_field_length",
+        "landing_field_length": "performance.landing_field_length"
+      },
+      "resources": {
+        "catalog": [
+          "polars",
+          "limits",
+          "engine"
+        ]
+      }
+    }
+  },
+  "requirements": {
+    "takeoff_field_length": {
+      "name": "Takeoff field length",
+      "metric": "performance.takeoff_field_length",
+      "relation": "le",
+      "target": {
+        "value": 11000,
+        "unit": "ft"
+      },
+      "priority": "soft",
+      "source": {
+        "kind": "user",
+        "reference": "examples/b777/requirements.yaml"
+      }
+    },
+    "payload": {
+      "name": "Payload",
+      "metric": "payload.mass",
+      "relation": "ge",
+      "target": {
+        "value": 50000,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/b777/requirements.yaml"
+      }
+    },
+    "design_range": {
+      "name": "Design range",
+      "metric": "mission.flown_distance",
+      "relation": "ge",
+      "target": {
+        "value": 7000,
+        "unit": "nmi"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/b777/requirements.yaml"
+      }
+    },
+    "cruise_mach": {
+      "name": "Cruise Mach",
+      "metric": "phase.cruise.mach",
+      "relation": "ge",
+      "target": {
+        "value": 0.83,
+        "unit": "1"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/b777/requirements.yaml"
+      }
+    },
+    "service_ceiling": {
+      "name": "Service ceiling",
+      "metric": "performance.service_ceiling",
+      "relation": "ge",
+      "target": {
+        "value": 41000,
+        "unit": "ft"
+      },
+      "priority": "soft",
+      "source": {
+        "kind": "user",
+        "reference": "examples/b777/requirements.yaml"
+      }
+    },
+    "remaining_fuel": {
+      "name": "Fuel remaining after reserve",
+      "metric": "mission.remaining_fuel",
+      "relation": "ge",
+      "target": {
+        "value": 0,
+        "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/b777/requirements.yaml"
+      }
+    }
+  },
+  "mass_items": {
+    "empty": {
+      "kind": "empty",
+      "mass": "weight.oew",
+      "cg": [
+        {
+          "value": 33.0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      }
+    },
+    "payload": {
+      "kind": "payload",
+      "mass": "payload.mass",
+      "cg": [
+        {
+          "value": 32.0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      }
+    },
+    "fuel": {
+      "kind": "fuel",
+      "mass": "fuel.loaded",
+      "cg": [
+        {
+          "value": 31.5,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        },
+        {
+          "value": 0,
+          "unit": "m"
+        }
+      ],
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "capacity": "weight.maximum_fuel"
+    }
+  },
+  "missions": {
+    "long_range": {
+      "name": "B777-class long-range mission",
+      "stages": [
+        {
+          "id": "taxi_out",
+          "kind": "taxi",
+          "analysis": "taxi_out",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false
+        },
+        {
+          "id": "takeoff",
+          "kind": "takeoff",
+          "analysis": "takeoff",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.takeoff.duration_input",
+            "mean_speed": "phase.takeoff.speed",
+            "target_altitude": "phase.takeoff.end_altitude",
+            "target_speed": "phase.takeoff.end_speed"
+          }
+        },
+        {
+          "id": "climb_low",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.climb_low.altitude",
+            "target_speed": "phase.climb_low.speed",
+            "path_distance": "phase.climb_low.path_distance"
+          }
+        },
+        {
+          "id": "climb_mid",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.climb_mid.altitude",
+            "target_speed": "phase.climb_mid.speed",
+            "path_distance": "phase.climb_mid.path_distance"
+          }
+        },
+        {
+          "id": "climb_high",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise_1.altitude",
+            "target_speed": "phase.climb_high.speed",
+            "path_distance": "phase.climb_high.path_distance"
+          }
+        },
+        {
+          "id": "accelerate",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise_1.altitude",
+            "target_speed": "phase.cruise_1.speed",
+            "path_distance": "phase.accelerate.path_distance"
+          }
+        },
+        {
+          "id": "cruise_1",
+          "kind": "cruise",
+          "analysis": "level",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.cruise_1.duration_input"
+          }
+        },
+        {
+          "id": "step_climb_1",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise_2.altitude",
+            "target_speed": "phase.cruise_2.speed",
+            "path_distance": "phase.step.path_distance"
+          }
+        },
+        {
+          "id": "cruise_2",
+          "kind": "cruise",
+          "analysis": "level",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "duration": "phase.cruise_2.duration_input"
+          }
+        },
+        {
+          "id": "step_climb_2",
+          "kind": "climb",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.cruise_3.altitude",
+            "target_speed": "phase.cruise_3.speed",
+            "path_distance": "phase.step.path_distance"
+          }
+        },
+        {
+          "id": "cruise_3",
+          "kind": "cruise",
+          "analysis": "cruise",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "route_distance": "mission.distance",
+            "arrival_distance": "phase.arrival.distance"
+          }
+        },
+        {
+          "id": "descent",
+          "kind": "descent",
+          "analysis": "path",
+          "fuel_sequence": [
+            "fuel"
+          ],
+          "reserve": false,
+          "inputs": {
+            "target_altitude": "phase.descent.target_altitude",
+            "target_speed": "phase.descent.speed",
+            "path_distance": "phase.descent.path_distance",
+            "idle_thrust": "phase.descent.idle_thrust"
+          }
+        }
+      ],
+      "branches": {
+        "reserve": {
+          "from_stage": "descent",
+          "stages": [
+            {
+              "id": "alternate_climb",
+              "kind": "climb",
+              "analysis": "path",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.alternate.altitude",
+                "target_speed": "phase.alternate.speed",
+                "path_distance": "phase.alternate.climb_distance"
+              }
+            },
+            {
+              "id": "alternate",
+              "kind": "cruise",
+              "analysis": "level",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.alternate.duration_input"
+              }
+            },
+            {
+              "id": "alternate_descent",
+              "kind": "descent",
+              "analysis": "path",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "target_altitude": "phase.reserve.altitude",
+                "target_speed": "phase.reserve.speed",
+                "path_distance": "phase.alternate.descent_distance",
+                "idle_thrust": "phase.descent.idle_thrust"
+              }
+            },
+            {
+              "id": "hold",
+              "kind": "reserve",
+              "analysis": "level",
+              "fuel_sequence": [
+                "fuel"
+              ],
+              "reserve": true,
+              "inputs": {
+                "duration": "phase.reserve.duration_input"
+              }
+            }
+          ]
+        }
+      },
+      "conditions": {
+        "altitude": {
+          "value": 0,
+          "unit": "m"
+        },
+        "speed": {
+          "value": 0,
+          "unit": "m/s"
+        }
+      }
+    }
+  },
+  "catalog": {
+    "polars": {
+      "kind": "aerodynamic_polars",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "document": {
+        "model": "aero.parabolic_polar",
+        "clean": {
+          "cd0": 0.0205,
+          "oswald_efficiency": 0.84,
+          "cl_max": 1.45,
+          "mach_critical": 0.82,
+          "wave_drag": {
+            "coefficient": 0.35,
+            "exponent": 2.4
+          }
+        },
+        "takeoff": {
+          "cd0": 0.038,
+          "oswald_efficiency": 0.78,
+          "cl_max": 2.15
+        },
+        "landing": {
+          "cd0": 0.085,
+          "oswald_efficiency": 0.72,
+          "cl_max": 2.65
+        }
+      }
+    },
+    "limits": {
+      "kind": "operating_limits",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "document": {
+        "maximum_operating_mach": 0.89,
+        "maximum_operating_altitude": "43100 ft",
+        "maximum_load_factor": 2.5,
+        "minimum_load_factor": -1.0
+      }
+    },
+    "engine": {
+      "kind": "turbofan_engine",
+      "version": 1,
+      "source": {
+        "kind": "reference",
+        "reference": "B777-300ER-class reference aircraft (examples/b777); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "document": {
+        "id": "engine.ge90_115b_class",
+        "version": 2,
+        "type": "turbofan_engine",
+        "model": "propulsion.table_deck",
+        "metadata": {
+          "display_name": "GE90-115B-Class Turbofan",
+          "source": "representative conceptual profile",
+          "confidence": "medium"
+        },
+        "parameters": {
+          "dry_mass": "8760 kg",
+          "bypass_ratio": 9.0,
+          "installation": {
+            "thrust_loss_fraction": 0.03,
+            "nacelle_drag_area": "2.4 m^2"
+          },
+          "table_deck": {
+            "axes": {
+              "mach": [
+                0.0,
+                0.9
+              ],
+              "altitude": [
+                "0 ft",
+                "5000 ft",
+                "10000 ft",
+                "15000 ft",
+                "21500 ft",
+                "33000 ft",
+                "35000 ft",
+                "37000 ft",
+                "45000 ft"
+              ]
+            },
+            "modes": {
+              "takeoff": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      513000.0,
+                      374490.0
+                    ],
+                    [
+                      460865.704221,
+                      336431.964081
+                    ],
+                    [
+                      412446.82714,
+                      301086.183812
+                    ],
+                    [
+                      367598.625862,
+                      268346.996879
+                    ],
+                    [
+                      314397.391193,
+                      229510.095571
+                    ],
+                    [
+                      233492.008232,
+                      170449.16601
+                    ],
+                    [
+                      221043.635605,
+                      161361.853992
+                    ],
+                    [
+                      207911.641199,
+                      151775.498075
+                    ],
+                    [
+                      157803.870809,
+                      115196.82569
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ],
+                    [
+                      0.0108,
+                      0.0108
+                    ]
+                  ]
+                }
+              },
+              "climb": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      513000.0,
+                      374490.0
+                    ],
+                    [
+                      460865.704221,
+                      336431.964081
+                    ],
+                    [
+                      412446.82714,
+                      301086.183812
+                    ],
+                    [
+                      367598.625862,
+                      268346.996879
+                    ],
+                    [
+                      314397.391193,
+                      229510.095571
+                    ],
+                    [
+                      233492.008232,
+                      170449.16601
+                    ],
+                    [
+                      221043.635605,
+                      161361.853992
+                    ],
+                    [
+                      207911.641199,
+                      151775.498075
+                    ],
+                    [
+                      157803.870809,
+                      115196.82569
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ],
+                    [
+                      0.03721,
+                      0.03721
+                    ]
+                  ]
+                }
+              },
+              "cruise": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      513000.0,
+                      374490.0
+                    ],
+                    [
+                      460865.704221,
+                      336431.964081
+                    ],
+                    [
+                      412446.82714,
+                      301086.183812
+                    ],
+                    [
+                      367598.625862,
+                      268346.996879
+                    ],
+                    [
+                      314397.391193,
+                      229510.095571
+                    ],
+                    [
+                      233492.008232,
+                      170449.16601
+                    ],
+                    [
+                      221043.635605,
+                      161361.853992
+                    ],
+                    [
+                      207911.641199,
+                      151775.498075
+                    ],
+                    [
+                      157803.870809,
+                      115196.82569
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ]
+                  ]
+                }
+              },
+              "economy": {
+                "thrust": {
+                  "unit": "N",
+                  "values": [
+                    [
+                      513000.0,
+                      374490.0
+                    ],
+                    [
+                      460865.704221,
+                      336431.964081
+                    ],
+                    [
+                      412446.82714,
+                      301086.183812
+                    ],
+                    [
+                      367598.625862,
+                      268346.996879
+                    ],
+                    [
+                      314397.391193,
+                      229510.095571
+                    ],
+                    [
+                      233492.008232,
+                      170449.16601
+                    ],
+                    [
+                      221043.635605,
+                      161361.853992
+                    ],
+                    [
+                      207911.641199,
+                      151775.498075
+                    ],
+                    [
+                      157803.870809,
+                      115196.82569
+                    ]
+                  ]
+                },
+                "tsfc": {
+                  "unit": "kg/N/hr",
+                  "values": [
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ],
+                    [
+                      0.0372,
+                      0.0372
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "operations": null,
+  "objectives": {
+    "minimize_fuel": {
+      "metric": "mission.block_fuel",
+      "direction": "min"
+    },
+    "minimize_takeoff_distance": {
+      "metric": "performance.takeoff_field_length",
+      "direction": "min"
+    }
+  },
+  "design_variables": [
+    {
+      "parameter": "wing.area",
+      "lower": {
+        "value": 410,
+        "unit": "m^2"
+      },
+      "upper": {
+        "value": 465,
+        "unit": "m^2"
+      }
+    },
+    {
+      "parameter": "wing.span",
+      "lower": {
+        "value": 62.0,
+        "unit": "m"
+      },
+      "upper": {
+        "value": 67.5,
+        "unit": "m"
+      }
+    },
+    {
+      "parameter": "engine.sizing_factor",
+      "lower": {
+        "value": 0.92,
+        "unit": "1"
+      },
+      "upper": {
+        "value": 1.08,
+        "unit": "1"
+      }
+    },
+    {
+      "parameter": "weight.maximum_fuel",
+      "lower": {
+        "value": 138000,
+        "unit": "kg"
+      },
+      "upper": {
+        "value": 153000,
+        "unit": "kg"
+      }
+    }
+  ]
+}
