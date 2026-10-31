@@ -282,3 +282,120 @@ fn missing_or_ambiguous_catalog_data_fails_before_analysis() {
             .is_err()
     );
 }
+
+/// The operating-point plugin on a legacy example at one cruise condition.
+fn operating_point(
+    name: &str,
+    condition: [f64; 3],
+    stations: Option<[f64; 3]>,
+) -> Result<PluginOutput, SolverError> {
+    let (mut inputs, resources) = fixture(name);
+    let ports = [
+        ("altitude", Unit::Meter),
+        ("true_airspeed", Unit::MeterPerSecond),
+        ("mass", Unit::Kilogram),
+    ];
+    for ((port, unit), value) in ports.into_iter().zip(condition) {
+        inputs.insert(port.into(), Quantity::new(value, unit).unwrap());
+    }
+    let plugin = match stations {
+        Some(stations) => {
+            for (port, value) in [
+                "center_of_gravity",
+                "wing_aerodynamic_center",
+                "tail_aerodynamic_center",
+            ]
+            .into_iter()
+            .zip(stations)
+            {
+                inputs.insert(port.into(), Quantity::new(value, Unit::Meter).unwrap());
+            }
+            OperatingPoint::trimmed()
+        }
+        None => OperatingPoint::new(),
+    };
+    run(&plugin, &inputs, resources)
+}
+
+const CRUISE: [(&str, [f64; 3]); 2] = [
+    ("c172", [2_438.4, 59.16, 1_111.0]),
+    ("b777", [10_668.0, 249.1, 300_000.0]),
+];
+
+#[test]
+fn vehicle_operating_point_reproduces_the_scenario_point() {
+    for (name, [altitude, speed, mass]) in CRUISE {
+        let scenario = crate::test_support::example_scenario(name).unwrap();
+        let legacy = PointAnalyzer::new(scenario)
+            .point(altitude, speed, mass, "clean")
+            .unwrap();
+        let output = operating_point(name, [altitude, speed, mass], None).unwrap();
+        for (port, expected) in [
+            ("mach", legacy.mach),
+            ("stall_speed", legacy.stall_speed_m_s),
+            ("thrust_required", legacy.thrust_required_n),
+            ("power_required", legacy.power_required_w),
+            ("excess_power", legacy.excess_power_w),
+            ("rate_of_climb", legacy.rate_of_climb_m_s),
+            ("climb_gradient", legacy.climb_gradient),
+            ("fuel_flow_required", legacy.fuel_flow_required_kg_s),
+            ("fuel_flow_maximum_power", legacy.fuel_flow_max_power_kg_s),
+        ] {
+            let actual = output.values[port].value;
+            assert!(
+                (actual - expected).abs() <= 1e-9 * expected.abs().max(1.0),
+                "{name} {port}: {actual} != {expected}"
+            );
+        }
+        assert!(
+            output.values["excess_power"].value > 0.0,
+            "{name} cannot hold cruise"
+        );
+        assert!(!output.values.contains_key("trim_wing_lift_fraction"));
+    }
+}
+
+#[test]
+fn trimmed_operating_point_reproduces_the_scenario_cg_point() {
+    let scenario = crate::test_support::example_scenario("b777").unwrap();
+    let stations = crate::models::mass_properties::longitudinal_stations(&scenario).unwrap();
+    let cg = stations.wing_aerodynamic_center_m - 1.0;
+    let [altitude, speed, mass] = CRUISE[1].1;
+    let legacy = PointAnalyzer::new(scenario)
+        .point_at_cg(altitude, speed, mass, "clean", Some(cg))
+        .unwrap();
+    let output = operating_point(
+        "b777",
+        [altitude, speed, mass],
+        Some([
+            cg,
+            stations.wing_aerodynamic_center_m,
+            stations.tail_aerodynamic_center_m,
+        ]),
+    )
+    .unwrap();
+    let fraction = output.values["trim_wing_lift_fraction"].value;
+    assert!((fraction - legacy.trim_wing_lift_fraction.unwrap()).abs() < 1e-12);
+    assert!(
+        fraction > 1.0,
+        "a CG ahead of the wing loads the wing beyond the weight"
+    );
+    let induced = output.values["thrust_required"].value;
+    assert!((induced - legacy.thrust_required_n).abs() <= 1e-9 * induced);
+}
+
+#[test]
+fn operating_point_rejects_untrimmable_cg_and_speed_below_stall() {
+    let [altitude, speed, mass] = CRUISE[1].1;
+    assert!(operating_point("b777", [altitude, speed, mass], Some([70.0, 33.0, 64.0])).is_err());
+    assert!(operating_point("b777", [altitude, speed, mass], Some([30.0, 33.0, 20.0])).is_err());
+    let Err(SolverError::External { source, .. }) =
+        operating_point("b777", [0.0, 40.0, mass], None)
+    else {
+        panic!("40 m/s at MTOM is below the clean stall speed");
+    };
+    assert!(
+        source.to_string().to_lowercase().contains("stall"),
+        "{source}"
+    );
+}

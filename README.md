@@ -258,6 +258,17 @@ wing loading. The sampled curves, feasible mask and active constraint are kept
 in the run details. The curves use sea-level dynamic pressure at the design
 speed. `aex chart VEHICLE ANALYSIS --artifact SVG` draws them.
 
+`aircraft.operating_point` evaluates the clean configuration at an `altitude`,
+`true_airspeed` and `mass` with the same aircraft ports and catalog entries,
+and returns Mach, stall speed, lift and drag coefficients, L/D, thrust and
+power required, excess thrust and power, rate of climb, climb gradient, and
+fuel flow at the required and at maximum power. `aircraft.trimmed_operating_point`
+also takes a `center_of_gravity` and the wing and tail aerodynamic-center
+stations from the same datum (bind the CG to a `vehicle.mass_properties`
+output); the wing then carries the trimmed lift, which sets stall speed and
+induced drag, and `trim_wing_lift_fraction` is reported. A CG at or behind the
+tail aerodynamic center, or a speed below stall, fails the analysis.
+
 Rate-based operations require one currency, price year and cost scope. Native
 rates use USD, block hours, cycles, turnaround time and annual ownership cost.
 The `crew_flight_hour`, `maintenance_flight_hour` and annual `flight_time` fields

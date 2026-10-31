@@ -22,6 +22,7 @@ mod validity;
 use ceiling::service_ceiling_threshold;
 use solver::bracket_roots;
 use trim::trim_wing_lift_fraction;
+pub(crate) use trim::wing_lift_fraction;
 use validity::{
     aggregate as aggregate_validity, from_warnings as validity_from_warnings,
     point_reference_validity, reference_metric_validity, speed_upper_bound,
@@ -93,12 +94,27 @@ impl PointAnalyzer {
         configuration: &str,
         center_of_gravity_m: Option<f64>,
     ) -> AexResult<PointPerformanceResult> {
+        let trim = center_of_gravity_m
+            .map(|cg| trim_wing_lift_fraction(&self.scenario, cg).map(|fraction| (cg, fraction)))
+            .transpose()?;
+        self.point_trimmed(altitude_m, speed_m_s, mass_kg, configuration, trim)
+    }
+
+    /// Point performance with `trim` as the CG station and the wing's share of the
+    /// weight that trims there, for callers that hold the stations themselves.
+    pub(crate) fn point_trimmed(
+        &self,
+        altitude_m: f64,
+        speed_m_s: f64,
+        mass_kg: f64,
+        configuration: &str,
+        trim: Option<(f64, f64)>,
+    ) -> AexResult<PointPerformanceResult> {
+        let center_of_gravity_m = trim.map(|(cg, _)| cg);
+        let trim = trim.map(|(_, fraction)| fraction);
         let atmosphere = self.atmosphere.evaluate(altitude_m)?;
         let mach = speed_m_s / atmosphere.speed_of_sound_m_s;
         let reference = point_reference_validity(&self.scenario.aircraft, configuration)?;
-        let trim = center_of_gravity_m
-            .map(|cg| trim_wing_lift_fraction(&self.scenario, cg))
-            .transpose()?;
         let wing_lift_mass_kg = mass_kg * trim.unwrap_or(1.0);
         let stall_speed = stall_speed_m_s(
             &self.scenario.aircraft,

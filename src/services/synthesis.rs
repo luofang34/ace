@@ -66,6 +66,8 @@ pub(crate) fn create_session_blocking(
     registry.register(Arc::new(weight::WeightPlugin::new()))?;
     registry.register(Arc::new(performance::PerformanceEnvelope::new()))?;
     registry.register(Arc::new(performance::ConstraintDiagram::new()))?;
+    registry.register(Arc::new(performance::OperatingPoint::new()))?;
+    registry.register(Arc::new(performance::OperatingPoint::trimmed()))?;
     for phase in flight_phases() {
         registry.register(Arc::new(phase))?;
     }
