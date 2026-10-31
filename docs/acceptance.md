@@ -14,8 +14,8 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
 5. **Both examples produce reports, ledgers, warnings, curves, payload-range,
    and constraints.** CLI plot flows, immutable run layout, and sample
    artifacts.
-6. **One- and two-dimensional sweeps work from CLI and MCP.** CLI 2-D
-   integration test; `run_parameter_sweep` MCP tool uses the same service.
+6. **One- and two-variable vehicle studies chart from CLI and MCP.** CLI
+   generated-grid integration test; `study_vehicle` uses the same service.
 7. **CLI and MCP share numerical services.** Adapters contain no equations;
    stdio MCP integration invokes the same mission method tested by CLI.
 8. **Every run has a manifest and stable content hash.** Run-store unit test
@@ -77,7 +77,7 @@ The acceptance contract is executable. `./ci.sh` is the release gate.
     ratio derive the third; rounded triples are normalized through an inclusive
     0.5% tolerance and larger conflicts return
     `INCONSISTENT_WING_PLANFORM`. Direct overrides, all shipped examples,
-    study candidates, sweep rows, and refinement outputs are regression tested
+    study candidates, and refinement outputs are regression tested
     against `aspect_ratio = span² / area`.
 23. **Bounded solver results cannot masquerade as roots.** Interior envelope
     roots are valid or explicitly extrapolated, while atmosphere and default

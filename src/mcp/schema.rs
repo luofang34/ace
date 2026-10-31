@@ -89,26 +89,6 @@ pub(super) struct WingLoadingRequest {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct SweepRequest {
-    pub(super) scenario_path: String,
-    pub(super) units: Option<String>,
-    #[serde(default)]
-    pub(super) strict: bool,
-    pub(super) variables: Vec<SweepVariableRequest>,
-    pub(super) metrics: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub(super) struct SweepVariableRequest {
-    pub(super) path: String,
-    pub(super) start: Option<String>,
-    pub(super) stop: Option<String>,
-    pub(super) count: Option<u32>,
-    pub(super) values: Option<Vec<String>>,
-    pub(super) logarithmic: Option<bool>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct CompareRequest {
     pub(super) scenario_paths: Vec<String>,
     pub(super) units: Option<String>,

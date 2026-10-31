@@ -15,7 +15,9 @@ pub(super) fn command() -> Command {
             Command::new("study")
                 .about("Evaluate a vehicle parameter grid or bounded Pareto refinement")
                 .arg(path("scenario"))
-                .arg(optional_path("plan").required(true)),
+                .arg(optional_path("plan").required(true))
+                .arg(Arg::new("chart").long("chart"))
+                .arg(optional_path("artifact").requires("chart")),
         ))
         .subcommand(common(
             Command::new("uncertainty")
@@ -46,13 +48,6 @@ pub(super) fn command() -> Command {
                 ),
         ))
         .subcommand(analysis())
-        .subcommand(common(
-            Command::new("sweep")
-                .arg(path("scenario"))
-                .arg(repeated("var", true))
-                .arg(repeated("metric", true))
-                .arg(flag("logarithmic")),
-        ))
         .subcommand(output(
             Command::new("compare")
                 .arg(path("scenarios").num_args(1..))

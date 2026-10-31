@@ -24,7 +24,7 @@ pub(super) async fn run(client: &Client) -> Result<(), Box<dyn Error>> {
     );
     assert!(feasibility["baseline"]["analysis"]["metrics"].is_object());
     assert_eq!(feasibility["refinement"], serde_json::Value::Null);
-    sweep(client, &path).await
+    Ok(())
 }
 
 async fn reports(client: &Client) -> Result<(), Box<dyn Error>> {
@@ -89,31 +89,4 @@ async fn create_and_edit(client: &Client, directory: &Path) -> Result<String, Bo
     )
     .await?;
     Ok(path)
-}
-
-async fn sweep(client: &Client, path: &str) -> Result<(), Box<dyn Error>> {
-    let sweep = call_tool(client, "run_parameter_sweep", json!({
-        "scenario_path": path,
-        "variables": [
-            {"path": "aircraft.geometry.wing.aspect_ratio", "values": ["7.5", "8.5"]},
-            {"path": "aircraft.propulsion.sizing_factor", "values": ["1.0", "1.1"]}
-        ],
-        "metrics": ["aerodynamics.maximum_lift_to_drag_ratio", "feasibility.hard_constraints_passed"]
-    })).await?;
-    assert_eq!(sweep["result"]["rows"].as_array().map(Vec::len), Some(4));
-    assert_eq!(sweep["result"]["provenance"]["backend"], "native");
-    assert_eq!(sweep["chart_spec"]["chart_type"], "carpet");
-    assert_eq!(
-        sweep["chart_spec"]["surface"]["values"]
-            .as_array()
-            .map(Vec::len),
-        Some(4)
-    );
-    assert_eq!(
-        sweep["chart_spec"]["surface"]["feasible_mask"]
-            .as_array()
-            .map(Vec::len),
-        Some(4)
-    );
-    Ok(())
 }

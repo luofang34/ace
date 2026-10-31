@@ -3,7 +3,7 @@ use crate::StudyError;
 
 pub(super) fn run(
     search: &mut Search,
-    requested: &BTreeMap<String, Vec<Quantity>>,
+    requested: &BTreeMap<String, crate::Axis>,
 ) -> StudyResult<StopReason> {
     let variables = crate::plan::variables(
         search.baseline.model(),
@@ -13,10 +13,11 @@ pub(super) fn run(
     for variable in variables {
         let values = requested
             .get(&variable.name)
-            .ok_or_else(|| StudyError::invalid(&variable.name, "missing axis"))?;
+            .ok_or_else(|| StudyError::invalid(&variable.name, "missing axis"))?
+            .samples(&variable.name)?;
         let mut normalized = Vec::new();
         for value in values {
-            let mut value = crate::plan::sample(search.baseline.model(), &variable, *value)?;
+            let mut value = crate::plan::sample(search.baseline.model(), &variable, value)?;
             if value.value == 0.0 {
                 value.value = 0.0;
             }

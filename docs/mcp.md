@@ -12,7 +12,6 @@ structured JSON output for:
 - `simulate_mission`
 - `generate_constraint_diagram`
 - `generate_payload_range`
-- `run_parameter_sweep`
 - `compare_scenarios`
 - `explain_result`
 - `generate_report`
@@ -46,7 +45,7 @@ field overrides the project. MCP and CLI responses share the same presentation
 serializer: canonical values remain SI, while Aviation-US display metadata uses
 kt, ft, lb, and nmi according to quantity semantics.
 
-Scenario resolution, point, mission, constraint, payload-range, sweep, and
+Scenario resolution, point, mission, constraint, payload-range, and
 comparison requests accept optional `strict` (default `false`). The shared
 CLI/MCP [strict warning policy](strict-warning-policy.md) returns
 `STRICT_WARNING_FAILURE` when a registered promotable warning is present;
@@ -167,22 +166,8 @@ protocol, the tool returns an error and does not return a native-only response.
 Known backend unavailability is rejected before native analysis, refinement
 search, design creation, or artifact creation.
 
-`run_parameter_sweep` accepts the design `scenario_path` and supports metrics
-including:
-
-- `geometry.aspect_ratio`
-- `geometry.wing_area`
-- `aerodynamics.maximum_lift_to_drag_ratio`
-- `performance.takeoff_field_length`
-- `performance.landing_field_length`
-- `mission.breguet_range`
-- `mission.breguet_endurance`
-- `performance.full_payload_range`
-- `performance.zero_payload_ferry_range`
-- `feasibility.hard_constraints_passed`
-
-The same `feasibility.hard_constraints_passed` metric is available to scenario
-and design comparisons and to study constraints and objectives.
+Scenario and design comparisons and study constraints and objectives accept
+the `feasibility.hard_constraints_passed` metric.
 
 `auto_refine_design` runs a deterministic bounded native search over wing area,
 aspect ratio, propulsion sizing, and fuel capacity. Wing span remains consistent

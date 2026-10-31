@@ -12,10 +12,10 @@ use crate::models::atmosphere::scenario_atmosphere;
 use crate::models::performance::PointAnalyzer;
 
 mod constraints;
-mod sweep;
+mod study;
 
 pub(crate) use constraints::constraints;
-pub(crate) use sweep::sweep;
+pub(crate) use study::study;
 
 pub(crate) fn drag_polar(scenario: &ResolvedScenario) -> AexResult<ChartSpec> {
     let config = &scenario.aircraft.aerodynamics.clean;

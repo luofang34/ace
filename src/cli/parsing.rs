@@ -30,6 +30,8 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
         "study" => Ok(Command::Study {
             scenario: required(args, "scenario")?,
             plan: required(args, "plan")?,
+            chart: optional(args, "chart"),
+            artifact: optional(args, "artifact"),
             common: common(args)?,
         }),
         "uncertainty" => Ok(Command::Uncertainty {
@@ -49,13 +51,6 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
         "analyze" => Ok(Command::Analyze {
             analysis: analysis(args)?,
         }),
-        "sweep" => Ok(Command::Sweep(SweepArgs {
-            scenario: required(args, "scenario")?,
-            variables: many(args, "var"),
-            metrics: many(args, "metric"),
-            logarithmic: args.get_flag("logarithmic"),
-            common: common(args)?,
-        })),
         "compare" => Ok(Command::Compare(CompareArgs {
             scenarios: many(args, "scenarios"),
             metrics: many(args, "metric"),

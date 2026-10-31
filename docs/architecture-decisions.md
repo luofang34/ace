@@ -12,9 +12,8 @@ values.
 ## ADR-002 — Rust implementation
 
 The independent implementation targets current stable Rust and forbids unsafe code.
-Serde provides interface schemas, `uom` normalizes physical quantities, Rayon
-orders local sweeps, Plotters renders SVG, and the official `rmcp` SDK serves
-MCP over stdio.
+Serde provides interface schemas, `uom` normalizes physical quantities,
+Plotters renders SVG, and the official `rmcp` SDK serves MCP over stdio.
 
 ## ADR-003 — SI storage, explicit interface units
 
@@ -61,7 +60,7 @@ data axes; an author-supplied prose or limit field cannot widen that support.
 ## ADR-008 — Separate aircraft, mission, requirements, and scenario
 
 Scenario resolution combines independent versioned documents. Dotted-path
-overrides apply before normalization, allowing reuse and declarative sweeps.
+overrides apply before normalization, allowing reuse.
 Wing area, span, and aspect ratio reconcile at this boundary: any two define
 the third, rounded triples have a 0.5% tolerance, and the canonical ratio is
 always recomputed from resolved area and span.
@@ -99,11 +98,12 @@ Analyses return renderer-independent axes, series, annotations, and warnings.
 The SVG renderer consumes only this specification and never performs aircraft
 calculations.
 
-## ADR-014 — Declarative deterministic sweeps
+## ADR-014 — Declarative deterministic grids
 
-One- and two-dimensional linear, logarithmic, explicit-value, and categorical
-profile sweeps expand into a stable Cartesian order. Local workers share a
-sub-run cache without holding a lock across asynchronous work.
+Vehicle study grids take explicit samples or endpoint-inclusive linear or
+logarithmic ranges per declared design variable and expand into a stable
+Cartesian order. Candidates share unaffected calculations through the session
+rather than a separate sweep cache.
 
 ## ADR-015 — Bounded scalar closure
 
@@ -346,8 +346,8 @@ line, bar, and scatter specifications omit the additive field.
 Constraint carpet plots consume the native constraint result rather than
 recomputing aircraft physics in the renderer. Boundary series remain the exact
 analyzer curves, while each surface cell records loading margin and feasibility
-against the analyzer stall limit. Complete two-variable Cartesian sweeps and
-grid-study archives use the same representation. Evolutionary,
+against the analyzer stall limit. Complete two-variable vehicle study grids use
+the same representation. Evolutionary,
 higher-dimensional, conditional, or incomplete study spaces remain Pareto
 scatter and carry `IRREGULAR_TRADE_SPACE`; the chart layer never invents
 missing grid cells.

@@ -337,23 +337,3 @@ pub(crate) struct ConstraintResult {
     pub(crate) warnings: Vec<Diagnostic>,
     pub(crate) model: ModelMetadata,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct SweepRow {
-    pub(crate) variables: std::collections::BTreeMap<String, serde_json::Value>,
-    pub(crate) metrics: std::collections::BTreeMap<String, f64>,
-    #[serde(default)]
-    pub(crate) feasible: bool,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub(crate) metric_validity: BTreeMap<String, MetricValidity>,
-    pub(crate) warnings: Vec<Diagnostic>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct SweepResult {
-    pub(crate) scenario_id: String,
-    pub(crate) rows: Vec<SweepRow>,
-    pub(crate) deterministic_ordering: bool,
-    pub(crate) warnings: Vec<Diagnostic>,
-    pub(crate) provenance: ResultProvenance,
-}

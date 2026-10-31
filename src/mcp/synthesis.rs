@@ -27,6 +27,10 @@ pub(super) struct StudyRequest {
     plan_path: String,
     #[serde(default)]
     overrides: BTreeMap<String, String>,
+    /// Output parameter to chart over the studied inputs.
+    chart_metric: Option<String>,
+    /// SVG path for the chart; requires `chart_metric`.
+    artifact_path: Option<String>,
 }
 
 pub(super) fn study(request: StudyRequest) -> Result<Json<ObjectOutput>, ErrorData> {
@@ -35,6 +39,13 @@ pub(super) fn study(request: StudyRequest) -> Result<Json<ObjectOutput>, ErrorDa
         Path::new(&request.plan_path),
         &request.overrides,
     )
+    .and_then(|archive| {
+        crate::services::vehicle_study::chart_blocking(
+            archive,
+            request.chart_metric,
+            request.artifact_path.map(Into::into),
+        )
+    })
     .map_err(super::domain_error::mcp_error)?;
     canonical_json_output(result)
 }

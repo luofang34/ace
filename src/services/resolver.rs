@@ -35,7 +35,6 @@ pub(crate) use embedded::resolve_embedded_study;
 use energy_climb::{validate_energy_schedule_limits, validate_energy_schedule_transitions};
 pub(crate) use initial_state::usable_initial_fuel_kg;
 use initial_state::{resolve_initial_state, validate_initial_state};
-pub(crate) use planform::complete_planform_overrides;
 use segments::resolve_segment;
 
 #[derive(Clone)]

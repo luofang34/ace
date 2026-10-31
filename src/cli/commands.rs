@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::cli::{
     AnalyzeCommand, Command, CompareArgs, ConstraintArgs, McpCommand, PerformanceArgs, PointArgs,
-    ProfileCommand, ReportArgs, ScenarioArgs, SweepArgs,
+    ProfileCommand, ReportArgs, ScenarioArgs,
 };
 use crate::domain::diagnostic::{AexError, AexResult};
 use crate::domain::quantity::{Dimension, parse_quantity};
@@ -17,7 +17,6 @@ use crate::services::analysis::{ApplicationService, PointCondition};
 use crate::services::report::LIMITATION;
 use crate::services::report::markdown_report;
 use crate::services::requirements::{evaluate_requirements, hard_requirements_passed};
-use crate::services::sweep::SweepVariable;
 use crate::storage::run_store::RunAttribution;
 
 use super::output::{emit_blocking, emit_canonical_blocking, emit_scenario_blocking};
@@ -61,7 +60,6 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
             emit_scenario_blocking(&result, &common.output, &scenario)
         }
         Command::Analyze { analysis } => execute_analysis(&service, analysis),
-        Command::Sweep(arguments) => execute_sweep(&service, arguments),
         Command::Compare(arguments) => execute_compare(&service, arguments),
         Command::Profile { profile } => execute_profile(&service, profile),
         Command::Plot(arguments) => execute_plot(&service, arguments),
@@ -76,13 +74,16 @@ pub(super) async fn execute(command: Command) -> AexResult<()> {
         Command::Study {
             scenario,
             plan,
+            chart,
+            artifact,
             common,
         } => {
-            let result = crate::services::vehicle_study::run_blocking(
+            let archive = crate::services::vehicle_study::run_blocking(
                 &scenario,
                 &plan,
                 &common.override_map(),
             )?;
+            let result = crate::services::vehicle_study::chart_blocking(archive, chart, artifact)?;
             emit_canonical_blocking(&result, &common.output)
         }
         command @ (Command::Uncertainty { .. }
@@ -301,37 +302,6 @@ fn execute_performance(service: &ApplicationService, arguments: PerformanceArgs)
     )
 }
 
-fn execute_sweep(service: &ApplicationService, arguments: SweepArgs) -> AexResult<()> {
-    let variables = arguments
-        .variables
-        .iter()
-        .map(|raw| parse_sweep_variable(raw, arguments.logarithmic))
-        .collect::<AexResult<Vec<_>>>()?;
-    let result = service.sweep_blocking(&arguments.scenario, &variables, &arguments.metrics)?;
-    enforce_strict(arguments.common.strict, &result.warnings)?;
-    let scenario =
-        service.resolve_blocking(&arguments.scenario, &arguments.common.override_map())?;
-    let run = service.persist_blocking(
-        &scenario,
-        "sweep",
-        &result,
-        &result.warnings,
-        arguments.common.seed,
-        RunAttribution::with_mass_properties(),
-    )?;
-    emit_scenario_blocking(
-        &AnalysisEnvelope {
-            scenario_name: scenario.name,
-            run_id: run.run_id,
-            completion_status: "completed".to_owned(),
-            warning_count: result.warnings.len(),
-            result,
-        },
-        &arguments.common.output,
-        &arguments.scenario,
-    )
-}
-
 fn execute_compare(service: &ApplicationService, arguments: CompareArgs) -> AexResult<()> {
     let result = service.compare_blocking(&arguments.scenarios, &arguments.metrics)?;
     enforce_strict(arguments.strict, &result.warnings)?;
@@ -406,28 +376,6 @@ fn service_blocking() -> AexResult<ApplicationService> {
         source,
     })?;
     Ok(ApplicationService::filesystem(current.join("runs")))
-}
-
-fn parse_sweep_variable(raw: &str, logarithmic: bool) -> AexResult<SweepVariable> {
-    let (path, specification) = raw.split_once('=').ok_or_else(|| {
-        AexError::validation(
-            "INVALID_SWEEP_VARIABLE",
-            "var",
-            "expected PATH=START:STOP:COUNT",
-        )
-    })?;
-    let parts: Vec<&str> = specification.rsplitn(3, ':').collect();
-    if parts.len() != 3 {
-        return Err(AexError::validation(
-            "INVALID_SWEEP_VARIABLE",
-            path,
-            "expected START:STOP:COUNT",
-        ));
-    }
-    let count = parts[0]
-        .parse::<u32>()
-        .map_err(|source| AexError::validation("INVALID_SWEEP_COUNT", path, source.to_string()))?;
-    SweepVariable::linear(path.to_owned(), parts[2], parts[1], count, logarithmic)
 }
 
 pub(crate) fn parse_wing_loading(raw: &str) -> AexResult<f64> {

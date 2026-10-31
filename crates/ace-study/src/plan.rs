@@ -3,16 +3,18 @@ use ace_model::{Quantity, VehicleModel};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+mod axis;
 mod validation;
+pub use axis::{Axis, AxisRange, Spacing};
 
 /// Search strategy; every evaluation uses the authoritative synthesis graph.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum SearchMethod {
-    /// Cartesian product of explicit, unit-bearing samples.
+    /// Cartesian product of unit-bearing samples.
     Grid {
-        /// Parameter identifiers mapped to sampled values.
-        axes: BTreeMap<String, Vec<Quantity>>,
+        /// Parameter identifiers mapped to explicit or generated samples.
+        axes: BTreeMap<String, Axis>,
     },
     /// Pareto pattern search, halving each variable's step at each level.
     Refine {
@@ -92,3 +94,6 @@ pub(crate) fn sample(
     }
     Ok(value)
 }
+
+#[cfg(test)]
+mod tests;

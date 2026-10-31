@@ -326,7 +326,7 @@ fn calibration_bands_cover_both_aircraft_classes() -> Result<(), Box<dyn Error>>
 }
 
 #[test]
-fn plots_and_two_dimensional_sweep_execute() -> Result<(), Box<dyn Error>> {
+fn payload_range_plot_writes_an_svg_artifact() -> Result<(), Box<dyn Error>> {
     let temporary = TempDir::new()?;
     let artifact = temporary.path().join("payload-range.svg");
     let b777_path = scenario("b777");
@@ -343,58 +343,6 @@ fn plots_and_two_dimensional_sweep_execute() -> Result<(), Box<dyn Error>> {
         .assert()
         .success();
     assert!(fs::metadata(&artifact)?.len() > 100);
-
-    let c172_path = scenario("c172");
-    let sweep = command(temporary.path())
-        .args([
-            "sweep",
-            &c172_path.to_string_lossy(),
-            "--var",
-            "aircraft.geometry.wing.area=14 m^2:18 m^2:3",
-            "--var",
-            "aircraft.geometry.wing.aspect_ratio=7:8:3",
-            "--metric",
-            "performance.stall_speed_landing",
-            "--metric",
-            "geometry.wing_area",
-            "--metric",
-            "geometry.wing_span",
-            "--metric",
-            "geometry.aspect_ratio",
-            "--metric",
-            "performance.achieved_cruise_true_airspeed",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success();
-    let sweep_result: Value = serde_json::from_slice(&sweep.get_output().stdout)?;
-    let rows = sweep_result["result"]["rows"]
-        .as_array()
-        .ok_or("missing sweep rows")?;
-    assert_eq!(rows.len(), 9);
-    for row in rows {
-        let metrics = &row["metrics"];
-        let area = metrics["geometry.wing_area"]
-            .as_f64()
-            .ok_or("missing sweep wing area")?;
-        let span = metrics["geometry.wing_span"]
-            .as_f64()
-            .ok_or("missing sweep wing span")?;
-        let aspect_ratio = metrics["geometry.aspect_ratio"]
-            .as_f64()
-            .ok_or("missing sweep aspect ratio")?;
-        assert!(
-            metrics["performance.achieved_cruise_true_airspeed"]["value"]
-                .as_f64()
-                .is_some_and(|speed| speed > 0.0)
-        );
-        assert_eq!(
-            row["metric_validity"]["performance.achieved_cruise_true_airspeed"]["status"],
-            "valid"
-        );
-        assert!((span.powi(2) / area - aspect_ratio).abs() < 1.0e-9);
-    }
     Ok(())
 }
 

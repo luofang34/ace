@@ -17,7 +17,6 @@ pub(super) enum Command {
     Analyze {
         analysis: AnalyzeCommand,
     },
-    Sweep(SweepArgs),
     Compare(CompareArgs),
     Profile {
         profile: ProfileCommand,
@@ -29,6 +28,8 @@ pub(super) enum Command {
     Study {
         scenario: PathBuf,
         plan: PathBuf,
+        chart: Option<String>,
+        artifact: Option<PathBuf>,
         common: CommonArgs,
     },
     Uncertainty {
@@ -114,15 +115,6 @@ pub(super) struct ConstraintArgs {
     pub(super) start: String,
     pub(super) stop: String,
     pub(super) count: u32,
-    pub(super) common: CommonArgs,
-}
-
-#[derive(Debug)]
-pub(super) struct SweepArgs {
-    pub(super) scenario: PathBuf,
-    pub(super) variables: Vec<String>,
-    pub(super) metrics: Vec<String>,
-    pub(super) logarithmic: bool,
     pub(super) common: CommonArgs,
 }
 
