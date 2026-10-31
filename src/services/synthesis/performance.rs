@@ -8,7 +8,10 @@ use std::collections::BTreeMap;
 use crate::models::performance::PointAnalyzer;
 use crate::services::model_preflight::preflight_model_domains;
 
+mod constraint_diagram;
 mod inputs;
+
+pub(super) use constraint_diagram::ConstraintDiagram;
 
 const ID: &str = "aircraft.performance_envelope";
 
