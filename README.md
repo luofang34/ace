@@ -233,6 +233,20 @@ unsupported shapes fail explicitly. Mesh convergence, experimental calibration,
 whole-aircraft interference, trim, stall and transonic shocks remain unverified.
 Use the same model file with `sheet`, `study` or `drawing` to project its results.
 
+`aircraft.performance_envelope` returns stall (clean and landing), best-glide,
+minimum-power and maximum level speeds, maximum L/D, service and absolute
+ceilings and takeoff and landing field lengths from the native point-performance
+models. Wing area, span and sweep, the four design masses, the takeoff and
+landing case masses, engine count, sizing factor and field conditions (elevation,
+obstacle height, braking coefficient, runway slope, headwind) are scalar ports.
+The analysis selects catalog entries for its `aerodynamic_polars` (clean,
+takeoff and landing polars with optional wave drag or polar tables),
+`operating_limits`, one engine profile (for example `piston_engine` or
+`turbofan_engine`) and an optional `propeller`; these use the same document
+shapes as the scenario aircraft and profile files. The envelope assumes an ISA
+standard day, enforces the registered model domains and marks its result
+approximate when any metric is boundary-limited or extrapolated.
+
 Rate-based operations require one currency, price year and cost scope. Native
 rates use USD, block hours, cycles, turnaround time and annual ownership cost.
 The `crew_flight_hour`, `maintenance_flight_hour` and annual `flight_time` fields
