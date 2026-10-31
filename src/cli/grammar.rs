@@ -192,7 +192,6 @@ fn analysis() -> Command {
                         .default_value("clean"),
                 ),
         ))
-        .subcommand(common(Command::new("payload-range").arg(path("scenario"))))
         .subcommand(common(
             Command::new("performance")
                 .arg(path("scenario"))
@@ -205,18 +204,6 @@ fn analysis() -> Command {
                     Arg::new("landing_mass")
                         .long("landing-mass")
                         .help("Landing mass for the landing field length"),
-                ),
-        ))
-        .subcommand(common(
-            Command::new("constraints")
-                .arg(path("scenario"))
-                .arg(Arg::new("start").long("start").default_value("300 N/m^2"))
-                .arg(Arg::new("stop").long("stop").default_value("9000 N/m^2"))
-                .arg(
-                    Arg::new("count")
-                        .long("count")
-                        .default_value("80")
-                        .value_parser(value_parser!(u32)),
                 ),
         ))
 }
@@ -245,8 +232,6 @@ fn plot() -> Command {
             "power-curves",
             "thrust-curves",
             "climb-envelope",
-            "payload-range",
-            "constraints",
             "mission-mass",
             "requirement-margins",
         ]))

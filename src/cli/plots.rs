@@ -4,8 +4,7 @@ use std::path::PathBuf;
 use serde::Serialize;
 
 use crate::charts::generators::{
-    climb_envelope, constraints, drag_polar, mission_mass, payload_range, performance_curves,
-    requirement_margins,
+    climb_envelope, drag_polar, mission_mass, performance_curves, requirement_margins,
 };
 use crate::charts::renderer::render_svg_blocking;
 use crate::charts::spec::ChartSpec;
@@ -80,15 +79,6 @@ fn generate_chart(
             performance_curves(scenario, altitude)
         }
         PlotKind::ClimbEnvelope => climb_envelope(scenario),
-        PlotKind::PayloadRange => {
-            let (_, result) = service.payload_range_blocking(&arguments.scenario, overrides)?;
-            Ok(payload_range(scenario, &result))
-        }
-        PlotKind::Constraints => {
-            let (_, result) =
-                service.constraints_blocking(&arguments.scenario, overrides, 300.0, 9000.0, 80)?;
-            Ok(constraints(&scenario.name, &result))
-        }
         PlotKind::MissionMass => {
             let (_, result) = service.mission_blocking(&arguments.scenario, overrides)?;
             Ok(mission_mass(scenario, &result))

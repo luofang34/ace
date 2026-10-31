@@ -100,8 +100,6 @@ pub(super) struct DrawingArgs {
 #[derive(Debug)]
 pub(super) enum AnalyzeCommand {
     Point(PointArgs),
-    Constraints(ConstraintArgs),
-    PayloadRange(ScenarioArgs),
     Performance(PerformanceArgs),
 }
 
@@ -131,15 +129,6 @@ pub(super) struct PerformanceArgs {
 #[derive(Debug)]
 pub(super) struct ScenarioArgs {
     pub(super) scenario: PathBuf,
-    pub(super) common: CommonArgs,
-}
-
-#[derive(Debug)]
-pub(super) struct ConstraintArgs {
-    pub(super) scenario: PathBuf,
-    pub(super) start: String,
-    pub(super) stop: String,
-    pub(super) count: u32,
     pub(super) common: CommonArgs,
 }
 
@@ -214,8 +203,6 @@ pub(super) enum PlotKind {
     PowerCurves,
     ThrustCurves,
     ClimbEnvelope,
-    PayloadRange,
-    Constraints,
     MissionMass,
     RequirementMargins,
 }
@@ -227,8 +214,6 @@ impl PlotKind {
             Self::PowerCurves => "power-curves",
             Self::ThrustCurves => "thrust-curves",
             Self::ClimbEnvelope => "climb-envelope",
-            Self::PayloadRange => "payload-range",
-            Self::Constraints => "constraints",
             Self::MissionMass => "mission-mass",
             Self::RequirementMargins => "requirement-margins",
         }
