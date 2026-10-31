@@ -153,6 +153,9 @@ does not declare returns `UNKNOWN_COMPARISON_METRIC`.
 the same corners as `aex payload-range`; an optional `artifact_path` writes
 the chart as SVG.
 
+`generate_report` also accepts `vehicle_path` in place of `scenario_path` or
+`run_id`, and returns the same report as `aex report --vehicle`.
+
 `chart_vehicle_analysis` takes `vehicle_path`, `analysis`, optional
 `artifact_path` and `overrides`, and returns the same chart as `aex chart`.
 

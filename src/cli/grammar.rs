@@ -115,7 +115,12 @@ pub(super) fn command() -> Command {
         .subcommand(plot())
         .subcommand(
             Command::new("report")
-                .arg(Arg::new("run_id").required(true))
+                .arg(
+                    Arg::new("run_id")
+                        .required_unless_present("vehicle")
+                        .conflicts_with("vehicle"),
+                )
+                .arg(optional_path("vehicle").help("Report on a synthesized vehicle file"))
                 .arg(
                     Arg::new("format")
                         .long("format")

@@ -95,7 +95,8 @@ pub(super) fn command(matches: ArgMatches) -> Result<Command, Error> {
         }),
         "plot" => Ok(Command::Plot(plot(args)?)),
         "report" => Ok(Command::Report(ReportArgs {
-            run_id: required(args, "run_id")?,
+            run_id: optional(args, "run_id"),
+            vehicle: optional(args, "vehicle"),
             format: required(args, "format")?,
             output: OutputArgs {
                 format: OutputFormat::Json,

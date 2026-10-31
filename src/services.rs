@@ -23,4 +23,5 @@ pub(crate) mod vehicle_edit;
 pub(crate) mod vehicle_explanation;
 pub(crate) mod vehicle_payload_range;
 pub(crate) mod vehicle_promotion;
+pub(crate) mod vehicle_report;
 pub(crate) mod vehicle_study;
