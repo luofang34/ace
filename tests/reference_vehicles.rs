@@ -45,6 +45,31 @@ fn c172_vehicle_flies_its_mission_with_reference_performance() -> Result<(), Box
     assert!((11_000.0..=14_000.0).contains(&ceiling_ft), "{ceiling_ft}");
     assert_eq!(result["margins"]["stall_speed_landing"]["status"], "PASS");
     assert_eq!(result["margins"]["service_ceiling"]["status"], "FAIL");
+    assert_constraint_diagram_met(&result, 600.0..=700.0)?;
+    Ok(())
+}
+
+/// MTOM wing loading in the expected band, inside the stall limit and under installed loading.
+fn assert_constraint_diagram_met(
+    result: &Value,
+    wing_loading_pa: std::ops::RangeInclusive<f64>,
+) -> Result<(), Box<dyn Error>> {
+    let selected = value(result, "constraints.selected_wing_loading")?;
+    assert!(wing_loading_pa.contains(&selected), "{selected}");
+    for (parameter, requirement) in [
+        (
+            "constraints.installed_to_required_loading",
+            "installed_loading",
+        ),
+        (
+            "constraints.stall_limit_to_selected_wing_loading",
+            "landing_wing_loading",
+        ),
+    ] {
+        let ratio = value(result, parameter)?;
+        assert!((1.0..=2.0).contains(&ratio), "{parameter} {ratio}");
+        assert_ne!(result["margins"][requirement]["status"], "FAIL");
+    }
     Ok(())
 }
 
@@ -99,12 +124,9 @@ fn b777_vehicle_flies_its_mission_on_the_tabulated_engine_deck() -> Result<(), B
     for requirement in ["service_ceiling", "takeoff_field_length"] {
         assert_eq!(result["margins"][requirement]["status"], "PASS");
     }
-    let climb = &result["snapshot"]["runs"];
-    assert!(
-        climb
-            .to_string()
-            .contains("aircraft.deck_energy_path_phase")
-    );
+    assert_constraint_diagram_met(&result, 7_500.0..=8_200.0)?;
+    let runs = result["snapshot"]["runs"].to_string();
+    assert!(runs.contains("aircraft.deck_energy_path_phase"));
     Ok(())
 }
 

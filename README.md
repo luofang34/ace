@@ -247,6 +247,17 @@ shapes as the scenario aircraft and profile files. The envelope assumes an ISA
 standard day, enforces the registered model domains and marks its result
 approximate when any metric is boundary-limited or extrapolated.
 
+`aircraft.constraint_diagram` takes the same ports and catalog entries plus an
+explicit design speed, landing stall speed limit, takeoff distance limit and
+wing-loading range; it never substitutes defaults for missing targets. It
+returns the MTOM wing loading, the landing stall wing-loading limit, and two
+ratios a requirement can bound at one: installed thrust-to-weight (or
+power-to-weight) over the largest cruise, climb or approximate takeoff
+requirement at the design wing loading, and the stall limit over the design
+wing loading. The sampled curves, feasible mask and active constraint are kept
+in the run details. The curves use sea-level dynamic pressure at the design
+speed, as in the scenario `analyze constraints` command.
+
 Rate-based operations require one currency, price year and cost scope. Native
 rates use USD, block hours, cycles, turnaround time and annual ownership cost.
 The `crew_flight_hour`, `maintenance_flight_hour` and annual `flight_time` fields

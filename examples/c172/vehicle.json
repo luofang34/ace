@@ -925,6 +925,107 @@
         "revision": null
       },
       "owner": "c172_reference"
+    },
+    "constraints.design_speed": {
+      "unit": "m/s",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 59.1611,
+        "unit": "m/s"
+      }
+    },
+    "constraints.landing_stall_speed_limit": {
+      "unit": "kt",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 50,
+        "unit": "kt"
+      }
+    },
+    "constraints.takeoff_distance_limit": {
+      "unit": "m",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 600.0,
+        "unit": "m"
+      }
+    },
+    "constraints.wing_loading_minimum": {
+      "unit": "Pa",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 300.0,
+        "unit": "Pa"
+      }
+    },
+    "constraints.wing_loading_maximum": {
+      "unit": "Pa",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference",
+      "value": {
+        "value": 9000.0,
+        "unit": "Pa"
+      }
+    },
+    "constraints.selected_wing_loading": {
+      "unit": "Pa",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "constraints.stall_wing_loading_limit": {
+      "unit": "Pa",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "constraints.installed_to_required_loading": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
+    },
+    "constraints.stall_limit_to_selected_wing_loading": {
+      "unit": "1",
+      "source": {
+        "kind": "reference",
+        "reference": "C172-class reference aircraft (examples/c172); representative conceptual data, not type-certificate values",
+        "revision": null
+      },
+      "owner": "c172_reference"
     }
   },
   "analyses": {
@@ -1106,6 +1207,47 @@
           "propeller"
         ]
       }
+    },
+    "constraints": {
+      "plugin": "aircraft.constraint_diagram",
+      "version": "1",
+      "inputs": {
+        "area": "wing.area",
+        "span": "wing.span",
+        "sweep": "wing.sweep",
+        "maximum_takeoff_mass": "weight.mtow",
+        "operating_empty_mass": "weight.oew",
+        "maximum_payload_mass": "weight.maximum_payload",
+        "maximum_fuel_mass": "weight.maximum_fuel",
+        "takeoff_mass": "weight.mtow",
+        "landing_mass": "weight.mtow",
+        "engine_count": "engine.count",
+        "sizing_factor": "engine.sizing_factor",
+        "field_elevation": "field.elevation",
+        "obstacle_height": "field.obstacle_height",
+        "braking_coefficient": "field.braking_coefficient",
+        "runway_slope": "field.runway_slope",
+        "headwind": "field.headwind",
+        "design_speed": "constraints.design_speed",
+        "landing_stall_speed_limit": "constraints.landing_stall_speed_limit",
+        "takeoff_distance_limit": "constraints.takeoff_distance_limit",
+        "wing_loading_minimum": "constraints.wing_loading_minimum",
+        "wing_loading_maximum": "constraints.wing_loading_maximum"
+      },
+      "outputs": {
+        "selected_wing_loading": "constraints.selected_wing_loading",
+        "stall_wing_loading_limit": "constraints.stall_wing_loading_limit",
+        "installed_to_required_loading": "constraints.installed_to_required_loading",
+        "stall_limit_to_selected_wing_loading": "constraints.stall_limit_to_selected_wing_loading"
+      },
+      "resources": {
+        "catalog": [
+          "polars",
+          "limits",
+          "engine",
+          "propeller"
+        ]
+      }
     }
   },
   "requirements": {
@@ -1172,6 +1314,34 @@
       "target": {
         "value": 0,
         "unit": "kg"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
+    },
+    "installed_loading": {
+      "name": "Installed loading covers cruise, climb and takeoff curves",
+      "metric": "constraints.installed_to_required_loading",
+      "relation": "ge",
+      "target": {
+        "value": 1,
+        "unit": "1"
+      },
+      "priority": "hard",
+      "source": {
+        "kind": "user",
+        "reference": "examples/c172/requirements.yaml"
+      }
+    },
+    "landing_wing_loading": {
+      "name": "Wing loading within the landing stall limit at MTOM",
+      "metric": "constraints.stall_limit_to_selected_wing_loading",
+      "relation": "ge",
+      "target": {
+        "value": 1,
+        "unit": "1"
       },
       "priority": "hard",
       "source": {
