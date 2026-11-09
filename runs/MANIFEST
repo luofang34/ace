@@ -1,0 +1,10 @@
+# Entries kept under runs/. Everything else is reproducible from a commit,
+# a vehicle and a plan, and belongs in the run cache (.ace/runs/), not here.
+# scripts/check_runs_manifest.sh fails when runs/ holds an unlisted entry.
+# name<TAB>what it is and what reads it
+aerothermal-high-re-20261017	high-Re aerothermal verification grids, logs and the audit scripts that read them
+cfd-reference	pinned Eilmer (gdtk) build, its reference solutions and checkpoint verification
+c172-openvsp	OpenVSP/VSPAERO reference geometry and polars for the C172 example
+c172-refinement	OpenVSP refinement study of the C172 example
+model501-10	Model 501-10 engine-trade design candidates
+model501-study	Model 501-10 OpenVSP study; examples/designs/model501/README.md names its .vsp3

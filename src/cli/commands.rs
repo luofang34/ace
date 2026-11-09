@@ -315,12 +315,17 @@ fn execute_report(service: &ApplicationService, arguments: ReportArgs) -> AexRes
     emit_blocking(&report, &arguments.output)
 }
 
+/// Where analysis runs are stored, relative to the working directory. Runs are
+/// reproducible from a commit and their inputs, so they live in the ignored
+/// cache; `runs/` holds only the references its MANIFEST names.
+const RUN_CACHE: &str = ".ace/runs";
+
 fn service_blocking() -> AexResult<ApplicationService> {
     let current = env::current_dir().map_err(|source| AexError::Read {
         path: PathBuf::from("."),
         source,
     })?;
-    Ok(ApplicationService::filesystem(current.join("runs")))
+    Ok(ApplicationService::filesystem(current.join(RUN_CACHE)))
 }
 
 fn pretty_json(value: &Value) -> AexResult<String> {

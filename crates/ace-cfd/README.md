@@ -74,7 +74,8 @@ This prepares geometry only and preserves the case's boundary and solver setting
 `verify_directional.py --case INPUT` can sample a supplied master grid: each requested
 cell count must divide the corresponding master count. It retains exact selected
 vertices, saves the master input and its hash, and writes solve checkpoints alongside
-the results. Use a persistent output directory under `runs/` for long studies.
+the results. Use a persistent output directory under `.ace/runs/` for long studies,
+and list it in `runs/MANIFEST` under `runs/` only when it becomes reference data.
 Set `curved_geometry: true` to integrate polar cells with a spherical wall and
 curved radial faces. Every angular row of supplied vertices must lie on one ray;
 radial levels interpolate linearly between angular nodes. Wall reconstruction
@@ -113,7 +114,7 @@ uv run --no-project python crates/ace-cfd/benchmarks/compare.py \
   --eilmer /path/to/eilmer-install \
   --eilmer-nk /path/to/e4-nk-shared \
   --case crates/ace-cfd/cases/sphere-viscous.json \
-  --output runs/sphere-comparison
+  --output .ace/runs/sphere-comparison
 ```
 
 The output directory must not exist. Python needs only its standard library.
@@ -167,7 +168,7 @@ enable `ace-exact-conserved-checkpoint`; each native binary snapshot has a
 The reader checks its checksum, cell order, physical states, time and step before
 restoring conserved quantities. Primitive-only snapshots remain available for
 diagnostics but cannot qualify a Newton–Krylov comparison. Keep calculation outputs
-in persistent storage such as `runs/`; system temporary directories are not archives.
+in persistent storage such as `.ace/runs/`; system temporary directories are not archives.
 Use `--verification-only` when other calculations may contend for CPU time; it
 retains the accuracy gates and disables qualification of a timing comparison.
 

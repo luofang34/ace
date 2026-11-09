@@ -1,6 +1,8 @@
 /target/
-/runs/
-/output/
+/runs/*
+!/runs/MANIFEST
+/output/*
+!/output/MANIFEST
 /.ace/
 **/designs/**
 !examples/designs/

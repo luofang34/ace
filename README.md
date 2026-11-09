@@ -478,9 +478,12 @@ cargo run --bin aex -- payload-range examples/b777/vehicle.json \
   --artifact b777-payload-range.svg --format json
 ```
 
-Every successful analysis is stored below `runs/<run-id>/` with original and
-resolved input, result JSON, warnings, assumptions CSV, model manifest, and a
-SHA-256 content hash.
+Every successful analysis is stored below `.ace/runs/<run-id>/` (ignored by
+git) with original and resolved input, result JSON, warnings, assumptions CSV,
+model manifest, and a SHA-256 content hash. A run is reproducible from its
+commit and inputs; `runs/` keeps only the reference data `runs/MANIFEST` names,
+and `scripts/check_runs_manifest.sh` refuses anything else there or in
+`output/`.
 
 ## MCP
 
