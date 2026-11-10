@@ -122,6 +122,7 @@ fn diagram(
             targets.design_speed_m_s,
             Unit::MeterPerSecond,
         ),
+        ("design_altitude", targets.design_altitude_m, Unit::Meter),
         (
             "landing_stall_speed_limit",
             targets.landing_stall_speed_m_s,
@@ -184,6 +185,7 @@ fn vehicle_constraint_diagram_reproduces_the_scenario_diagram() {
 fn constraint_diagram_takes_no_default_targets_or_inverted_ranges() {
     let targets = crate::models::constraints::ConstraintTargets {
         design_speed_m_s: 120.0,
+        design_altitude_m: 0.0,
         landing_stall_speed_m_s: 70.0,
         takeoff_distance_m: 3_000.0,
     };
@@ -213,6 +215,7 @@ fn constraint_diagram_takes_no_default_targets_or_inverted_ranges() {
     let (mut inputs, resources) = fixture("b777");
     for (port, value, unit) in [
         ("design_speed", 120.0, Unit::MeterPerSecond),
+        ("design_altitude", 0.0, Unit::Meter),
         ("landing_stall_speed_limit", 70.0, Unit::MeterPerSecond),
         ("takeoff_distance_limit", 3_000.0, Unit::Meter),
         ("wing_loading_minimum", 9_000.0, Unit::Pascal),

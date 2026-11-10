@@ -1416,7 +1416,7 @@
     },
     "constraints": {
       "plugin": "aircraft.constraint_diagram",
-      "version": "1",
+      "version": "2",
       "inputs": {
         "area": "wing.area",
         "span": "wing.span",
@@ -1435,6 +1435,7 @@
         "runway_slope": "field.runway_slope",
         "headwind": "field.headwind",
         "design_speed": "constraints.design_speed",
+        "design_altitude": "phase.cruise.altitude",
         "landing_stall_speed_limit": "constraints.landing_stall_speed_limit",
         "takeoff_distance_limit": "constraints.takeoff_distance_limit",
         "wing_loading_minimum": "constraints.wing_loading_minimum",

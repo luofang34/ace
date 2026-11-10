@@ -1,17 +1,21 @@
 use std::collections::BTreeMap;
 
-use crate::domain::diagnostic::{AexResult, Diagnostic};
+use crate::domain::diagnostic::{AexError, AexResult, Diagnostic};
 use crate::domain::quantity::GRAVITY_M_S2;
-use crate::domain::result::{ConstraintResult, ModelMetadata};
+use crate::domain::result::{AtmosphereState, ConstraintResult, ModelMetadata};
 use crate::domain::schema::{EngineProfile, ResolvedScenario};
 use crate::domain::warning::WarningCode;
 use crate::models::aerodynamics::coefficient_evaluation_at_mach;
 use crate::models::atmosphere::scenario_atmosphere;
+use crate::models::propulsion::{self, OperatingMode, PropulsionQuery};
 
-/// Mission speed and requirement values the diagram is drawn against.
+/// Design point and requirement values the diagram is drawn against.
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct ConstraintTargets {
+    /// True airspeed of the cruise and climb curves.
     pub(crate) design_speed_m_s: f64,
+    /// Altitude the design speed is flown at.
+    pub(crate) design_altitude_m: f64,
     pub(crate) landing_stall_speed_m_s: f64,
     pub(crate) takeoff_distance_m: f64,
 }
@@ -22,6 +26,7 @@ impl ConstraintTargets {
     pub(crate) fn from_scenario(scenario: &ResolvedScenario) -> Self {
         Self {
             design_speed_m_s: design_speed(scenario),
+            design_altitude_m: 0.0,
             landing_stall_speed_m_s: landing_stall_requirement(scenario),
             takeoff_distance_m: takeoff_distance_requirement(scenario),
         }
@@ -67,12 +72,14 @@ impl ConstraintAnalyzer {
             })
             .collect();
         let atmosphere = scenario_atmosphere(&self.scenario).evaluate(0.0)?;
+        let design_atmosphere =
+            scenario_atmosphere(&self.scenario).evaluate(targets.design_altitude_m)?;
         let clean = &self.scenario.aircraft.aerodynamics.clean;
         let design_speed = targets.design_speed_m_s;
         let clean_evaluation = coefficient_evaluation_at_mach(
             &self.scenario.aircraft,
             "clean",
-            design_speed / atmosphere.speed_of_sound_m_s,
+            design_speed / design_atmosphere.speed_of_sound_m_s,
         )?;
         let takeoff_evaluation =
             coefficient_evaluation_at_mach(&self.scenario.aircraft, "takeoff", 0.0)?;
@@ -81,11 +88,19 @@ impl ConstraintAnalyzer {
         let clean_polar = clean_evaluation.coefficients;
         let takeoff_polar = takeoff_evaluation.coefficients;
         let landing_polar = landing_evaluation.coefficients;
-        let dynamic_pressure = 0.5 * atmosphere.density_kg_m3 * design_speed.powi(2);
+        let design_point = DesignPoint {
+            dynamic_pressure: 0.5 * design_atmosphere.density_kg_m3 * design_speed.powi(2),
+            available_fraction: available_fraction(
+                &self.scenario,
+                &atmosphere,
+                &design_atmosphere,
+                design_speed,
+            )?,
+        };
         let constraints = build_constraints(
             &self.scenario,
             &wing_loading,
-            dynamic_pressure,
+            design_point,
             clean_polar.cd0 + clean.additional_cd,
             clean_polar.induced_drag_factor,
             takeoff_polar.cl_max,
@@ -136,10 +151,64 @@ impl ConstraintAnalyzer {
     }
 }
 
+/// Flight condition of the cruise and climb curves.
+#[derive(Debug, Clone, Copy)]
+struct DesignPoint {
+    dynamic_pressure: f64,
+    /// Full-throttle power or thrust at the design altitude over the same at
+    /// sea level. The installed loading is a sea-level rating, so a
+    /// requirement at altitude is divided by this to compare with it.
+    available_fraction: f64,
+}
+
+/// What is left of the sea-level rating at the design altitude: the piston
+/// engine's power lapse, or a turbofan's thrust at the design speed there over
+/// its thrust at that speed at sea level.
+fn available_fraction(
+    scenario: &ResolvedScenario,
+    sea_level: &AtmosphereState,
+    design: &AtmosphereState,
+    speed_m_s: f64,
+) -> AexResult<f64> {
+    let fraction = match &scenario.engine {
+        EngineProfile::Piston(profile) => {
+            profile
+                .power_lapse
+                .fraction(design.density_kg_m3 / sea_level.density_kg_m3)
+                .fraction
+        }
+        EngineProfile::Turbofan(_) => {
+            let thrust = |atmosphere: &AtmosphereState| {
+                let query = PropulsionQuery {
+                    altitude_m: atmosphere.altitude_m,
+                    true_airspeed_m_s: speed_m_s,
+                    mach: speed_m_s / atmosphere.speed_of_sound_m_s,
+                    throttle: 1.0,
+                    mode: OperatingMode::Cruise,
+                };
+                propulsion::evaluate(scenario, atmosphere, query)
+                    .map(|state| state.thrust_available_n.unwrap_or(0.0))
+            };
+            thrust(design)? / thrust(sea_level)?
+        }
+    };
+    if fraction.is_finite() && fraction > 0.0 {
+        Ok(fraction)
+    } else {
+        Err(AexError::analysis(
+            "NO_POWER_AT_DESIGN_ALTITUDE",
+            format!(
+                "the engine has no usable rating at the design altitude {} m",
+                design.altitude_m
+            ),
+        ))
+    }
+}
+
 fn build_constraints(
     scenario: &ResolvedScenario,
     wing_loading: &[f64],
-    dynamic_pressure: f64,
+    design_point: DesignPoint,
     parasite: f64,
     induced: f64,
     takeoff_cl_max: f64,
@@ -156,12 +225,12 @@ fn build_constraints(
                 loading_constraint(
                     scenario,
                     *loading,
-                    dynamic_pressure,
+                    design_point.dynamic_pressure,
                     parasite,
                     induced,
                     targets.design_speed_m_s,
                     rate,
-                )
+                ) / design_point.available_fraction
             })
             .collect()
     };
