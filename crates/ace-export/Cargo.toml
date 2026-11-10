@@ -1,0 +1,40 @@
+[package]
+name = "ace-export"
+description = "Compiles vehicle designs into verified system packages, with a JSBSim aircraft and aerothermal capsule data"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+ace-cfd = { path = "../ace-cfd" }
+ace-model = { path = "../ace-model" }
+glam = { version = "0.33", default-features = false, features = ["f64", "libm"] }
+mbd-core = { git = "https://github.com/luofang34/mbd.git", rev = "861574978e7e2d82a91e9688f0d145340a21b6d2" }
+serde_json.workspace = true
+sha2.workspace = true
+syspack = { git = "https://github.com/luofang34/mbd.git", rev = "861574978e7e2d82a91e9688f0d145340a21b6d2" }
+thiserror.workspace = true
+
+[dev-dependencies]
+jsbsim = { git = "https://github.com/luofang34/jsbsim-rs.git", rev = "ca376d63d1ba3453ad5ca97dd593aacb4d20b218", default-features = false }
+tempfile = "3.20.0"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[lints.clippy]
+unwrap_used = "forbid"
+expect_used = "forbid"
+panic = "forbid"
+todo = "forbid"
+unimplemented = "forbid"
+unreachable = "forbid"
+exit = "forbid"
+mem_forget = "forbid"
+get_unwrap = "forbid"
+indexing_slicing = "deny"
+let_underscore_must_use = "deny"
+let_underscore_future = "deny"
+await_holding_lock = "deny"
