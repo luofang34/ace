@@ -210,8 +210,15 @@
       "expression": {
         "op": "multiply",
         "left": {
-          "op": "reference",
-          "parameter": "engine.rated_power"
+          "op": "multiply",
+          "left": {
+            "op": "reference",
+            "parameter": "engine.rated_power"
+          },
+          "right": {
+            "op": "reference",
+            "parameter": "engine.count"
+          }
         },
         "right": {
           "op": "reference",
