@@ -3,6 +3,15 @@ use ace_model::{Quantity, Relation, Requirement, VehicleModel};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+#[cfg(test)]
+mod tests;
+
+/// Relative size below which a difference between two evaluations of the same
+/// quantity is floating-point rounding: a mission that closes on a 600 nmi
+/// route sums its legs to 600 nmi give or take a few units in the last place.
+/// Slack inside this band is zero slack, not a violation.
+const ROUNDING_RELATIVE: f64 = 1e-9;
+
 /// Requirement disposition, including explicitly missing or inapplicable evidence.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -84,7 +93,7 @@ fn evaluate(id: &str, requirement: &Requirement, snapshot: &Snapshot) -> EngineR
             return Ok(margin);
         };
         if (quantity.to(expected.unit)?.value - expected.value).abs()
-            > 1e-9 * expected.value.abs().max(1.0)
+            > ROUNDING_RELATIVE * expected.value.abs().max(1.0)
         {
             margin.status = MarginStatus::NotApplicable;
             margin.message = Some(format!("condition {name} does not match"));
@@ -122,10 +131,11 @@ fn evaluate(id: &str, requirement: &Requirement, snapshot: &Snapshot) -> EngineR
     };
     margin.run_id = record.run_id.clone();
     margin.provisional = record.status == ValueStatus::Approximate;
-    margin.status = if slack < 0.0 {
+    let rounding = ROUNDING_RELATIVE * requirement.target.value.abs().max(actual.value.abs());
+    margin.status = if slack < -rounding {
         MarginStatus::Fail
     } else if margin.provisional
-        || slack == 0.0
+        || slack <= rounding
         || margin.fraction.is_some_and(|value| value <= 0.05)
     {
         MarginStatus::Warn
