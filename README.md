@@ -248,15 +248,17 @@ standard day, enforces the registered model domains and marks its result
 approximate when any metric is boundary-limited or extrapolated.
 
 `aircraft.constraint_diagram` takes the same ports and catalog entries plus an
-explicit design speed, landing stall speed limit, takeoff distance limit and
-wing-loading range; it never substitutes defaults for missing targets. It
+explicit design speed and design altitude, landing stall speed limit, takeoff
+distance limit and wing-loading range; it never substitutes defaults for missing targets. It
 returns the MTOM wing loading, the landing stall wing-loading limit, and two
 ratios a requirement can bound at one: installed thrust-to-weight (or
 power-to-weight) over the largest cruise, climb or approximate takeoff
 requirement at the design wing loading, and the stall limit over the design
 wing loading. The sampled curves, feasible mask and active constraint are kept
-in the run details. The curves use sea-level dynamic pressure at the design
-speed. `aex chart VEHICLE ANALYSIS --artifact SVG` draws them.
+in the run details. The cruise and climb curves use the dynamic pressure of the
+design true airspeed at the design altitude and are divided by the fraction of
+its sea-level rating the engine keeps there, so they compare with the installed
+sea-level loading; the stall limit and takeoff curve are at sea level. `aex chart VEHICLE ANALYSIS --artifact SVG` draws them.
 
 `aircraft.operating_point` evaluates the clean configuration at an `altitude`,
 `true_airspeed` and `mass` with the same aircraft ports and catalog entries,

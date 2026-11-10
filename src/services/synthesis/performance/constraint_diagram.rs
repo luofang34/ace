@@ -4,7 +4,7 @@ use ace_engine::{
     AnalysisContext, AnalysisPlugin, Fidelity, PluginIdentity, PluginOutput, PluginSpec,
     SolverError,
 };
-use ace_model::{DomainBound, DomainVariable, Quantity, Unit};
+use ace_model::{DomainBound, DomainLimit, DomainVariable, Quantity, Unit};
 use std::collections::BTreeMap;
 
 use super::{INPUTS, domain, inputs};
@@ -17,9 +17,10 @@ const ID: &str = "aircraft.constraint_diagram";
 /// Wing-loading samples across the declared range, matching the scenario command default.
 const SAMPLES: u32 = 80;
 
-/// Mission and requirement values the curves are drawn against, plus the plotted range.
-const TARGETS: [(&str, Unit); 5] = [
+/// Design point and requirement values the curves are drawn against, plus the plotted range.
+const TARGETS: [(&str, Unit); 6] = [
     ("design_speed", Unit::MeterPerSecond),
+    ("design_altitude", Unit::Meter),
     ("landing_stall_speed_limit", Unit::MeterPerSecond),
     ("takeoff_distance_limit", Unit::Meter),
     ("wing_loading_minimum", Unit::Pascal),
@@ -43,7 +44,14 @@ impl ConstraintDiagram {
     pub fn new() -> Self {
         let mut domain = domain();
         domain.bounds.extend(TARGETS.iter().map(|(name, unit)| {
-            DomainBound::positive(DomainVariable::Input((*name).into()), *unit)
+            let mut bound = DomainBound::positive(DomainVariable::Input((*name).into()), *unit);
+            if *name == "design_altitude" {
+                bound.lower = Some(DomainLimit {
+                    value: 0.0,
+                    inclusive: true,
+                });
+            }
+            bound
         }));
         Self {
             spec: PluginSpec {
@@ -51,7 +59,7 @@ impl ConstraintDiagram {
                 domain,
                 identity: PluginIdentity {
                     id: ID.into(),
-                    version: "1".into(),
+                    version: "2".into(),
                     fidelity: Fidelity::Conceptual,
                     code_revision: ace_engine::implementation_identity().digest,
                 },
@@ -97,6 +105,7 @@ impl AnalysisPlugin for ConstraintDiagram {
         }
         let targets = ConstraintTargets {
             design_speed_m_s: port("design_speed")?,
+            design_altitude_m: port("design_altitude")?,
             landing_stall_speed_m_s: port("landing_stall_speed_limit")?,
             takeoff_distance_m: port("takeoff_distance_limit")?,
         };
