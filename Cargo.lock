@@ -1284,7 +1284,7 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 [[package]]
 name = "mbd-airdata"
 version = "0.1.0"
-source = "git+https://github.com/luofang34/mbd.git?rev=32812cae9eeef161af6b502877a14be4b77e5bab#32812cae9eeef161af6b502877a14be4b77e5bab"
+source = "git+https://github.com/luofang34/mbd.git?rev=861574978e7e2d82a91e9688f0d145340a21b6d2#861574978e7e2d82a91e9688f0d145340a21b6d2"
 dependencies = [
  "libm",
  "thiserror",
@@ -1293,7 +1293,7 @@ dependencies = [
 [[package]]
 name = "mbd-core"
 version = "0.1.0"
-source = "git+https://github.com/luofang34/mbd.git?rev=32812cae9eeef161af6b502877a14be4b77e5bab#32812cae9eeef161af6b502877a14be4b77e5bab"
+source = "git+https://github.com/luofang34/mbd.git?rev=861574978e7e2d82a91e9688f0d145340a21b6d2#861574978e7e2d82a91e9688f0d145340a21b6d2"
 dependencies = [
  "glam",
  "thiserror",
@@ -2028,7 +2028,7 @@ checksum = "0bf256ce5efdfa370213c1dabab5935a12e49f2c58d15e9eac2870d3b4f27263"
 [[package]]
 name = "syspack"
 version = "0.1.0"
-source = "git+https://github.com/luofang34/mbd.git?rev=32812cae9eeef161af6b502877a14be4b77e5bab#32812cae9eeef161af6b502877a14be4b77e5bab"
+source = "git+https://github.com/luofang34/mbd.git?rev=861574978e7e2d82a91e9688f0d145340a21b6d2#861574978e7e2d82a91e9688f0d145340a21b6d2"
 dependencies = [
  "glam",
  "mbd-airdata",

@@ -237,6 +237,8 @@ pub fn compile_ace_vehicle_to_syspack(
         controls: controls(&design),
         devices: devices(&design, options),
         instrument_pack: None,
+        parts: Vec::new(),
+        typeface: None,
     };
     let bytes = serde_json::to_vec_pretty(&manifest).map_err(AceExportError::ManifestEncode)?;
     let source = MemoryPackageSource::new(bytes, BTreeMap::from([(entry_asset, xml)]));

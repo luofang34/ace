@@ -144,6 +144,8 @@ fn the_derived_dynamics_load_through_the_package_validator() {
         controls: syspack::ControlsSpec::default(),
         devices: Vec::new(),
         instrument_pack: None,
+        parts: Vec::new(),
+        typeface: None,
     };
     let bytes = serde_json::to_vec(&manifest).unwrap();
     let package = VerifiedSyspack::load(&MemoryPackageSource::new(bytes, BTreeMap::new())).unwrap();
