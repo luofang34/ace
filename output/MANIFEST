@@ -1,0 +1,4 @@
+# Entries kept under output/, the default target for drawings and exported
+# artifacts that are regenerated on demand. Nothing is kept by default.
+# scripts/check_runs_manifest.sh fails when output/ holds an unlisted entry.
+# name<TAB>what it is and what reads it

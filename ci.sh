@@ -6,6 +6,8 @@ bash scripts/test_dependency_paths.sh
 bash scripts/check_dependency_paths.sh
 bash scripts/test_rust_size_limits.sh
 bash scripts/check_rust_size_limits.sh
+bash scripts/test_runs_manifest.sh
+bash scripts/check_runs_manifest.sh
 cargo fmt --all --check
 cargo clippy --all-targets -- -D warnings
 cargo test --all-targets
